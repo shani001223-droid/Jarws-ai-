@@ -1,1 +1,114 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JARVIS AI</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #080d16;
+      color: #e8f7ff;
+      font-family: Arial, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .app {
+      width: 100%;
+      max-width: 430px;
+      text-align: center;
+      padding: 28px 20px;
+      border: 1px solid #174b66;
+      border-radius: 24px;
+      background: #0d1725;
+      box-shadow: 0 0 35px #00334b55;
+    }
+    h1 { letter-spacing: 6px; color: #55dfff; }
+    .orb {
+      width: 145px;
+      height: 145px;
+      margin: 30px auto;
+      border: 3px solid #55dfff;
+      border-radius: 50%;
+      box-shadow: 0 0 25px #00bfff77, inset 0 0 25px #00bfff33;
+      display: grid;
+      place-items: center;
+      font-size: 42px;
+    }
+    #status { color: #8caec2; min-height: 22px; }
+    button {
+      border: 1px solid #55dfff;
+      background: #102b40;
+      color: white;
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin: 6px;
+      font-size: 15px;
+    }
+    button:active { background: #176080; }
+    #reply {
+      margin-top: 20px;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <h1>JARVIS</h1>
+    <p>PERSONAL AI ASSISTANT</p>
+    <div class="orb">✦</div>
+    <p id="status">System ready</p>
+    <button id="speakBtn">🎙️ Speak</button>
+    <button id="helloBtn">Test Assistant</button>
+    <div id="reply">Hello! I am JARVIS. Ready to assist you.</div>
+  </main>
+  <script>
+    const status = document.getElementById('status');
+    const reply = document.getElementById('reply');
+
+    function respond(message) {
+      reply.textContent = message;
+      if ('speechSynthesis' in window) {
+        speechSynthesis.cancel();
+        speechSynthesis.speak(new SpeechSynthesisUtterance(message));
+      }
+    }
+
+    document.getElementById('helloBtn').onclick = () => {
+      respond('Hello! JARVIS is online. How can I help you?');
+      status.textContent = 'Assistant active';
+    };
+
+    document.getElementById('speakBtn').onclick = () => {
+      const Recognition = window.SpeechRecognition ||
+                          window.webkitSpeechRecognition;
+      if (!Recognition) {
+        status.textContent = 'Voice recognition not supported here';
+        respond('Please open JARVIS in a browser that supports voice recognition.');
+        return;
+      }
+      const recognition = new Recognition();
+      recognition.lang = 'en-US';
+      recognition.onstart = () => status.textContent = 'Listening...';
+      recognition.onresult = event => {
+        const command = event.results[0][0].transcript;
+        respond('You said: ' + command);
+        status.textContent = 'Command received';
+      };
+      recognition.onerror = () => status.textContent = 'Please try again';
+      recognition.onend = () => {
+        if (status.textContent === 'Listening...') {
+          status.textContent = 'System ready';
+        }
+      };
+      recognition.start();
+    };
+  </script>
+</body>
+</html>

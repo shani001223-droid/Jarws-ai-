@@ -43,7 +43,7 @@ class FrontendContractTests(unittest.TestCase):
         self.assertIn("./assets/hoshi-expressions.webp", SERVICE_WORKER)
         self.assertIn("./memory-privacy.js", SERVICE_WORKER)
         self.assertIn('<script src="./memory-privacy.js"></script>', HTML)
-        self.assertIn('CACHE_NAME = "hoshi-shell-v9"', SERVICE_WORKER)
+        self.assertIn('CACHE_NAME = "hoshi-shell-v10"', SERVICE_WORKER)
 
     def test_each_ui_emotion_selects_a_character_expression(self):
         emotions = (
@@ -53,6 +53,13 @@ class FrontendContractTests(unittest.TestCase):
         for emotion in emotions:
             selector = rf'\.orb\[data-emotion="{emotion}"\] \.companion-avatar\{{background-position:'
             self.assertRegex(HTML, selector, f"No sprite position for {emotion}")
+
+    def test_voice_errors_stop_restart_loop_and_keep_actionable_status(self):
+        self.assertIn('let lastVoiceError=""', HTML)
+        for error in ("not-allowed", "audio-capture", "language-not-supported", "network"):
+            self.assertIn("'" + error + "'", HTML)
+        self.assertIn("VOICE RESTART FAILED · TAP TO RETRY", HTML)
+        self.assertIn("if(!lastVoiceError)setStatus('READY')", HTML)
 
     def test_android_screenshot_is_explicit_and_api_gated(self):
         self.assertIn('id="screenshotQuickBtn"', HTML)

@@ -36,6 +36,30 @@ class AssistantResponse(BaseModel):
     reply: str
     mode: str = "gemini"
     emotion: str = "caring"
+    speech_text: Optional[str] = None
+
+
+def make_assistant_response(raw: str, mode: str, message: str, locale: str) -> AssistantResponse:
+    """Keep readable chat separate from Urdu-script speech, without another API call."""
+    reply = raw.strip()
+    speech_text = None
+    if str(locale or "").lower().startswith("ur"):
+        candidate = re.sub(r"^```(?:json)?\s*|\s*```$", "", reply).strip()
+        try:
+            value = json.loads(candidate)
+        except (json.JSONDecodeError, TypeError):
+            value = None
+        if isinstance(value, dict) and isinstance(value.get("reply"), str) and value["reply"].strip():
+            reply = value["reply"].strip()[:6000]
+            spoken = value.get("speech_text")
+            if isinstance(spoken, str) and re.search(r"[\u0600-\u06ff]", spoken) and not re.search(r"[\u0900-\u097f]", spoken):
+                speech_text = spoken.strip()[:6000]
+        elif candidate.startswith(("{", "[")):
+            raise HTTPException(status_code=502, detail="AI reply formatting failed. Please try again.")
+        # Backward-compatible plain Urdu replies are already suitable for speech.
+        if speech_text is None and re.search(r"[\u0600-\u06ff]", reply) and not re.search(r"[\u0900-\u097f]", reply):
+            speech_text = reply
+    return AssistantResponse(reply=reply, mode=mode, emotion=classify_emotion(message, reply), speech_text=speech_text)
 
 
 def classify_emotion(message: str, reply: str) -> str:
@@ -337,6 +361,18 @@ def assistant(payload: AssistantRequest):
         "Avoid storing or asking for secrets. Keep the answer clear and proportionate to the user's message."
     )
 
+    if str(payload.locale or "").lower().startswith("ur"):
+        language_hint += (
+            " The selected conversation language is Pakistani Urdu. This overrides device/browser language. "
+            "For Roman Urdu input, write reply in natural Pakistani Roman Urdu; for Urdu-script input, use Urdu script. "
+            "Do not switch to Hindi, Arabic, or another language unless explicitly asked to translate. "
+            "Return ONLY one JSON object with two string fields: reply and speech_text. "
+            "speech_text must contain the SAME answer in proper Pakistani Urdu script for pronunciation, "
+            "not Roman letters or Devanagari. Spell English names and abbreviations phonetically in Urdu script. "
+            "Do not add content to speech_text that is absent from reply. Use natural short sentences and punctuation. "
+            "Example: {\"reply\":\"Main Hoshi hoon. Tum kaise ho?\",\"speech_text\":\"میں ہوشی ہوں۔ تم کیسے ہو؟\"}."
+        )
+
     # Gemini is primary. A temporary overload (503), rate limit (429), server
     # error, timeout, or malformed response triggers Groq when its key is set.
     if gemini_key:
@@ -373,7 +409,7 @@ def assistant(payload: AssistantRequest):
             if not reply:
                 reply = str(data.get("output_text") or "").strip()
             if reply:
-                return AssistantResponse(reply=reply, mode="gemini", emotion=classify_emotion(message, reply))
+                return make_assistant_response(reply, "gemini", message, payload.locale)
             gemini_problem = "Gemini Interactions API returned no text (possibly blocked or empty output)."
             should_fallback = True
         except HTTPError as exc:
@@ -397,7 +433,7 @@ def assistant(payload: AssistantRequest):
         if should_fallback and groq_key:
             try:
                 reply = _groq_reply(request_input, language_hint)
-                return AssistantResponse(reply=reply, mode="groq", emotion=classify_emotion(message, reply))
+                return make_assistant_response(reply, "groq", message, payload.locale)
             except RuntimeError as groq_error:
                 raise HTTPException(
                     status_code=502,
@@ -414,7 +450,7 @@ def assistant(payload: AssistantRequest):
     if groq_key:
         try:
             reply = _groq_reply(request_input, language_hint)
-            return AssistantResponse(reply=reply, mode="groq", emotion=classify_emotion(message, reply))
+            return make_assistant_response(reply, "groq", message, payload.locale)
         except RuntimeError as groq_error:
             raise HTTPException(status_code=502, detail=str(groq_error)) from None
 

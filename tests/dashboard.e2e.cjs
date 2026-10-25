@@ -292,6 +292,7 @@ async function main() {
       window.__voiceReady = () => {window.__voices = [{name: "Urdu female", lang: "ur-PK"}];listeners.voiceschanged?.()};
       Object.defineProperty(window, "SpeechSynthesisUtterance", {configurable: true, value: function(text){this.text=text}});
     });
+    assert.ok(apiMessages.every(request => request.locale === 'ur-PK'), 'Use selected Urdu mode rather than the browser locale');
     const beforePreview = await page.evaluate(() => ({reply: document.querySelector('#reply').textContent, memory: localStorage.getItem('hoshiConversationMemoryV1')}));
     assert.equal(await page.locator('#voiceSelect').count(), 0);
     await page.locator('#previewVoiceBtn').click();
@@ -304,9 +305,15 @@ async function main() {
     await page.locator('#previewVoiceBtn').click();
     const spoken = await page.evaluate(() => window.__voiceCalls.filter(v => typeof v === 'object'));
     assert.equal(spoken.length, 1, 'Preview speaks with automatic replies disabled');
+    assert.match(spoken[0].text, /[\u0600-\u06ff]/, 'Urdu preview uses Urdu script for pronunciation');
     assert.ok(spoken[0].rate < 0.9, 'Warm delivery is gentle');
     assert.deepEqual(await page.evaluate(() => ({reply: document.querySelector('#reply').textContent, memory: localStorage.getItem('hoshiConversationMemoryV1')})), beforePreview,
       'Preview must not overwrite chat or save a conversation');
+    await page.evaluate(() => {window.__voices = [{name: 'English female', lang: 'en-US'}, {name: 'Hindi female', lang: 'hi-IN'}]});
+    await page.locator('#previewVoiceBtn').click();
+    assert.equal(await page.evaluate(() => window.__voiceCalls.filter(v => typeof v === 'object').length), 1,
+      'Urdu mode must not silently substitute English or Hindi');
+    assert.match(await page.locator('#status').innerText(), /URDU VOICE NOT INSTALLED/);
     await page.locator('.voice-fine-tune summary').click();
     await page.locator('#resetVoiceBtn').click();
     assert.equal(await page.locator('[data-voice-style="soft"]').getAttribute('aria-pressed'), 'true');

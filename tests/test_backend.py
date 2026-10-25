@@ -24,6 +24,37 @@ class FakeResponse:
 
 class AssistantApiTests(unittest.TestCase):
 
+    def test_urdu_response_separates_chat_and_pronunciation_text(self):
+        raw = json.dumps({"reply": "Main Hoshi hoon.", "speech_text": "میں ہوشی ہوں۔"})
+        for provider in ("gemini", "groq"):
+            result = main.make_assistant_response(raw, provider, "Tum kon ho?", "ur-PK")
+            self.assertEqual(result.reply, "Main Hoshi hoon.")
+            self.assertEqual(result.speech_text, "میں ہوشی ہوں۔")
+            self.assertEqual(result.mode, provider)
+
+    def test_urdu_response_does_not_pass_roman_or_hindi_to_speech(self):
+        for spoken in ("Main Hoshi hoon.", "मैं होशी हूँ", "میں Hoshi ہوں मैं"):
+            result = main.make_assistant_response(json.dumps({"reply": "Main Hoshi hoon.", "speech_text": spoken}), "gemini", "salam", "ur-PK")
+            self.assertIsNone(result.speech_text)
+        plain = main.make_assistant_response("میں ہوشی ہوں۔", "groq", "salam", "ur-PK")
+        self.assertEqual(plain.speech_text, plain.reply)
+
+    def test_urdu_locale_instructs_both_providers_in_one_request(self):
+        raw = json.dumps({"reply": "Main sun rahi hoon.", "speech_text": "میں سن رہی ہوں۔"})
+        payload = {"steps": [{"type": "model_output", "content": [{"type": "text", "text": raw}]}]}
+        with patch.dict(os.environ, {"GEMINI_API_KEY": "test", "GROQ_API_KEY": ""}):
+            with patch("cloud_backend.main.urlopen", return_value=FakeResponse(payload)) as mocked:
+                result = main.assistant(main.AssistantRequest(message="Meri baat suno", locale="ur-PK"))
+        self.assertEqual(mocked.call_count, 1)
+        prompt = json.loads(mocked.call_args.args[0].data)["system_instruction"]
+        self.assertIn("speech_text", prompt)
+        self.assertIn("selected conversation language is Pakistani Urdu", prompt)
+        self.assertEqual(result.speech_text, "میں سن رہی ہوں۔")
+
+    def test_invalid_structured_response_is_not_shown_or_spoken_as_json(self):
+        with self.assertRaises(main.HTTPException):
+            main.make_assistant_response('{"reply":', "gemini", "salam", "ur-PK")
+
     def test_emotion_classifier_handles_roman_urdu_and_playfulness(self):
         self.assertEqual(main.classify_emotion("Mujhe bohat khushi ho rahi hai", "Yay!"), "happy")
         self.assertEqual(main.classify_emotion("Aaj dil udaas hai", "Main sun rahi hoon."), "caring")

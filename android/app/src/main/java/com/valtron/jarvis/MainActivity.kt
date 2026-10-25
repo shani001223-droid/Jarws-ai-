@@ -300,6 +300,11 @@ class MainActivity : Activity() {
             .show()
     }
 
+    fun supportsUrduSpeech(): Boolean {
+        val engine = textToSpeech ?: return false
+        return ttsReady && engine.isLanguageAvailable(Locale("ur", "PK")) >= TextToSpeech.LANG_AVAILABLE
+    }
+
     fun speakNative(text: String, language: String, pitch: Float, rate: Float): Boolean {
         val safeText = text.trim().take(3000)
         if (safeText.isBlank()) return false
@@ -322,6 +327,12 @@ class MainActivity : Activity() {
         }
     }
 
+    private fun notifyHoshiUrduUnavailable() {
+        runOnUiThread {
+            dashboardWebView?.evaluateJavascript("window.hoshiUrduUnavailable && window.hoshiUrduUnavailable()", null)
+        }
+    }
+
     private fun notifyHoshiVoiceError() {
         runOnUiThread {
             dashboardWebView?.evaluateJavascript(
@@ -338,14 +349,21 @@ class MainActivity : Activity() {
         engine.setSpeechRate(request.rate)
         val lang = request.language.substringBefore('-').lowercase(Locale.ROOT)
         val candidates = when (lang) {
-            "ur" -> listOf(Locale("ur", "PK"), Locale("hi", "IN"), Locale("en", "IN"), Locale.US)
+            "ur" -> listOf(Locale("ur", "PK"))
             "hi" -> listOf(Locale("hi", "IN"), Locale("en", "IN"), Locale.US)
             else -> listOf(Locale("en", "IN"), Locale.US, Locale.getDefault())
         }
         val available = candidates.distinct().firstOrNull {
             engine.isLanguageAvailable(it) >= TextToSpeech.LANG_AVAILABLE
         }
-        if (available != null) engine.setLanguage(available)
+        if (lang == "ur" && available == null) {
+            notifyHoshiUrduUnavailable()
+            return
+        }
+        if (available != null && engine.setLanguage(available) < TextToSpeech.LANG_AVAILABLE) {
+            if (lang == "ur") notifyHoshiUrduUnavailable() else notifyHoshiVoiceError()
+            return
+        }
         try {
             val voices = engine.voices.orEmpty().filter { available == null || it.locale.language == available.language }
             // Free-first voice selection: prefer an installed Pakistani Urdu voice,
@@ -363,7 +381,6 @@ class MainActivity : Activity() {
                     ?: voices.firstOrNull { it.locale.language == "ur" && isFeminineHint(it) }
                     ?: voices.firstOrNull { it.locale.language == "ur" && it.locale.country == "PK" }
                     ?: voices.firstOrNull { it.locale.language == "ur" }
-                    ?: voices.firstOrNull(isFeminineHint)
             } else {
                 voices.firstOrNull(isFeminineHint)
             }
@@ -375,13 +392,7 @@ class MainActivity : Activity() {
             request.text, TextToSpeech.QUEUE_FLUSH, Bundle(),
             "jarvis-" + System.currentTimeMillis()
         )
-        if (result == TextToSpeech.ERROR) {
-            engine.setLanguage(Locale.getDefault())
-            engine.speak(
-                request.text, TextToSpeech.QUEUE_FLUSH, Bundle(),
-                "jarvis-fallback-" + System.currentTimeMillis()
-            )
-        }
+        if (result == TextToSpeech.ERROR) notifyHoshiVoiceError()
     }
 
     fun stopNativeSpeech(): Boolean {

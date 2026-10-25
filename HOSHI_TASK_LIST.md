@@ -1,6 +1,6 @@
 # HOSHI AI — Master Transformation Task List
 
-**Current status (26 October 2026):** Core HOSHI persona, Roman Urdu/English mood guidance, context memory, privacy controls, responsive dashboard, native Android bridge, reminders, Gemini/Groq fallback, and existing hosting are implemented. The dashboard has been brought closer to the final user-provided reference with its HOSHI artwork, responsive hero layout, and a speaking waveform. Prior automated checks and live smoke tests passed; new regression tests for multi-turn context, speaking state, narrow-phone overlap, and native Urdu voice selection were added after those recorded runs and require a fresh CI result. **Realme Note 50 testing remains on hold until all other available work is complete, as requested.**
+**Current status (26 October 2026):** Core HOSHI persona, Roman Urdu/English mood guidance, context memory, privacy controls, responsive dashboard, native Android bridge, reminders, Gemini/Groq fallback, and existing hosting are implemented. The dashboard has been brought closer to the final user-provided reference with its HOSHI artwork, responsive hero layout, and a speaking waveform/mouth indicator. Prior automated checks and live smoke tests passed; new regression tests for multi-turn context, speaking state, narrow-phone overlap, and native Urdu voice selection were added after those recorded runs and require a fresh CI result. **Realme Note 50 testing remains on hold until all other available work is complete, as requested.**
 
 Repository: [shani001223-droid/Jarws-ai-](https://github.com/shani001223-droid/Jarws-ai-)
 
@@ -30,9 +30,9 @@ Final design sources are the two user-provided images. Keep the navy / electric-
 - [x] Automatic voice selection prefers installed Pakistani Urdu (`ur-PK`) when available, then another Urdu voice, then a best-effort feminine-sounding fallback.
 - [x] Native Android TTS now gives preference to a matching feminine-hinted `ur-PK` voice, then Urdu, then a fallback voice.
 - [x] Emotion-linked 8-expression avatar sprite.
-- [x] Visible animated waveform while speech is playing; it clears when speaking ends.
+- [x] Visible animated waveform and lightweight mouth overlay while speech is playing; both clear when speaking ends.
 - [ ] A natural female Pakistani Urdu accent cannot be guaranteed by code alone. It depends on installed Android/WebView speech engines and downloaded voices; physical voice quality has not been verified on the target phone.
-- [ ] True phoneme-synchronized lip-sync is not implemented. The current art is a static expression sprite, not a rigged avatar or timed mouth-shape set. The waveform is a speaking indicator, not lip-sync.
+- [ ] True phoneme-synchronized lip-sync is not implemented. The current art is a static expression sprite, not a rigged avatar or timed mouth-shape set. The mouth overlay approximates opening/closing during TTS; it is not timed to phonemes, and true lip-sync remains unimplemented.
 
 ## Phase 4 — Memory and personalization
 

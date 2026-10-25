@@ -9,7 +9,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-app = FastAPI(title="JARVIS Cloud API", version="0.3.0")
+app = FastAPI(title="JARVIS Cloud API", version="0.4.0")
 
 origins = [item.strip() for item in os.getenv("ALLOWED_ORIGINS", "*").split(",") if item.strip()]
 app.add_middleware(
@@ -20,8 +20,9 @@ app.add_middleware(
     allow_headers=["Content-Type", "Authorization"],
 )
 
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
-GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+# Override these in Render Environment if you want to use different model IDs.
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile").strip()
 
 
 class AssistantRequest(BaseModel):
@@ -38,7 +39,7 @@ def _groq_reply(message: str, language_hint: str) -> str:
     """Ask Groq using its OpenAI-compatible chat completions API."""
     api_key = os.getenv("GROQ_API_KEY", "").strip()
     if not api_key:
-        raise RuntimeError("GROQ_API_KEY is not configured.")
+        raise RuntimeError("GROQ_API_KEY is not configured in the running service.")
 
     body = {
         "model": GROQ_MODEL,
@@ -62,7 +63,6 @@ def _groq_reply(message: str, language_hint: str) -> str:
         with urlopen(req, timeout=35) as response:
             data = json.loads(response.read().decode("utf-8"))
     except HTTPError as exc:
-        # Do not expose credentials or provider request details to the client.
         try:
             error_data = json.loads(exc.read().decode("utf-8"))
             provider_message = str(error_data.get("error", {}).get("message", "")).strip()
@@ -70,7 +70,7 @@ def _groq_reply(message: str, language_hint: str) -> str:
             provider_message = ""
         detail = "Groq fallback failed with HTTP " + str(exc.code) + "."
         if exc.code == 429:
-            detail = "Groq fallback rate limit or quota reached."
+            detail = "Groq fallback rate limit or quota reached (HTTP 429)."
         if provider_message:
             detail += " Groq says: " + provider_message[:220]
         raise RuntimeError(detail) from None
@@ -93,6 +93,7 @@ def root():
     return {
         "ok": True,
         "service": "jarvis-cloud-api",
+        "version": app.version,
         "message": "JARVIS cloud API is running",
         "health": "/health",
         "assistant": "/api/assistant",
@@ -101,15 +102,19 @@ def root():
 
 @app.get("/health")
 def health():
+    gemini_configured = bool(os.getenv("GEMINI_API_KEY", "").strip())
+    groq_configured = bool(os.getenv("GROQ_API_KEY", "").strip())
     return {
         "ok": True,
         "service": "jarvis-cloud-api",
-        "ai_connected": bool(
-            os.getenv("GEMINI_API_KEY", "").strip()
-            or os.getenv("GROQ_API_KEY", "").strip()
-        ),
-        "gemini_configured": bool(os.getenv("GEMINI_API_KEY", "").strip()),
-        "groq_configured": bool(os.getenv("GROQ_API_KEY", "").strip()),
+        "version": app.version,
+        "ai_connected": gemini_configured or groq_configured,
+        "gemini_configured": gemini_configured,
+        "groq_configured": groq_configured,
+        "primary_provider": "gemini" if gemini_configured else ("groq" if groq_configured else None),
+        "fallback_provider": "groq" if gemini_configured and groq_configured else None,
+        "gemini_model": GEMINI_MODEL,
+        "groq_model": GROQ_MODEL if groq_configured else None,
     }
 
 
@@ -129,8 +134,8 @@ def assistant(payload: AssistantRequest):
         "or perform actions unless an available tool actually did so."
     )
 
-    # Gemini remains primary. If it is overloaded, rate-limited, or unavailable,
-    # use Groq as a backup when GROQ_API_KEY is configured.
+    # Gemini is primary. A temporary overload (503), rate limit (429), server
+    # error, timeout, or malformed response triggers Groq when its key is set.
     if gemini_key:
         body = {
             "systemInstruction": {"parts": [{"text": language_hint}]},
@@ -143,20 +148,18 @@ def assistant(payload: AssistantRequest):
             headers={"Content-Type": "application/json"},
             method="POST",
         )
+        gemini_problem = "Gemini did not return a usable response."
+        should_fallback = False
         try:
             with urlopen(req, timeout=35) as response:
                 data = json.loads(response.read().decode("utf-8"))
-            parts = (
-                data.get("candidates", [{}])[0]
-                .get("content", {})
-                .get("parts", [])
-            )
-            reply = "\\n".join(
-                part.get("text", "") for part in parts if part.get("text")
+            parts = (data.get("candidates") or [{}])[0].get("content", {}).get("parts", [])
+            reply = "\n".join(
+                str(part.get("text", "")) for part in parts if part.get("text")
             ).strip()
             if reply:
                 return AssistantResponse(reply=reply, mode="gemini")
-            gemini_problem = "Gemini did not return text."
+            gemini_problem = "Gemini returned no text (possibly blocked or empty output)."
             should_fallback = True
         except HTTPError as exc:
             try:
@@ -164,27 +167,13 @@ def assistant(payload: AssistantRequest):
                 google_message = str(error_data.get("error", {}).get("message", "")).strip()
             except (json.JSONDecodeError, UnicodeDecodeError, AttributeError):
                 google_message = ""
-            if exc.code in (503, 429, 500, 502, 504):
-                gemini_problem = "Gemini service returned HTTP " + str(exc.code) + "."
-                if google_message:
-                    gemini_problem += " Google says: " + google_message[:220]
-                should_fallback = True
-            elif exc.code in (400, 401, 403, 404):
-                detail = "Gemini rejected the request. Check GEMINI_API_KEY, API access, and GEMINI_MODEL."
-                if google_message:
-                    detail += " Google says: " + google_message[:300]
-                # Configuration errors are not usually fixed by switching providers.
-                if not groq_key:
-                    raise HTTPException(status_code=502, detail=detail) from None
-                gemini_problem = detail
-                should_fallback = True
-            else:
-                gemini_problem = "Gemini service returned HTTP " + str(exc.code) + "."
-                if google_message:
-                    gemini_problem += " Google says: " + google_message[:220]
-                should_fallback = False
+            gemini_problem = "Gemini service returned HTTP " + str(exc.code) + "."
+            if google_message:
+                gemini_problem += " Google says: " + google_message[:220]
+            # Try backup for temporary provider errors and configuration/model errors.
+            should_fallback = exc.code in (400, 401, 403, 404, 408, 429, 500, 502, 503, 504)
         except (URLError, TimeoutError):
-            gemini_problem = "Gemini connection timed out or failed."
+            gemini_problem = "Gemini connection failed or timed out."
             should_fallback = True
         except (json.JSONDecodeError, UnicodeDecodeError, IndexError, KeyError, TypeError):
             gemini_problem = "Gemini returned an invalid response."
@@ -192,10 +181,7 @@ def assistant(payload: AssistantRequest):
 
         if should_fallback and groq_key:
             try:
-                return AssistantResponse(
-                    reply=_groq_reply(message, language_hint),
-                    mode="groq",
-                )
+                return AssistantResponse(reply=_groq_reply(message, language_hint), mode="groq")
             except RuntimeError as groq_error:
                 raise HTTPException(
                     status_code=502,
@@ -204,11 +190,11 @@ def assistant(payload: AssistantRequest):
         if should_fallback:
             raise HTTPException(
                 status_code=503,
-                detail=gemini_problem + " Add GROQ_API_KEY in Render Environment to enable automatic fallback.",
+                detail=gemini_problem + " Groq fallback is unavailable because GROQ_API_KEY is missing from this running service. Attach the Environment Group to this service and redeploy.",
             ) from None
         raise HTTPException(status_code=502, detail=gemini_problem) from None
 
-    # If Gemini is not configured, Groq can still serve requests.
+    # If Gemini is not configured, Groq can serve requests on its own.
     if groq_key:
         try:
             return AssistantResponse(reply=_groq_reply(message, language_hint), mode="groq")
@@ -217,5 +203,5 @@ def assistant(payload: AssistantRequest):
 
     raise HTTPException(
         status_code=503,
-        detail="No AI key is configured. Add GEMINI_API_KEY or GROQ_API_KEY in Render Environment.",
+        detail="No AI key is configured in the running service. Add GEMINI_API_KEY or GROQ_API_KEY to the Render Environment Group, attach it to this service, and redeploy.",
     )

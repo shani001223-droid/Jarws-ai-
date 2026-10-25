@@ -133,7 +133,7 @@ async function main() {
     await page.waitForFunction(() => document.querySelector("#connection")?.textContent === "AI KEYS CONFIGURED", undefined, { timeout: 5000 });
 
     // Local command path should work without a cloud call.
-    await page.locator('[data-cmd="what time is it"]').click();
+    await page.locator('[data-cmd="what time is it"]').first().click();
     await page.waitForFunction(() => /Abhi waqt|The time is/.test(document.querySelector("#reply")?.textContent || ""), undefined, { timeout: 3000 });
 
     // Cloud chat should display the reply and change the expression.

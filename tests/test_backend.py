@@ -91,7 +91,7 @@ class AssistantApiTests(unittest.TestCase):
         request = mocked.call_args.args[0]
         self.assertEqual(request.full_url, "https://generativelanguage.googleapis.com/v1beta/interactions")
         self.assertEqual(request.get_header("X-goog-api-key"), "test-gemini-key")
-        self.assertEqual(request.get_header("User-agent"), "JARVIS-Cloud-Assistant/0.7.0 (+https://jarws-ai-1.onrender.com)")
+        self.assertEqual(request.get_header("User-agent"), "HOSHI-Cloud-Assistant/0.9.1 (+https://jarws-ai-1.onrender.com)")
         body = json.loads(request.data.decode("utf-8"))
         self.assertEqual(body["model"], main.GEMINI_MODEL)
         self.assertEqual(body["input"], "Hello")
@@ -229,7 +229,7 @@ class AssistantApiTests(unittest.TestCase):
         self.assertEqual(mocked.call_count, 2)
         fallback_request = mocked.call_args.args[0]
         self.assertEqual(fallback_request.full_url, "https://api.groq.com/openai/v1/chat/completions")
-        self.assertEqual(fallback_request.get_header("User-agent"), "JARVIS-Cloud-Assistant/0.7.0 (+https://jarws-ai-1.onrender.com)")
+        self.assertEqual(fallback_request.get_header("User-agent"), "HOSHI-Cloud-Assistant/0.9.1 (+https://jarws-ai-1.onrender.com)")
 
 
 if __name__ == "__main__":

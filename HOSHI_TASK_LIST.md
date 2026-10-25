@@ -1,6 +1,6 @@
 # HOSHI AI — Master Transformation Task List
 
-**Current status (26 October 2026):** Core HOSHI persona, Roman Urdu/English mood guidance, context memory, privacy controls, responsive dashboard, native Android bridge, reminders, Gemini/Groq fallback, and existing hosting are implemented. The dashboard has been brought closer to the final user-provided reference with its HOSHI artwork, responsive hero layout, and a speaking waveform/mouth indicator. Prior automated checks and live smoke tests passed; new regression tests for multi-turn context, speaking state, narrow-phone overlap, and native Urdu voice selection were added after those recorded runs and require a fresh CI result. **Realme Note 50 testing remains on hold until all other available work is complete, as requested.**
+**Current status (26 October 2026):** Core HOSHI persona, Roman Urdu/English mood guidance, context memory, privacy controls, responsive dashboard, native Android bridge, reminders, Gemini/Groq fallback, and existing hosting are implemented. The dashboard has been brought closer to the final user-provided reference with its HOSHI artwork, responsive hero layout, and a speaking waveform/mouth indicator. Prior automated checks and live smoke tests passed; new regression tests for multi-turn context, speaking waveform/mouth lifecycle, narrow-phone overlap, and native Urdu voice selection were added after those recorded runs and require a fresh CI result. **Realme Note 50 testing remains on hold until all other available work is complete, as requested.**
 
 Repository: [shani001223-droid/Jarws-ai-](https://github.com/shani001223-droid/Jarws-ai-)
 
@@ -66,7 +66,7 @@ Final design sources are the two user-provided images. Keep the navy / electric-
 - [x] Previous live backend health/AI smoke test passed: [run #35](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40237196850).
 - [x] Previous Android debug APK build passed and uploaded `hoshi-debug-apk`: [run #32](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40237013290).
 - [x] Rollback steps and release pre-checks documented in [`DEPLOYMENT_ROLLBACK.md`](https://github.com/shani001223-droid/Jarws-ai-/blob/main/DEPLOYMENT_ROLLBACK.md).
-- [ ] Obtain a new green automated run after the newest dashboard E2E tests, native voice-priority change, and narrow-phone overlap fix.
+- [ ] Obtain a new green automated run after the newest dashboard E2E tests, approximate mouth-animation lifecycle tests, native voice-priority change, and narrow-phone overlap fix.
 - [ ] Confirm the latest Android APK workflow succeeds after the native TTS selection change.
 - [ ] Final end-to-end live AI conversation / role-play / real voice acceptance is not equivalent to mocked CI; voice behavior depends on installed device features and the AI provider.
 - [ ] Install the current APK and test on the **Realme Note 50 only after all other available code and automated work is complete**. This device test is deliberately deferred.

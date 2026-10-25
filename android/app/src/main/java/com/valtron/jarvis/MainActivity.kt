@@ -6,7 +6,6 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.text.InputType
@@ -24,18 +23,21 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
-import android.widget.SeekBar
+import android.speech.tts.TextToSpeech
+import java.util.Locale
 
 class MainActivity : Activity() {
+    private data class NativeSpeech(val text: String, val language: String, val pitch: Float, val rate: Float)
+
     companion object {
-        private const val REQUEST_OVERLAY = 4101
         private const val REQUEST_MICROPHONE = 4102
         private const val REQUEST_NOTIFICATIONS = 4103
         private const val DASHBOARD_URL = "https://jarws-ai-1.onrender.com/?native=1"
     }
 
-    private lateinit var overlayButton: Button
-    private var startOverlayWhenPermissionReturns = false
+    private var textToSpeech: TextToSpeech? = null
+    private var ttsReady = false
+    private var pendingSpeech: NativeSpeech? = null
     private var pendingWebPermission: PermissionRequest? = null
     private var pendingReminder: Pair<String, Int>? = null
 
@@ -43,6 +45,18 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         window.statusBarColor = Color.rgb(7, 17, 30)
         window.navigationBarColor = Color.rgb(7, 17, 30)
+
+        textToSpeech = TextToSpeech(applicationContext) { result ->
+            runOnUiThread {
+                if (result == TextToSpeech.SUCCESS) {
+                    ttsReady = true
+                    textToSpeech?.setPitch(1.12f)
+                    val queued = pendingSpeech
+                    pendingSpeech = null
+                    if (queued != null) speakNativeOnUiThread(queued)
+                }
+            }
+        }
 
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -60,63 +74,6 @@ class MainActivity : Activity() {
         root.addView(title, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
         ))
-
-        val sizeRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-        }
-        val initialIconSize = getSharedPreferences(
-            FloatingAssistantService.PREFS_NAME, MODE_PRIVATE
-        ).getInt(FloatingAssistantService.PREFS_SIZE_KEY, 62).coerceIn(44, 100)
-        val sizeLabel = TextView(this).apply {
-            text = "Icon size: ${initialIconSize} dp"
-            textSize = 12f
-            setTextColor(Color.rgb(154, 178, 198))
-        }
-        val sizeSlider = SeekBar(this).apply {
-            min = 44
-            max = 100
-            progress = initialIconSize
-            setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                    val size = progress.coerceIn(44, 100)
-                    sizeLabel.text = "Icon size: ${size} dp"
-                    getSharedPreferences(
-                        FloatingAssistantService.PREFS_NAME, MODE_PRIVATE
-                    ).edit().putInt(FloatingAssistantService.PREFS_SIZE_KEY, size).apply()
-                    if (fromUser && FloatingAssistantService.isRunning) {
-                        val resize = Intent(this@MainActivity, FloatingAssistantService::class.java).apply {
-                            action = FloatingAssistantService.ACTION_RESIZE
-                            putExtra(FloatingAssistantService.EXTRA_SIZE_DP, size)
-                        }
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            startForegroundService(resize)
-                        } else {
-                            startService(resize)
-                        }
-                    }
-                }
-
-                override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
-                override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
-            })
-        }
-        sizeRow.addView(sizeLabel, LinearLayout.LayoutParams(dp(105), ViewGroup.LayoutParams.WRAP_CONTENT))
-        sizeRow.addView(sizeSlider, LinearLayout.LayoutParams(0, dp(40), 1f))
-        root.addView(sizeRow)
-
-        val controls = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER
-        }
-        overlayButton = makeButton("Enable floating icon") { enableOverlay() }
-        controls.addView(overlayButton, LinearLayout.LayoutParams(0, dp(44), 1f))
-        val stopButton = makeButton("Stop icon") {
-            stopService(Intent(this, FloatingAssistantService::class.java))
-            updateOverlayButton()
-        }
-        controls.addView(stopButton, LinearLayout.LayoutParams(0, dp(44), 1f))
-        root.addView(controls)
 
         val featureButtons = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -137,14 +94,6 @@ class MainActivity : Activity() {
         root.addView(listRemindersButton, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, dp(40)
         ))
-
-        val hint = TextView(this).apply {
-            text = "Floating icon runs only after you enable it. Tap the orb to return to JARVIS."
-            textSize = 12f
-            setTextColor(Color.rgb(154, 178, 198))
-            setPadding(dp(4), dp(5), dp(4), dp(7))
-        }
-        root.addView(hint)
 
         val webView = WebView(this)
         webView.setBackgroundColor(Color.rgb(7, 17, 30))
@@ -209,7 +158,6 @@ class MainActivity : Activity() {
             ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f
         ))
         setContentView(root)
-        updateOverlayButton()
         webView.loadUrl(DASHBOARD_URL)
     }
 
@@ -343,55 +291,70 @@ class MainActivity : Activity() {
             .show()
     }
 
-    private fun enableOverlay() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-            startOverlayWhenPermissionReturns = true
-            val intent = Intent(
-                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                Uri.parse("package:$packageName")
+    fun speakNative(text: String, language: String, pitch: Float, rate: Float): Boolean {
+        val safeText = text.trim().take(3000)
+        if (safeText.isBlank()) return false
+        val request = NativeSpeech(
+            safeText, language.take(20),
+            pitch.coerceIn(0.8f, 1.6f), rate.coerceIn(0.75f, 1.15f)
+        )
+        runOnUiThread {
+            if (!ttsReady || textToSpeech == null) pendingSpeech = request
+            else speakNativeOnUiThread(request)
+        }
+        return true
+    }
+
+    private fun speakNativeOnUiThread(request: NativeSpeech) {
+        val engine = textToSpeech ?: run { pendingSpeech = request; return }
+        if (!ttsReady) { pendingSpeech = request; return }
+        engine.stop()
+        engine.setPitch(request.pitch)
+        engine.setSpeechRate(request.rate)
+        val lang = request.language.substringBefore('-').lowercase(Locale.ROOT)
+        val candidates = when (lang) {
+            "ur" -> listOf(Locale("ur", "PK"), Locale("hi", "IN"), Locale("en", "IN"), Locale.US)
+            "hi" -> listOf(Locale("hi", "IN"), Locale("en", "IN"), Locale.US)
+            else -> listOf(Locale("en", "IN"), Locale.US, Locale.getDefault())
+        }
+        val available = candidates.distinct().firstOrNull {
+            engine.isLanguageAvailable(it) >= TextToSpeech.LANG_AVAILABLE
+        }
+        if (available != null) engine.setLanguage(available)
+        try {
+            val voices = engine.voices.orEmpty().filter { available == null || it.locale.language == available.language }
+            val preferred = voices.firstOrNull {
+                it.name.contains("female", ignoreCase = true) ||
+                it.name.contains("feminine", ignoreCase = true) ||
+                it.name.contains("sfg", ignoreCase = true)
+            }
+            if (preferred != null) engine.voice = preferred
+        } catch (_: Exception) {
+            // Some Android speech engines do not expose selectable voices.
+        }
+        val result = engine.speak(
+            request.text, TextToSpeech.QUEUE_FLUSH, Bundle(),
+            "jarvis-" + System.currentTimeMillis()
+        )
+        if (result == TextToSpeech.ERROR) {
+            engine.setLanguage(Locale.getDefault())
+            engine.speak(
+                request.text, TextToSpeech.QUEUE_FLUSH, Bundle(),
+                "jarvis-fallback-" + System.currentTimeMillis()
             )
-            startActivityForResult(intent, REQUEST_OVERLAY)
-            return
-        }
-        startFloatingService()
-    }
-
-    private fun startFloatingService() {
-        val intent = Intent(this, FloatingAssistantService::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(intent)
-        } else {
-            startService(intent)
-        }
-        updateOverlayButton()
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_OVERLAY) {
-            if (Settings.canDrawOverlays(this) && startOverlayWhenPermissionReturns) {
-                startOverlayWhenPermissionReturns = false
-                startFloatingService()
-            } else {
-                startOverlayWhenPermissionReturns = false
-                updateOverlayButton()
-            }
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        updateOverlayButton()
+    fun stopNativeSpeech(): Boolean {
+        runOnUiThread { textToSpeech?.stop(); pendingSpeech = null }
+        return true
     }
 
-    private fun updateOverlayButton() {
-        if (::overlayButton.isInitialized) {
-            overlayButton.text = if (Settings.canDrawOverlays(this)) {
-                "Start / show floating icon"
-            } else {
-                "Grant overlay permission"
-            }
-        }
+    override fun onDestroy() {
+        try { textToSpeech?.stop(); textToSpeech?.shutdown() } catch (_: Exception) {}
+        textToSpeech = null
+        ttsReady = false
+        super.onDestroy()
     }
 
     override fun onRequestPermissionsResult(

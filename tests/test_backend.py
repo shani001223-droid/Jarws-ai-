@@ -23,6 +23,19 @@ class FakeResponse:
 
 
 class AssistantApiTests(unittest.TestCase):
+
+    def test_health_reports_interactions_api_and_provider_flags(self):
+        with patch.dict(os.environ, {
+            "GEMINI_API_KEY": "test-gemini-key",
+            "GROQ_API_KEY": "test-groq-key",
+        }):
+            health = main.health()
+
+        self.assertEqual(health["version"], "0.5.0")
+        self.assertEqual(health["gemini_api"], "interactions")
+        self.assertTrue(health["gemini_configured"])
+        self.assertTrue(health["groq_configured"])
+        self.assertEqual(health["gemini_model"], "gemini-3.8-flash")
     def test_gemini_uses_interactions_api_and_extracts_model_output(self):
         payload = {
             "status": "completed",

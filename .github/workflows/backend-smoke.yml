@@ -1,0 +1,56 @@
+name: JARVIS live backend smoke test
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "cloud_backend/main.py"
+      - ".github/workflows/backend-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Wait for the updated Render backend
+        env:
+          API_BASE: https://jarws-ai-2.onrender.com
+        run: |
+          set -euo pipefail
+          health=""
+          for attempt in $(seq 1 30); do
+            if health=$(curl -fsS --max-time 10 "$API_BASE/health"); then
+              if echo "$health" | jq -e '.gemini_api == "interactions" and .gemini_model == "gemini-3.8-flash" and .ai_connected == true' >/dev/null; then
+                echo "$health" | jq '{version, gemini_api, gemini_model, groq_configured, ai_connected}'
+                break
+              fi
+            fi
+            if [ "$attempt" -eq 30 ]; then
+              echo "Timed out waiting for the updated backend. Last health response: $health"
+              exit 1
+            fi
+            sleep 5
+          done
+      - name: Send one live AI request
+        env:
+          API_BASE: https://jarws-ai-2.onrender.com
+        run: |
+          set -euo pipefail
+          response=$(curl -sS --max-time 60 -w '\n%{http_code}' \
+            -X POST "$API_BASE/api/assistant" \
+            -H 'Content-Type: application/json' \
+            --data '{"message":"Automated live smoke test. Reply with exactly: JARVIS OK.","locale":"en"}')
+          http_code="${response##*$'\n'}"
+          body="${response%$'\n'*}"
+          if [ "$http_code" != "200" ]; then
+            echo "Live assistant request failed with HTTP $http_code"
+            echo "$body"
+            exit 1
+          fi
+          echo "$body" | jq -e '(.reply | type == "string" and length > 0) and (.mode == "gemini" or .mode == "groq")' >/dev/null
+          echo "PASS — live AI provider: $(echo "$body" | jq -r '.mode')"
+          echo "Reply: $(echo "$body" | jq -r '.reply')"

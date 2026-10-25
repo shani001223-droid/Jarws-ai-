@@ -9,7 +9,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-app = FastAPI(title="JARVIS Cloud API", version="0.4.0")
+app = FastAPI(title="JARVIS Cloud API", version="0.5.0")
 
 origins = [item.strip() for item in os.getenv("ALLOWED_ORIGINS", "*").split(",") if item.strip()]
 app.add_middleware(
@@ -108,6 +108,7 @@ def health():
         "ok": True,
         "service": "jarvis-cloud-api",
         "version": app.version,
+        "gemini_api": "interactions" if gemini_configured else None,
         "ai_connected": gemini_configured or groq_configured,
         "gemini_configured": gemini_configured,
         "groq_configured": groq_configured,

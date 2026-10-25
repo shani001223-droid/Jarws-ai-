@@ -5,7 +5,7 @@ A mobile-first HOSHI AI companion for Android, using a hosted backend and a resp
 ## Current features
 
 - HOSHI dashboard with responsive sidebar navigation, chat, voice, memory, settings, and external app shortcuts.
-- Installable web-app metadata declares the HOSHI SVG app icon at 192×192 and 512×512 sizes, and the browser tab uses the same icon.
+- Installable web-app metadata uses a scalable SVG HOSHI app icon (`sizes: any`) with explicit 512×512 view dimensions; the browser tab uses the same icon.
 - HOSHI identity prompt with language matching, affectionate/playful tone, honesty, and emotional boundaries.
 - Conversation emotion labels (happy, sad, affectionate, excited, shy, concerned, annoyed, playful, thinking, caring), character-sheet expression switching, TTS pitch/speed modulation, an animated waveform, and a lightweight mouth overlay while HOSHI speaks.
 - Optional local conversation memory with bounded recent context, entry-by-entry review/edit/delete, clear/disable controls, and a tested privacy filter for common credentials, token formats, recovery phrases, OTPs, email addresses, phone-like strings, and long numeric identifiers. Privacy detection is heuristic; it cannot guarantee detection of every sensitive detail.

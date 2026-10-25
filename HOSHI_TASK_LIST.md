@@ -14,7 +14,7 @@
 - [x] Emotional boundaries in the system prompt: no guilt-tripping, emotional blackmail, coercion, or manipulative dependency.
 
 ## Phase 2 — Intelligence and emotional understanding
-- [ ] Mood detection based on user wording and conversation context.
+- [x] Rule-based mood detection for English and Roman Urdu covers sadness, frustration, anxiety, affection, playfulness, positivity, and curiosity; short acknowledgements can carry forward only the immediately previous user mood. This is a lightweight heuristic, not a trained emotion model.
 - [x] Bounded recent-turn context is sent to the AI; robust context construction avoids accidentally dropping the last saved turn when a message is filtered from memory. Topic tracking remains basic.
 - [x] A suitable emotion label is returned with cloud replies, with a deterministic fallback classifier.
 - [ ] Natural personality; reduce repetitive, scripted, robotic replies.
@@ -23,7 +23,7 @@
 ## Phase 3 — Voice and expressions
 - [ ] Female Urdu voice with Pakistani Urdu accent; prefer free-first TTS.
 - [x] Emotional TTS pitch/rate modulation is implemented where the active speech engine supports it; physical voice quality still needs testing.
-- [x] Voice input and speech-to-text wiring are implemented through the available browser/WebView APIs; target-device verification pending.
+- [x] Voice input and speech-to-text wiring are implemented through available browser/WebView APIs; target-device verification remains pending.
 - [x] Voice conversation flow and voice-reply control are implemented; natural turn-taking acceptance testing is pending.
 - [x] Avatar expressions: an 8-tile WebP sprite cut from the final character sheet now switches for happy, affectionate, excited, thinking, sad/concerned, playful, shy, and annoyed states.
 - [ ] Lip-sync with avatar mouth movement if technically feasible.
@@ -36,12 +36,12 @@
 - [x] Local-memory filter blocks common credential language, token formats, recovery phrases, OTPs, email addresses, phone-like strings, and long numeric identifiers. It is heuristic, not a guarantee.
 
 ## Phase 5 — JARVIS interface and Android
-- [ ] Mobile-first responsive UI for the Realme Note 50.
+- [x] Responsive UI breakpoints for desktop, tablet, and phone widths are implemented; Realme Note 50 runtime/layout verification remains pending.
 - [x] HOSHI home screen with avatar, chat, microphone/voice controls, and settings exists in the frontend.
 - [x] Emotion-driven avatar expression sprite positions and glow changes are mapped to the response emotion label.
 - [x] Local conversation history is displayed and can be reviewed, edited, deleted entry-by-entry, disabled, or cleared.
 - [x] Settings for voice, language, personality, memory, and auto-speak are available; language/voice-reply/wake-word selections now persist locally.
-- [ ] Graceful failure states exist, but latency/data-use have not been measured and TTS/network edge cases still need end-to-end verification.
+- [x] User-facing cloud timeout/offline/provider errors and speech-recognition/TTS failure messages exist; measured latency/data use and device-specific edge cases still need verification.
 - [ ] Follow the final user-provided HOSHI dashboard image; do not redesign it without permission.
 - [x] Source audit confirms no BTC/Bitcoin text or floating-icon selectors remain in `index.html`; live Render visual verification is still pending.
 
@@ -54,7 +54,7 @@
 
 ## Phase 7 — Testing and delivery
 - [ ] Full end-to-end acceptance tests for chat, emotion/role-play quality, memory behavior, real voice, and avatar state changes are still pending. Automated backend, privacy-filter, frontend-contract, and JS syntax tests now pass.
-- [ ] Handle network failures, API limits, and TTS errors.
+- [x] Cloud HTTP/provider errors, timeouts, offline failures, and speech recognition restart failures now produce user-facing recovery messages; physical TTS/microphone acceptance remains pending.
 - [ ] Test on a real Realme Note 50 Android device.
 - [ ] Deploy safely to existing hosting and provide rollback if needed.
 - [ ] Final report clearly separates working features, limitations, and pending work.
@@ -67,14 +67,14 @@
 ## GitHub Actions verification
 - [x] `HOSHI basic checks` run #112 passed on commit `e4141eea0e01396be09380bb4b2e2095a68e1a26`; it includes Python tests, JavaScript parser tests, privacy-filter tests, frontend contract checks, and JS syntax compilation.
 - [x] `Build HOSHI Android APK` run #24 passed and uploaded `hoshi-debug-apk` on commit `c5737b886e108c9aa368a9ce8efe27f88f8073a2`. No Android source files changed after that APK build; regenerate after future native Android changes.
-- [x] Latest implementation-code workflow run #112 and GitHub Pages publish run #137 both passed; the task-list/README edits themselves will trigger another routine CI run.
+- [x] Latest confirmed `HOSHI basic checks` run #134 and GitHub Pages publish run #159 passed after mood-detection, voice-recovery, and cache updates. The live backend smoke test #25 also passed after the backend mood change.
 - [ ] Install the generated debug APK and verify core flows on the target Android phone.
 
 ## Initial audit notes
 - [x] Read the repository README and inspect the CI workflow definition at `.github/workflows/ci.yml`.
 - [x] Inspect the Android APK workflow definition at `.github/workflows/android-apk.yml`.
 - [x] Backend health and live AI request were verified by HOSHI live backend smoke test run #23; no backend code changed in the later frontend/privacy commits.
-- [ ] Re-check current Render frontend `https://jarws-ai-1.onrender.com` after the sprite/privacy update and confirm the live visual display and BTC/floating-icon removal. This check is not confirmed from the current tool session.
+- [ ] Re-check current Render frontend `https://jarws-ai-1.onrender.com` after the voice-recovery/cache update and confirm the live visual display and BTC/floating-icon removal. This check is not confirmed from the current tool session.
 - [x] GitHub Actions status checked: HOSHI basic checks #112 and GitHub Pages publish #137 passed on implementation commit `e4141eea0e01396be09380bb4b2e2095a68e1a26`.
 - [ ] Real-device Android testing: **pending**.
 
@@ -89,7 +89,7 @@
 - [x] Phase 5 foundation: responsive dashboard navigation, app shortcuts, HOSHI branding, emotion-linked expression sprite, memory history controls, and Android notification/activity labels updated.
 - [x] Phase 6 foundation: existing Gemini/Groq fallback preserved; API keys remain environment variables; README documents current limitations.
 - [x] Frontend inline JavaScript compiles successfully in CI; dedicated frontend contract tests also pass.
-- [x] Render frontend latest deployment reached **live**.
+- [x] A previous Render frontend deployment reached **live**; current live visual confirmation after the latest frontend changes remains pending.
 - [x] Render backend deployment reached **live** at commit `21d6409ddfd45055e32e573fcfb3d2a8133ab253`; Render logs showed repeated `GET /health` responses with HTTP 200 and no recent error-level application logs during the check.
 - [x] GitHub Actions run #112 (basic checks) and run #137 (Pages deployment) passed on implementation/test commit `e4141eea0e01396be09380bb4b2e2095a68e1a26`.
 - [ ] Realme Note 50 device testing: pending by design; do not start until the remaining task list is addressed.
@@ -97,11 +97,15 @@
 
 ## Latest implementation update (2026-10-26)
 - [x] Added `assets/hoshi-expressions.webp`, an 8-state sprite made from the final user-provided character sheet; the dashboard switches sprite positions based on `data-emotion`.
-- [x] Bumped the service-worker cache to `hoshi-shell-v9`; it precaches both the emotion sprite and `memory-privacy.js`.
+- [x] Bumped the service-worker cache to `hoshi-shell-v10`; it precaches the emotion sprite and privacy helper and fetches the current online document before using offline cache.
 - [x] Added reusable `memory-privacy.js` and Node tests for credentials, token formats, recovery phrase language, OTPs, email addresses, phone-like strings, and long numeric strings.
 - [x] Added Python frontend-contract checks for duplicate/missing HTML IDs, sprite file signature, emotion mappings, local memory controls, and service-worker cache contents.
 - [x] Corrected a Gemini multi-block reply separator bug and added a regression test; the assertion was corrected after the first test run exposed an over-escaped expectation.
 - [ ] Physical target-device testing remains deferred until the other pending work is addressed, as requested.
+
+- [x] Phase 2 mood signal added: deterministic English/Roman Urdu phrase detection plus safe continuity across short acknowledgements; backend tests cover key moods, context carry, and neutral-context reset.
+- [x] Phase 3 voice failure handling improved: permission, missing microphone, unsupported language, network, and unknown speech-recognition errors stop automatic restart loops and display actionable states; service-worker cache bumped to `hoshi-shell-v10`.
+- [x] Current validation: HOSHI basic checks #134 and GitHub Pages publish #159 passed; live backend smoke test #25 passed after the mood implementation.
 
 ## Working rules
 1. This document records requirements; it does not mean implementation is complete.

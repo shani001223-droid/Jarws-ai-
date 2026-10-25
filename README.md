@@ -6,11 +6,8 @@ A mobile-first personal AI assistant prototype for Android, with a hosted AI bac
 
 - Hosted assistant dashboard with Urdu/Roman Urdu and English text commands.
 - Cloud AI using Gemini Interactions API with Groq as a fallback provider.
-- Read-only BTC-USD spot market snapshot (price, 24-hour change, high/low and volume) through the public Coinbase Exchange REST API; it does not place trades or provide futures/liquidation data.
 - Voice reply settings: choose an installed phone voice, adjust pitch/speed, and play a preview.
-- Generated anime avatar shown on the dashboard and the draggable Android floating icon.
-- Floating icon size slider, saved locally on the phone.
-- The floating service has a persistent Android notification and an explicit Stop action.
+- Generated anime avatar shown in the dashboard.
 - Local one-shot reminders can be listed/cancelled from **View / cancel reminders**, scheduled from **Set reminder**, or created by typing commands such as “remind me to drink water in 10 minutes,” “remind me in 2 hours to call mom,” or “mujhe 10 minute baad pani peene yaad dilao.” They use Android notifications and are scheduled again after reboot, without needing cloud AI to trigger.
 - Optional user-triggered Accessibility actions: Back, Home, Swipe up, and Swipe down. The service does not retrieve screen content or upload screen text.
 - GitHub Actions runs Python tests, JavaScript syntax checks, a live backend smoke test, and an Android debug APK build.
@@ -30,7 +27,6 @@ A mobile-first personal AI assistant prototype for Android, with a hosted AI bac
 ## Important limitations
 
 - This is a debug/test APK, not a Play Store release. It has only been build-tested with GitHub Actions; it has not been validated on every phone model.
-- The floating icon opens the JARVIS dashboard. Basic Back/Home/swipe actions require the user to manually enable JARVIS Accessibility in Android Settings. This version does not tap arbitrary app buttons, read screen text, or control the whole phone.
 - Voice quality and voice choices depend on the speech engines installed on the Android device. The dashboard can select and tune available voices but cannot install a premium neural voice on its own.
 - The hosted backend requires internet. Gemini free-tier limits can be exhausted; Groq is configured as the backup, but provider policies and free limits can change. Local reminders run on-device; Android power-saving may deliver them a little late.
 - API keys remain in the private Render environment; never place them in frontend code, an APK, or a public repository.
@@ -39,12 +35,10 @@ A mobile-first personal AI assistant prototype for Android, with a hosted AI bac
 
 - Dashboard: https://jarws-ai-1.onrender.com
 - Backend health: https://jarws-ai-2.onrender.com/health
-- BTC market snapshot: https://jarws-ai-2.onrender.com/api/market/btc
 - Repository: https://github.com/shani001223-droid/Jarws-ai-
 
-## Next roadmap
+## Remaining real-device checks
 
-1. Test the current APK on the target Android phone and refine the anime/voice experience.
-2. Test basic accessibility gestures on the target phone and refine voice behavior.
-3. Test local reminder delivery and reboot recovery on the target phone.
-4. Build separate, user-approved integrations for trading analysis, Flora business management, and social/video automation instead of giving one assistant unlimited access by default.
+- Install the latest debug APK and verify audible speech through Android Text-to-Speech. The app uses native TTS first and browser speech synthesis only as a browser fallback.
+- Test microphone permission and voice recognition on the phone; Web Speech recognition support depends on installed browser/WebView support.
+- Test local reminder delivery and reboot recovery on the target phone.

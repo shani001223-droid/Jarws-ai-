@@ -11,7 +11,7 @@ class ModularBackendTests(unittest.TestCase):
         with patch.dict(os.environ, {"GEMINI_API_KEY":"g", "GROQ_API_KEY":"q"}): result = main.health()
         self.assertTrue(result["ok"]); self.assertEqual(result["gemini_api"], "interactions")
         self.assertTrue(result["gemini_configured"]); self.assertTrue(result["groq_configured"])
-        self.assertEqual(result["assistant"], "/api/assistant")
+        self.assertEqual(main.root()["assistant"], "/api/assistant")
     def test_api_payload_and_response_contract(self):
         payload = main.AssistantRequest(message="Hello", locale="en")
         with patch("cloud_backend.jarvis_app.api.answer_message", return_value=("Hi there", "gemini")): result = main.assistant(payload)

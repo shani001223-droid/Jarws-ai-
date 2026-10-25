@@ -14,9 +14,45 @@ import org.json.JSONObject
  * This intentionally uses inexact alarms so no special exact-alarm permission is needed.
  */
 object ReminderScheduler {
+    data class Reminder(val id: Int, val title: String, val fireAt: Long)
+
     const val ACTION_FIRE = "com.valtron.jarvis.REMINDER_FIRE"
     private const val PREFS = "jarvis_local_reminders"
     private const val ITEMS = "items"
+
+    fun list(context: Context): List<Reminder> {
+        val items = readItems(context)
+        val reminders = mutableListOf<Reminder>()
+        for (i in 0 until items.length()) {
+            val item = items.optJSONObject(i) ?: continue
+            val id = item.optInt("id", 0)
+            val title = item.optString("title", "JARVIS reminder")
+            val fireAt = item.optLong("fireAt", 0L)
+            if (id > 0 && fireAt > System.currentTimeMillis()) {
+                reminders.add(Reminder(id, title, fireAt))
+            }
+        }
+        return reminders.sortedBy { it.fireAt }
+    }
+
+    fun cancel(context: Context, id: Int) {
+        val intent = Intent(context, ReminderReceiver::class.java).apply {
+            action = ACTION_FIRE
+            data = Uri.parse("jarvis-reminder://$id")
+        }
+        val pending = PendingIntent.getBroadcast(
+            context,
+            id,
+            intent,
+            PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
+        )
+        if (pending != null) {
+            val alarm = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            alarm.cancel(pending)
+            pending.cancel()
+        }
+        remove(context, id)
+    }
 
     fun schedule(context: Context, title: String, delayMinutes: Int): Long {
         require(title.isNotBlank()) { "Reminder title is required." }

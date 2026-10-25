@@ -131,6 +131,12 @@ class MainActivity : Activity() {
         }
         featureButtons.addView(reminderButton, LinearLayout.LayoutParams(0, dp(42), 1f))
         root.addView(featureButtons)
+        val listRemindersButton = makeButton("View / cancel reminders") {
+            showReminders()
+        }
+        root.addView(listRemindersButton, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, dp(40)
+        ))
 
         val hint = TextView(this).apply {
             text = "Floating icon runs only after you enable it. Tap the orb to return to JARVIS."
@@ -215,6 +221,38 @@ class MainActivity : Activity() {
             setTextColor(Color.WHITE)
             setOnClickListener { action() }
         }
+    }
+
+    private fun showReminders() {
+        val items = ReminderScheduler.list(this)
+        if (items.isEmpty()) {
+            Toast.makeText(this, "No scheduled reminders.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val formatter = java.text.DateFormat.getDateTimeInstance(
+            java.text.DateFormat.SHORT,
+            java.text.DateFormat.SHORT
+        )
+        val labels = items.map { reminder ->
+            reminder.title + " — " + formatter.format(java.util.Date(reminder.fireAt))
+        }.toTypedArray()
+
+        AlertDialog.Builder(this)
+            .setTitle("Scheduled reminders")
+            .setItems(labels) { _, which ->
+                val selected = items[which]
+                AlertDialog.Builder(this)
+                    .setTitle("Cancel this reminder?")
+                    .setMessage(selected.title + "\n" + formatter.format(java.util.Date(selected.fireAt)))
+                    .setNegativeButton("Keep", null)
+                    .setPositiveButton("Cancel reminder") { _, _ ->
+                        ReminderScheduler.cancel(this, selected.id)
+                        Toast.makeText(this, "Reminder cancelled.", Toast.LENGTH_SHORT).show()
+                    }
+                    .show()
+            }
+            .setPositiveButton("Close", null)
+            .show()
     }
 
     private fun promptReminder() {

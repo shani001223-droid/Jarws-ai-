@@ -271,6 +271,15 @@ class MainActivity : Activity() {
         scheduleLocalReminder(title, delayMinutes)
     }
 
+    fun scheduleReminderFromAssistant(title: String, delayMinutes: Int) {
+        val safeTitle = title.trim().take(100)
+        if (safeTitle.isBlank() || delayMinutes !in 1..10080) {
+            Toast.makeText(this, "Reminder must have a title and be within 7 days.", Toast.LENGTH_LONG).show()
+            return
+        }
+        requestNotificationsThenSchedule(safeTitle, delayMinutes)
+    }
+
     private fun scheduleLocalReminder(title: String, delayMinutes: Int) {
         val at = ReminderScheduler.schedule(this, title, delayMinutes)
         val minutesText = if (delayMinutes == 1) "1 minute" else "$delayMinutes minutes"

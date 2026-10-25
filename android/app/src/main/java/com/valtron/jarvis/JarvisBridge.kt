@@ -37,6 +37,18 @@ class JarvisBridge(private val activity: MainActivity) {
     }
 
     @JavascriptInterface
+    fun scheduleReminder(title: String, delayMinutes: Int): Boolean {
+        val safeTitle = title.trim().take(100)
+        if (safeTitle.isBlank() || delayMinutes !in 1..10080) return false
+        activity.runOnUiThread {
+            if (!activity.isFinishing) {
+                activity.scheduleReminderFromAssistant(safeTitle, delayMinutes)
+            }
+        }
+        return true
+    }
+
+    @JavascriptInterface
     fun performAction(action: String): Boolean {
         if (action !in allowedActions || !isEnabled()) return false
         val queued = mainHandler.post {

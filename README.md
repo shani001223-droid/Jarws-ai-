@@ -17,15 +17,14 @@ A mobile-first HOSHI AI companion for Android, using a hosted backend and a resp
 
 ## Install the Android test APK
 
-1. Open the latest successful **Build JARVIS Android APK** workflow in the [GitHub Actions page](https://github.com/shani001223-droid/Jarws-ai-/actions/workflows/android-apk.yml).
-2. Open its **Artifacts** section and download `jarvis-debug-apk`.
+1. Open the latest successful **Build HOSHI Android APK** workflow in the [GitHub Actions page](https://github.com/shani001223-droid/Jarws-ai-/actions/workflows/android-apk.yml).
+2. Open its **Artifacts** section and download `hoshi-debug-apk`.
 3. Extract the ZIP, then open `app-debug.apk` on the Android phone.
 4. Android may ask you to allow your browser or file manager to install unknown apps. Allow it only for the app you used to download this APK, then install.
 5. Open **HOSHI AI** and keep internet access enabled.
-6. To use the draggable icon, tap **Grant overlay permission** or **Start / show floating icon**, and grant Android's **Display over other apps** permission.
-7. To enable basic phone gestures, tap **Screen controls**, accept the explanation, and turn on **JARVIS basic screen controls** in Android Accessibility settings. Only Back/Home/Swipe actions from the dashboard are available.
-8. Tap **Set reminder** to schedule locally, or type a supported reminder command into the dashboard. Allow notifications when requested; tap **View / cancel reminders** to manage them.
-9. The dashboard will ask for microphone permission when you deliberately start voice recognition. The floating icon can be stopped from the app or its persistent notification.
+6. To enable basic phone gestures, tap **Screen controls**, accept the explanation, and turn on **HOSHI basic screen controls** in Android Accessibility settings. Only Back/Home/Swipe actions from the dashboard are available.
+7. Tap **Set reminder** to schedule locally, or type a supported reminder command into the dashboard. Allow notifications when requested; tap **View / cancel reminders** to manage them.
+8. The dashboard will ask for microphone permission when you deliberately start voice recognition.
 
 ## Important limitations
 
@@ -42,7 +41,7 @@ A mobile-first HOSHI AI companion for Android, using a hosted backend and a resp
 - Backend personality, emotion labels, recent-context support, and Groq fallback are implemented in `cloud_backend/main.py`.
 - Backend service deployed successfully after a transient syntax error was caught and fixed. Render logs showed `/health` returning HTTP 200 and no recent error-level application logs at the time of verification.
 - Frontend deployed successfully; its inline JavaScript passed a syntax compilation check in this session.
-- GitHub Actions **JARVIS basic checks run #76 passed** on commit `24a727fb75e9ad498860cff27179b124ed25224c`, including Python syntax/unit tests, reminder parser tests, JavaScript syntax checks, and inline dashboard JavaScript compilation.
+- GitHub Actions **HOSHI basic checks run #76 passed** on commit `24a727fb75e9ad498860cff27179b124ed25224c`, including Python syntax/unit tests, reminder parser tests, JavaScript syntax checks, and inline dashboard JavaScript compilation.
 - GitHub Actions **live backend smoke test run #17 passed** on the same commit, including a real `/health` check and one live AI request.
 - GitHub Actions **Android debug APK build run #21 passed** on commit `bdefb75711c380b108ec21a87caecbe9e322df21`.
 - Real-device voice/microphone testing and lip-sync remain pending.

@@ -21,9 +21,14 @@ import kotlin.math.abs
 
 class FloatingAssistantService : Service() {
     companion object {
+        const val PREFS_NAME = "jarvis_assistant"
+        const val PREFS_SIZE_KEY = "overlay_icon_size_dp"
+        const val ACTION_RESIZE = "com.valtron.jarvis.RESIZE_FLOATING"
+        const val EXTRA_SIZE_DP = "size_dp"
         private const val CHANNEL_ID = "jarvis_floating_assistant"
         private const val NOTIFICATION_ID = 1701
         private const val ACTION_STOP = "com.valtron.jarvis.STOP_FLOATING"
+        @Volatile var isRunning: Boolean = false
     }
 
     private lateinit var windowManager: WindowManager
@@ -32,6 +37,7 @@ class FloatingAssistantService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        isRunning = true
         createNotificationChannel()
         startForeground(NOTIFICATION_ID, buildNotification())
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
@@ -43,16 +49,25 @@ class FloatingAssistantService : Service() {
             stopSelf()
             return START_NOT_STICKY
         }
+        if (intent?.action == ACTION_RESIZE) {
+            val requestedSize = intent.getIntExtra(EXTRA_SIZE_DP, 62).coerceIn(44, 100)
+            getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+                .edit().putInt(PREFS_SIZE_KEY, requestedSize).apply()
+            resizeBubble(requestedSize)
+            return START_STICKY
+        }
         if (bubble == null) showBubble()
         return START_STICKY
     }
 
     private fun showBubble() {
         if (bubble != null) return
-        val size = dp(62)
+        val sizeDp = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+            .getInt(PREFS_SIZE_KEY, 62).coerceIn(44, 100)
+        val size = dp(sizeDp)
         val view = TextView(this).apply {
             text = "✦"
-            textSize = 29f
+            textSize = sizeDp * 0.46f
             gravity = Gravity.CENTER
             setTextColor(Color.rgb(93, 225, 255))
             contentDescription = "Open JARVIS assistant"
@@ -130,6 +145,19 @@ class FloatingAssistantService : Service() {
         }
     }
 
+    private fun resizeBubble(sizeDp: Int) {
+        val view = bubble ?: return
+        val params = layoutParams ?: return
+        val px = dp(sizeDp.coerceIn(44, 100))
+        params.width = px
+        params.height = px
+        view.textSize = sizeDp.coerceIn(44, 100) * 0.46f
+        try {
+            windowManager.updateViewLayout(view, params)
+        } catch (_: IllegalArgumentException) {
+        }
+    }
+
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
@@ -173,6 +201,7 @@ class FloatingAssistantService : Service() {
     }
 
     override fun onDestroy() {
+        isRunning = false
         bubble?.let {
             try {
                 windowManager.removeView(it)

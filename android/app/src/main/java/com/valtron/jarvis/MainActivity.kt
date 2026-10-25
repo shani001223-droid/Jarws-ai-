@@ -20,6 +20,7 @@ import android.webkit.WebViewClient
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.SeekBar
 
 class MainActivity : Activity() {
     companion object {
@@ -53,6 +54,50 @@ class MainActivity : Activity() {
         root.addView(title, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
         ))
+
+        val sizeRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        val initialIconSize = getSharedPreferences(
+            FloatingAssistantService.PREFS_NAME, MODE_PRIVATE
+        ).getInt(FloatingAssistantService.PREFS_SIZE_KEY, 62).coerceIn(44, 100)
+        val sizeLabel = TextView(this).apply {
+            text = "Icon size: ${initialIconSize} dp"
+            textSize = 12f
+            setTextColor(Color.rgb(154, 178, 198))
+        }
+        val sizeSlider = SeekBar(this).apply {
+            min = 44
+            max = 100
+            progress = initialIconSize
+            setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                    val size = progress.coerceIn(44, 100)
+                    sizeLabel.text = "Icon size: ${size} dp"
+                    getSharedPreferences(
+                        FloatingAssistantService.PREFS_NAME, MODE_PRIVATE
+                    ).edit().putInt(FloatingAssistantService.PREFS_SIZE_KEY, size).apply()
+                    if (fromUser && FloatingAssistantService.isRunning) {
+                        val resize = Intent(this@MainActivity, FloatingAssistantService::class.java).apply {
+                            action = FloatingAssistantService.ACTION_RESIZE
+                            putExtra(FloatingAssistantService.EXTRA_SIZE_DP, size)
+                        }
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            startForegroundService(resize)
+                        } else {
+                            startService(resize)
+                        }
+                    }
+                }
+
+                override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
+                override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
+            })
+        }
+        sizeRow.addView(sizeLabel, LinearLayout.LayoutParams(dp(105), ViewGroup.LayoutParams.WRAP_CONTENT))
+        sizeRow.addView(sizeSlider, LinearLayout.LayoutParams(0, dp(40), 1f))
+        root.addView(sizeRow)
 
         val controls = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL

@@ -87,22 +87,30 @@ def assistant(payload: AssistantRequest):
         with urlopen(req, timeout=35) as response:
             data = json.loads(response.read().decode("utf-8"))
     except HTTPError as exc:
-        # Do not return the request URL or API key to the client.
-        if exc.code in (400, 401, 403):
-            raise HTTPException(
-                status_code=502,
-                detail="Gemini rejected the request. Check the API key, API access, and model configuration in Google AI Studio.",
-            ) from None
+        # Return a safe diagnostic from Google's response, never the request URL or API key.
+        try:
+            error_data = json.loads(exc.read().decode("utf-8"))
+            google_message = str(error_data.get("error", {}).get("message", "")).strip()
+        except (json.JSONDecodeError, UnicodeDecodeError, AttributeError):
+            google_message = ""
+        if exc.code in (400, 401, 403, 404):
+            detail = "Gemini rejected the request. Check that GEMINI_API_KEY is valid, the Generative Language API is enabled, and the model is available to this key."
+            if google_message:
+                detail += " Google says: " + google_message[:350]
+            raise HTTPException(status_code=502, detail=detail) from None
         if exc.code == 429:
-            raise HTTPException(
-                status_code=429,
-                detail="Gemini rate limit reached. Please wait and try again.",
-            ) from None
-        raise HTTPException(status_code=502, detail="Gemini service returned an error.") from None
+            detail = "Gemini rate limit or quota reached. Check Google AI Studio usage and try again later."
+            if google_message:
+                detail += " Google says: " + google_message[:250]
+            raise HTTPException(status_code=429, detail=detail) from None
+        detail = "Gemini service returned HTTP " + str(exc.code) + "."
+        if google_message:
+            detail += " Google says: " + google_message[:250]
+        raise HTTPException(status_code=502, detail=detail) from None
     except (URLError, TimeoutError):
         raise HTTPException(
             status_code=504,
-            detail="Could not reach Gemini in time. Please try again.",
+            detail="Gemini did not respond before the server timeout. This is an AI-provider timeout, not necessarily your internet connection. Try again; if repeated, check Google AI Studio quota/service status.",
         ) from None
     except (json.JSONDecodeError, UnicodeDecodeError):
         raise HTTPException(status_code=502, detail="Gemini returned an invalid response.") from None

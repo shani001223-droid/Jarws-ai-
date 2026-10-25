@@ -221,13 +221,13 @@ class MainActivity : Activity() {
         val titleInput = EditText(this).apply {
             hint = "Reminder title"
             setText("Take a short break")
-            singleLine = true
+            setSingleLine(true)
         }
         val minutesInput = EditText(this).apply {
             hint = "Minutes from now (1–10080)"
             inputType = InputType.TYPE_CLASS_NUMBER
             setText("30")
-            singleLine = true
+            setSingleLine(true)
         }
         val dialogContent = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL

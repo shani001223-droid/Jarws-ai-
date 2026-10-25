@@ -1,6 +1,7 @@
 package com.valtron.jarvis
 
 import android.content.ComponentName
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
@@ -60,6 +61,7 @@ class JarvisBridge(private val activity: MainActivity) {
     @JavascriptInterface
     fun performAction(action: String): Boolean {
         if (action !in allowedActions || !isEnabled()) return false
+        if (action == "screenshot" && Build.VERSION.SDK_INT < Build.VERSION_CODES.P) return false
         val queued = mainHandler.post {
             JarvisAccessibilityService.instance?.performBasicAction(action)
         }

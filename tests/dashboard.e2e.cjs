@@ -172,6 +172,39 @@ async function main() {
     assert.ok((await page.locator("#chatHistory").innerText()).includes("Explain how to organize a study day"),
       "The saved conversation should appear in history");
 
+    // A second turn must send prior user + HOSHI messages for continuity.
+    await page.locator("#commandInput").fill("Follow up with a bit more detail");
+    await page.locator('#commandForm button[type="submit"]').click();
+    await page.waitForFunction(() =>
+      document.querySelector("#reply")?.textContent === "I can help you plan, explain, and create.",
+      undefined, { timeout: 7000 });
+    const secondRequest = apiMessages.find(item => item.message === "Follow up with a bit more detail");
+    assert.ok(secondRequest, "Expected the follow-up to reach the mocked cloud API");
+    assert.ok((secondRequest.context || []).some(item =>
+      item.includes("Explain how to organize a study day")),
+      "Second turn must include the prior user message");
+    assert.ok((secondRequest.context || []).some(item =>
+      item.includes("I can help you plan, explain, and create.")),
+      "Second turn must include HOSHI's prior reply");
+    assert.ok(!(secondRequest.context || []).includes("user: Follow up with a bit more detail"),
+      "Current follow-up must not be duplicated in context");
+
+    // The speaking indicator responds to the native/browser TTS bridge state.
+    const speakingState = await page.evaluate(() => {
+      window.hoshiSetSpeaking(true);
+      const wave = document.querySelector(".speech-wave");
+      const active = {
+        speakingClass: document.querySelector("#orb")?.classList.contains("speaking"),
+        waveOpacity: wave ? getComputedStyle(wave).opacity : null,
+      };
+      window.hoshiSetSpeaking(false);
+      return active;
+    });
+    assert.equal(speakingState.speakingClass, true, "Speaking state should activate the avatar");
+    assert.equal(speakingState.waveOpacity, "1", "Speaking waveform should become visible");
+    assert.equal(await page.locator("#orb").evaluate(node => node.classList.contains("speaking")), false,
+      "Speaking indicator should clear after speech ends");
+
     // A delayed earlier request must not overwrite the newer reply.
     const oldRequest = page.waitForRequest(request =>
       request.url().endsWith("/api/assistant") && (request.postData() || "").includes("older slow request"),

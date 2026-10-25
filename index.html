@@ -1,197 +1,85 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#080d16">
-<title>JARVIS AI Assistant</title>
-
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07111e">
+<meta name="description" content="JARVIS mobile-first personal AI assistant prototype">
+<link rel="manifest" href="./manifest.json">
+<title>JARVIS — Personal AI</title>
 <style>
-*{box-sizing:border-box}
-body{
-  margin:0;min-height:100vh;padding:20px;
-  display:flex;align-items:center;justify-content:center;
-  background:#080d16;color:#e8f7ff;
-  font-family:Arial,sans-serif
-}
-.app{
-  width:100%;max-width:460px;padding:25px 18px;
-  text-align:center;background:#0d1725;
-  border:1px solid #174b66;border-radius:24px;
-  box-shadow:0 0 35px #00334b55
-}
-h1{color:#55dfff;letter-spacing:7px;margin-bottom:5px}
-.sub{color:#8caec2;font-size:12px;letter-spacing:2px}
-.orb{
-  width:145px;height:145px;margin:28px auto;
-  border:3px solid #55dfff;border-radius:50%;
-  display:grid;place-items:center;font-size:48px;
-  color:#55dfff;
-  box-shadow:0 0 25px #00bfff66,inset 0 0 25px #00bfff33;
-  animation:pulse 3s infinite
-}
-@keyframes pulse{
-  50%{box-shadow:0 0 40px #00bfff99,inset 0 0 30px #00bfff55}
-}
-#status{color:#55dfff;min-height:22px}
-#reply{
-  min-height:60px;line-height:1.6;
-  overflow-wrap:anywhere;margin:20px 0
-}
-button{
-  width:90%;max-width:280px;padding:14px;margin:6px;
-  border:1px solid #55dfff;border-radius:12px;
-  background:#102b40;color:white;font-size:15px
-}
-button:active{background:#176080}
-input{
-  width:90%;max-width:320px;padding:13px;
-  margin:10px 0;border:1px solid #28617c;
-  border-radius:10px;background:#07111c;color:white;
-  font-size:15px
-}
-.small{font-size:12px;color:#8caec2;line-height:1.7}
+:root{color-scheme:dark;--bg:#07111e;--panel:#0d1b2b;--cyan:#5de1ff;--muted:#9ab2c6;--line:#1c4862}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 0,#102b42 0,var(--bg) 58%);color:#eaf8ff;font:16px system-ui,-apple-system,Arial,sans-serif;padding:18px;display:flex;justify-content:center}
+.app{width:100%;max-width:520px;margin:auto;padding:22px 17px 28px;background:#0b1725eF;border:1px solid var(--line);border-radius:26px;box-shadow:0 18px 60px #0008}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px}h1{margin:0;color:var(--cyan);letter-spacing:.2em;font-size:27px}.tag{color:var(--muted);font-size:10px;letter-spacing:.16em;margin-top:4px}.pill{border:1px solid var(--line);border-radius:99px;padding:7px 10px;font-size:11px;color:var(--muted);white-space:nowrap}
+.orb{width:132px;height:132px;border-radius:50%;margin:27px auto 18px;display:grid;place-items:center;border:2px solid var(--cyan);color:var(--cyan);font-size:46px;background:radial-gradient(circle,#12425a,#081523 68%);box-shadow:0 0 30px #1acfff35,inset 0 0 24px #1acfff25}
+.orb.active{animation:pulse 1.6s infinite}@keyframes pulse{50%{box-shadow:0 0 48px #1acfff88,inset 0 0 28px #1acfff55;transform:scale(1.025)}}
+#status{text-align:center;color:var(--cyan);font-size:12px;letter-spacing:.12em;min-height:19px}#reply{line-height:1.6;min-height:58px;text-align:center;overflow-wrap:anywhere;margin:16px 2px 20px}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:9px}button{font:inherit;cursor:pointer;min-height:47px;padding:11px 12px;border:1px solid #28617c;border-radius:13px;background:#10283b;color:#effbff}button.primary{background:linear-gradient(135deg,#126080,#12364d);border-color:var(--cyan)}button:active{transform:scale(.985)}button:disabled{opacity:.5}
+form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;border:1px solid var(--line);border-radius:12px;background:#06101a;color:white;font:inherit}form button{min-width:82px}
+.section{margin-top:18px;padding:13px;border:1px solid #17354b;border-radius:15px;background:#081522}.section h2{font-size:12px;letter-spacing:.12em;color:var(--muted);margin:0 0 9px}.small{font-size:12px;color:var(--muted);line-height:1.65;margin:0}.statusrow{display:flex;justify-content:space-between;gap:10px;align-items:center}.toggle{min-height:38px;font-size:12px}.quick{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}.quick button{min-height:34px;padding:7px 10px;font-size:12px}
+footer{margin-top:17px;text-align:center;font-size:11px;color:#718da3;line-height:1.6}
 </style>
 </head>
-
 <body>
 <main class="app">
-  <h1>JARVIS</h1>
-  <p class="sub">PERSONAL AI ASSISTANT</p>
-
-  <div class="orb">✦</div>
-  <p id="status">SYSTEM READY</p>
-  <p id="reply">Hello! I am JARVIS. How can I help you?</p>
-
-  <button id="testBtn">Test Assistant</button>
-  <button id="voiceBtn">🎙️ Speak to JARVIS</button>
-
-  <form id="commandForm">
-    <input id="commandInput" type="text"
-      placeholder="Type a command here..." autocomplete="off">
-    <button type="submit">Send Command</button>
-  </form>
-
-  <button id="stopBtn">🔇 Stop Speaking</button>
-
-  <p class="small">
-    Try: hello, what is the time, today's date,
-    who are you, open Google, open YouTube, help.
-  </p>
+<header><div><h1>JARVIS</h1><div class="tag">PERSONAL AI SYSTEM · PROTOTYPE 01</div></div><div class="pill" id="connection">LOCAL MODE</div></header>
+<div class="orb" id="orb" aria-hidden="true">✦</div>
+<div id="status" role="status" aria-live="polite">READY · TAP START LISTENING</div>
+<p id="reply" aria-live="polite">Hello. I am JARVIS. Tap “Start listening” and say “Hey JARVIS” to activate the voice command mode.</p>
+<div class="controls">
+<button class="primary" id="wakeBtn">🎙 Start listening</button>
+<button id="stopBtn">■ Stop listening</button>
+<button id="testBtn">Test assistant</button>
+<button id="speakToggle">🔊 Voice replies: ON</button>
+</div>
+<form id="commandForm"><input id="commandInput" autocomplete="off" placeholder="Type a command…" aria-label="Command"><button class="primary" type="submit">Send</button></form>
+<div class="section"><div class="statusrow"><h2>WAKE WORD</h2><button class="toggle" id="wakeToggle">Hey JARVIS: OFF</button></div><p class="small">Wake-word detection works only while this page is open, foregrounded and microphone access is granted. This web prototype cannot listen reliably while the phone is locked or the app is closed.</p></div>
+<div class="section"><h2>TRY A COMMAND</h2><p class="small">“Hey JARVIS” · “What time is it?” · “Open Google” · “Open YouTube” · “Help” · “Stop speaking”</p><div class="quick"><button data-cmd="what time is it">Time</button><button data-cmd="today's date">Date</button><button data-cmd="open Google">Google</button><button data-cmd="open YouTube">YouTube</button><button data-cmd="help">Help</button></div></div>
+<footer>Stage 1: mobile voice interface and wake-word prototype.<br>Cloud AI, Android screen control and background wake-word are not connected yet.</footer>
 </main>
-
 <script>
-(function(){
-  const status = document.getElementById('status');
-  const reply = document.getElementById('reply');
-  const input = document.getElementById('commandInput');
-
-  function speak(message){
-    reply.textContent = message;
-
-    if('speechSynthesis' in window){
-      window.speechSynthesis.cancel();
-      const speech = new SpeechSynthesisUtterance(message);
-      speech.lang = 'en-US';
-      window.speechSynthesis.speak(speech);
-    }
-  }
-
-  function processCommand(text){
-    const c = text.toLowerCase().trim();
-    if(!c) return;
-
-    status.textContent = 'PROCESSING COMMAND...';
-
-    if(c.includes('hello') || c.includes('jarvis')){
-      speak('Hello! JARVIS is online. How can I help you?');
-    }
-    else if(c.includes('time')){
-      speak('The time is ' + new Date().toLocaleTimeString());
-    }
-    else if(c.includes('date') || c.includes('today')){
-      speak('Today is ' + new Date().toLocaleDateString());
-    }
-    else if(c.includes('your name') || c.includes('who are you')){
-      speak('I am JARVIS, your personal assistant.');
-    }
-    else if(c.includes('how are you')){
-      speak('I am functioning properly. Thank you!');
-    }
-    else if(c.includes('open youtube')){
-      speak('Opening YouTube.');
-      window.open('https://m.youtube.com/', '_blank');
-    }
-    else if(c.includes('open google')){
-      speak('Opening Google.');
-      window.open('https://www.google.com/', '_blank');
-    }
-    else if(c.includes('help') || c.includes('what can you do')){
-      speak('I can tell you the time and date, answer basic greetings, and open Google or YouTube. More abilities can be added later.');
-    }
-    else if(c.includes('stop')){
-      window.speechSynthesis.cancel();
-      reply.textContent = 'Speech stopped.';
-    }
-    else{
-      speak('I heard you say: ' + text +
-        '. I do not know that command yet. Try saying help.');
-    }
-
-    status.textContent = 'SYSTEM READY';
-  }
-
-  document.getElementById('testBtn').addEventListener('click',function(){
-    processCommand('hello');
-  });
-
-  document.getElementById('commandForm').addEventListener('submit',function(e){
-    e.preventDefault();
-    processCommand(input.value);
-    input.value = '';
-  });
-
-  document.getElementById('stopBtn').addEventListener('click',function(){
-    if('speechSynthesis' in window) window.speechSynthesis.cancel();
-    status.textContent = 'SPEECH STOPPED';
-  });
-
-  document.getElementById('voiceBtn').addEventListener('click',function(){
-    const Recognition = window.SpeechRecognition ||
-                        window.webkitSpeechRecognition;
-
-    if(!Recognition){
-      speak('Voice recognition is unavailable in this browser. Please use the text command box.');
-      status.textContent = 'VOICE UNAVAILABLE';
-      return;
-    }
-
-    try{
-      const recognition = new Recognition();
-      recognition.lang = 'en-US';
-      recognition.onstart = function(){
-        status.textContent = 'LISTENING...';
-      };
-      recognition.onresult = function(event){
-        const heard = event.results[0][0].transcript;
-        input.value = heard;
-        processCommand(heard);
-      };
-      recognition.onerror = function(){
-        status.textContent = 'VOICE ERROR - TRY AGAIN';
-      };
-      recognition.onend = function(){
-        if(status.textContent === 'LISTENING...'){
-          status.textContent = 'SYSTEM READY';
-        }
-      };
-      recognition.start();
-    }
-    catch(error){
-      status.textContent = 'MICROPHONE COULD NOT START';
-    }
-  });
+(()=> {
+ const $=id=>document.getElementById(id), status=$('status'), reply=$('reply'), input=$('commandInput'), orb=$('orb');
+ let recognition=null, listening=false, wakeEnabled=false, awaitingCommand=false, voiceReplies=true, restartTimer=null;
+ const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+ function setStatus(s){status.textContent=s}
+ function say(text){reply.textContent=text;if(voiceReplies&&'speechSynthesis'in window){window.speechSynthesis.cancel();if(recognition&&listening){try{recognition.stop()}catch(e){}}const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.onend=()=>{if(listening&&recognition){clearTimeout(restartTimer);restartTimer=setTimeout(()=>{try{recognition.start()}catch(e){}},350)}};window.speechSynthesis.speak(u)}}
+ function processCommand(raw){const text=raw.trim(),c=text.toLowerCase();if(!c)return;
+ setStatus('PROCESSING…');orb.classList.add('active');
+ if(/\b(hello|hi|salam|assalam|hey jarvis)\b/.test(c)){say('I am online. Tell me what you need.')}
+ else if(c.includes('time'))say('The time is '+new Date().toLocaleTimeString());
+ else if(c.includes('date')||c.includes('today'))say('Today is '+new Date().toLocaleDateString());
+ else if(c.includes('your name')||c.includes('who are you'))say('I am JARVIS, your personal assistant prototype.');
+ else if(c.includes('open google')){say('Opening Google.');window.open('https://www.google.com/','_blank','noopener')}
+ else if(c.includes('open youtube')){say('Opening YouTube.');window.open('https://m.youtube.com/','_blank','noopener')}
+ else if(c.includes('stop speaking')){if('speechSynthesis'in window)window.speechSynthesis.cancel();reply.textContent='Voice reply stopped.'}
+ else if(c==='help'||c.includes('what can you do'))say('I can respond to basic commands, tell the time and date, and open Google or YouTube. Cloud AI and advanced phone control are planned next.');
+ else say('I heard: '+text+'. This command needs the AI brain, which is not connected yet.');
+ setStatus(listening?'LISTENING FOR WAKE WORD':'READY');setTimeout(()=>orb.classList.remove('active'),900)
+ }
+ function startListening(){if(!Recognition){say('Speech recognition is not supported in this browser. Try Chrome, or use the text command box.');setStatus('VOICE RECOGNITION UNAVAILABLE');return}
+ if(recognition&&listening)return;
+ recognition=new Recognition();recognition.lang='en-US';recognition.continuous=true;recognition.interimResults=false;
+ recognition.onstart=()=>{listening=true;$('wakeBtn').textContent='🎙 Listening…';setStatus(wakeEnabled?'LISTENING FOR “HEY JARVIS”':'LISTENING');};
+ recognition.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++){if(!e.results[i].isFinal)continue;const heard=e.results[i][0].transcript.trim();const lower=heard.toLowerCase();input.value=heard;
+ if(!wakeEnabled){processCommand(heard);continue}
+ if(awaitingCommand){awaitingCommand=false;processCommand(heard);continue}
+ if(lower.includes('hey jarvis')||lower.includes('hey, jarvis')||lower.includes('a jarvis')){const after=heard.replace(/hey[, ]*jarvis/i,'').trim();if(after){processCommand(after)}else{awaitingCommand=true;setStatus('JARVIS AWAKE · SAY YOUR COMMAND');reply.textContent='I’m listening. What can I do for you?';if(voiceReplies&&'speechSynthesis'in window){window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance('Yes?');u.lang='en-US';u.onend=()=>{if(listening&&recognition){try{recognition.start()}catch(e){}}};window.speechSynthesis.speak(u)}}}
+ }}
+ recognition.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed'){listening=false;setStatus('MICROPHONE PERMISSION REQUIRED');$('wakeBtn').textContent='🎙 Start listening'}else if(e.error!=='no-speech'&&e.error!=='aborted')setStatus('VOICE ERROR · '+e.error.toUpperCase())};
+ recognition.onend=()=>{if(listening){clearTimeout(restartTimer);restartTimer=setTimeout(()=>{try{recognition.start()}catch(e){}},500)}else{$('wakeBtn').textContent='🎙 Start listening';setStatus('READY')}};
+ try{recognition.start()}catch(e){setStatus('COULD NOT START MICROPHONE')}
+ }
+ function stopListening(){listening=false;awaitingCommand=false;clearTimeout(restartTimer);if(recognition){try{recognition.onend=null;recognition.stop()}catch(e){}recognition=null}if('speechSynthesis'in window)window.speechSynthesis.cancel();$('wakeBtn').textContent='🎙 Start listening';setStatus('LISTENING STOPPED')}
+ $('wakeBtn').onclick=()=>startListening();$('stopBtn').onclick=stopListening;
+ $('testBtn').onclick=()=>processCommand('hello');
+ $('speakToggle').onclick=()=>{voiceReplies=!voiceReplies;$('speakToggle').textContent=voiceReplies?'🔊 Voice replies: ON':'🔇 Voice replies: OFF'};
+ $('wakeToggle').onclick=()=>{wakeEnabled=!wakeEnabled;$('wakeToggle').textContent='Hey JARVIS: '+(wakeEnabled?'ON':'OFF');setStatus(listening?(wakeEnabled?'LISTENING FOR “HEY JARVIS”':'LISTENING'):'READY')};
+ $('commandForm').onsubmit=e=>{e.preventDefault();processCommand(input.value);input.value=''};
+ document.querySelectorAll('[data-cmd]').forEach(b=>b.onclick=()=>processCommand(b.dataset.cmd));
+ if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+ if(!Recognition){$('connection').textContent='TEXT MODE';setStatus('TEXT MODE · VOICE SUPPORT DEPENDS ON BROWSER')}
 })();
 </script>
 </body>

@@ -25,9 +25,9 @@ class FrontendContractTests(unittest.TestCase):
         parser.feed(HTML)
         self.assertEqual(len(parser.ids), len(set(parser.ids)), "Duplicate HTML id found")
         known_ids = set(parser.ids)
-        scripts = re.findall(r"<script>([\\s\\S]*?)</script>", HTML, re.IGNORECASE)
+        scripts = re.findall(r"<script>([\s\S]*?)</script>", HTML, re.IGNORECASE)
         self.assertTrue(scripts, "Dashboard inline script is missing")
-        refs = set(re.findall(r"\\$\\(['\"]([^'\"]+)['\"]\\)", scripts[0]))
+        refs = set(re.findall(r"\$\(['\"]([^'\"]+)['\"]\)", scripts[0]))
         self.assertTrue(refs, "Dashboard ID references were not detected")
         self.assertEqual(refs - known_ids, set(), "Script references missing HTML IDs")
 
@@ -46,7 +46,7 @@ class FrontendContractTests(unittest.TestCase):
             "concerned", "annoyed", "playful", "thinking", "caring",
         )
         for emotion in emotions:
-            selector = rf'\\.orb\\[data-emotion="{emotion}"\\] \\.companion-avatar\\{{background-position:'
+            selector = rf'\.orb\[data-emotion="{emotion}"\] \.companion-avatar\{{background-position:'
             self.assertRegex(HTML, selector, f"No sprite position for {emotion}")
 
     def test_memory_controls_and_local_preferences_are_present(self):

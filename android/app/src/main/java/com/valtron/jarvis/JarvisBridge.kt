@@ -11,7 +11,7 @@ import android.webkit.JavascriptInterface
  */
 class JarvisBridge(private val activity: MainActivity) {
     private val mainHandler = Handler(Looper.getMainLooper())
-    private val allowedActions = setOf("back", "home", "swipe_up", "swipe_down")
+    private val allowedActions = setOf("back", "home", "swipe_up", "swipe_down", "screenshot")
 
     @JavascriptInterface
     fun speakNative(text: String, language: String, pitch: Float, rate: Float): Boolean {

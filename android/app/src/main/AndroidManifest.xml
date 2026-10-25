@@ -9,7 +9,7 @@
         android:allowBackup="false"
         android:icon="@drawable/jarvis_anime_avatar"
         android:roundIcon="@drawable/jarvis_anime_avatar"
-        android:label="JARVIS Assistant"
+        android:label="HOSHI AI"
         android:usesCleartextTraffic="false"
         android:theme="@android:style/Theme.Material.Light.NoActionBar"
         android:supportsRtl="true">
@@ -35,7 +35,7 @@
 
         <service
             android:name=".JarvisAccessibilityService"
-            android:label="JARVIS basic screen controls"
+            android:label="HOSHI basic screen controls"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
             android:exported="true">
             <intent-filter>

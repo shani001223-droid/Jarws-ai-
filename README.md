@@ -9,6 +9,7 @@ A mobile-first HOSHI AI companion for Android, using a hosted backend and a resp
 - Conversation emotion labels (happy, sad, affectionate, excited, shy, concerned, annoyed, playful, thinking, caring), actual character-sheet expression sprite switching, and limited TTS pitch/speed modulation.
 - Optional local conversation memory with bounded recent context, entry-by-entry review/edit/delete, clear/disable controls, and a tested privacy filter for common credentials, token formats, recovery phrases, OTPs, email addresses, phone-like strings, and long numeric identifiers. Privacy detection is heuristic; it cannot guarantee detection of every sensitive detail.
 - Local persistence for language selection, voice-reply (auto-speak) toggle, wake-word toggle, personality, and voice tuning.
+- Cloud requests sanitize client-provided conversation context: only `user:` and `assistant:` entries are retained, control characters and escaped newline/tab sequences are flattened, and the latest eight entries are bounded to under 500 characters each.
 - Cloud AI using Gemini Interactions API with Groq as a fallback provider.
 - Voice reply settings: choose an installed phone voice, adjust pitch/speed, and play a preview.
 - `assets/hoshi-expressions.webp` is a compact 8-tile WebP sprite cropped from the final user-provided character sheet. The dashboard switches the sprite position for each response emotion; ten emotion labels map to the closest of the eight available expressions.

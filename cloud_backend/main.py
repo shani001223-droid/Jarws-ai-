@@ -141,9 +141,9 @@ def _groq_reply(message: str, language_hint: str) -> str:
 def root():
     return {
         "ok": True,
-        "service": "jarvis-cloud-api",
+        "service": "hoshi-cloud-api",
         "version": app.version,
-        "message": "JARVIS cloud API is running",
+        "message": "HOSHI cloud API is running",
         "health": "/health",
         "assistant": "/api/assistant",
     }

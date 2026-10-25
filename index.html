@@ -125,7 +125,7 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
 <p id="voiceEngineStatus" class="small" role="status">Device speech · checking availability</p>
 <div class="voice-actions"><button type="button" class="primary" id="previewVoiceBtn">▶ Hear Hoshi</button><button type="button" id="stopSpeakingBtn">■ Stop speaking</button></div>
 <audio id="hoshiAudio" controls hidden preload="none" aria-label="Hoshi Urdu voice playback" style="width:100%;max-width:100%"></audio>
-<p class="small">When no Urdu device voice is available, online speech sends the spoken reply to Microsoft. Turn voice replies off to disable it. If automatic playback is blocked, tap Play above.</p>
+<p class="small">Urdu uses the online Hoshi voice so the phone does not substitute a different speaker. Spoken replies are sent to Microsoft. Turn voice replies off to disable it. If automatic playback is blocked, tap Play above.</p>
 <details class="voice-fine-tune"><summary>Fine tune delivery</summary>
 <div class="voice-setting"><label for="pitchSlider">Softness / pitch</label><output id="pitchValue">1.12×</output><input id="pitchSlider" type="range" min="0.8" max="1.4" step="0.01" value="1.12" aria-label="Voice pitch"></div>
 <div class="voice-setting"><label for="rateSlider">Speaking speed</label><output id="rateValue">0.88×</output><input id="rateSlider" type="range" min="0.75" max="1.15" step="0.01" value="0.88" aria-label="Speaking speed"></div>
@@ -210,7 +210,7 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
  }
  let speechSequence=0, speechAudioUrl=null, speechAudioController=null, currentSpeech=null, cloudSpeechAttempt=-1;
  const voiceStyles={soft:[1.12,0.88],warm:[1.04,0.85],playful:[1.18,0.96]};
- function refreshVoices(){const status=$('voiceEngineStatus');if(window.JarvisBridge&&typeof window.JarvisBridge.supportsUrduSpeech==='function'&&window.JarvisBridge.supportsUrduSpeech()){status.textContent='Android Urdu speech ready';return}const voice=chooseVoice();status.textContent=voice?'Urdu / selected-language speech ready':'Online Urdu fallback available · internet required'}
+ function refreshVoices(){const status=$('voiceEngineStatus');if(window.JarvisBridge&&typeof window.JarvisBridge.supportsUrduSpeech==='function'&&window.JarvisBridge.supportsUrduSpeech()){status.textContent='Hoshi online Urdu voice · internet required';return}const voice=chooseVoice();status.textContent=voice?'Urdu / selected-language speech ready':'Online Urdu fallback available · internet required'}
  function chooseVoice(){if(!('speechSynthesis'in window))return null;const voices=window.speechSynthesis.getVoices();const lang=(commandLanguage||'ur-PK').toLowerCase(),base=lang.split('-')[0];const female=/female|uzma|zira|samantha|aria|jenny|sara|siri|victoria|eva|sonia|karen/i;const locale=v=>String(v.lang||'').toLowerCase();const exact=voices.filter(v=>locale(v)===lang),same=voices.filter(v=>locale(v).split('-')[0]===base);return exact.find(v=>female.test(v.name))||exact[0]||same.find(v=>female.test(v.name))||same[0]||(base==='ur'?null:voices.find(v=>female.test(v.name))||voices[0])||null}
  function saveVoiceSettings(){const pitch=Number($('pitchSlider').value),rate=Number($('rateSlider').value);$('pitchValue').textContent=pitch.toFixed(2)+'×';$('rateValue').textContent=rate.toFixed(2)+'×';try{localStorage.setItem('jarvisVoicePitch',String(pitch));localStorage.setItem('jarvisVoiceRate',String(rate));localStorage.removeItem('jarvisVoiceKey');if(!localStorage.getItem('hoshiVoiceStyle'))localStorage.setItem('hoshiVoiceStyle','soft')}catch(e){}}
  function applyVoiceStyle(style,persist=true){const key=voiceStyles[style]?style:'soft';const [pitch,rate]=voiceStyles[key];$('pitchSlider').value=pitch;$('rateSlider').value=rate;document.querySelectorAll('[data-voice-style]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.voiceStyle===key)));if(persist){try{localStorage.setItem('hoshiVoiceStyle',key)}catch(e){}}saveVoiceSettings()}
@@ -273,7 +273,8 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
    const pitch=Math.max(0.8,Math.min(1.6,basePitch+voiceMood[0]));
    const rate=Math.max(0.75,Math.min(1.15,baseRate+voiceMood[1]));
    currentSpeech={id:speechId,text:spokenMessage};
-   // One Hoshi delivery: use Android native speech first, browser speech as fallback.
+   if(urduMode){playOnlineUrdu(currentSpeech);return}
+   // One Hoshi delivery: online Urdu first; device speech handles other languages.
    if(window.JarvisBridge&&typeof window.JarvisBridge.speakNative==='function'&&(!urduMode||(typeof window.JarvisBridge.supportsUrduSpeech==='function'&&window.JarvisBridge.supportsUrduSpeech()))){
       const nativeStarted=window.JarvisBridge.speakNative(spokenMessage,commandLanguage,pitch,rate); if(nativeStarted){setSpeaking(true);return;}
    }

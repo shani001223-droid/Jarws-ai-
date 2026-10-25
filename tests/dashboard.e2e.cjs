@@ -295,28 +295,15 @@ async function main() {
     assert.ok(apiMessages.every(request => request.locale === 'ur-PK'), 'Use selected Urdu mode rather than the browser locale');
     const beforePreview = await page.evaluate(() => ({reply: document.querySelector('#reply').textContent, memory: localStorage.getItem('hoshiConversationMemoryV1')}));
     assert.equal(await page.locator('#voiceSelect').count(), 0);
-    await page.locator('#previewVoiceBtn').click();
-    await page.locator('#stopSpeakingBtn').click();
-    await page.evaluate(() => window.__voiceReady());
-    await page.waitForTimeout(1000);
-    assert.equal(await page.evaluate(() => window.__voiceCalls.filter(v => typeof v === 'object').length), 0,
-      'Stop must invalidate speech waiting for browser voices');
-    await page.locator('[data-voice-style="warm"]').click();
-    await page.locator('#previewVoiceBtn').click();
-    const spoken = await page.evaluate(() => window.__voiceCalls.filter(v => typeof v === 'object'));
-    assert.equal(spoken.length, 1, 'Preview speaks with automatic replies disabled');
-    assert.match(spoken[0].text, /[\u0600-\u06ff]/, 'Urdu preview uses Urdu script for pronunciation');
-    assert.ok(spoken[0].rate < 0.9, 'Warm delivery is gentle');
-    assert.deepEqual(await page.evaluate(() => ({reply: document.querySelector('#reply').textContent, memory: localStorage.getItem('hoshiConversationMemoryV1')})), beforePreview,
-      'Preview must not overwrite chat or save a conversation');
     await page.route('https://jarws-ai-2.onrender.com/api/speech', route => route.fulfill({status: 200, contentType: 'audio/mpeg', headers: {'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type'}, body: Buffer.from('SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYwLjE2LjEwMAAAAAAAAAAAAAAA//NkxAAAAANIAAAAAExBTUVVVVVMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//NkxHwAAANIAAAAAFVVVVVVVVVMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//NkxHwAAANIAAAAAFVVVVVVVVVMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//NkxHwAAANIAAAAAFVVVVVVVVVMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//NkxHwAAANIAAAAAFVVVVVVVVVMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//NkxHwAAANIAAAAAFVVVVVVVVVMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//NkxHwAAANIAAAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV', 'base64')}));
     await page.evaluate(() => {document.querySelector('#hoshiAudio').play = () => Promise.reject(new DOMException('Tap required', 'NotAllowedError'))});
     await page.evaluate(() => {window.__voices = [{name: 'English female', lang: 'en-US'}, {name: 'Hindi female', lang: 'hi-IN'}]});
     await page.locator('#previewVoiceBtn').click();
-    assert.equal(await page.evaluate(() => window.__voiceCalls.filter(v => typeof v === 'object').length), 1,
+    assert.equal(await page.evaluate(() => window.__voiceCalls.filter(v => typeof v === 'object').length), 0,
       'Urdu mode must not silently substitute English or Hindi');
     try { await page.waitForFunction(() => document.querySelector('#status').textContent.includes('TAP PLAY'), {timeout:10000}); } catch (error) {throw new Error('Audio fallback status: '+await page.locator('#status').innerText())}
     assert.equal(await page.locator('#hoshiAudio').isVisible(), true, 'Autoplay-blocked audio must expose a player');
+    assert.deepEqual(await page.evaluate(() => ({reply: document.querySelector('#reply').textContent, memory: localStorage.getItem('hoshiConversationMemoryV1')})), beforePreview, 'Online preview must not change chat or memory');
     await page.locator('#stopSpeakingBtn').click();
     assert.equal(await page.locator('#hoshiAudio').isVisible(), false, 'Stop discards the online audio player');
     await page.locator('.voice-fine-tune summary').click();

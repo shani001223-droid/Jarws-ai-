@@ -9,6 +9,8 @@
 <title>JARVIS — Personal AI</title>
 <style>
 :root{color-scheme:dark;--bg:#07111e;--panel:#0d1b2b;--cyan:#5de1ff;--muted:#9ab2c6;--line:#1c4862;--violet:#9275ff;--pink:#ffb6d5}
+:root[data-theme="violet"]{--cyan:#c0b0ff;--line:#4b3f78;--violet:#c0b0ff}
+:root[data-theme="rose"]{--cyan:#ffb6d5;--line:#674256;--violet:#ffb6d5}
 *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 0,#102b42 0,var(--bg) 58%);color:#eaf8ff;font:16px system-ui,-apple-system,Arial,sans-serif;padding:18px;display:flex;justify-content:center}
 .app{width:100%;max-width:520px;margin:auto;padding:22px 17px 28px;background:#0b1725eF;border:1px solid var(--line);border-radius:26px;box-shadow:0 18px 60px #0008}
 header{display:flex;justify-content:space-between;align-items:center;gap:12px}h1{margin:0;color:var(--cyan);letter-spacing:.2em;font-size:27px}.tag{color:var(--muted);font-size:10px;letter-spacing:.16em;margin-top:4px}.pill{border:1px solid var(--line);border-radius:99px;padding:7px 10px;font-size:11px;color:var(--muted);white-space:nowrap}
@@ -33,6 +35,9 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
 <button id="testBtn">Test assistant</button>
 <button id="speakToggle">🔊 Voice replies: ON</button>
 <button id="languageToggle">🗣 Language: Urdu</button>
+<button id="stopSpeakingBtn" type="button">⏹ Stop speaking</button>
+<button id="themeToggle" type="button">🎨 Theme: Cyan</button>
+<button id="newChatBtn" type="button">＋ New chat</button>
 </div>
 <form id="commandForm"><input id="commandInput" autocomplete="off" placeholder="Type a command…" aria-label="Command"><button class="primary" type="submit">Send</button></form>
 <div class="section" id="voicePanel"><h2>CUTE VOICE SETTINGS</h2><div class="voice-grid">
@@ -53,12 +58,77 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
 (()=> {
  const $=id=>document.getElementById(id), status=$('status'), reply=$('reply'), input=$('commandInput'), orb=$('orb');
  const API_BASE='https://jarws-ai-2.onrender.com';
- let cloudOnline=false;
+ function createConversationId(){
+   if(window.crypto&&typeof window.crypto.randomUUID==='function')return window.crypto.randomUUID();
+   if(window.crypto&&typeof window.crypto.getRandomValues==='function'){
+     const bytes=new Uint8Array(16);window.crypto.getRandomValues(bytes);
+     bytes[6]=(bytes[6]&15)|64;bytes[8]=(bytes[8]&63)|128;
+     const hex=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
+     return hex.slice(0,8)+'-'+hex.slice(8,12)+'-'+hex.slice(12,16)+'-'+hex.slice(16,20)+'-'+hex.slice(20);
+   }
+   return '';
+ }
+ function loadConversationId(){
+   try{
+     const stored=localStorage.getItem('jarvisConversationId')||'';
+     if(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(stored))return stored;
+     const fresh=createConversationId();if(fresh)localStorage.setItem('jarvisConversationId',fresh);return fresh;
+   }catch(e){return createConversationId()}
+ }
+ let conversationId=loadConversationId();
+ let cloudOnline=false, assistantRequestInProgress=false, speechGeneration=0;
  let recognition=null, listening=false, wakeEnabled=false, awaitingCommand=false, voiceReplies=true, restartTimer=null, commandLanguage="ur-PK";
  const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
   function setStatus(s){status.textContent=s}
+ const themeChoices=['cyan','violet','rose'];
+ const themeLabels={cyan:'Cyan',violet:'Violet',rose:'Rose'};
+ function applyTheme(theme,save=true){
+   const safe=themeChoices.includes(theme)?theme:'cyan';
+   document.documentElement.dataset.theme=safe;
+   const meta=document.querySelector('meta[name="theme-color"]');
+   if(meta)meta.content=safe==='violet'?'#211b38':(safe==='rose'?'#321a27':'#07111e');
+   $('themeToggle').textContent='🎨 Theme: '+themeLabels[safe];
+   if(save){try{localStorage.setItem('jarvisTheme',safe)}catch(e){}}
+ }
+ let initialTheme='cyan';try{initialTheme=localStorage.getItem('jarvisTheme')||'cyan'}catch(e){}
+ applyTheme(initialTheme,false);
+ function stopSpeaking(){
+   speechGeneration++;
+   try{if(window.JarvisBridge&&typeof window.JarvisBridge.stopNativeSpeech==='function')window.JarvisBridge.stopNativeSpeech()}catch(e){}
+   try{if('speechSynthesis'in window)window.speechSynthesis.cancel()}catch(e){}
+   setStatus('SPEECH STOPPED');
+ }
  async function checkCloud(){const badge=$('connection');try{const r=await fetch(API_BASE+'/health',{method:'GET',cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);const data=await r.json();cloudOnline=!!data.ok;const aiReady=!!data.ai_connected;badge.textContent=aiReady?'AI KEYS CONFIGURED':(cloudOnline?'API ONLINE · AI NOT CONFIGURED':'CLOUD ERROR');badge.style.color=aiReady?'#5de1ff':(cloudOnline?'#ffd27d':'#ff9b9b');return cloudOnline}catch(e){cloudOnline=false;badge.textContent='CLOUD OFFLINE';badge.style.color='#ff9b9b';return false}}
- async function askCloud(message){setStatus('SENDING TO CLOUD…');orb.classList.add('active');try{const r=await fetch(API_BASE+'/api/assistant',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,locale:navigator.language||'en'})});let data={};try{data=await r.json()}catch(_){}if(!r.ok){let detail=data.detail||'';if(r.status===502)detail=detail||'Gemini ne request reject ki. Render environment mein API key aur Google AI Studio access check karna hoga.';else if(r.status===504)detail=detail||'Gemini response time par nahi aaya. Yeh AI server timeout hai, zaroori nahi ke aapka internet kharab ho.';else if(r.status===429)detail=detail||'Gemini ki free quota ya rate limit poori ho gayi hai.';else if(r.status===503)detail=detail||'Render par GEMINI_API_KEY configured nahi hai.';else detail=detail||('Cloud API error: HTTP '+r.status);throw new Error(detail)}say(data.reply||'Cloud received the message but returned no reply.');setStatus('CLOUD REPLIED · '+(data.mode||'API'));}catch(e){const message=(e&&e.message)?e.message:'Cloud request failed. Check connection and try again.';say(message);setStatus('CLOUD REQUEST FAILED');}finally{setTimeout(()=>orb.classList.remove('active'),900)}}
+ async function askCloud(message){
+   if(assistantRequestInProgress){setStatus('WAIT FOR THE CURRENT AI REPLY');return}
+   assistantRequestInProgress=true;
+   const requestSpeechGeneration=speechGeneration;
+   setStatus('SENDING TO CLOUD…');orb.classList.add('active');
+   try{
+     const r=await fetch(API_BASE+'/api/assistant',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,locale:navigator.language||'en',conversation_id:conversationId||undefined})});
+     let data={};try{data=await r.json()}catch(_){}
+     if(!r.ok){
+       let detail=data.detail||'';
+       if(r.status===502)detail=detail||'Gemini/Groq provider error. Check Render environment and provider access.';
+       else if(r.status===504)detail=detail||'AI provider timed out. This may be a server-side timeout.';
+       else if(r.status===429)detail=detail||'AI provider free quota or rate limit reached.';
+       else if(r.status===503)detail=detail||'No AI provider is ready on the backend.';
+       else detail=detail||('Cloud API error: HTTP '+r.status);
+       throw new Error(detail);
+     }
+     const answer=data.reply||'Cloud received the message but returned no reply.';
+     reply.textContent=answer;
+     if(speechGeneration===requestSpeechGeneration)say(answer);
+     setStatus('CLOUD REPLIED · '+(data.mode||'API'));
+   }catch(e){
+     const message=(e&&e.message)?e.message:'Cloud request failed. Check connection and try again.';
+     if(speechGeneration===requestSpeechGeneration)say(message);else reply.textContent=message;
+     setStatus('CLOUD REQUEST FAILED');
+   }finally{
+     assistantRequestInProgress=false;
+     setTimeout(()=>orb.classList.remove('active'),900);
+   }
+ }
  function voiceKey(v){return v.name+"||"+v.lang}
  function refreshVoices(){if(!('speechSynthesis'in window))return;const list=window.speechSynthesis.getVoices();if(!list.length)return;const select=$('voiceSelect');const selected=select.value||localStorage.getItem('jarvisVoiceKey')||'';select.innerHTML='';const auto=document.createElement('option');auto.value='';auto.textContent='Auto — best available';select.appendChild(auto);list.slice().sort((a,b)=>a.lang.localeCompare(b.lang)||a.name.localeCompare(b.name)).forEach(v=>{const option=document.createElement('option');option.value=voiceKey(v);option.textContent=v.name+' — '+v.lang;select.appendChild(option)});select.value=list.some(v=>voiceKey(v)===selected)?selected:''}
  function chooseVoice(){const voices=window.speechSynthesis.getVoices();const selected=$('voiceSelect').value;if(selected){const found=voices.find(v=>voiceKey(v)===selected);if(found)return found}const lang=(commandLanguage||'ur-PK').toLowerCase();const base=lang.split('-')[0];const female=/female|zira|samantha|aria|jenny|sara|siri|victoria|eva|sonia|karen|google.*female/i;return voices.find(v=>female.test(v.name)&&v.lang.toLowerCase().startsWith(base))||voices.find(v=>base==='ur'&&v.lang.toLowerCase().startsWith('hi'))||voices.find(v=>v.lang.toLowerCase().startsWith(base))||voices.find(v=>female.test(v.name))||voices[0]||null}
@@ -91,6 +161,17 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
    }else speak();
  }
 
+ function launchPhoneApp(appId,label,fallbackUrl){
+   if(window.JarvisBridge&&typeof window.JarvisBridge.openInstalledApp==='function'){
+     const launched=window.JarvisBridge.openInstalledApp(appId);
+     if(launched){reply.textContent='Opening '+label+'.';setStatus('APP LAUNCH REQUESTED');return}
+     say(label+' app nahi mili. Browser se web version khol raha hoon.');
+     window.location.href=fallbackUrl;
+     return;
+   }
+   say('Opening '+label+'.');
+   window.open(fallbackUrl,'_blank','noopener');
+ }
  function processCommand(raw){const text=String(raw||'').trim(),c=window.JarvisCommandUtils?window.JarvisCommandUtils.normalize(text):text.toLowerCase().replace(/[!?.,،۔]/g,' ').replace(/\s+/g,' ').trim();if(!c)return;
  setStatus('PROCESSING…');orb.classList.add('active');
  const has=(patterns)=>patterns.some(p=>p.test(c));
@@ -105,9 +186,11 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
  else if(window.JarvisCommandUtils&&window.JarvisCommandUtils.isTimeCommand(text))say(commandLanguage==='ur-PK'?'Abhi waqt '+new Date().toLocaleTimeString('en-PK',{hour:'numeric',minute:'2-digit'})+' hai.':'The time is '+new Date().toLocaleTimeString());
  else if(window.JarvisCommandUtils&&window.JarvisCommandUtils.isDateCommand(text))say(commandLanguage==='ur-PK'?'Aaj ki tareekh '+new Date().toLocaleDateString('en-GB')+' hai.':'Today is '+new Date().toLocaleDateString());
  else if(has([/\b(your name|who are you|tumhara naam|ap ka naam|aap ka naam)\b/,/تمہارا نام/,/آپ کا نام/]))say('Main JARVIS hoon, aap ka personal assistant.');
- else if(has([/\b(open google|google kholo|google khol do|kholo google|google open)\b/,/گوگل کھولو/,/گوگل کھول دو/])){say(commandLanguage==='ur-PK'?'Google khol raha hoon.':'Opening Google.');window.open('https://www.google.com/','_blank','noopener')}
- else if(has([/\b(open youtube|youtube kholo|youtube khol do|kholo youtube|youtube open)\b/,/یوٹیوب کھولو/,/یوٹیوب کھول دو/])){say(commandLanguage==='ur-PK'?'YouTube khol raha hoon.':'Opening YouTube.');window.open('https://m.youtube.com/','_blank','noopener')}
- else if(has([/\b(stop speaking|bolna band|chup ho jao)\b/,/بولنا بند/])){if(window.JarvisBridge&&typeof window.JarvisBridge.stopNativeSpeech==='function')window.JarvisBridge.stopNativeSpeech();if('speechSynthesis'in window)window.speechSynthesis.cancel();reply.textContent='Theek hai, voice reply rok di.'}
+ else if(has([/\b(open whatsapp|whatsapp kholo|whatsapp khol do|kholo whatsapp|whatsapp open)\b/,/واٹس ایپ کھولو/,/واٹس ایپ کھول دو/]))launchPhoneApp('whatsapp','WhatsApp','https://web.whatsapp.com/');
+ else if(has([/\b(open browser|browser kholo|browser khol do|open chrome|chrome kholo)\b/,/براؤزر کھولو/]))launchPhoneApp('browser','browser','https://www.google.com/');
+ else if(has([/\b(open google|google kholo|google khol do|kholo google|google open)\b/,/گوگل کھولو/,/گوگل کھول دو/]))launchPhoneApp('browser','Google','https://www.google.com/');
+ else if(has([/\b(open youtube|youtube kholo|youtube khol do|kholo youtube|youtube open)\b/,/یوٹیوب کھولو/,/یوٹیوب کھول دو/]))launchPhoneApp('youtube','YouTube','https://m.youtube.com/');
+ else if(has([/\b(stop speaking|bolna band|chup ho jao)\b/,/بولنا بند/])){stopSpeaking();reply.textContent='Theek hai, voice reply rok di.'}
  else if(has([/\b(help|madad|kya kar sakte ho|commands)\b/,/مدد/,/کیا کر سکتے ہو/]))say('Main waqt aur tareekh bata sakta hoon, Google aur YouTube khol sakta hoon, aur Android app mein local reminders schedule kar sakta hoon. Basic Back, Home aur swipe controls ke liye aapki permission zaroori hai.');
  else {reply.textContent='JARVIS se jawab liya ja raha hai…';askCloud(text);return;}
  setStatus(listening?(wakeEnabled?'LISTENING FOR WAKE WORD':'LISTENING'):'READY');setTimeout(()=>orb.classList.remove('active'),900)
@@ -125,7 +208,7 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
  recognition.onend=()=>{if(listening){clearTimeout(restartTimer);restartTimer=setTimeout(()=>{try{recognition.start()}catch(e){}},500)}else{$('wakeBtn').textContent='🎙 Start listening';setStatus('READY')}};
  try{recognition.start()}catch(e){setStatus('COULD NOT START MICROPHONE')}
  }
- function stopListening(){listening=false;awaitingCommand=false;clearTimeout(restartTimer);if(recognition){try{recognition.onend=null;recognition.stop()}catch(e){}recognition=null}if('speechSynthesis'in window)window.speechSynthesis.cancel();$('wakeBtn').textContent='🎙 Start listening';setStatus('LISTENING STOPPED')}
+ function stopListening(){listening=false;awaitingCommand=false;clearTimeout(restartTimer);if(recognition){try{recognition.onend=null;recognition.stop()}catch(e){}recognition=null}stopSpeaking();$('wakeBtn').textContent='🎙 Start listening';setStatus('LISTENING STOPPED')}
  // Voice settings are stored locally on this device. Voice availability is controlled by Android.
  try{$('pitchSlider').value=localStorage.getItem('jarvisVoicePitch')||'1.22';$('rateSlider').value=localStorage.getItem('jarvisVoiceRate')||'0.91'}catch(e){}
  $('pitchSlider').addEventListener('input',saveVoiceSettings);$('rateSlider').addEventListener('input',saveVoiceSettings);
@@ -136,7 +219,10 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
  saveVoiceSettings();
  $('wakeBtn').onclick=()=>startListening();$('stopBtn').onclick=stopListening;
  $('testBtn').onclick=()=>askCloud('Test connection. Tell me whether the JARVIS cloud API received this message.');
- $('speakToggle').onclick=()=>{voiceReplies=!voiceReplies;$('speakToggle').textContent=voiceReplies?'🔊 Voice replies: ON':'🔇 Voice replies: OFF'};
+ $('speakToggle').onclick=()=>{voiceReplies=!voiceReplies;$('speakToggle').textContent=voiceReplies?'🔊 Voice replies: ON':'🔇 Voice replies: OFF';if(!voiceReplies)stopSpeaking()};
+ $('stopSpeakingBtn').onclick=()=>{stopSpeaking();reply.textContent='Voice reply stopped.'};
+ $('themeToggle').onclick=()=>{const current=document.documentElement.dataset.theme||'cyan';const next=themeChoices[(themeChoices.indexOf(current)+1)%themeChoices.length];applyTheme(next,true)};
+ $('newChatBtn').onclick=()=>{const fresh=createConversationId();if(!fresh){setStatus('SECURE RANDOM ID UNAVAILABLE · MEMORY OFF');return}conversationId=fresh;try{localStorage.setItem('jarvisConversationId',fresh)}catch(e){}reply.textContent='New conversation started. Previous chat is retained on the server until its retention window expires.';setStatus('NEW CONVERSATION READY')};
  $('languageToggle').onclick=()=>{commandLanguage=commandLanguage==='ur-PK'?'en-US':'ur-PK';$('languageToggle').textContent=commandLanguage==='ur-PK'?'🗣 Language: Urdu':'🗣 Language: English';if(listening){stopListening();startListening()}say(commandLanguage==='ur-PK'?'Urdu mode on. Ab Urdu ya Roman Urdu mein command bolain.':'English mode on. Speak your command in English.')};
  $('wakeToggle').onclick=()=>{wakeEnabled=!wakeEnabled;$('wakeToggle').textContent='Hey JARVIS: '+(wakeEnabled?'ON':'OFF');setStatus(listening?(wakeEnabled?'LISTENING FOR “HEY JARVIS”':'LISTENING'):'READY')};
  $('commandForm').onsubmit=e=>{e.preventDefault();processCommand(input.value);input.value=''};
@@ -151,7 +237,11 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
    }));
  }
  if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>{let refreshing=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!refreshing){refreshing=true;location.reload()}});navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(reg=>reg.update()).catch(()=>{});});
- checkCloud();setInterval(checkCloud,60000);
+ // A foreground-only health ping can keep a free instance warm while the dashboard is open.
+ // Render Free still spins down after inactivity when the client is closed/backgrounded.
+ function refreshCloudIfVisible(){if(document.visibilityState==='visible')checkCloud()}
+ checkCloud();setInterval(refreshCloudIfVisible,240000);
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkCloud()});
  if(!Recognition){setStatus('TEXT MODE · VOICE SUPPORT DEPENDS ON BROWSER')}
 })();
 </script>

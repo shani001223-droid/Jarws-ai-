@@ -348,14 +348,24 @@ class MainActivity : Activity() {
         if (available != null) engine.setLanguage(available)
         try {
             val voices = engine.voices.orEmpty().filter { available == null || it.locale.language == available.language }
-            // Best-effort preference only: installed TTS engines expose different voice names,
-            // and a feminine-sounding Urdu voice cannot be guaranteed if the device lacks one.
+            // Free-first voice selection: prefer an installed Pakistani Urdu voice,
+            // then any installed Urdu voice, then a feminine-sounding fallback.
+            // TTS engines expose inconsistent voice names; gender/accent cannot be guaranteed.
             val feminineVoiceHints = listOf(
                 "female", "feminine", "sfg", "zira", "samantha", "aria",
                 "jenny", "sara", "siri", "victoria", "sonia", "karen"
             )
-            val preferred = voices.firstOrNull { voice ->
+            val isFeminineHint: (android.speech.tts.Voice) -> Boolean = { voice ->
                 feminineVoiceHints.any { hint -> voice.name.contains(hint, ignoreCase = true) }
+            }
+            val preferred = if (lang == "ur") {
+                voices.firstOrNull { it.locale.language == "ur" && it.locale.country == "PK" && isFeminineHint(it) }
+                    ?: voices.firstOrNull { it.locale.language == "ur" && isFeminineHint(it) }
+                    ?: voices.firstOrNull { it.locale.language == "ur" && it.locale.country == "PK" }
+                    ?: voices.firstOrNull { it.locale.language == "ur" }
+                    ?: voices.firstOrNull(isFeminineHint)
+            } else {
+                voices.firstOrNull(isFeminineHint)
             }
             if (preferred != null) engine.voice = preferred
         } catch (_: Exception) {

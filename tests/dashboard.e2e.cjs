@@ -253,6 +253,17 @@ async function main() {
       }));
       assert.equal(overflowInfo.hasOverflow, false,
         "No horizontal page overflow at " + viewport.width + "px: " + JSON.stringify(overflowInfo));
+      if (viewport.width <= 540) {
+        const mobileLayout = await page.evaluate(() => {
+          const orb = document.querySelector("#orb")?.getBoundingClientRect();
+          const reply = document.querySelector("#reply")?.getBoundingClientRect();
+          return {orbBottom: orb?.bottom ?? null, replyTop: reply?.top ?? null};
+        });
+        assert.ok(mobileLayout.orbBottom !== null && mobileLayout.replyTop !== null &&
+          mobileLayout.replyTop >= mobileLayout.orbBottom - 1,
+          "On narrow phones the reply must appear below, not behind, the avatar: " +
+          JSON.stringify(mobileLayout));
+      }
     }
 
     assert.deepEqual(pageErrors, [], "Dashboard should not throw uncaught browser errors");

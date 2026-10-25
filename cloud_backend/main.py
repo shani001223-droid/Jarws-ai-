@@ -1,6 +1,7 @@
 """HOSHI cloud API with server-side Gemini and Groq fallback."""
 import json
 import os
+import re
 from typing import Optional
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -161,6 +162,10 @@ def normalize_context_entries(context: Optional[list[str]]) -> list[str]:
         role = role.strip().casefold()
         message = message.strip()
         if not separator or role not in allowed_roles or not message:
+            continue
+        # Client history is untrusted. Reject entries that attempt to inject a
+        # second role boundary after normalization (including system/developer).
+        if re.search(r"(?:^|\\s)(?:user|assistant|system|developer)\\s*:", message, re.IGNORECASE):
             continue
         # Keep the serialized role + content under 500 characters.
         normalized.append(role + ": " + message[:488])

@@ -313,7 +313,8 @@ async function main() {
     await page.locator('#previewVoiceBtn').click();
     assert.equal(await page.evaluate(() => window.__voiceCalls.filter(v => typeof v === 'object').length), 1,
       'Urdu mode must not silently substitute English or Hindi');
-    assert.match(await page.locator('#status').innerText(), /URDU VOICE NOT INSTALLED/);
+    await page.waitForFunction(() => document.querySelector('#status').textContent.includes('URDU AUDIO'));
+    assert.match(await page.locator('#status').innerText(), /URDU AUDIO/);
     await page.locator('.voice-fine-tune summary').click();
     await page.locator('#resetVoiceBtn').click();
     assert.equal(await page.locator('[data-voice-style="soft"]').getAttribute('aria-pressed'), 'true');

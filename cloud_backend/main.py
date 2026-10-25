@@ -1,4 +1,5 @@
 """HOSHI cloud API with server-side Gemini and Groq fallback."""
+import asyncio
 import json
 import os
 import re
@@ -6,7 +7,7 @@ from typing import Optional
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -38,6 +39,45 @@ class AssistantResponse(BaseModel):
     mode: str = "gemini"
     emotion: str = "caring"
     speech_text: Optional[str] = None
+
+
+class SpeechRequest(BaseModel):
+    text: str = Field(min_length=1, max_length=6000)
+    style: str = "soft"
+
+
+async def synthesize_urdu(text: str, style: str) -> bytes:
+    import edge_tts
+    rate, pitch = {"soft": ("-5%", "+5Hz"), "warm": ("-8%", "+0Hz"), "playful": ("+0%", "+10Hz")}.get(style, ("-5%", "+5Hz"))
+    audio = bytearray()
+    async for chunk in edge_tts.Communicate(text, "ur-PK-UzmaNeural", rate=rate, pitch=pitch).stream():
+        if chunk["type"] == "audio":
+            audio.extend(chunk["data"])
+            if len(audio) > 2_000_000:
+                raise ValueError("Audio exceeds response limit")
+    if not audio:
+        raise ValueError("No audio returned")
+    return bytes(audio)
+
+
+speech_slots = asyncio.Semaphore(2)
+
+
+@app.post("/api/speech")
+async def speech(payload: SpeechRequest):
+    text = payload.text.strip()
+    if not re.search(r"[\u0600-\u06ff]", text) or re.search(r"[\u0900-\u097f]", text):
+        raise HTTPException(status_code=400, detail="Urdu-script text is required for Urdu speech.")
+    async def generate():
+        async with speech_slots:
+            return await synthesize_urdu(text, payload.style)
+    try:
+        audio = await asyncio.wait_for(generate(), timeout=25)
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Online Urdu voice timed out. Tap Hear Hoshi to retry.") from None
+    except Exception:
+        raise HTTPException(status_code=502, detail="Online Urdu voice is unavailable. Try again or install an Urdu device voice.") from None
+    return Response(content=audio, media_type="audio/mpeg", headers={"Cache-Control": "no-store"})
 
 
 def make_assistant_response(raw: str, mode: str, message: str, locale: str) -> AssistantResponse:

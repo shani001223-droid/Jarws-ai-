@@ -1,8 +1,9 @@
+import asyncio
 import io
 import json
 import os
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, AsyncMock
 from urllib.error import HTTPError
 
 from cloud_backend import main
@@ -28,6 +29,28 @@ class AssistantApiTests(unittest.TestCase):
         isolate = patch.dict(os.environ, {"OPENROUTER_API_KEY": ""})
         isolate.start()
         self.addCleanup(isolate.stop)
+
+    def test_online_urdu_audio_returns_mp3_without_storage(self):
+        with patch("cloud_backend.main.synthesize_urdu", new=AsyncMock(return_value=b"ID3test-audio")) as mocked:
+            response = asyncio.run(main.speech(main.SpeechRequest(text="میں ہوشی ہوں۔", style="warm")))
+        self.assertEqual(response.media_type, "audio/mpeg")
+        self.assertEqual(response.headers["cache-control"], "no-store")
+        self.assertEqual(response.body, b"ID3test-audio")
+        mocked.assert_awaited_once_with("میں ہوشی ہوں۔", "warm")
+
+    def test_online_urdu_audio_rejects_wrong_script_before_provider(self):
+        with patch("cloud_backend.main.synthesize_urdu", new=AsyncMock()) as mocked:
+            with self.assertRaises(main.HTTPException) as raised:
+                asyncio.run(main.speech(main.SpeechRequest(text="Main Hoshi hoon")))
+        self.assertEqual(raised.exception.status_code, 400)
+        mocked.assert_not_awaited()
+
+    def test_online_voice_failure_is_clear_without_provider_error_leak(self):
+        with patch("cloud_backend.main.synthesize_urdu", new=AsyncMock(side_effect=RuntimeError("private upstream error"))):
+            with self.assertRaises(main.HTTPException) as raised:
+                asyncio.run(main.speech(main.SpeechRequest(text="میں ہوشی ہوں۔")))
+        self.assertEqual(raised.exception.status_code, 502)
+        self.assertNotIn("private upstream", raised.exception.detail)
 
     def test_openrouter_free_primary_keeps_urdu_and_context(self):
         raw = json.dumps({"reply": "Main Hoshi hoon.", "speech_text": "میں ہوشی ہوں۔"})

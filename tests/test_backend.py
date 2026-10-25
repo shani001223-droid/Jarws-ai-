@@ -53,7 +53,7 @@ class AssistantApiTests(unittest.TestCase):
         }
         with patch.dict(os.environ, {"GEMINI_API_KEY": "test-gemini-key", "GROQ_API_KEY": ""}):
             with patch("cloud_backend.main.urlopen", return_value=FakeResponse(payload)) as mocked:
-                result = main.assistant(main.AssistantRequest(message="Hello"))
+                result = main.assistant(main.AssistantRequest(message="Hello", personality="playful"))
 
         self.assertEqual(result.reply, "Hello from Gemini")
         self.assertEqual(result.mode, "gemini")
@@ -66,6 +66,7 @@ class AssistantApiTests(unittest.TestCase):
         self.assertEqual(body["input"], "Hello")
         self.assertFalse(body["store"])
         self.assertIn("Roman Urdu", body["system_instruction"])
+        self.assertIn("playful teasing", body["system_instruction"])
 
     def test_recent_context_is_bounded_and_passed_to_gemini(self):
         payload = {

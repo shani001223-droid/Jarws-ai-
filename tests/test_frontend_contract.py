@@ -54,7 +54,11 @@ class FrontendContractTests(unittest.TestCase):
         self.assertIn("<svg", icon)
         self.assertIn('href="./assets/hoshi-app-icon.svg"', HTML)
         self.assertIn('./assets/hoshi-app-icon.svg', MANIFEST)
-        self.assertIn('"purpose": "any maskable"', MANIFEST)
+        self.assertIn('"sizes": "any"', MANIFEST)
+        self.assertIn('"type": "image/svg+xml"', MANIFEST)
+        self.assertIn('"purpose": "any"', MANIFEST)
+        self.assertNotIn('"purpose": "any maskable"', MANIFEST)
+        self.assertIn('width="512" height="512"', icon)
         self.assertIn("./assets/hoshi-app-icon.svg", SERVICE_WORKER)
 
     def test_final_dashboard_hero_art_and_speaking_indicator_are_wired(self):

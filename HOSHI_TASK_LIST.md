@@ -1,6 +1,6 @@
 # HOSHI AI — Master Transformation Task List
 
-**Status:** Implementation in progress — the main personality, memory, responsive dashboard, avatar-expression, backend fallback, and native Android foundations are present. Earlier automated runs passed; the latest backend context-hardening and provider-branding changes are awaiting fresh CI confirmation. Full conversational acceptance, live Render visual verification, and target-phone tests are still pending.  
+**Status:** Implementation in progress — the main personality, memory, responsive dashboard, avatar-expression, backend fallback, and native Android foundations are present. Latest basic checks and the Android debug APK build passed after context hardening, voice-selection improvements, mobile overflow fixes, and the HOSHI launcher icon update. The live Render responsive check is running; full conversational/voice acceptance and target-phone tests remain pending.  
 **Repository:** [shani001223-droid/Jarws-ai-](https://github.com/shani001223-droid/Jarws-ai-)  
 **Final design:** The two user-provided HOSHI character and dashboard images are the final design, not inspiration. Preserve the character appearance, layout, dark navy / electric-blue / cyan neon palette, and panel arrangement as closely as implementation permits.
 
@@ -71,7 +71,7 @@
 - [x] Latest confirmed backend/contract suite `HOSHI basic checks` run #167 passed, including mood-negation and roleplay-boundary tests. [Run #167](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40235947933).
 - [x] `Build HOSHI Android APK` run #30 passed and uploaded `hoshi-debug-apk` after the Android TTS voice-selection improvement. [Run #30](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40235143457). Installing and testing it on the target phone remains pending by design.
 - [x] `HOSHI basic checks` run #160 passed with Chromium verifying the five hero shortcuts, text chat, emotion state, memory toggle, stale-response protection, and browser-mode fallbacks. [Run #160](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40235361114). Current Render frontend visual verification and Realme testing remain pending.
-- [ ] Install the generated debug APK and verify core flows on the target Android phone.
+- [ ] Install the generated debug APK and verify core flows on the target Android phone (deferred until all other available tasks are complete, as requested).
 
 ## Initial audit notes
 - [x] Read the repository README and inspect the CI workflow definition at `.github/workflows/ci.yml`.
@@ -103,7 +103,7 @@
 - [x] Backend context input hardened: accepts only `user:` / `assistant:` history rows, collapses actual control characters and literal escaped newline/tab sequences, limits each entry and retains at most eight recent turns.
 - [x] Regression tests added for invalid context roles, multiline entries, literal escaped control sequences, and per-entry/eight-turn bounds.
 - [x] Provider request User-Agent and backend module branding updated from stale JARVIS 0.7.0 to HOSHI 0.9.1.
-- [ ] Confirm the newest GitHub Actions backend/contract and browser suites pass after these changes; do not mark this check complete before a green run.
+- [x] Confirmed the newest GitHub Actions backend/contract and Chromium browser suites pass after context hardening, voice-selection, and mobile-overflow fixes. [Run #193](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40237061426).
 - [ ] Confirm the updated Render backend deployment and current frontend UI; physical Realme Note 50 test remains deferred until all other available tasks are complete.
 
 - [x] Added `assets/hoshi-expressions.webp`, an 8-state sprite made from the final user-provided character sheet; the dashboard switches sprite positions based on `data-emotion`.
@@ -124,3 +124,15 @@
 4. Make changes in small, testable steps and avoid destructive rewrites.
 5. Use free options where practical; explain any unavoidable cost before proceeding.
 6. Mark phases complete only after their tests pass; unchecked items remain pending.
+
+
+## Latest implementation update (2026-10-26 — continued)
+
+- [x] Improved automatic voice choice: prefer exact Urdu-Pakistan voice when installed, then Urdu voices, then female Hindi/other voice fallback; an explicitly selected device voice remains respected. This is still dependent on the device's installed TTS engines and does not create a new neural voice.
+- [x] Fixed narrow-screen horizontal overflow in the responsive dashboard. The first browser run exposed a 3px overflow; a viewport-width guard was added and the subsequent full basic check passed.
+- [x] Added a native vector HOSHI neon-star launcher icon and pointed Android normal/round icon fields to it.
+- [x] Android debug APK build passed after the launcher icon change. [Build run #32](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40237013290).
+- [x] Full basic suite and real-browser dashboard smoke test passed after the mobile overflow fix. [Run #193](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40237061426).
+- [ ] Live Render responsive screenshot/visual smoke test is running; mark complete only after its result is green.
+- [ ] Lip-sync/full avatar rig remains unimplemented because the current asset is a static 8-expression sprite; the existing speaking pulse is only a visual indicator, not mouth synchronization.
+- [ ] Target-device Realme Note 50 test remains intentionally deferred until all other available tasks are completed.

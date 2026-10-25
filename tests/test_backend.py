@@ -5,6 +5,8 @@ import tempfile
 import unittest
 import uuid
 from unittest.mock import patch
+
+from fastapi import HTTPException
 from urllib.error import HTTPError
 
 from cloud_backend import main
@@ -151,7 +153,7 @@ class AssistantApiTests(unittest.TestCase):
                 self.assertEqual(history[-1]["content"], "Your name is Ali.")
 
     def test_invalid_conversation_id_is_rejected(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(HTTPException):
             main.assistant(main.AssistantRequest(
                 message="Hello", conversation_id="x" * 36
             ))

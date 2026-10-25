@@ -96,6 +96,10 @@ class AssistantApiTests(unittest.TestCase):
         self.assertIn("Do not repeat greetings, stock lines", body["system_instruction"])
         self.assertIn("warm reconciliation", body["system_instruction"])
         self.assertIn("Never use fake distress", body["system_instruction"])
+        self.assertIn("clearly fictional, age-appropriate affectionate", body["system_instruction"])
+        self.assertIn("never use guilt, emotional blackmail, coercion", body["system_instruction"])
+        self.assertIn("Do not pretend to have real human feelings", body["system_instruction"])
+        self.assertIn("Do not claim to control the user's device", body["system_instruction"])
 
     def test_gemini_joins_multiple_text_blocks_with_real_newlines(self):
         payload = {

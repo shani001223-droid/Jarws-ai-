@@ -32,39 +32,41 @@ footer{margin-top:17px;text-align:center;font-size:11px;color:#718da3;line-heigh
 <button id="stopBtn">■ Stop listening</button>
 <button id="testBtn">Test assistant</button>
 <button id="speakToggle">🔊 Voice replies: ON</button>
+<button id="languageToggle">🗣 Language: Urdu</button>
 </div>
 <form id="commandForm"><input id="commandInput" autocomplete="off" placeholder="Type a command…" aria-label="Command"><button class="primary" type="submit">Send</button></form>
 <div class="section"><div class="statusrow"><h2>WAKE WORD</h2><button class="toggle" id="wakeToggle">Hey JARVIS: OFF</button></div><p class="small">Wake-word detection works only while this page is open, foregrounded and microphone access is granted. This web prototype cannot listen reliably while the phone is locked or the app is closed.</p></div>
 <div class="section"><h2>TRY A COMMAND</h2><p class="small">“Hey JARVIS” · “What time is it?” · “Open Google” · “Open YouTube” · “Help” · “Stop speaking”</p><div class="quick"><button data-cmd="what time is it">Time</button><button data-cmd="today's date">Date</button><button data-cmd="open Google">Google</button><button data-cmd="open YouTube">YouTube</button><button data-cmd="help">Help</button></div></div>
-<footer>Cloud API connected when online · AI model is not connected yet.<br>Android screen control and background wake-word still need a separate implementation.</footer>
+<footer>Basic commands, time/date, Google and YouTube are available. Urdu/Roman Urdu and English commands supported where browser speech recognition permits.<br>Cloud AI and advanced phone control depend on backend configuration and are not guaranteed.</footer>
 </main>
 <script>
 (()=> {
  const $=id=>document.getElementById(id), status=$('status'), reply=$('reply'), input=$('commandInput'), orb=$('orb');
  const API_BASE='https://jarws-ai.onrender.com';
  let cloudOnline=false;
- let recognition=null, listening=false, wakeEnabled=false, awaitingCommand=false, voiceReplies=true, restartTimer=null;
+ let recognition=null, listening=false, wakeEnabled=false, awaitingCommand=false, voiceReplies=true, restartTimer=null, commandLanguage="ur-PK";
  const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
  function setStatus(s){status.textContent=s}
- async function checkCloud(){const badge=$('connection');try{const r=await fetch(API_BASE+'/health',{method:'GET',cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);const data=await r.json();cloudOnline=!!data.ok;badge.textContent=cloudOnline?'CLOUD ONLINE':'CLOUD ERROR';badge.style.color=cloudOnline?'#5de1ff':'#ff9b9b';return cloudOnline}catch(e){cloudOnline=false;badge.textContent='CLOUD OFFLINE';badge.style.color='#ff9b9b';return false}}
- async function askCloud(message){setStatus('SENDING TO CLOUD…');orb.classList.add('active');try{const r=await fetch(API_BASE+'/api/assistant',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,locale:navigator.language||'en'})});if(!r.ok)throw new Error('HTTP '+r.status);const data=await r.json();say(data.reply||'Cloud received the message but returned no reply.');setStatus('CLOUD REPLIED · '+(data.mode||'API'));}catch(e){say('I could not reach the cloud server. Check your internet connection and try again.');setStatus('CLOUD REQUEST FAILED');}finally{setTimeout(()=>orb.classList.remove('active'),900)}}
- function say(text){reply.textContent=text;if(voiceReplies&&'speechSynthesis'in window){window.speechSynthesis.cancel();if(recognition&&listening){try{recognition.stop()}catch(e){}}const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.onend=()=>{if(listening&&recognition){clearTimeout(restartTimer);restartTimer=setTimeout(()=>{try{recognition.start()}catch(e){}},350)}};window.speechSynthesis.speak(u)}}
- function processCommand(raw){const text=raw.trim(),c=text.toLowerCase();if(!c)return;
+ async function checkCloud(){const badge=$('connection');try{const r=await fetch(API_BASE+'/health',{method:'GET',cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);const data=await r.json();cloudOnline=!!data.ok;const aiReady=!!data.ai_connected;badge.textContent=aiReady?'AI CONNECTED':(cloudOnline?'API ONLINE · AI NOT READY':'CLOUD ERROR');badge.style.color=aiReady?'#5de1ff':(cloudOnline?'#ffd27d':'#ff9b9b');return cloudOnline}catch(e){cloudOnline=false;badge.textContent='CLOUD OFFLINE';badge.style.color='#ff9b9b';return false}}
+ async function askCloud(message){setStatus('SENDING TO CLOUD…');orb.classList.add('active');try{const r=await fetch(API_BASE+'/api/assistant',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,locale:navigator.language||'en'})});if(!r.ok)throw new Error('HTTP '+r.status);const data=await r.json();say(data.reply||'Cloud received the message but returned no reply.');setStatus('CLOUD REPLIED · '+(data.mode||'API'));}catch(e){let detail='';try{const problem=await r.json();detail=problem.detail||''}catch(_){}say(detail?'Cloud AI: '+detail:'I could not reach the cloud server. Check your internet connection and try again.');setStatus('CLOUD REQUEST FAILED');}finally{setTimeout(()=>orb.classList.remove('active'),900)}}
+ function say(text){reply.textContent=text;if(voiceReplies&&'speechSynthesis'in window){window.speechSynthesis.cancel();if(recognition&&listening){try{recognition.stop()}catch(e){}}const u=new SpeechSynthesisUtterance(text);u.lang=commandLanguage;u.onend=()=>{if(listening&&recognition){clearTimeout(restartTimer);restartTimer=setTimeout(()=>{try{recognition.start()}catch(e){}},350)}};window.speechSynthesis.speak(u)}}
+ function processCommand(raw){const text=raw.trim(),c=text.toLowerCase().replace(/[!?.,،۔]/g,' ').replace(/\s+/g,' ').trim();if(!c)return;
  setStatus('PROCESSING…');orb.classList.add('active');
- if(/\b(hello|hi|salam|assalam|hey jarvis)\b/.test(c)){say('I am online. Tell me what you need.')}
- else if(c.includes('time'))say('The time is '+new Date().toLocaleTimeString());
- else if(c.includes('date')||c.includes('today'))say('Today is '+new Date().toLocaleDateString());
- else if(c.includes('your name')||c.includes('who are you'))say('I am JARVIS, your personal assistant prototype.');
- else if(c.includes('open google')){say('Opening Google.');window.open('https://www.google.com/','_blank','noopener')}
- else if(c.includes('open youtube')){say('Opening YouTube.');window.open('https://m.youtube.com/','_blank','noopener')}
- else if(c.includes('stop speaking')){if('speechSynthesis'in window)window.speechSynthesis.cancel();reply.textContent='Voice reply stopped.'}
- else if(c==='help'||c.includes('what can you do'))say('I can respond to basic commands, tell the time and date, and open Google or YouTube. Cloud AI and advanced phone control are planned next.');
- else {reply.textContent='Sending to JARVIS cloud…';askCloud(text);return;}
- setStatus(listening?'LISTENING FOR WAKE WORD':'READY');setTimeout(()=>orb.classList.remove('active'),900)
+ const has=(patterns)=>patterns.some(p=>p.test(c));
+ if(has([/\b(hello|hi|salam|assalam|hey jarvis)\b/,/السلام علیکم/,/سلام/]))say(commandLanguage==='ur-PK'?'Ji, main JARVIS hoon. Batayein, kya madad chahiye?':'I am online. Tell me what you need.');
+ else if(has([/\b(time|waqt|kitne bajay|kitna bajay|baje|baj rahe|time batao)\b/,/وقت/,/کتنے بجے/,/کیا وقت/]))say(commandLanguage==='ur-PK'?'Abhi waqt '+new Date().toLocaleTimeString('en-PK',{hour:'numeric',minute:'2-digit'})+' hai.':'The time is '+new Date().toLocaleTimeString());
+ else if(has([/\b(date|tareekh|tarikh|aaj ki date|aaj ki tareekh)\b/,/تاریخ/,/آج کی تاریخ/]))say(commandLanguage==='ur-PK'?'Aaj ki tareekh '+new Date().toLocaleDateString('en-GB')+' hai.':'Today is '+new Date().toLocaleDateString());
+ else if(has([/\b(your name|who are you|tumhara naam|ap ka naam|aap ka naam)\b/,/تمہارا نام/,/آپ کا نام/]))say('Main JARVIS hoon, aap ka personal assistant.');
+ else if(has([/\b(open google|google kholo|google khol do|kholo google|google open)\b/,/گوگل کھولو/,/گوگل کھول دو/])){say(commandLanguage==='ur-PK'?'Google khol raha hoon.':'Opening Google.');window.open('https://www.google.com/','_blank','noopener')}
+ else if(has([/\b(open youtube|youtube kholo|youtube khol do|kholo youtube|youtube open)\b/,/یوٹیوب کھولو/,/یوٹیوب کھول دو/])){say(commandLanguage==='ur-PK'?'YouTube khol raha hoon.':'Opening YouTube.');window.open('https://m.youtube.com/','_blank','noopener')}
+ else if(has([/\b(stop speaking|bolna band|chup ho jao)\b/,/بولنا بند/])){if('speechSynthesis'in window)window.speechSynthesis.cancel();reply.textContent='Theek hai, voice reply rok di.'}
+ else if(has([/\b(help|madad|kya kar sakte ho|commands)\b/,/مدد/,/کیا کر سکتے ہو/]))say('Main basic commands samajh sakta hoon, waqt aur tareekh bata sakta hoon, aur Google ya YouTube khol sakta hoon. Urdu aur English mein baat karne ki koshish karta hoon. Cloud AI aur advanced phone control aglay marhalay mein hain.');
+ else {reply.textContent='JARVIS se jawab liya ja raha hai…';askCloud(text);return;}
+ setStatus(listening?(wakeEnabled?'LISTENING FOR WAKE WORD':'LISTENING'):'READY');setTimeout(()=>orb.classList.remove('active'),900)
  }
  function startListening(){if(!Recognition){say('Speech recognition is not supported in this browser. Try Chrome, or use the text command box.');setStatus('VOICE RECOGNITION UNAVAILABLE');return}
  if(recognition&&listening)return;
- recognition=new Recognition();recognition.lang='en-US';recognition.continuous=true;recognition.interimResults=false;
+ recognition=new Recognition();recognition.lang=commandLanguage;recognition.continuous=true;recognition.interimResults=false;
  recognition.onstart=()=>{listening=true;$('wakeBtn').textContent='🎙 Listening…';setStatus(wakeEnabled?'LISTENING FOR “HEY JARVIS”':'LISTENING');};
  recognition.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++){if(!e.results[i].isFinal)continue;const heard=e.results[i][0].transcript.trim();const lower=heard.toLowerCase();input.value=heard;
  if(!wakeEnabled){processCommand(heard);continue}
@@ -79,6 +81,7 @@ footer{margin-top:17px;text-align:center;font-size:11px;color:#718da3;line-heigh
  $('wakeBtn').onclick=()=>startListening();$('stopBtn').onclick=stopListening;
  $('testBtn').onclick=()=>askCloud('Test connection. Tell me whether the JARVIS cloud API received this message.');
  $('speakToggle').onclick=()=>{voiceReplies=!voiceReplies;$('speakToggle').textContent=voiceReplies?'🔊 Voice replies: ON':'🔇 Voice replies: OFF'};
+ $('languageToggle').onclick=()=>{commandLanguage=commandLanguage==='ur-PK'?'en-US':'ur-PK';$('languageToggle').textContent=commandLanguage==='ur-PK'?'🗣 Language: Urdu':'🗣 Language: English';if(listening){stopListening();startListening()}say(commandLanguage==='ur-PK'?'Urdu mode on. Ab Urdu ya Roman Urdu mein command bolain.':'English mode on. Speak your command in English.')};
  $('wakeToggle').onclick=()=>{wakeEnabled=!wakeEnabled;$('wakeToggle').textContent='Hey JARVIS: '+(wakeEnabled?'ON':'OFF');setStatus(listening?(wakeEnabled?'LISTENING FOR “HEY JARVIS”':'LISTENING'):'READY')};
  $('commandForm').onsubmit=e=>{e.preventDefault();processCommand(input.value);input.value=''};
  document.querySelectorAll('[data-cmd]').forEach(b=>b.onclick=()=>processCommand(b.dataset.cmd));

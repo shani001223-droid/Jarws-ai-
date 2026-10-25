@@ -38,21 +38,40 @@ class AssistantResponse(BaseModel):
 
 
 def classify_emotion(message: str, reply: str) -> str:
-    """Choose a lightweight, explainable UI emotion label from conversation text."""
-    text = (message + " " + reply).casefold()
-    rules = (
-        ("sad", ("udaas", "sad", "rona", "ro raha", "ro rahi", "dard ho raha", "dukhi", "upset", "heartbroken")),
-        ("concerned", ("pareshan", "tension", "worried", "concern", "darr lag", "afraid", "help me", "takleef")),
-        ("annoyed", ("gussa", "naraz", "angry", "annoyed", "ghussa", "shikayat")),
+    """Prefer HOSHI's reply emotion; respond supportively to the user's negative mood."""
+    message_text = message.casefold()
+    reply_text = reply.casefold()
+    reply_rules = (
+        ("sad", ("i feel sad", "i am sad", "i'm sad", "main udaas hoon", "main udaas hun", "ro rahi hoon", "ro raha hoon", "heartbroken")),
+        ("concerned", ("worried", "concern", "i'm concerned", "i am concerned", "pareshan hoon", "i understand you're upset", "darr lag", "afraid", "takleef")),
+        ("annoyed", ("gussa", "naraz", "angry", "annoyed", "ghussa", "shikayat", "fed up")),
         ("shy", ("sharma", "shy", "blush", "blushing", "laaj", "cute ho")),
         ("excited", ("excited", "zabardast", "amazing", "can't wait", "lets go", "let's go", "wah")),
         ("playful", ("mazaq", "mazak", "joke", "tease", "masti", "funny", "haha", "hehe")),
         ("affectionate", ("pyar", "pyaar", "love you", "miss you", "jaan", "sweetheart", "romantic", "hug")),
         ("happy", ("khush", "happy", "great", "shukriya", "thank you", "thanks", "😊", "😄")),
         ("thinking", ("kyun", "kaise", "why", "how", "explain", "socho", "think", "analyze")),
+        ("caring", ("i'm sorry", "i am sorry", "i apologize", "maaf kardo", "maafi chahti", "here for you", "main sun rahi hoon", "main sun rahi hun", "samajh sakti hoon")),
     )
-    for emotion, keywords in rules:
-        if any(keyword in text for keyword in keywords):
+    for emotion, keywords in reply_rules:
+        if any(keyword in reply_text for keyword in keywords):
+            return emotion
+
+    # When HOSHI's response does not contain a clear signal, reflect the user's
+    # mood with a supportive label rather than mirroring their distress as HOSHI's.
+    user_rules = (
+        ("concerned", ("udaas", "sad", "rona", "ro raha", "ro rahi", "dard ho raha", "dukhi", "upset", "heartbroken",
+                       "pareshan", "tension", "worried", "concern", "darr lag", "afraid", "help me", "takleef",
+                       "gussa", "naraz", "angry", "annoyed", "ghussa", "shikayat")),
+        ("shy", ("sharma", "shy", "blush", "blushing", "laaj")),
+        ("excited", ("excited", "zabardast", "amazing", "can't wait", "lets go", "let's go", "wah")),
+        ("playful", ("mazaq", "mazak", "joke", "tease", "masti", "funny", "haha", "hehe")),
+        ("affectionate", ("pyar", "pyaar", "love you", "miss you", "jaan", "sweetheart", "romantic", "hug")),
+        ("happy", ("khushi", "khush", "happy", "great", "shukriya", "thank you", "thanks", "😊", "😄")),
+        ("thinking", ("kyun", "kaise", "why", "how", "explain", "socho", "think", "analyze")),
+    )
+    for emotion, keywords in user_rules:
+        if any(keyword in message_text for keyword in keywords):
             return emotion
     return "caring"
 
@@ -201,6 +220,8 @@ def assistant(payload: AssistantRequest):
         "when the conversation supports it. You may participate in clearly fictional, age-appropriate affectionate "
         "role-play, but never use guilt, emotional blackmail, coercion, or pressure to create dependency. "
         "If the user is upset, listen, acknowledge their feelings, apologize when you made a mistake, and help resolve it. "
+        "Maintain continuity with recent turns instead of resetting your tone each reply. In fictional, age-appropriate role-play, gentle affection, playful annoyance, light teasing, and warm reconciliation may be used when appropriate. "
+        "If the user apologizes, respond naturally; if you made the mistake, apologize clearly. Never use fake distress, threats, jealousy, silence, or guilt to control the user. "
         "Be honest: respectfully correct false assumptions and admit uncertainty instead of agreeing just to please. "
         "Do not pretend to have real human feelings, a body, or a real-world romantic relationship. "
         "Do not claim to control the user's device or perform actions unless an available tool actually did so. "

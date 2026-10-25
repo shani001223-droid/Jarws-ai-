@@ -48,7 +48,7 @@ Final design sources are the two user-provided images. Keep the navy / electric-
 - [x] Integrated compressed HOSHI artwork into the hero and added a speech waveform without replacing live UI controls.
 - [x] Responsive breakpoints for desktop, tablet, and phone widths; automated checks guard horizontal overflow and narrow-phone avatar/reply overlap.
 - [x] Old BTC/Bitcoin panel and floating icon removed from the dashboard source.
-- [x] Native HOSHI branding/launcher icon, installable PWA/favicon icon, shell-v12 offline precache, and a controlled Android WebView-to-native speech/reminder/accessibility bridge.
+- [x] Native HOSHI branding/launcher icon, installable PWA/favicon icon, shell-v13 offline precache, and a controlled Android WebView-to-native speech/reminder/accessibility bridge.
 - [ ] The interface is an interactive responsive adaptation, not a pixel-perfect reconstruction of every lower panel in the reference image. Final visual acceptance still needs checking on the target phone after the code/tests are stable.
 
 ## Phase 6 — Existing JARVIS functionality

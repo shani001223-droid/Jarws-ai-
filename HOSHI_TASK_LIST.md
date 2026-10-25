@@ -53,7 +53,8 @@
 - [x] Changes were applied in small commits to the existing project; reminder parsing, native bridge, and existing workflows were retained.
 
 ## Phase 7 — Testing and delivery
-- [ ] Full end-to-end acceptance tests for chat, emotion/role-play quality, memory behavior, real voice, and avatar state changes are still pending. Automated backend, privacy-filter, frontend-contract, and JS syntax tests now pass.
+- [ ] Full acceptance of natural multi-turn conversation, real voice, full role-play quality, and physical avatar/voice behavior is still pending.
+- [x] Desktop Chromium browser smoke test checks dashboard load, local command, AI text chat, emotion state, context deduplication, saved history, memory toggle, stale-response protection, graceful web-mode fallback, and uncaught browser errors. [Run #154 passed](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40234981960).
 - [x] Cloud HTTP/provider errors, timeouts, offline failures, and speech recognition restart failures now produce user-facing recovery messages; physical TTS/microphone acceptance remains pending.
 - [ ] Test on a real Realme Note 50 Android device.
 - [ ] Deploy safely to existing hosting and provide rollback if needed.
@@ -67,7 +68,7 @@
 ## GitHub Actions verification
 - [x] `HOSHI basic checks` run #112 passed on commit `e4141eea0e01396be09380bb4b2e2095a68e1a26`; it includes Python tests, JavaScript parser tests, privacy-filter tests, frontend contract checks, and JS syntax compilation.
 - [x] `Build HOSHI Android APK` run #24 passed and uploaded `hoshi-debug-apk` on commit `c5737b886e108c9aa368a9ce8efe27f88f8073a2`. No Android source files changed after that APK build; regenerate after future native Android changes.
-- [x] Latest confirmed `HOSHI basic checks` run #134 and GitHub Pages publish run #159 passed after mood-detection, voice-recovery, and cache updates. The live backend smoke test #25 also passed after the backend mood change.
+- [x] Latest `HOSHI basic checks` run #154 passed, including the new Chromium browser interaction suite. [Run #154](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40234981960). Previous live backend smoke #26 and Pages publishes #167/#169 passed; current Render frontend visual verification is still pending.
 - [ ] Install the generated debug APK and verify core flows on the target Android phone.
 
 ## Initial audit notes
@@ -105,7 +106,7 @@
 
 - [x] Phase 2 mood signal added: deterministic English/Roman Urdu phrase detection plus safe continuity across short acknowledgements; backend tests cover key moods, context carry, and neutral-context reset.
 - [x] Phase 3 voice failure handling improved: permission, missing microphone, unsupported language, network, and unknown speech-recognition errors stop automatic restart loops and display actionable states; explicitly selected browser voices are respected. Service-worker cache is `hoshi-shell-v10`.
-- [x] Current validation: HOSHI basic checks #142 and GitHub Pages publish #167 passed; live backend smoke test #26 passed after the non-repetitive reply prompt change.
+- [x] Current validation: HOSHI basic checks #154 passed, including a real Chromium browser run against the local dashboard with a mocked cloud API. Live backend smoke test #26 passed after the non-repetitive reply prompt change; Render frontend visual verification and device tests remain pending.
 
 ## Working rules
 1. This document records requirements; it does not mean implementation is complete.

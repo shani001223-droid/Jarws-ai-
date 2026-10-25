@@ -67,6 +67,23 @@ class AssistantApiTests(unittest.TestCase):
         self.assertFalse(body["store"])
         self.assertIn("Roman Urdu", body["system_instruction"])
 
+    def test_recent_context_is_bounded_and_passed_to_gemini(self):
+        payload = {
+            "steps": [
+                {"type": "model_output", "content": [{"type": "text", "text": "I remember our recent topic."}]}
+            ]
+        }
+        with patch.dict(os.environ, {"GEMINI_API_KEY": "test-gemini-key", "GROQ_API_KEY": ""}):
+            with patch("cloud_backend.main.urlopen", return_value=FakeResponse(payload)) as mocked:
+                result = main.assistant(main.AssistantRequest(
+                    message="Continue",
+                    context=["user: We discussed HOSHI", "assistant: Yes, we did."]
+                ))
+        body = json.loads(mocked.call_args.args[0].data.decode("utf-8"))
+        self.assertIn("We discussed HOSHI", body["input"])
+        self.assertIn("Current user message: Continue", body["input"])
+        self.assertEqual(result.emotion, "caring")
+
     def test_groq_403_error_is_diagnosable(self):
         error_body = io.BytesIO(json.dumps({"error": "Project does not have permission to use this model."}).encode("utf-8"))
         groq_error = HTTPError(

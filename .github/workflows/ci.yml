@@ -47,7 +47,7 @@ jobs:
           node -e 'const fs = require("node:fs"); const html = fs.readFileSync("index.html", "utf8"); const match = html.match(/<script>([\s\S]*?)<\/script>/i); if (!match) { throw new Error("No inline script found in index.html"); } new Function(match[1]); console.log("Dashboard JavaScript syntax: OK");'
       - name: Install Playwright Chromium for browser smoke tests
         run: |
-          npm install --no-save playwright@1.55.0
+          npm install --no-save playwright@1.64.1
           npx playwright install --with-deps chromium
       - name: Run real-browser dashboard smoke tests
         run: node tests/dashboard.e2e.cjs

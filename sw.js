@@ -1,4 +1,4 @@
-const CACHE_NAME = "jarvis-shell-v6";
+const CACHE_NAME = "hoshi-shell-v7";
 const APP_SHELL = ["./", "./index.html", "./manifest.json", "./reminder-parser.js", "./assistant-commands.js"];
 
 self.addEventListener("install", event => {

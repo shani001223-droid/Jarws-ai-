@@ -43,7 +43,18 @@ class FrontendContractTests(unittest.TestCase):
         self.assertIn("./assets/hoshi-expressions.webp", SERVICE_WORKER)
         self.assertIn("./memory-privacy.js", SERVICE_WORKER)
         self.assertIn('<script src="./memory-privacy.js"></script>', HTML)
-        self.assertIn('CACHE_NAME = "hoshi-shell-v10"', SERVICE_WORKER)
+        self.assertIn('CACHE_NAME = "hoshi-shell-v11"', SERVICE_WORKER)
+        self.assertIn("./assets/hoshi-hero-background.svg", SERVICE_WORKER)
+
+    def test_final_dashboard_hero_art_and_speaking_indicator_are_wired(self):
+        hero_asset = ROOT / "assets" / "hoshi-hero-background.svg"
+        self.assertTrue(hero_asset.is_file(), "Final-art hero background asset is missing")
+        hero_svg = hero_asset.read_text(encoding="utf-8")
+        self.assertIn('data:image/webp;base64,', hero_svg)
+        self.assertIn('url("./assets/hoshi-hero-background.svg")', HTML)
+        self.assertIn('<span class="speech-wave" aria-hidden="true">', HTML)
+        self.assertIn(".orb.speaking .speech-wave{opacity:1}", HTML)
+        self.assertIn("@media(prefers-reduced-motion:reduce)", HTML)
 
     def test_each_ui_emotion_selects_a_character_expression(self):
         emotions = (

@@ -29,10 +29,10 @@
 - [ ] Lip-sync with avatar mouth movement if technically feasible.
 
 ## Phase 4 — Memory and personalization
-- [ ] Preference memory for language, tone, and assistant settings.
-- [ ] Maintain recent conversation context.
+- [x] Preference memory for language, tone, and assistant settings (language, personality, voice replies, wake-word toggle, and voice tuning persist locally).
+- [x] Maintain bounded recent conversation context for cloud replies.
 - [ ] Relationship-role-play continuity when relevant, including playful annoyance and reconciliation.
-- [ ] User controls to review, update, and clear memory.
+- [x] User controls to review, edit, delete individual entries, disable memory, and clear memory.
 - [ ] Privacy: avoid unnecessary storage of secrets or sensitive details.
 
 ## Phase 5 — JARVIS interface and Android
@@ -40,7 +40,7 @@
 - [ ] HOSHI home screen with avatar, chat, microphone, and voice controls.
 - [ ] Emotion-driven avatar and UI changes.
 - [ ] Conversation history.
-- [ ] Settings for voice, language, personality, memory, and auto-speak.
+- [x] Settings for voice, language, personality, memory, and auto-speak are available; language/voice-reply/wake-word selections now persist locally.
 - [ ] Low lag, reasonable data use, and graceful error handling.
 - [ ] Follow the final user-provided HOSHI dashboard image; do not redesign it without permission.
 - [ ] Verify the BTC panel and floating icon are removed from the frontend, while preserving unrelated working functionality.
@@ -73,23 +73,26 @@
 ## Initial audit notes
 - [x] Read the repository README and inspect the CI workflow definition at `.github/workflows/ci.yml`.
 - [x] Inspect the Android APK workflow definition at `.github/workflows/android-apk.yml`.
-- [ ] Live Render backend health response: **not verified yet**.
-- [ ] Live frontend rendering and BTC/floating-icon removal: **not verified yet**.
-- [ ] Latest GitHub Actions run statuses: **not verified yet**.
+- [ ] Live Render backend health response: **verify separately after current code push**.
+- [ ] Live frontend rendering and BTC/floating-icon removal: **verify separately after frontend deployment**.
+- [ ] Latest GitHub Actions run statuses: **run #92 triggered; final result pending**.
 - [ ] Real-device Android testing: **pending**.
 
 ## Progress / verification log
 - [x] Phase 1 foundation: HOSHI identity/personality prompt added; compact avatar crop from the final character sheet embedded in the frontend.
 - [x] Phase 2 foundation: response emotion labels added with deterministic fallback classification and unit-test cases.
 - [x] Phase 3 foundation: HOSHI voice labels, voice input support inherited from existing app, emotion-based avatar styling, and limited pitch/rate modulation added.
-- [x] Phase 4 foundation: bounded recent context, local conversation history, memory toggle/clear controls, and basic sensitive-string storage filtering added. UI now discloses that recent context is sent with AI requests.
+- [x] Phase 4 foundation: bounded recent context, local conversation history, memory toggle/clear controls, and basic sensitive-string storage filtering added. UI discloses that recent context is sent with AI requests.
+- [x] HOSHI memory controls expanded: individually edit/delete saved user and assistant entries; edits reject obvious sensitive strings, and UI updates use text nodes rather than HTML injection.
+- [x] Local preference persistence expanded: language, voice replies (auto-speak), and wake-word toggle state are restored after reload, alongside existing personality and voice settings.
+- [ ] Frontend JS regression check for commit `824a41d6b5e2ffa352cc2d7496e147b36aca0ac2`: waiting on GitHub Actions run #92.
 - [x] Phase 5 foundation: responsive dashboard navigation, app shortcuts, HOSHI branding, and Android application label updated.
 - [x] Phase 6 foundation: existing Gemini/Groq fallback preserved; API keys remain environment variables; README documents current limitations.
 - [x] Frontend inline JavaScript compiled successfully with a syntax check in this session.
 - [x] Render frontend latest deployment reached **live**.
 - [x] Render backend deployment reached **live** at commit `21d6409ddfd45055e32e573fcfb3d2a8133ab253`; Render logs showed repeated `GET /health` responses with HTTP 200 and no recent error-level application logs during the check.
-- [ ] GitHub Actions Python/unit tests and Android APK workflow: latest run results were not readable through the available GitHub connection, so do not treat them as passed.
-- [ ] Realme Note 50 device testing: pending; this requires physical-device interaction.
+- [ ] GitHub Actions for the latest change: run #92 was triggered by commit `824a41d6b5e2ffa352cc2d7496e147b36aca0ac2`; awaiting final result at the time of this update. Android APK workflow is path-filtered to `android/**` and was not triggered by this frontend-only change.
+- [ ] Realme Note 50 device testing: pending by design; do not start until the remaining task list is addressed.
 - [ ] Pixel-perfect full dashboard reproduction, full-resolution character-sheet integration, lip-sync, and advanced expression animation: pending/limited.
 
 ## Working rules

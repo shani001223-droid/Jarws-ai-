@@ -26,7 +26,7 @@ object ReminderScheduler {
         for (i in 0 until items.length()) {
             val item = items.optJSONObject(i) ?: continue
             val id = item.optInt("id", 0)
-            val title = item.optString("title", "JARVIS reminder")
+            val title = item.optString("title", "HOSHI reminder")
             val fireAt = item.optLong("fireAt", 0L)
             if (id > 0 && fireAt > System.currentTimeMillis()) {
                 reminders.add(Reminder(id, title, fireAt))
@@ -80,7 +80,7 @@ object ReminderScheduler {
         for (i in 0 until items.length()) {
             val item = items.optJSONObject(i) ?: continue
             val id = item.optInt("id", 0)
-            val title = item.optString("title", "JARVIS reminder")
+            val title = item.optString("title", "HOSHI reminder")
             val fireAt = item.optLong("fireAt", 0L)
             if (id > 0 && fireAt > now) {
                 remaining.put(item)

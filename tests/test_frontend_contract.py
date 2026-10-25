@@ -7,6 +7,8 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 HTML = (ROOT / "index.html").read_text(encoding="utf-8")
 SERVICE_WORKER = (ROOT / "sw.js").read_text(encoding="utf-8")
+MANIFEST = (ROOT / "manifest.json").read_text(encoding="utf-8")
+ICON_PATH = ROOT / "assets" / "hoshi-app-icon.svg"
 BRIDGE = (ROOT / "android/app/src/main/java/com/valtron/jarvis/JarvisBridge.kt").read_text(encoding="utf-8")
 ACCESSIBILITY = (ROOT / "android/app/src/main/java/com/valtron/jarvis/JarvisAccessibilityService.kt").read_text(encoding="utf-8")
 MAIN_ACTIVITY = (ROOT / "android/app/src/main/java/com/valtron/jarvis/MainActivity.kt").read_text(encoding="utf-8")
@@ -43,8 +45,17 @@ class FrontendContractTests(unittest.TestCase):
         self.assertIn("./assets/hoshi-expressions.webp", SERVICE_WORKER)
         self.assertIn("./memory-privacy.js", SERVICE_WORKER)
         self.assertIn('<script src="./memory-privacy.js"></script>', HTML)
-        self.assertIn('CACHE_NAME = "hoshi-shell-v11"', SERVICE_WORKER)
+        self.assertIn('CACHE_NAME = "hoshi-shell-v12"', SERVICE_WORKER)
         self.assertIn("./assets/hoshi-hero-background.svg", SERVICE_WORKER)
+
+    def test_hoshi_app_icon_is_wired_for_favicon_pwa_and_offline_shell(self):
+        self.assertTrue(ICON_PATH.is_file(), "HOSHI installable app icon is missing")
+        icon = ICON_PATH.read_text(encoding="utf-8")
+        self.assertIn("<svg", icon)
+        self.assertIn('href="./assets/hoshi-app-icon.svg"', HTML)
+        self.assertIn('./assets/hoshi-app-icon.svg', MANIFEST)
+        self.assertIn('"purpose": "any maskable"', MANIFEST)
+        self.assertIn("./assets/hoshi-app-icon.svg", SERVICE_WORKER)
 
     def test_final_dashboard_hero_art_and_speaking_indicator_are_wired(self):
         hero_asset = ROOT / "assets" / "hoshi-hero-background.svg"

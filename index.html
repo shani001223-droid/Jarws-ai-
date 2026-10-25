@@ -18,13 +18,13 @@ header{display:flex;justify-content:space-between;align-items:center;gap:12px}h1
 .controls{display:grid;grid-template-columns:1fr 1fr;gap:9px}button{font:inherit;cursor:pointer;min-height:47px;padding:11px 12px;border:1px solid #28617c;border-radius:13px;background:#10283b;color:#effbff}button.primary{background:linear-gradient(135deg,#126080,#12364d);border-color:var(--cyan)}button:active{transform:scale(.985)}button:disabled{opacity:.5}
 form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;border:1px solid var(--line);border-radius:12px;background:#06101a;color:white;font:inherit}form button{min-width:82px}
 .section{margin-top:18px;padding:13px;border:1px solid #17354b;border-radius:15px;background:#081522}.section h2{font-size:12px;letter-spacing:.12em;color:var(--muted);margin:0 0 9px}.small{font-size:12px;color:var(--muted);line-height:1.65;margin:0}.statusrow{display:flex;justify-content:space-between;gap:10px;align-items:center}.toggle{min-height:38px;font-size:12px}.quick{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}.quick button{min-height:34px;padding:7px 10px;font-size:12px}
-.market-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:10px 0}.market-cell{border:1px solid var(--line);background:#091724;border-radius:12px;padding:11px;min-width:0}.market-cell span{display:block;font-size:10px;color:var(--muted);letter-spacing:.1em}.market-cell strong{display:block;margin-top:7px;font-size:clamp(14px,3.7vw,18px);overflow-wrap:anywhere}.market-change.up{color:#75e2b0}.market-change.down{color:#ff9baf}.voice-grid{display:grid;grid-template-columns:1fr;gap:10px}.voice-setting{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center}.voice-setting label{font-size:12px;color:var(--muted)}.voice-setting output{font-size:12px;color:var(--cyan)}.voice-setting input[type=range]{grid-column:1/-1;width:100%;padding:0;accent-color:var(--cyan)}select{width:100%;min-width:0;padding:10px;border:1px solid var(--line);border-radius:10px;background:#06101a;color:#effbff;font:inherit;font-size:13px}.voice-actions{display:flex;gap:8px}.voice-actions button{flex:1;min-height:38px;font-size:12px}.assistant-card{position:relative;border:1px solid #304e72;border-radius:22px;padding:10px 10px 0;margin-top:12px;background:linear-gradient(155deg,#14253a,#0b1725 65%);box-shadow:inset 0 1px #ffffff0d}.avatar-label{text-align:center;color:#c5c8ff;font-size:10px;letter-spacing:.2em;margin-top:7px}.anime-face{position:absolute;z-index:2;left:26%;right:26%;top:32%;height:33%;border-radius:44% 44% 48% 48%;background:linear-gradient(110deg,#fff1ed,#ffe4e1 48%,#edc6d2);box-shadow:0 0 0 1px #b8c9e8}.anime-face:before{content:"";position:absolute;left:-14%;right:-14%;top:-39%;height:70%;border-radius:65% 55% 20% 20%;background:linear-gradient(115deg,#f8ffff,#d8e9f5 45%,#ffffff 65%,#9cb8d5);clip-path:polygon(0 0,100% 0,96% 75%,78% 45%,64% 100%,48% 48%,35% 90%,22% 40%,0 85%)}.eye{position:absolute;top:43%;width:20%;height:19%;border-radius:50%;background:linear-gradient(#6bf4ff,#1c8bbf 70%,#101d45);border:1px solid white;box-shadow:0 0 5px #68f3ff}.eye.left{left:17%}.eye.right{right:17%}.mouth{position:absolute;left:43%;top:72%;width:14%;height:5%;border-bottom:1px solid #b86e88;border-radius:50%}.orb-wrap{display:flex;flex-direction:column;align-items:center}.size-controls{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin:-3px 0 18px;color:var(--muted);font-size:10px}.size-controls button{min-height:30px;width:32px;padding:2px;font-size:20px;border-radius:9px}.size-controls input{flex:0 1 115px;padding:0;accent-color:var(--cyan)}.size-controls output{min-width:44px;color:var(--cyan);font-size:11px}footer{margin-top:17px;text-align:center;font-size:11px;color:#718da3;line-height:1.6}
+.voice-grid{display:grid;grid-template-columns:1fr;gap:10px}.voice-setting{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center}.voice-setting label{font-size:12px;color:var(--muted)}.voice-setting output{font-size:12px;color:var(--cyan)}.voice-setting input[type=range]{grid-column:1/-1;width:100%;padding:0;accent-color:var(--cyan)}select{width:100%;min-width:0;padding:10px;border:1px solid var(--line);border-radius:10px;background:#06101a;color:#effbff;font:inherit;font-size:13px}.voice-actions{display:flex;gap:8px}.voice-actions button{flex:1;min-height:38px;font-size:12px}.assistant-card{position:relative;border:1px solid #304e72;border-radius:22px;padding:10px 10px 0;margin-top:12px;background:linear-gradient(155deg,#14253a,#0b1725 65%);box-shadow:inset 0 1px #ffffff0d}.avatar-label{text-align:center;color:#c5c8ff;font-size:10px;letter-spacing:.2em;margin-top:7px}.anime-face{position:absolute;z-index:2;left:26%;right:26%;top:32%;height:33%;border-radius:44% 44% 48% 48%;background:linear-gradient(110deg,#fff1ed,#ffe4e1 48%,#edc6d2);box-shadow:0 0 0 1px #b8c9e8}.anime-face:before{content:"";position:absolute;left:-14%;right:-14%;top:-39%;height:70%;border-radius:65% 55% 20% 20%;background:linear-gradient(115deg,#f8ffff,#d8e9f5 45%,#ffffff 65%,#9cb8d5);clip-path:polygon(0 0,100% 0,96% 75%,78% 45%,64% 100%,48% 48%,35% 90%,22% 40%,0 85%)}.eye{position:absolute;top:43%;width:20%;height:19%;border-radius:50%;background:linear-gradient(#6bf4ff,#1c8bbf 70%,#101d45);border:1px solid white;box-shadow:0 0 5px #68f3ff}.eye.left{left:17%}.eye.right{right:17%}.mouth{position:absolute;left:43%;top:72%;width:14%;height:5%;border-bottom:1px solid #b86e88;border-radius:50%}.orb-wrap{display:flex;flex-direction:column;align-items:center}footer{margin-top:17px;text-align:center;font-size:11px;color:#718da3;line-height:1.6}
 </style>
 </head>
 <body>
 <main class="app">
 <header><div><h1>JARVIS</h1><div class="tag">PERSONAL AI SYSTEM · PROTOTYPE 01</div></div><div class="pill" id="connection">CHECKING CLOUD…</div></header>
-<div class="assistant-card"><div class="avatar-label">YOUR AI COMPANION</div><div class="orb-wrap"><div class="orb" id="orb" role="img" aria-label="JARVIS anime companion"><img class="companion-avatar" src="./assets/jarvis-anime-avatar.webp" alt="Silver-haired, cyan-eyed JARVIS companion"></div><div class="size-controls" aria-label="Floating icon size"><span>ICON SIZE</span><button type="button" id="sizeDown" aria-label="Make icon smaller">−</button><input id="iconSize" type="range" min="56" max="176" value="132" aria-label="Icon size"><button type="button" id="sizeUp" aria-label="Make icon larger">+</button><output id="sizeValue">132 px</output></div></div>
+<div class="assistant-card"><div class="avatar-label">YOUR AI COMPANION</div><div class="orb-wrap"><div class="orb" id="orb" role="img" aria-label="JARVIS anime companion"><img class="companion-avatar" src="./assets/jarvis-anime-avatar.webp" alt="Silver-haired, cyan-eyed JARVIS companion"></div></div>
 <div id="status" role="status" aria-live="polite">READY · TAP START LISTENING</div>
 <p id="reply" aria-live="polite">Hello. I am JARVIS. Tap “Start listening” and say “Hey JARVIS” to activate the voice command mode.</p>
 <div class="controls">
@@ -42,12 +42,12 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
 <div class="voice-actions"><button type="button" id="previewVoiceBtn">▶ Preview voice</button><button type="button" id="resetVoiceBtn">Reset</button></div>
 <p class="small">Voices depend on the speech engine installed on your phone. To add Urdu or a more natural female voice, check Android Settings → Text-to-speech output.</p>
 </div></div>
-<div class="section" id="btcMarketSection"><div class="statusrow"><h2>BTC SPOT MARKET</h2><button class="toggle" type="button" id="refreshBtcMarket">Refresh</button></div><div class="market-grid"><div class="market-cell"><span>BTC PRICE (USD)</span><strong id="btcPrice">—</strong></div><div class="market-cell"><span>24H CHANGE</span><strong id="btcChange" class="market-change">—</strong></div><div class="market-cell"><span>24H LOW / HIGH</span><strong id="btcLowHigh">— / —</strong></div><div class="market-cell"><span>24H VOLUME</span><strong id="btcVolume">—</strong></div></div><p id="btcMarketStatus" class="small">Tap Refresh to fetch a public Coinbase BTC-USD spot snapshot.</p><p class="small">Spot data only; perpetual prices may differ. Not a trade signal.</p></div>
 <div class="section" id="screenControlSection" style="display:none"><h2>BASIC PHONE CONTROLS</h2><p class="small">Optional Android Accessibility permission. Only the actions you tap run; screen text is not read or sent to the cloud.</p><div class="quick"><button type="button" id="screenPermissionBtn">Enable permission</button><button type="button" data-screen-action="back">Back</button><button type="button" data-screen-action="home">Home</button><button type="button" data-screen-action="swipe_up">Swipe up</button><button type="button" data-screen-action="swipe_down">Swipe down</button></div></div>
 <div class="section"><div class="statusrow"><h2>WAKE WORD</h2><button class="toggle" id="wakeToggle">Hey JARVIS: OFF</button></div><p class="small">Wake-word detection works only while this page is open, foregrounded and microphone access is granted. This web prototype cannot listen reliably while the phone is locked or the app is closed.</p></div>
 <div class="section"><h2>TRY A COMMAND</h2><p class="small">“Hey JARVIS” · “What time is it?” · “Open Google” · “Open YouTube” · “Help” · “Stop speaking”</p><div class="quick"><button data-cmd="what time is it">Time</button><button data-cmd="today's date">Date</button><button data-cmd="open Google">Google</button><button data-cmd="open YouTube">YouTube</button><button data-cmd="help">Help</button></div></div>
 <footer>Basic commands, time/date, Google and YouTube are available. Urdu/Roman Urdu and English commands supported where browser speech recognition permits.<br>AI keys may be configured while provider quota or permissions still prevent replies. Live AI access is checked when you send a message. Advanced phone control requires native Android permissions.</footer>
 </main>
+<script src="./assistant-commands.js"></script>
 <script src="./reminder-parser.js"></script>
 <script>
 (()=> {
@@ -56,38 +56,8 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
  let cloudOnline=false;
  let recognition=null, listening=false, wakeEnabled=false, awaitingCommand=false, voiceReplies=true, restartTimer=null, commandLanguage="ur-PK";
  const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
- let iconSize=132;
- function setIconSize(n){iconSize=Math.max(56,Math.min(176,n));orb.style.width=iconSize+'px';orb.style.height=iconSize+'px';orb.style.fontSize=Math.round(iconSize*.35)+'px';$('iconSize').value=iconSize;$('sizeValue').textContent=iconSize+' px';}
- $('iconSize').addEventListener('input',e=>setIconSize(Number(e.target.value)));$('sizeDown').addEventListener('click',()=>setIconSize(iconSize-12));$('sizeUp').addEventListener('click',()=>setIconSize(iconSize+12));
- function setStatus(s){status.textContent=s}
+  function setStatus(s){status.textContent=s}
  async function checkCloud(){const badge=$('connection');try{const r=await fetch(API_BASE+'/health',{method:'GET',cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);const data=await r.json();cloudOnline=!!data.ok;const aiReady=!!data.ai_connected;badge.textContent=aiReady?'AI KEYS CONFIGURED':(cloudOnline?'API ONLINE · AI NOT CONFIGURED':'CLOUD ERROR');badge.style.color=aiReady?'#5de1ff':(cloudOnline?'#ffd27d':'#ff9b9b');return cloudOnline}catch(e){cloudOnline=false;badge.textContent='CLOUD OFFLINE';badge.style.color='#ff9b9b';return false}}
- async function loadBtcMarket(){
-   const button=$('refreshBtcMarket'),status=$('btcMarketStatus');
-   button.disabled=true;status.textContent='FETCHING BTC SPOT DATA…';
-   try{
-     const response=await fetch(API_BASE+'/api/market/btc',{method:'GET',cache:'no-store'});
-     let data={};try{data=await response.json()}catch(_){}
-     if(!response.ok)throw new Error(data.detail||('HTTP '+response.status));
-     const formatUsd=value=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:2}).format(Number(value));
-     const change=Number(data.change_24h_pct);
-     $('btcPrice').textContent=formatUsd(data.price_usd);
-     $('btcChange').textContent=(change>0?'+':'')+change.toFixed(2)+'%';
-     $('btcChange').className='market-change '+(change>0?'up':change<0?'down':'');
-     $('btcLowHigh').textContent=formatUsd(data.low_24h_usd)+' / '+formatUsd(data.high_24h_usd);
-     $('btcVolume').textContent=Number(data.volume_24h_btc).toLocaleString('en-US',{maximumFractionDigits:2})+' BTC';
-     const asOf=data.last_trade_at?(' · last trade '+new Date(data.last_trade_at).toLocaleTimeString()):'';
-     status.textContent='Updated from '+data.source+asOf+'. Spot snapshot only.';
-     setStatus('BTC MARKET UPDATED');
-     return data;
-   }catch(error){
-     status.textContent='BTC market unavailable: '+String(error.message||error);
-     setStatus('BTC MARKET UNAVAILABLE');
-     return null;
-   }finally{
-     button.disabled=false;
-     orb.classList.remove('active');
-   }
- }
  async function askCloud(message){setStatus('SENDING TO CLOUD…');orb.classList.add('active');try{const r=await fetch(API_BASE+'/api/assistant',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,locale:navigator.language||'en'})});let data={};try{data=await r.json()}catch(_){}if(!r.ok){let detail=data.detail||'';if(r.status===502)detail=detail||'Gemini ne request reject ki. Render environment mein API key aur Google AI Studio access check karna hoga.';else if(r.status===504)detail=detail||'Gemini response time par nahi aaya. Yeh AI server timeout hai, zaroori nahi ke aapka internet kharab ho.';else if(r.status===429)detail=detail||'Gemini ki free quota ya rate limit poori ho gayi hai.';else if(r.status===503)detail=detail||'Render par GEMINI_API_KEY configured nahi hai.';else detail=detail||('Cloud API error: HTTP '+r.status);throw new Error(detail)}say(data.reply||'Cloud received the message but returned no reply.');setStatus('CLOUD REPLIED · '+(data.mode||'API'));}catch(e){const message=(e&&e.message)?e.message:'Cloud request failed. Check connection and try again.';say(message);setStatus('CLOUD REQUEST FAILED');}finally{setTimeout(()=>orb.classList.remove('active'),900)}}
  function voiceKey(v){return v.name+"||"+v.lang}
  function refreshVoices(){if(!('speechSynthesis'in window))return;const list=window.speechSynthesis.getVoices();if(!list.length)return;const select=$('voiceSelect');const selected=select.value||localStorage.getItem('jarvisVoiceKey')||'';select.innerHTML='';const auto=document.createElement('option');auto.value='';auto.textContent='Auto — best available';select.appendChild(auto);list.slice().sort((a,b)=>a.lang.localeCompare(b.lang)||a.name.localeCompare(b.name)).forEach(v=>{const option=document.createElement('option');option.value=voiceKey(v);option.textContent=v.name+' — '+v.lang;select.appendChild(option)});select.value=list.some(v=>voiceKey(v)===selected)?selected:''}
@@ -95,20 +65,9 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
  function saveVoiceSettings(){const pitch=Number($('pitchSlider').value);const rate=Number($('rateSlider').value);$('pitchValue').textContent=pitch.toFixed(2)+'×';$('rateValue').textContent=rate.toFixed(2)+'×';try{localStorage.setItem('jarvisVoicePitch',String(pitch));localStorage.setItem('jarvisVoiceRate',String(rate));localStorage.setItem('jarvisVoiceKey',$('voiceSelect').value)}catch(e){}}
  function say(text){reply.textContent=text;if(!voiceReplies||!('speechSynthesis'in window))return;const synth=window.speechSynthesis;synth.cancel();if(recognition&&listening){try{recognition.stop()}catch(e){}}const u=new SpeechSynthesisUtterance(text);const voice=chooseVoice();if(voice)u.voice=voice;u.lang=voice?voice.lang:commandLanguage;u.rate=Number($('rateSlider').value)||0.91;u.pitch=Number($('pitchSlider').value)||1.22;u.volume=1;u.onend=()=>{if(listening&&recognition){clearTimeout(restartTimer);restartTimer=setTimeout(()=>{try{recognition.start()}catch(e){}},350)}};let spoken=false;const speak=()=>{if(spoken)return;spoken=true;const current=chooseVoice();if(current){u.voice=current;u.lang=current.lang}synth.speak(u)};if(!synth.getVoices().length){const onVoices=()=>{synth.removeEventListener('voiceschanged',onVoices);refreshVoices();speak()};synth.addEventListener('voiceschanged',onVoices);setTimeout(speak,900)}else speak()}
 
- function processCommand(raw){const text=raw.trim(),c=text.toLowerCase().replace(/[!?.,،۔]/g,' ').replace(/\\s+/g,' ').trim();if(!c)return;
+ function processCommand(raw){const text=String(raw||'').trim(),c=window.JarvisCommandUtils?window.JarvisCommandUtils.normalize(text):text.toLowerCase().replace(/[!?.,،۔]/g,' ').replace(/\s+/g,' ').trim();if(!c)return;
  setStatus('PROCESSING…');orb.classList.add('active');
  const has=(patterns)=>patterns.some(p=>p.test(c));
- if(/^(btc|bitcoin)( (price|market|spot|quote))?$/.test(c)||c==="what is btc price"||c==="what is bitcoin price"){
-   loadBtcMarket().then(data=>{
-     if(data){
-       const change=Number(data.change_24h_pct);
-       say("Bitcoin spot price is "+Number(data.price_usd).toLocaleString("en-US",{maximumFractionDigits:2})+" US dollars. The 24-hour change is "+(change>0?"plus ":"")+change.toFixed(2)+" percent. This is spot data, not a trade signal.");
-     }else{
-       say("BTC spot data is temporarily unavailable.");
-     }
-   });
-   return;
- }
  const reminder=window.JarvisBridge&&window.JarvisReminderParser?window.JarvisReminderParser(text):null;
  if(reminder&&reminder.title&&reminder.minutes>=1&&reminder.minutes<=10080&&window.JarvisBridge.scheduleReminder(reminder.title,reminder.minutes)){
    say(commandLanguage==='ur-PK'?'Theek hai, reminder ki request bhej di hai. Notification permission maangi jaye to allow kar dena.':'Okay, I sent the local reminder request. Allow notifications if Android asks.');
@@ -117,8 +76,8 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
    return;
  }
  if(has([/\b(hello|hi|salam|assalam|hey jarvis)\b/,/السلام علیکم/,/سلام/]))say(commandLanguage==='ur-PK'?'Ji, main JARVIS hoon. Batayein, kya madad chahiye?':'I am online. Tell me what you need.');
- else if(has([/\b(time|waqt|kitne bajay|kitna bajay|baje|baj rahe|time batao)\b/,/وقت/,/کتنے بجے/,/کیا وقت/]))say(commandLanguage==='ur-PK'?'Abhi waqt '+new Date().toLocaleTimeString('en-PK',{hour:'numeric',minute:'2-digit'})+' hai.':'The time is '+new Date().toLocaleTimeString());
- else if(has([/\b(date|tareekh|tarikh|aaj ki date|aaj ki tareekh)\b/,/تاریخ/,/آج کی تاریخ/]))say(commandLanguage==='ur-PK'?'Aaj ki tareekh '+new Date().toLocaleDateString('en-GB')+' hai.':'Today is '+new Date().toLocaleDateString());
+ else if(window.JarvisCommandUtils&&window.JarvisCommandUtils.isTimeCommand(text))say(commandLanguage==='ur-PK'?'Abhi waqt '+new Date().toLocaleTimeString('en-PK',{hour:'numeric',minute:'2-digit'})+' hai.':'The time is '+new Date().toLocaleTimeString());
+ else if(window.JarvisCommandUtils&&window.JarvisCommandUtils.isDateCommand(text))say(commandLanguage==='ur-PK'?'Aaj ki tareekh '+new Date().toLocaleDateString('en-GB')+' hai.':'Today is '+new Date().toLocaleDateString());
  else if(has([/\b(your name|who are you|tumhara naam|ap ka naam|aap ka naam)\b/,/تمہارا نام/,/آپ کا نام/]))say('Main JARVIS hoon, aap ka personal assistant.');
  else if(has([/\b(open google|google kholo|google khol do|kholo google|google open)\b/,/گوگل کھولو/,/گوگل کھول دو/])){say(commandLanguage==='ur-PK'?'Google khol raha hoon.':'Opening Google.');window.open('https://www.google.com/','_blank','noopener')}
  else if(has([/\b(open youtube|youtube kholo|youtube khol do|kholo youtube|youtube open)\b/,/یوٹیوب کھولو/,/یوٹیوب کھول دو/])){say(commandLanguage==='ur-PK'?'YouTube khol raha hoon.':'Opening YouTube.');window.open('https://m.youtube.com/','_blank','noopener')}
@@ -155,7 +114,6 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
  $('languageToggle').onclick=()=>{commandLanguage=commandLanguage==='ur-PK'?'en-US':'ur-PK';$('languageToggle').textContent=commandLanguage==='ur-PK'?'🗣 Language: Urdu':'🗣 Language: English';if(listening){stopListening();startListening()}say(commandLanguage==='ur-PK'?'Urdu mode on. Ab Urdu ya Roman Urdu mein command bolain.':'English mode on. Speak your command in English.')};
  $('wakeToggle').onclick=()=>{wakeEnabled=!wakeEnabled;$('wakeToggle').textContent='Hey JARVIS: '+(wakeEnabled?'ON':'OFF');setStatus(listening?(wakeEnabled?'LISTENING FOR “HEY JARVIS”':'LISTENING'):'READY')};
  $('commandForm').onsubmit=e=>{e.preventDefault();processCommand(input.value);input.value=''};
- $('refreshBtcMarket').onclick=()=>loadBtcMarket();
  document.querySelectorAll('[data-cmd]').forEach(b=>b.onclick=()=>processCommand(b.dataset.cmd));
  if(window.JarvisBridge){
    $('screenControlSection').style.display='block';

@@ -256,7 +256,8 @@ def assistant(payload: AssistantRequest):
 
         if should_fallback and groq_key:
             try:
-                reply = _groq_reply(request_input, language_hint)\n                return AssistantResponse(reply=reply, mode="groq", emotion=classify_emotion(message, reply))
+                reply = _groq_reply(request_input, language_hint)
+                return AssistantResponse(reply=reply, mode="groq", emotion=classify_emotion(message, reply))
             except RuntimeError as groq_error:
                 raise HTTPException(
                     status_code=502,

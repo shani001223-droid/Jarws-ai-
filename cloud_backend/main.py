@@ -1,4 +1,4 @@
-"""JARVIS cloud API with server-side Gemini and Groq fallback."""
+"""HOSHI cloud API with server-side Gemini and Groq fallback."""
 import json
 import os
 from typing import Optional
@@ -188,7 +188,7 @@ def _groq_reply(message: str, language_hint: str) -> str:
         headers={
             "Content-Type": "application/json",
             "Authorization": "Bearer " + api_key,
-            "User-Agent": "JARVIS-Cloud-Assistant/0.7.0 (+https://jarws-ai-1.onrender.com)",
+            "User-Agent": "HOSHI-Cloud-Assistant/0.9.1 (+https://jarws-ai-1.onrender.com)",
         },
         method="POST",
     )
@@ -348,7 +348,7 @@ def assistant(payload: AssistantRequest):
             headers={
                 "Content-Type": "application/json",
                 "x-goog-api-key": gemini_key,
-                "User-Agent": "JARVIS-Cloud-Assistant/0.7.0 (+https://jarws-ai-1.onrender.com)",
+                "User-Agent": "HOSHI-Cloud-Assistant/0.9.1 (+https://jarws-ai-1.onrender.com)",
             },
             method="POST",
         )

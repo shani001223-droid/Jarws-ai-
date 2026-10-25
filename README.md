@@ -41,9 +41,9 @@ A mobile-first HOSHI AI companion for Android, using a hosted backend and a resp
 - Backend personality, emotion labels, recent-context support, and Groq fallback are implemented in `cloud_backend/main.py`.
 - Backend service deployed successfully after a transient syntax error was caught and fixed. Render logs showed `/health` returning HTTP 200 and no recent error-level application logs at the time of verification.
 - Frontend deployed successfully; its inline JavaScript passed a syntax compilation check in this session.
-- GitHub Actions **HOSHI basic checks run #76 passed** on commit `24a727fb75e9ad498860cff27179b124ed25224c`, including Python syntax/unit tests, reminder parser tests, JavaScript syntax checks, and inline dashboard JavaScript compilation.
-- GitHub Actions **live backend smoke test run #17 passed** on the same commit, including a real `/health` check and one live AI request.
-- GitHub Actions **Android debug APK build run #21 passed** on commit `bdefb75711c380b108ec21a87caecbe9e322df21`.
+- GitHub Actions **HOSHI basic checks run #89 passed** on commit `cda83d88e278b53b9968671cd27c2e6371a62da7`, including Python syntax/unit tests, reminder parser tests, JavaScript syntax checks, and inline dashboard JavaScript compilation.
+- GitHub Actions **HOSHI live backend smoke test run #22 passed** on commit `cda83d88e278b53b9968671cd27c2e6371a62da7`. It confirmed the deployed API version `0.9.1`, health response, and one live AI request; the request succeeded through the configured Groq fallback.
+- GitHub Actions **Build HOSHI Android APK run #22 passed** on commit `640f294f5e770a17863566e5a572797342e8b080`; the debug APK artifact is `hoshi-debug-apk`.
 - Real-device voice/microphone testing and lip-sync remain pending.
 
 ## Services

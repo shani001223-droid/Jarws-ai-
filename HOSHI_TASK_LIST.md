@@ -1,6 +1,6 @@
 # HOSHI AI — Master Transformation Task List
 
-**Status:** Implementation in progress — the main personality, memory, responsive dashboard, avatar-expression, backend fallback, and native Android foundations are present. Current automated tests pass; full conversational acceptance, live Render verification after recent frontend updates, and target-phone tests are still pending.  
+**Status:** Implementation in progress — the main personality, memory, responsive dashboard, avatar-expression, backend fallback, and native Android foundations are present. Earlier automated runs passed; the latest backend context-hardening and provider-branding changes are awaiting fresh CI confirmation. Full conversational acceptance, live Render visual verification, and target-phone tests are still pending.  
 **Repository:** [shani001223-droid/Jarws-ai-](https://github.com/shani001223-droid/Jarws-ai-)  
 **Final design:** The two user-provided HOSHI character and dashboard images are the final design, not inspiration. Preserve the character appearance, layout, dark navy / electric-blue / cyan neon palette, and panel arrangement as closely as implementation permits.
 
@@ -99,6 +99,13 @@
 - [ ] Pixel-perfect full dashboard reproduction, full-resolution character-sheet integration, lip-sync/advanced rigging, end-to-end voice acceptance, current Render-front-end live visual confirmation, and Realme Note 50 testing remain pending/limited.
 
 ## Latest implementation update (2026-10-26)
+
+- [x] Backend context input hardened: accepts only `user:` / `assistant:` history rows, collapses actual control characters and literal escaped newline/tab sequences, limits each entry and retains at most eight recent turns.
+- [x] Regression tests added for invalid context roles, multiline entries, literal escaped control sequences, and per-entry/eight-turn bounds.
+- [x] Provider request User-Agent and backend module branding updated from stale JARVIS 0.7.0 to HOSHI 0.9.1.
+- [ ] Confirm the newest GitHub Actions backend/contract and browser suites pass after these changes; do not mark this check complete before a green run.
+- [ ] Confirm the updated Render backend deployment and current frontend UI; physical Realme Note 50 test remains deferred until all other available tasks are complete.
+
 - [x] Added `assets/hoshi-expressions.webp`, an 8-state sprite made from the final user-provided character sheet; the dashboard switches sprite positions based on `data-emotion`.
 - [x] Bumped the service-worker cache to `hoshi-shell-v10`; it precaches the emotion sprite and privacy helper and fetches the current online document before using offline cache.
 - [x] Added reusable `memory-privacy.js` and Node tests for credentials, token formats, recovery phrase language, OTPs, email addresses, phone-like strings, and long numeric strings.

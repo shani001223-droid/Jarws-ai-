@@ -20,7 +20,7 @@ class ReminderReceiver : BroadcastReceiver() {
             ReminderScheduler.ACTION_FIRE -> showReminder(
                 context,
                 intent.getIntExtra("reminder_id", 1),
-                intent.getStringExtra("reminder_title") ?: "JARVIS reminder"
+                intent.getStringExtra("reminder_title") ?: "HOSHI reminder"
             )
         }
     }
@@ -31,10 +31,10 @@ class ReminderReceiver : BroadcastReceiver() {
             manager.createNotificationChannel(
                 NotificationChannel(
                     CHANNEL_ID,
-                    "JARVIS reminders",
+                    "HOSHI reminders",
                     NotificationManager.IMPORTANCE_HIGH
                 ).apply {
-                    description = "Reminders created locally in JARVIS."
+                    description = "Reminders created locally in HOSHI."
                 }
             )
         }
@@ -55,7 +55,7 @@ class ReminderReceiver : BroadcastReceiver() {
         }
         val notification = builder
             .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("JARVIS reminder")
+            .setContentTitle("HOSHI reminder")
             .setContentText(title)
             .setStyle(Notification.BigTextStyle().bigText(title))
             .setContentIntent(openPending)

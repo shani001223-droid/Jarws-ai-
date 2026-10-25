@@ -196,6 +196,20 @@ async function main() {
     await page.locator("#screenshotQuickBtn").click();
     assert.match(await page.locator("#status").innerText(), /NEEDS THE HOSHI ANDROID APP/);
 
+    // Responsive regression coverage in tablet and narrow-phone browser viewports.
+    for (const viewport of [{ width: 768, height: 1024 }, { width: 390, height: 844 }]) {
+      await page.setViewportSize(viewport);
+      await page.waitForTimeout(100);
+      assert.equal(await page.locator("[data-ui-action]").count(), 5,
+        "All five hero actions should remain available at " + viewport.width + "px");
+      assert.equal(await page.locator('[data-ui-action="chat"]').isVisible(), true,
+        "Chat shortcut should stay visible at " + viewport.width + "px");
+      const overflow = await page.evaluate(() =>
+        document.documentElement.scrollWidth > document.documentElement.clientWidth + 1
+      );
+      assert.equal(overflow, false, "No horizontal page overflow at " + viewport.width + "px");
+    }
+
     assert.deepEqual(pageErrors, [], "Dashboard should not throw uncaught browser errors");
     console.log("PASS — dashboard loaded; local command, cloud chat, emotion, context privacy, request ordering, memory toggle, and graceful fallback worked.");
   } finally {

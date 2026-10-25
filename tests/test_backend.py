@@ -65,6 +65,18 @@ class AssistantApiTests(unittest.TestCase):
         self.assertFalse(body["store"])
         self.assertIn("Roman Urdu", body["system_instruction"])
 
+    def test_gemini_multiple_text_blocks_are_joined_with_newlines(self):
+        payload = {
+            "steps": [{"type": "model_output", "content": [
+                {"type": "text", "text": "First sentence."},
+                {"type": "text", "text": "Second sentence."},
+            ]}]
+        }
+        with patch.dict(os.environ, {"GEMINI_API_KEY": "test-gemini-key", "GROQ_API_KEY": ""}):
+            with patch("cloud_backend.main.urlopen", return_value=FakeResponse(payload)):
+                result = main.assistant(main.AssistantRequest(message="Hello"))
+        self.assertEqual(result.reply, "First sentence.\nSecond sentence.")
+
     def test_groq_403_error_is_diagnosable(self):
         error_body = io.BytesIO(json.dumps({"error": "Project does not have permission to use this model."}).encode("utf-8"))
         groq_error = HTTPError(

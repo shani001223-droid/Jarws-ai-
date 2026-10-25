@@ -54,6 +54,10 @@ class FrontendContractTests(unittest.TestCase):
             selector = rf'\.orb\[data-emotion="{emotion}"\] \.companion-avatar\{{background-position:'
             self.assertRegex(HTML, selector, f"No sprite position for {emotion}")
 
+    def test_selected_browser_voice_is_not_overridden_by_native_tts(self):
+        self.assertIn("if(!$('voiceSelect').value&&window.JarvisBridge", HTML)
+        self.assertIn("Honor an explicitly selected browser/device voice", HTML)
+
     def test_voice_errors_stop_restart_loop_and_keep_actionable_status(self):
         self.assertIn('lastVoiceError=""', HTML)
         for error in ("not-allowed", "audio-capture", "language-not-supported", "network"):

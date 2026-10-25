@@ -147,7 +147,7 @@ def normalize_context_entries(context: Optional[list[str]]) -> list[str]:
     for raw_item in context or []:
         # Convert tabs/newlines/control characters to ordinary spaces, then collapse.
         safe_chars = "".join(
-            char if char.isprintable() and char not in "\\r\\n\\t" else " "
+            char if char.isprintable() else " "
             for char in str(raw_item or "")
         )
         line = " ".join(safe_chars.split()).strip()

@@ -24,7 +24,7 @@ jobs:
           health=""
           for attempt in $(seq 1 30); do
             if health=$(curl -fsS --max-time 10 "$API_BASE/health"); then
-              if echo "$health" | jq -e ' .version == "0.8.0" and .gemini_api == "interactions" and .gemini_model == "gemini-3.8-flash" and .groq_model == "openai/gpt-oss-20b" and .ai_connected == true' >/dev/null; then
+              if echo "$health" | jq -e ' .version == "1.0.0" and .gemini_api == "interactions" and .gemini_model == "gemini-3.8-flash" and .groq_model == "openai/gpt-oss-20b" and .ai_connected == true' >/dev/null; then
                 echo "$health" | jq '{version, gemini_api, gemini_model, groq_model, groq_configured, ai_connected}'
                 break
               fi

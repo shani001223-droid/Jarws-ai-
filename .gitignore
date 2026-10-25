@@ -1,0 +1,24 @@
+# Python runtime/cache
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Server-side conversation memory (never commit user conversations)
+*.sqlite
+*.sqlite3
+*.sqlite-journal
+*.sqlite3-journal
+*.sqlite-wal
+*.sqlite3-wal
+*.sqlite-shm
+*.sqlite3-shm
+
+# Android/Gradle build outputs
+.gradle/
+**/build/
+local.properties
+
+# Local environment files
+.env
+.env.*
+!.env.example

@@ -3,7 +3,9 @@ package com.valtron.jarvis
 import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.net.Uri
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Build
@@ -274,6 +276,36 @@ class MainActivity : Activity() {
             "Reminder set for $minutesText from now.",
             Toast.LENGTH_LONG
         ).show()
+    }
+
+    /**
+     * Launch only fixed, allowlisted destinations requested by local commands.
+     * No arbitrary package name or URL supplied by the model is accepted.
+     */
+    fun openInstalledApp(appId: String): Boolean {
+        val safeId = appId.trim().lowercase(Locale.ROOT)
+        val launchIntent = when (safeId) {
+            "youtube" -> packageManager.getLaunchIntentForPackage("com.google.android.youtube")
+            "whatsapp" -> packageManager.getLaunchIntentForPackage("com.whatsapp")
+            "browser" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/"))
+            else -> null
+        } ?: return false
+
+        return try {
+            runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
+                try {
+                    startActivity(launchIntent)
+                } catch (_: ActivityNotFoundException) {
+                    Toast.makeText(this, "No compatible app is installed.", Toast.LENGTH_SHORT).show()
+                } catch (_: SecurityException) {
+                    Toast.makeText(this, "Android blocked this app launch.", Toast.LENGTH_SHORT).show()
+                }
+            }
+            true
+        } catch (_: Exception) {
+            false
+        }
     }
 
     fun promptScreenControls() {

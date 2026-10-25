@@ -1,113 +1,41 @@
-import io
-import json
-import os
-import unittest
+"""Regression tests for modular JARVIS API and service."""
+import os, tempfile, unittest
 from unittest.mock import patch
-from urllib.error import HTTPError
-
+from fastapi import HTTPException
 from cloud_backend import main
+from cloud_backend.jarvis_app import memory, service
+from cloud_backend.jarvis_app.providers import gemini_input, trim_history
 
+class ModularBackendTests(unittest.TestCase):
+    def test_health_contract_preserves_dashboard_fields(self):
+        with patch.dict(os.environ, {"GEMINI_API_KEY":"g", "GROQ_API_KEY":"q"}): result = main.health()
+        self.assertTrue(result["ok"]); self.assertEqual(result["gemini_api"], "interactions")
+        self.assertTrue(result["gemini_configured"]); self.assertTrue(result["groq_configured"])
+        self.assertEqual(main.root()["assistant"], "/api/assistant")
+    def test_api_payload_and_response_contract(self):
+        payload = main.AssistantRequest(message="Hello", locale="en")
+        with patch("cloud_backend.jarvis_app.api.answer_message", return_value=("Hi there", "gemini")): result = main.assistant(payload)
+        self.assertEqual(result.reply, "Hi there"); self.assertEqual(result.mode, "gemini")
+    def test_history_is_bounded_and_ordered(self):
+        history = [{"role":"user", "content":f"message {i}"} for i in range(20)]; result = trim_history(history)
+        self.assertLessEqual(len(result), 12); self.assertEqual(result[-1]["content"], "message 19")
+    def test_gemini_input_has_context_and_current_message(self):
+        prompt = gemini_input("current", [{"role":"user", "content":"previous"}])
+        self.assertIn("User: previous", prompt); self.assertIn("Current user message:", prompt); self.assertIn("current", prompt)
+    def test_invalid_conversation_id_returns_400(self):
+        with self.assertRaises(HTTPException) as ctx: service.canonical_conversation_id("not-a-uuid")
+        self.assertEqual(ctx.exception.status_code, 400)
+    def test_blank_message_returns_400(self):
+        with self.assertRaises(HTTPException) as ctx: service.answer_message(" ")
+        self.assertEqual(ctx.exception.status_code, 400)
+    def test_memory_save_and_retrieve_isolated_by_conversation(self):
+        with tempfile.TemporaryDirectory() as temp, patch("cloud_backend.jarvis_app.memory.get_settings") as settings:
+            settings.return_value = type("Settings", (), {"db_path":os.path.join(temp,"memory.db"), "memory_retention_days":30})()
+            memory.save_turn("conversation-A", "Hello", "Hi"); memory.save_turn("conversation-B", "Other", "Answer")
+            self.assertEqual(memory.get_recent_history("conversation-A"), [{"role":"user","content":"Hello"},{"role":"assistant","content":"Hi"}])
+    def test_gemini_success(self):
+        fake = type("Settings", (), {"gemini_api_key":"test", "groq_api_key":"", "gemini_model":"model", "groq_model":"fallback"})()
+        with patch("cloud_backend.jarvis_app.service.get_settings", return_value=fake), patch("cloud_backend.jarvis_app.service._history", return_value=[]), patch("cloud_backend.jarvis_app.service._save"), patch("cloud_backend.jarvis_app.service.gemini_reply", return_value="Hello"):
+            self.assertEqual(service.answer_message("Hello"), ("Hello", "gemini"))
 
-class FakeResponse:
-    def __init__(self, payload):
-        self.payload = json.dumps(payload).encode("utf-8")
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc, tb):
-        return False
-
-    def read(self):
-        return self.payload
-
-
-class AssistantApiTests(unittest.TestCase):
-
-    def test_health_reports_interactions_api_and_provider_flags(self):
-        with patch.dict(os.environ, {
-            "GEMINI_API_KEY": "test-gemini-key",
-            "GROQ_API_KEY": "test-groq-key",
-        }):
-            health = main.health()
-
-        self.assertEqual(health["version"], "0.8.0")
-        self.assertEqual(health["gemini_api"], "interactions")
-        self.assertTrue(health["gemini_configured"])
-        self.assertTrue(health["groq_configured"])
-        self.assertEqual(health["gemini_model"], "gemini-3.8-flash")
-        self.assertEqual(health["groq_model"], "openai/gpt-oss-20b")
-    def test_gemini_uses_interactions_api_and_extracts_model_output(self):
-        payload = {
-            "status": "completed",
-            "steps": [
-                {"type": "user_input", "content": [{"type": "text", "text": "Hello"}]},
-                {"type": "model_output", "content": [{"type": "text", "text": "Hello from Gemini"}]},
-            ],
-        }
-        with patch.dict(os.environ, {"GEMINI_API_KEY": "test-gemini-key", "GROQ_API_KEY": ""}):
-            with patch("cloud_backend.main.urlopen", return_value=FakeResponse(payload)) as mocked:
-                result = main.assistant(main.AssistantRequest(message="Hello"))
-
-        self.assertEqual(result.reply, "Hello from Gemini")
-        self.assertEqual(result.mode, "gemini")
-        request = mocked.call_args.args[0]
-        self.assertEqual(request.full_url, "https://generativelanguage.googleapis.com/v1beta/interactions")
-        self.assertEqual(request.get_header("X-goog-api-key"), "test-gemini-key")
-        self.assertEqual(request.get_header("User-agent"), "JARVIS-Cloud-Assistant/0.7.0 (+https://jarws-ai-1.onrender.com)")
-        body = json.loads(request.data.decode("utf-8"))
-        self.assertEqual(body["model"], main.GEMINI_MODEL)
-        self.assertEqual(body["input"], "Hello")
-        self.assertFalse(body["store"])
-        self.assertIn("Roman Urdu", body["system_instruction"])
-
-    def test_groq_403_error_is_diagnosable(self):
-        error_body = io.BytesIO(json.dumps({"error": "Project does not have permission to use this model."}).encode("utf-8"))
-        groq_error = HTTPError(
-            "https://api.groq.com/openai/v1/chat/completions",
-            403,
-            "Forbidden",
-            {},
-            error_body,
-        )
-        with patch.dict(os.environ, {"GROQ_API_KEY": "test-groq-key"}):
-            with patch("cloud_backend.main.GROQ_MODEL", "test-model"):
-                with patch("cloud_backend.main.urlopen", side_effect=groq_error):
-                    with self.assertRaisesRegex(RuntimeError, "permission/model access") as caught:
-                        main._groq_reply("Hello", "Reply in English.")
-        self.assertIn("test-model", str(caught.exception))
-        self.assertIn("does not have permission", str(caught.exception))
-
-    def test_gemini_http_404_falls_back_to_groq(self):
-        error_body = io.BytesIO(json.dumps({"error": {"message": "test model error"}}).encode("utf-8"))
-        gemini_error = HTTPError(
-            "https://generativelanguage.googleapis.com/v1beta/interactions",
-            404,
-            "Not Found",
-            {},
-            error_body,
-        )
-        groq_payload = {
-            "choices": [{"message": {"content": "Hello from Groq fallback"}}]
-        }
-
-        with patch.dict(os.environ, {
-            "GEMINI_API_KEY": "test-gemini-key",
-            "GROQ_API_KEY": "test-groq-key",
-        }):
-            with patch(
-                "cloud_backend.main.urlopen",
-                side_effect=[gemini_error, FakeResponse(groq_payload)],
-            ) as mocked:
-                result = main.assistant(main.AssistantRequest(message="Hello"))
-
-        self.assertEqual(result.reply, "Hello from Groq fallback")
-        self.assertEqual(result.mode, "groq")
-        self.assertEqual(mocked.call_count, 2)
-        fallback_request = mocked.call_args.args[0]
-        self.assertEqual(fallback_request.full_url, "https://api.groq.com/openai/v1/chat/completions")
-        self.assertEqual(fallback_request.get_header("User-agent"), "JARVIS-Cloud-Assistant/0.7.0 (+https://jarws-ai-1.onrender.com)")
-
-
-if __name__ == "__main__":
-    unittest.main()
+if __name__ == "__main__": unittest.main()

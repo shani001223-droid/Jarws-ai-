@@ -4,6 +4,7 @@ import android.content.ComponentName
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
+import java.util.Locale
 import android.webkit.JavascriptInterface
 
 /**
@@ -16,6 +17,13 @@ class JarvisBridge(private val activity: MainActivity) {
     @JavascriptInterface
     fun speakNative(text: String, language: String, pitch: Float, rate: Float): Boolean {
         return activity.speakNative(text, language, pitch, rate)
+    }
+
+    @JavascriptInterface
+    fun openInstalledApp(appId: String): Boolean {
+        val safeId = appId.trim().lowercase(Locale.ROOT)
+        if (safeId !in setOf("youtube", "whatsapp", "browser")) return false
+        return activity.openInstalledApp(safeId)
     }
 
     @JavascriptInterface

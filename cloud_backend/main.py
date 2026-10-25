@@ -266,7 +266,8 @@ def assistant(payload: AssistantRequest):
     # If Gemini is not configured, Groq can serve requests on its own.
     if groq_key:
         try:
-            return AssistantResponse(reply=_groq_reply(message, language_hint), mode="groq")
+            reply = _groq_reply(message, language_hint)
+            return AssistantResponse(reply=reply, mode="groq", emotion=classify_emotion(message, reply))
         except RuntimeError as groq_error:
             raise HTTPException(status_code=502, detail=str(groq_error)) from None
 

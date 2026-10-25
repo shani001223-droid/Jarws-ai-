@@ -6,7 +6,7 @@ A mobile-first HOSHI AI companion for Android, using a hosted backend and a resp
 
 - HOSHI dashboard with responsive sidebar navigation, chat, voice, memory, settings, and external app shortcuts.
 - HOSHI identity prompt with language matching, affectionate/playful tone, honesty, and emotional boundaries.
-- Conversation emotion labels (happy, sad, affectionate, excited, shy, concerned, annoyed, playful, thinking, caring), character-sheet expression switching, TTS pitch/speed modulation, and an animated waveform while HOSHI speaks.
+- Conversation emotion labels (happy, sad, affectionate, excited, shy, concerned, annoyed, playful, thinking, caring), character-sheet expression switching, TTS pitch/speed modulation, an animated waveform, and a lightweight mouth overlay while HOSHI speaks.
 - Optional local conversation memory with bounded recent context, entry-by-entry review/edit/delete, clear/disable controls, and a tested privacy filter for common credentials, token formats, recovery phrases, OTPs, email addresses, phone-like strings, and long numeric identifiers. Privacy detection is heuristic; it cannot guarantee detection of every sensitive detail.
 - Local persistence for language selection, voice-reply (auto-speak) toggle, wake-word toggle, personality, and voice tuning.
 - Cloud requests sanitize client-provided conversation context: only `user:` and `assistant:` entries are retained, control characters and escaped newline/tab sequences are flattened, and the latest eight entries are bounded to under 500 characters each.
@@ -32,7 +32,7 @@ A mobile-first HOSHI AI companion for Android, using a hosted backend and a resp
 
 - This is a debug/test APK, not a Play Store release. It has not been validated on the target Realme Note 50 during this session.
 - The full character sheet and complete dashboard screenshot are not embedded as full-resolution backgrounds; the optimized HOSHI hero artwork and key dashboard arrangement are implemented as a responsive interactive adaptation, not a pixel-perfect reproduction of every reference panel.
-- Eight compact expressions are available in a sprite and mapped to ten emotion labels. Speaking displays an animated waveform, but this is not phoneme-synchronized lip-sync; a true mouth rig/timed mouth-shape set is not implemented.
+- Eight compact expressions are available in a sprite and mapped to ten emotion labels. During TTS, an approximate mouth overlay opens/closes alongside the animated waveform; it follows speech start/stop state but is not phoneme-synchronized lip-sync. A true rig/timed mouth-shape set is not implemented.
 - Local memory stores recent turns in browser local storage. Entry review/edit/delete and clear/disable controls are available. The privacy filter blocks common credential terms, token shapes, recovery-phrase language, OTPs, email addresses, phone-like strings, and long numbers; it is heuristic and cannot guarantee every secret is detected. If the privacy utility fails to load, local storage fails closed and does not save messages. When memory is enabled, a bounded recent context is sent to the backend with AI requests; turn memory off to stop that context being sent.
 - Voice quality and choices depend on the speech engines installed on the Android device. Automatic selection prioritizes `ur-PK` where present, then Urdu, then an available feminine-sounding fallback; no code-only change can guarantee a natural female Pakistani accent or install a missing voice.
 - The hosted backend requires internet. Gemini free-tier limits can be exhausted; Groq is configured as the backup, but provider policies and free limits can change. Local reminders run on-device; Android power-saving may deliver them a little late.
@@ -47,7 +47,7 @@ A mobile-first HOSHI AI companion for Android, using a hosted backend and a resp
 - GitHub Pages publish workflow **run #227 passed** after the hero-art/speech-wave contract update. [Run #227](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40237303752).
 - GitHub Actions **HOSHI live backend smoke test run #35 passed** after adding transient gateway retries and correcting HTTP status parsing; it verified a non-empty live AI reply from the configured provider. [Run #35](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40237196850).
 - GitHub Actions **Build HOSHI Android APK run #32 passed** after the HOSHI neon-star launcher icon update. [Run #32](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40237013290). The native TTS voice-priority code changed after that run, so a fresh APK build is required before target-device testing. No physical phone test has been started.
-- Real-device voice/microphone acceptance, natural female Pakistani Urdu accent confirmation, and true lip-sync remain pending.
+- The lightweight mouth overlay is an approximation and has a lifecycle test; accurate phoneme-synchronized lip-sync, real-device voice/microphone acceptance, and confirmation of a natural female Pakistani Urdu accent remain pending.
 
 ## Services
 

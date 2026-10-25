@@ -10,6 +10,7 @@ A mobile-first personal AI assistant prototype for Android, with a hosted AI bac
 - Generated anime avatar shown on the dashboard and the draggable Android floating icon.
 - Floating icon size slider, saved locally on the phone.
 - The floating service has a persistent Android notification and an explicit Stop action.
+- Optional user-triggered Accessibility actions: Back, Home, Swipe up, and Swipe down. The service does not retrieve screen content or upload screen text.
 - GitHub Actions runs Python tests, JavaScript syntax checks, a live backend smoke test, and an Android debug APK build.
 
 ## Install the Android test APK
@@ -25,7 +26,7 @@ A mobile-first personal AI assistant prototype for Android, with a hosted AI bac
 ## Important limitations
 
 - This is a debug/test APK, not a Play Store release. It has only been build-tested with GitHub Actions; it has not been validated on every phone model.
-- The floating icon opens the JARVIS dashboard; it does not yet independently tap buttons in other apps, read all screen contents, or control the whole phone.
+- The floating icon opens the JARVIS dashboard. Basic Back/Home/swipe actions require the user to manually enable JARVIS Accessibility in Android Settings. This version does not tap arbitrary app buttons, read screen text, or control the whole phone.
 - Voice quality and voice choices depend on the speech engines installed on the Android device. The dashboard can select and tune available voices but cannot install a premium neural voice on its own.
 - The hosted backend requires internet. Gemini free-tier limits can be exhausted; Groq is configured as the backup, but provider policies and free limits can change.
 - API keys remain in the private Render environment; never place them in frontend code, an APK, or a public repository.
@@ -39,6 +40,6 @@ A mobile-first personal AI assistant prototype for Android, with a hosted AI bac
 ## Next roadmap
 
 1. Test the current APK on the target Android phone and refine the anime/voice experience.
-2. Add opt-in, clearly disclosed accessibility actions for limited user-triggered screen navigation.
+2. Test basic accessibility gestures on the target phone and refine voice behavior.
 3. Add persistent reminders and local settings.
 4. Build separate, user-approved integrations for trading analysis, Flora business management, and social/video automation instead of giving one assistant unlimited access by default.

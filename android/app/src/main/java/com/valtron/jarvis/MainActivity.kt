@@ -2,6 +2,7 @@ package com.valtron.jarvis
 
 import android.Manifest
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -112,6 +113,13 @@ class MainActivity : Activity() {
         controls.addView(stopButton, LinearLayout.LayoutParams(0, dp(44), 1f))
         root.addView(controls)
 
+        val screenPermissionButton = makeButton("Enable basic screen controls") {
+            promptScreenControls()
+        }
+        root.addView(screenPermissionButton, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, dp(42)
+        ))
+
         val hint = TextView(this).apply {
             text = "Floating icon runs only after you enable it. Tap the orb to return to JARVIS."
             textSize = 12f
@@ -122,6 +130,7 @@ class MainActivity : Activity() {
 
         val webView = WebView(this)
         webView.setBackgroundColor(Color.rgb(7, 17, 30))
+        webView.addJavascriptInterface(JarvisBridge(this), "JarvisBridge")
         webView.settings.apply {
             javaScriptEnabled = true
             domStorageEnabled = true
@@ -194,6 +203,21 @@ class MainActivity : Activity() {
             setTextColor(Color.WHITE)
             setOnClickListener { action() }
         }
+    }
+
+    fun promptScreenControls() {
+        AlertDialog.Builder(this)
+            .setTitle("Enable basic screen controls?")
+            .setMessage(
+                "JARVIS will only perform Back, Home, and swipe gestures when you tap those buttons. " +
+                    "It will not read screen text or send screen contents to the cloud. " +
+                    "You can disable the service anytime in Android Accessibility settings."
+            )
+            .setNegativeButton("Cancel", null)
+            .setPositiveButton("Open settings") { _, _ ->
+                startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+            }
+            .show()
     }
 
     private fun enableOverlay() {

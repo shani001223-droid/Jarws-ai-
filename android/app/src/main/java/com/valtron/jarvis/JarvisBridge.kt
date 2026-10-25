@@ -1,0 +1,47 @@
+package com.valtron.jarvis
+
+import android.app.Activity
+import android.content.ComponentName
+import android.os.Handler
+import android.os.Looper
+import android.provider.Settings
+import android.webkit.JavascriptInterface
+
+/**
+ * A deliberately small JavaScript bridge. Unknown action strings are rejected.
+ */
+class JarvisBridge(private val activity: MainActivity) {
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private val allowedActions = setOf("back", "home", "swipe_up", "swipe_down")
+
+    @JavascriptInterface
+    fun isEnabled(): Boolean {
+        val expected = ComponentName(activity, JarvisAccessibilityService::class.java)
+            .flattenToString()
+        val enabled = Settings.Secure.getString(
+            activity.contentResolver,
+            Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+        ).orEmpty()
+        return Settings.Secure.getInt(
+            activity.contentResolver,
+            Settings.Secure.ACCESSIBILITY_ENABLED,
+            0
+        ) == 1 && enabled.split(':').any { it.equals(expected, ignoreCase = true) }
+    }
+
+    @JavascriptInterface
+    fun requestSettings() {
+        activity.runOnUiThread {
+            if (!activity.isFinishing) activity.promptScreenControls()
+        }
+    }
+
+    @JavascriptInterface
+    fun performAction(action: String): Boolean {
+        if (action !in allowedActions || !isEnabled()) return false
+        val queued = mainHandler.post {
+            JarvisAccessibilityService.instance?.performBasicAction(action)
+        }
+        return queued
+    }
+}

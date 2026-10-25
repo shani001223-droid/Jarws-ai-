@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="jarvis_accessibility_description">Performs only user-requested Back, Home, and swipe gestures. Does not read or send screen text.</string>
+</resources>

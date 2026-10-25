@@ -1,7 +1,9 @@
 import io
 import json
 import os
+import tempfile
 import unittest
+import uuid
 from unittest.mock import patch
 from urllib.error import HTTPError
 
@@ -31,7 +33,7 @@ class AssistantApiTests(unittest.TestCase):
         }):
             health = main.health()
 
-        self.assertEqual(health["version"], "0.8.0")
+        self.assertEqual(health["version"], "0.9.0")
         self.assertEqual(health["gemini_api"], "interactions")
         self.assertTrue(health["gemini_configured"])
         self.assertTrue(health["groq_configured"])
@@ -54,7 +56,7 @@ class AssistantApiTests(unittest.TestCase):
         request = mocked.call_args.args[0]
         self.assertEqual(request.full_url, "https://generativelanguage.googleapis.com/v1beta/interactions")
         self.assertEqual(request.get_header("X-goog-api-key"), "test-gemini-key")
-        self.assertEqual(request.get_header("User-agent"), "JARVIS-Cloud-Assistant/0.7.0 (+https://jarws-ai-1.onrender.com)")
+        self.assertEqual(request.get_header("User-agent"), "JARVIS-Cloud-Assistant/0.9.0 (+https://jarws-ai-1.onrender.com)")
         body = json.loads(request.data.decode("utf-8"))
         self.assertEqual(body["model"], main.GEMINI_MODEL)
         self.assertEqual(body["input"], "Hello")
@@ -106,7 +108,54 @@ class AssistantApiTests(unittest.TestCase):
         self.assertEqual(mocked.call_count, 2)
         fallback_request = mocked.call_args.args[0]
         self.assertEqual(fallback_request.full_url, "https://api.groq.com/openai/v1/chat/completions")
-        self.assertEqual(fallback_request.get_header("User-agent"), "JARVIS-Cloud-Assistant/0.7.0 (+https://jarws-ai-1.onrender.com)")
+        self.assertEqual(fallback_request.get_header("User-agent"), "JARVIS-Cloud-Assistant/0.9.0 (+https://jarws-ai-1.onrender.com)")
+
+
+    def test_conversation_memory_is_used_for_followup_and_persisted(self):
+        first_reply = {
+            "steps": [{"type": "model_output", "content": [
+                {"type": "text", "text": "Nice to meet you, Ali."}
+            ]}]
+        }
+        second_reply = {
+            "steps": [{"type": "model_output", "content": [
+                {"type": "text", "text": "Your name is Ali."}
+            ]}]
+        }
+        conversation_id = str(uuid.uuid4())
+        with tempfile.TemporaryDirectory() as memory_dir:
+            with patch.dict(os.environ, {
+                "GEMINI_API_KEY": "test-gemini-key",
+                "GROQ_API_KEY": "",
+                "JARVIS_DB_PATH": os.path.join(memory_dir, "memory.sqlite3"),
+            }):
+                with patch(
+                    "cloud_backend.main.urlopen",
+                    side_effect=[FakeResponse(first_reply), FakeResponse(second_reply)],
+                ) as mocked:
+                    main.assistant(main.AssistantRequest(
+                        message="My name is Ali.", conversation_id=conversation_id
+                    ))
+                    result = main.assistant(main.AssistantRequest(
+                        message="What is my name?", conversation_id=conversation_id
+                    ))
+
+                self.assertEqual(result.reply, "Your name is Ali.")
+                second_request = json.loads(mocked.call_args_list[1].args[0].data.decode("utf-8"))
+                self.assertIn("My name is Ali.", second_request["input"])
+                self.assertIn("Current user message:", second_request["input"])
+                history = main.get_recent_history(conversation_id)
+                self.assertEqual([turn["role"] for turn in history], [
+                    "user", "assistant", "user", "assistant"
+                ])
+                self.assertEqual(history[-1]["content"], "Your name is Ali.")
+
+    def test_invalid_conversation_id_is_rejected(self):
+        with self.assertRaises(Exception):
+            main.assistant(main.AssistantRequest(
+                message="Hello", conversation_id="x" * 36
+            ))
+
 
 
 if __name__ == "__main__":

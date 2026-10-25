@@ -37,7 +37,7 @@ class AssistantApiTests(unittest.TestCase):
         }):
             health = main.health()
 
-        self.assertEqual(health["version"], "0.9.0")
+        self.assertEqual(health["version"], "0.9.1")
         self.assertEqual(health["gemini_api"], "interactions")
         self.assertTrue(health["gemini_configured"])
         self.assertTrue(health["groq_configured"])

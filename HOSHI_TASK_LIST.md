@@ -48,14 +48,14 @@
 
 ## Phase 6 — Existing JARVIS features
 - [x] Audited the existing repository, CI, Android APK workflow, reminder functionality, voice/gesture bridge, and backend fallback before modifying them.
-- [x] Gemini primary + Groq fallback preserved and a live backend smoke request succeeded through Groq fallback (run #23).
+- [x] Gemini primary + Groq fallback preserved; latest live backend smoke test #29 passed after retry/status-parsing fixes and received a valid AI reply. [Run #29](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40236085531).
 - [x] Existing service integrations remain explicit and supported: external app links, local reminders, and opt-in basic accessibility gestures.
 - [x] Backend provider keys are read from environment variables; no provider key was added to the frontend or repository.
 - [x] Changes were applied in small commits to the existing project; reminder parsing, native bridge, and existing workflows were retained.
 
 ## Phase 7 — Testing and delivery
 - [ ] Full acceptance of natural multi-turn conversation, real voice, full role-play quality, and physical avatar/voice behavior is still pending.
-- [x] Desktop Chromium browser smoke test checks dashboard load, local command, AI text chat, emotion state, context deduplication, saved history, memory toggle, stale-response protection, graceful web-mode fallback, and uncaught browser errors. [Run #154 passed](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40234981960).
+- [x] Desktop Chromium browser smoke test checks dashboard load, local command, AI text chat, emotion state, context deduplication, saved history, memory toggle, stale-response protection, all five hero shortcuts, graceful web-mode fallback, and uncaught browser errors. [Run #160 passed](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40235361114).
 - [x] Cloud HTTP/provider errors, timeouts, offline failures, and speech recognition restart failures now produce user-facing recovery messages; physical TTS/microphone acceptance remains pending.
 - [ ] Test on a real Realme Note 50 Android device.
 - [ ] Deploy safely to existing hosting and provide rollback if needed.
@@ -68,17 +68,17 @@
 - [ ] Confirm frontend/backend compatibility and check browser console/network errors.
 
 ## GitHub Actions verification
-- [x] `HOSHI basic checks` run #112 passed on commit `e4141eea0e01396be09380bb4b2e2095a68e1a26`; it includes Python tests, JavaScript parser tests, privacy-filter tests, frontend contract checks, and JS syntax compilation.
-- [x] `Build HOSHI Android APK` run #24 passed and uploaded `hoshi-debug-apk` on commit `c5737b886e108c9aa368a9ce8efe27f88f8073a2`. No Android source files changed after that APK build; regenerate after future native Android changes.
+- [x] Latest confirmed backend/contract suite `HOSHI basic checks` run #167 passed, including mood-negation and roleplay-boundary tests. [Run #167](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40235947933).
+- [x] `Build HOSHI Android APK` run #30 passed and uploaded `hoshi-debug-apk` after the Android TTS voice-selection improvement. [Run #30](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40235143457). Installing and testing it on the target phone remains pending by design.
 - [x] `HOSHI basic checks` run #160 passed with Chromium verifying the five hero shortcuts, text chat, emotion state, memory toggle, stale-response protection, and browser-mode fallbacks. [Run #160](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40235361114). Current Render frontend visual verification and Realme testing remain pending.
 - [ ] Install the generated debug APK and verify core flows on the target Android phone.
 
 ## Initial audit notes
 - [x] Read the repository README and inspect the CI workflow definition at `.github/workflows/ci.yml`.
 - [x] Inspect the Android APK workflow definition at `.github/workflows/android-apk.yml`.
-- [x] Backend health and live AI request were verified by HOSHI live backend smoke test run #23; no backend code changed in the later frontend/privacy commits.
+- [x] Latest live backend smoke test #29 passed after mood-negation and retry workflow updates, confirming a valid live AI reply using the configured fallback provider. [Run #29](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40236085531).
 - [ ] Re-check current Render frontend `https://jarws-ai-1.onrender.com` after the voice-recovery/cache update and confirm the live visual display and BTC/floating-icon removal. This check is not confirmed from the current tool session.
-- [x] GitHub Actions status checked: HOSHI basic checks #112 and GitHub Pages publish #137 passed on implementation commit `e4141eea0e01396be09380bb4b2e2095a68e1a26`.
+- [x] GitHub Actions checks: basic checks #167 passed with current backend tests; Pages publish #192 passed for the negated-mood regression commit. [Checks #167](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40235947933) · [Pages #192](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40235947839).
 - [ ] Real-device Android testing: **pending**.
 
 ## Progress / verification log
@@ -94,7 +94,7 @@
 - [x] Frontend inline JavaScript compiles successfully in CI; dedicated frontend contract tests also pass.
 - [x] A previous Render frontend deployment reached **live**; current live visual confirmation after the latest frontend changes remains pending.
 - [x] Render backend deployment reached **live** at commit `21d6409ddfd45055e32e573fcfb3d2a8133ab253`; Render logs showed repeated `GET /health` responses with HTTP 200 and no recent error-level application logs during the check.
-- [x] GitHub Actions run #112 (basic checks) and run #137 (Pages deployment) passed on implementation/test commit `e4141eea0e01396be09380bb4b2e2095a68e1a26`.
+- [x] Historical baseline checks were superseded by the newer #160 Chromium dashboard run, #167 backend/contract suite, and #29 live backend smoke test linked above.
 - [ ] Realme Note 50 device testing: pending by design; do not start until the remaining task list is addressed.
 - [ ] Pixel-perfect full dashboard reproduction, full-resolution character-sheet integration, lip-sync/advanced rigging, end-to-end voice acceptance, current Render-front-end live visual confirmation, and Realme Note 50 testing remain pending/limited.
 
@@ -106,9 +106,9 @@
 - [x] Corrected a Gemini multi-block reply separator bug and added a regression test; the assertion was corrected after the first test run exposed an over-escaped expectation.
 - [ ] Physical target-device testing remains deferred until the other pending work is addressed, as requested.
 
-- [x] Phase 2 mood signal added: deterministic English/Roman Urdu phrase detection plus safe continuity across short acknowledgements; backend tests cover key moods, context carry, and neutral-context reset.
+- [x] Phase 2 mood signal added: deterministic English/Roman Urdu phrase detection plus safe continuity across short acknowledgements; negation handling prevents common phrases like “udaas nahi” and “not sad” being misread. Regression tests cover positive/negative wording, context carry, and neutral-context reset.
 - [x] Phase 3 voice failure handling improved: permission, missing microphone, unsupported language, network, and unknown speech-recognition errors stop automatic restart loops and display actionable states; explicitly selected browser voices are respected. Service-worker cache is `hoshi-shell-v10`.
-- [x] Current validation: HOSHI basic checks #160 passed, including a Chromium browser run against the local dashboard with a mocked cloud API and the latest hero shortcuts. Live backend smoke test #26 passed after the non-repetitive reply prompt change; Render frontend visual verification and device tests remain pending.
+- [x] Current validation: Chromium dashboard smoke #160, backend/contract tests #167, and live backend smoke #29 passed. Current live Render dashboard visual confirmation, full conversational/voice acceptance, and physical device testing remain pending.
 
 ## Working rules
 1. This document records requirements; it does not mean implementation is complete.

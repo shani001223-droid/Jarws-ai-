@@ -24,6 +24,55 @@ class FakeResponse:
 
 class AssistantApiTests(unittest.TestCase):
 
+    def setUp(self):
+        isolate = patch.dict(os.environ, {"OPENROUTER_API_KEY": ""})
+        isolate.start()
+        self.addCleanup(isolate.stop)
+
+    def test_openrouter_free_primary_keeps_urdu_and_context(self):
+        raw = json.dumps({"reply": "Main Hoshi hoon.", "speech_text": "میں ہوشی ہوں۔"})
+        with patch.dict(os.environ, {"OPENROUTER_API_KEY": "test-openrouter", "GEMINI_API_KEY": "test-gemini", "GROQ_API_KEY": "test-groq"}):
+            with patch("cloud_backend.main.urlopen", return_value=FakeResponse({"choices": [{"message": {"content": raw}}]})) as mocked:
+                result = main.assistant(main.AssistantRequest(message="Tum kaun ho?", locale="ur-PK", context=["user: Salam"]))
+                health = main.health()
+        self.assertEqual(result.mode, "openrouter")
+        self.assertEqual(result.speech_text, "میں ہوشی ہوں۔")
+        self.assertEqual(health["primary_provider"], "openrouter")
+        self.assertIsNone(health["fallback_provider"])
+        self.assertEqual(mocked.call_count, 1)
+        req = mocked.call_args.args[0]
+        self.assertEqual(req.full_url, "https://openrouter.ai/api/v1/chat/completions")
+        body = json.loads(req.data)
+        self.assertEqual(body["model"], "openrouter/free")
+        self.assertIn("user: Salam", body["messages"][1]["content"])
+        self.assertIn("speech_text", body["messages"][0]["content"])
+        self.assertEqual(mocked.call_args.kwargs["timeout"], 35)
+
+    def test_openrouter_rejects_paid_model_before_network(self):
+        with patch.dict(os.environ, {"OPENROUTER_API_KEY": "test"}):
+            with patch.object(main, "OPENROUTER_MODEL", "paid/model"):
+                with patch("cloud_backend.main.urlopen") as mocked:
+                    with self.assertRaisesRegex(RuntimeError, "Paid models are disabled"):
+                        main._openrouter_reply("hello", "system")
+                mocked.assert_not_called()
+
+    def test_openrouter_rate_limit_does_not_retry_or_expose_key(self):
+        error = HTTPError("https://openrouter.ai/api/v1/chat/completions", 429, "limited", {}, None)
+        with patch.dict(os.environ, {"OPENROUTER_API_KEY": "secret-test-key"}):
+            with patch("cloud_backend.main.urlopen", side_effect=error) as mocked:
+                with self.assertRaises(main.HTTPException) as raised:
+                    main.assistant(main.AssistantRequest(message="hello"))
+        self.assertIn("HTTP 429", raised.exception.detail)
+        self.assertNotIn("secret-test-key", raised.exception.detail)
+        self.assertEqual(mocked.call_count, 1)
+
+    def test_openrouter_missing_reply_is_actionable(self):
+        with patch.dict(os.environ, {"OPENROUTER_API_KEY": "test"}):
+            for data in ({"choices": []}, {"error": {"message": "failed"}}, None):
+                with patch("cloud_backend.main.urlopen", return_value=FakeResponse(data)):
+                    with self.assertRaisesRegex(RuntimeError, "no usable reply"):
+                        main._openrouter_reply("hello", "system")
+
     def test_urdu_response_separates_chat_and_pronunciation_text(self):
         raw = json.dumps({"reply": "Main Hoshi hoon.", "speech_text": "میں ہوشی ہوں۔"})
         for provider in ("gemini", "groq"):

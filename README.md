@@ -1,3 +1,9 @@
+## OpenRouter free provider
+
+In the Render **Jarws-ai--2** backend Environment, set `OPENROUTER_API_KEY` privately and `OPENROUTER_MODEL=openrouter/free`, then save/deploy. Never paste the key into chat, frontend code, GitHub or the APK. When the key is configured OpenRouter is primary. Without it the existing Gemini/Groq path is unchanged. OpenRouter errors are reported directly; there is no silent paid upgrade or retry loop. Only `openrouter/free` or a model ID ending in `:free` is allowed. Free requests still have account/provider limits and availability can vary.
+
+`/health` exposes only configuration flags/model names. A real successful reply with `mode: openrouter` is required to verify the key; a flag is not evidence that the key is valid. Context, personality and Urdu `speech_text` handling remain shared across providers. No new Python dependency or APK is required.
+
 ## Urdu pronunciation correction (Android 0.8.1)
 
 Requests now send the selected conversation language instead of navigator.language. In Urdu mode the existing Gemini/Groq request asks for Roman Urdu chat plus equivalent Urdu-script speech_text. No second model request or extra TTS provider is introduced. Local commands and preview include Urdu-script speech text. Roman-only and Devanagari speech are not sent to Urdu TTS.

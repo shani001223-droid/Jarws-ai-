@@ -23,6 +23,7 @@ app.add_middleware(
 
 # Override these in Render Environment if you want to use different model IDs.
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash").strip()
+OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "openrouter/free").strip()
 GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b").strip()
 
 class AssistantRequest(BaseModel):
@@ -196,6 +197,50 @@ def normalize_context_entries(context: Optional[list[str]]) -> list[str]:
     return normalized[-8:]
 
 
+def _openrouter_reply(message: str, language_hint: str) -> str:
+    """Use only the free router or an explicitly free model; never auto-upgrade."""
+    key = os.getenv("OPENROUTER_API_KEY", "").strip()
+    if not key:
+        raise RuntimeError("OPENROUTER_API_KEY is not configured.")
+    if OPENROUTER_MODEL != "openrouter/free" and not OPENROUTER_MODEL.endswith(":free"):
+        raise RuntimeError("OPENROUTER_MODEL must be openrouter/free or a model ending in :free. Paid models are disabled.")
+    req = Request(
+        "https://openrouter.ai/api/v1/chat/completions",
+        data=json.dumps({
+            "model": OPENROUTER_MODEL,
+            "messages": [{"role": "system", "content": language_hint}, {"role": "user", "content": message}],
+            "max_tokens": 1024,
+            "temperature": 0.7,
+        }).encode("utf-8"),
+        headers={"Content-Type": "application/json", "Authorization": "Bearer " + key},
+        method="POST",
+    )
+    try:
+        with urlopen(req, timeout=35) as response:
+            data = json.loads(response.read().decode("utf-8"))
+    except HTTPError as exc:
+        explanations = {
+            401: "OpenRouter rejected the key (HTTP 401). Update OPENROUTER_API_KEY in the backend environment.",
+            402: "OpenRouter could not serve this free request (HTTP 402). Check free-model availability and account settings; no paid model was requested.",
+            403: "OpenRouter denied access (HTTP 403). Check model permissions and account privacy settings.",
+            404: "OpenRouter free model was not found (HTTP 404). Use openrouter/free or an available :free model.",
+            429: "OpenRouter free request limit reached (HTTP 429). Wait for the limit to reset.",
+        }
+        raise RuntimeError(explanations.get(exc.code, "OpenRouter request failed with HTTP " + str(exc.code) + ". Try again later.")) from None
+    except (URLError, TimeoutError):
+        raise RuntimeError("OpenRouter could not connect or timed out. Try again later.") from None
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        raise RuntimeError("OpenRouter returned an invalid response.") from None
+    try:
+        content = data["choices"][0]["message"]["content"]
+        reply = content.strip() if isinstance(content, str) else ""
+    except (KeyError, IndexError, TypeError):
+        reply = ""
+    if not reply:
+        raise RuntimeError("OpenRouter returned no usable reply. Try again later.")
+    return reply
+
+
 def _groq_reply(message: str, language_hint: str) -> str:
     """Ask Groq using its OpenAI-compatible chat completions API."""
     api_key = os.getenv("GROQ_API_KEY", "").strip()
@@ -293,16 +338,19 @@ def root():
 def health():
     gemini_configured = bool(os.getenv("GEMINI_API_KEY", "").strip())
     groq_configured = bool(os.getenv("GROQ_API_KEY", "").strip())
+    openrouter_configured = bool(os.getenv("OPENROUTER_API_KEY", "").strip())
     return {
         "ok": True,
         "service": "hoshi-cloud-api",
         "version": app.version,
         "gemini_api": "interactions" if gemini_configured else None,
-        "ai_connected": gemini_configured or groq_configured,
+        "ai_connected": openrouter_configured or gemini_configured or groq_configured,
+        "openrouter_configured": openrouter_configured,
+        "openrouter_model": OPENROUTER_MODEL if openrouter_configured else None,
         "gemini_configured": gemini_configured,
         "groq_configured": groq_configured,
-        "primary_provider": "gemini" if gemini_configured else ("groq" if groq_configured else None),
-        "fallback_provider": "groq" if gemini_configured and groq_configured else None,
+        "primary_provider": "openrouter" if openrouter_configured else ("gemini" if gemini_configured else ("groq" if groq_configured else None)),
+        "fallback_provider": "groq" if not openrouter_configured and gemini_configured and groq_configured else None,
         "gemini_model": GEMINI_MODEL,
         "groq_model": GROQ_MODEL if groq_configured else None,
     }
@@ -372,6 +420,15 @@ def assistant(payload: AssistantRequest):
             "Do not add content to speech_text that is absent from reply. Use natural short sentences and punctuation. "
             "Example: {\"reply\":\"Main Hoshi hoon. Tum kaise ho?\",\"speech_text\":\"میں ہوشی ہوں۔ تم کیسے ہو؟\"}."
         )
+
+    # An explicitly configured OpenRouter key selects OpenRouter first. Do not
+    # silently chain multiple exhausted providers or switch to paid models.
+    if os.getenv("OPENROUTER_API_KEY", "").strip():
+        try:
+            reply = _openrouter_reply(request_input, language_hint)
+            return make_assistant_response(reply, "openrouter", message, payload.locale)
+        except RuntimeError as error:
+            raise HTTPException(status_code=502, detail=str(error)) from None
 
     # Gemini is primary. A temporary overload (503), rate limit (429), server
     # error, timeout, or malformed response triggers Groq when its key is set.
@@ -456,5 +513,5 @@ def assistant(payload: AssistantRequest):
 
     raise HTTPException(
         status_code=503,
-        detail="No AI key is configured in the running service. Add GEMINI_API_KEY or GROQ_API_KEY to the Render Environment Group, attach it to this service, and redeploy.",
+        detail="No AI key is configured in the running service. Add OPENROUTER_API_KEY, GEMINI_API_KEY or GROQ_API_KEY to the Render Environment Group, attach it to this service, and redeploy.",
     )

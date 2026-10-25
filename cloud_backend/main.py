@@ -26,6 +26,10 @@ class AssistantResponse(BaseModel):
     reply: str
     mode: str = "starter"
 
+@app.get("/")
+def root():
+    return {"ok": True, "service": "jarvis-cloud-api", "message": "JARVIS cloud API is running", "health": "/health", "assistant": "/api/assistant"}
+
 @app.get("/health")
 def health():
     return {"ok": True, "service": "jarvis-cloud-api", "ai_connected": False}

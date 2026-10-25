@@ -89,7 +89,7 @@
 - [x] Render frontend latest deployment reached **live**.
 - [x] Render backend deployment reached **live** at commit `21d6409ddfd45055e32e573fcfb3d2a8133ab253`; Render logs showed repeated `GET /health` responses with HTTP 200 and no recent error-level application logs during the check.
 - [ ] GitHub Actions Python/unit tests and Android APK workflow: latest run results were not readable through the available GitHub connection, so do not treat them as passed.
-- [ ] Realme Note 50 device testing: pending.
+- [ ] Realme Note 50 device testing: pending; this requires physical-device interaction.
 - [ ] Pixel-perfect full dashboard reproduction, full-resolution character-sheet integration, lip-sync, and advanced expression animation: pending/limited.
 
 ## Working rules

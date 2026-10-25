@@ -9,7 +9,7 @@ app = FastAPI(title="JARVIS Cloud API", version="0.1.0")
 
 # Set ALLOWED_ORIGINS to your deployed HTTPS dashboard origin before production.
 # Example: https://yourname.github.io
-origins = [item.strip() for item in os.getenv("ALLOWED_ORIGINS", "http://localhost:8000,http://127.0.0.1:8000").split(",") if item.strip()]
+origins = [item.strip() for item in os.getenv("ALLOWED_ORIGINS", "*").split(",") if item.strip()]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,

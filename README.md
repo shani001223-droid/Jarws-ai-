@@ -10,6 +10,7 @@ A mobile-first personal AI assistant prototype for Android, with a hosted AI bac
 - Generated anime avatar shown on the dashboard and the draggable Android floating icon.
 - Floating icon size slider, saved locally on the phone.
 - The floating service has a persistent Android notification and an explicit Stop action.
+- Local one-shot reminders use Android notifications and are scheduled again after a device reboot. They do not require cloud AI to trigger.
 - Optional user-triggered Accessibility actions: Back, Home, Swipe up, and Swipe down. The service does not retrieve screen content or upload screen text.
 - GitHub Actions runs Python tests, JavaScript syntax checks, a live backend smoke test, and an Android debug APK build.
 
@@ -41,5 +42,5 @@ A mobile-first personal AI assistant prototype for Android, with a hosted AI bac
 
 1. Test the current APK on the target Android phone and refine the anime/voice experience.
 2. Test basic accessibility gestures on the target phone and refine voice behavior.
-3. Add persistent reminders and local settings.
+3. Test local reminder delivery and reboot recovery on the target phone.
 4. Build separate, user-approved integrations for trading analysis, Flora business management, and social/video automation instead of giving one assistant unlimited access by default.

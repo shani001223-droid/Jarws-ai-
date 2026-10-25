@@ -9,6 +9,7 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.text.InputType
 import android.provider.Settings
 import android.view.Gravity
 import android.view.ViewGroup
@@ -19,20 +20,24 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Button
+import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import android.widget.SeekBar
 
 class MainActivity : Activity() {
     companion object {
         private const val REQUEST_OVERLAY = 4101
         private const val REQUEST_MICROPHONE = 4102
+        private const val REQUEST_NOTIFICATIONS = 4103
         private const val DASHBOARD_URL = "https://jarws-ai-1.onrender.com/?native=1"
     }
 
     private lateinit var overlayButton: Button
     private var startOverlayWhenPermissionReturns = false
     private var pendingWebPermission: PermissionRequest? = null
+    private var pendingReminder: Pair<String, Int>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -113,12 +118,19 @@ class MainActivity : Activity() {
         controls.addView(stopButton, LinearLayout.LayoutParams(0, dp(44), 1f))
         root.addView(controls)
 
-        val screenPermissionButton = makeButton("Enable basic screen controls") {
+        val featureButtons = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+        }
+        val screenPermissionButton = makeButton("Screen controls") {
             promptScreenControls()
         }
-        root.addView(screenPermissionButton, LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, dp(42)
-        ))
+        featureButtons.addView(screenPermissionButton, LinearLayout.LayoutParams(0, dp(42), 1f))
+        val reminderButton = makeButton("Set reminder") {
+            promptReminder()
+        }
+        featureButtons.addView(reminderButton, LinearLayout.LayoutParams(0, dp(42), 1f))
+        root.addView(featureButtons)
 
         val hint = TextView(this).apply {
             text = "Floating icon runs only after you enable it. Tap the orb to return to JARVIS."
@@ -205,6 +217,70 @@ class MainActivity : Activity() {
         }
     }
 
+    private fun promptReminder() {
+        val titleInput = EditText(this).apply {
+            hint = "Reminder title"
+            setText("Take a short break")
+            singleLine = true
+        }
+        val minutesInput = EditText(this).apply {
+            hint = "Minutes from now (1–10080)"
+            inputType = InputType.TYPE_CLASS_NUMBER
+            setText("30")
+            singleLine = true
+        }
+        val dialogContent = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(20), dp(8), dp(20), 0)
+            addView(titleInput)
+            addView(minutesInput)
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("Set a local reminder")
+            .setMessage("Choose a title and a delay. The reminder is stored on this phone.")
+            .setView(dialogContent)
+            .setNegativeButton("Cancel", null)
+            .setPositiveButton("Schedule") { _, _ ->
+                val title = titleInput.text.toString().trim().take(100)
+                val delay = minutesInput.text.toString().toIntOrNull()
+                if (title.isBlank() || delay == null || delay !in 1..10080) {
+                    Toast.makeText(
+                        this,
+                        "Enter a title and a delay from 1 to 10080 minutes.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                } else {
+                    requestNotificationsThenSchedule(title, delay)
+                }
+            }
+            .show()
+    }
+
+    private fun requestNotificationsThenSchedule(title: String, delayMinutes: Int) {
+        if (Build.VERSION.SDK_INT >= 33 &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            pendingReminder = title to delayMinutes
+            requestPermissions(
+                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                REQUEST_NOTIFICATIONS
+            )
+            return
+        }
+        scheduleLocalReminder(title, delayMinutes)
+    }
+
+    private fun scheduleLocalReminder(title: String, delayMinutes: Int) {
+        val at = ReminderScheduler.schedule(this, title, delayMinutes)
+        val minutesText = if (delayMinutes == 1) "1 minute" else "$delayMinutes minutes"
+        Toast.makeText(
+            this,
+            "Reminder set for $minutesText from now.",
+            Toast.LENGTH_LONG
+        ).show()
+    }
+
     fun promptScreenControls() {
         AlertDialog.Builder(this)
             .setTitle("Enable basic screen controls?")
@@ -286,6 +362,21 @@ class MainActivity : Activity() {
                 } else {
                     request.deny()
                 }
+            }
+        } else if (requestCode == REQUEST_NOTIFICATIONS) {
+            val reminder = pendingReminder
+            pendingReminder = null
+            if (grantResults.isNotEmpty() &&
+                grantResults[0] == PackageManager.PERMISSION_GRANTED &&
+                reminder != null
+            ) {
+                scheduleLocalReminder(reminder.first, reminder.second)
+            } else {
+                Toast.makeText(
+                    this,
+                    "Notifications are off. Enable them to receive reminders.",
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
     }

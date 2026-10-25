@@ -1,0 +1,41 @@
+name: HOSHI live Render dashboard smoke test
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "index.html"
+      - "assets/**"
+      - "sw.js"
+      - "tests/live_render_smoke.cjs"
+      - ".github/workflows/render-live-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live-dashboard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save playwright@1.64.1
+          npx playwright install --with-deps chromium
+      - name: Verify public Render dashboard and responsive viewports
+        run: node tests/live_render_smoke.cjs
+      - name: Upload live dashboard screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hoshi-live-dashboard-smoke
+          path: /tmp/hoshi-live-dashboard.png
+          if-no-files-found: ignore
+          retention-days: 7

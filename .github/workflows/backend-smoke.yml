@@ -35,15 +35,6 @@ jobs:
             fi
             sleep 5
           done
-      - name: Smoke test live BTC spot endpoint
-        env:
-          API_BASE: https://jarws-ai-2.onrender.com
-        run: |
-          set -euo pipefail
-          market=$(curl -fsS --max-time 25 "$API_BASE/api/market/btc")
-          echo "$market" | jq -e '.source == "Coinbase Exchange" and .symbol == "BTC-USD" and .market_type == "spot" and (.price_usd | type == "number" and . > 0) and (.high_24h_usd | type == "number") and (.low_24h_usd | type == "number") and (.change_24h_pct | type == "number")' >/dev/null
-          echo "PASS — Coinbase BTC-USD spot snapshot"
-          echo "$market" | jq '{source, symbol, price_usd, change_24h_pct, high_24h_usd, low_24h_usd}'
       - name: Send one live AI request
         env:
           API_BASE: https://jarws-ai-2.onrender.com

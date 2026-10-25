@@ -33,6 +33,28 @@ class AssistantApiTests(unittest.TestCase):
         self.assertEqual(main.classify_emotion("Chalo thori masti karte hain", "Haha!"), "playful")
         self.assertEqual(main.classify_emotion("Can you explain this?", "Let's think it through."), "thinking")
 
+    def test_user_mood_detects_roman_urdu_and_english(self):
+        self.assertEqual(main.detect_user_mood("Aaj dil bohat udaas hai"), "sad")
+        self.assertEqual(main.detect_user_mood("I am really frustrated"), "annoyed")
+        self.assertEqual(main.detect_user_mood("Mujhe bohat tension ho rahi hai"), "anxious")
+        self.assertEqual(main.detect_user_mood("Chalo thori masti karte hain"), "playful")
+        self.assertEqual(main.detect_user_mood("Tum kaisay ho?"), "curious")
+        self.assertEqual(main.detect_user_mood("Hello HOSHI"), "neutral")
+
+    def test_user_mood_continues_only_for_short_acknowledgements(self):
+        context = [
+            "user: Mujhe aaj bohat udaasi mehsoos ho rahi hai",
+            "assistant: Main yahan hoon, aaram se batao.",
+        ]
+        self.assertEqual(main.detect_user_mood("hmm", context), "sad")
+        self.assertEqual(main.detect_user_mood("Lekin ab main khush hoon", context), "positive")
+        unrelated_context = [
+            "user: Main tumse pyar karta hoon",
+            "assistant: Acha ji.",
+            "user: Kal ka mausam batao",
+        ]
+        self.assertEqual(main.detect_user_mood("hmm", unrelated_context), "neutral")
+
     def test_health_reports_interactions_api_and_provider_flags(self):
         with patch.dict(os.environ, {
             "GEMINI_API_KEY": "test-gemini-key",
@@ -92,6 +114,20 @@ class AssistantApiTests(unittest.TestCase):
 
         self.assertEqual(result.reply, "First line" + chr(10) + "Second line")
         self.assertEqual(result.mode, "gemini")
+
+    def test_detected_user_mood_is_added_to_ai_guidance(self):
+        payload = {
+            "steps": [
+                {"type": "model_output", "content": [{"type": "text", "text": "I'm listening. Tell me what happened."}]}
+            ]
+        }
+        with patch.dict(os.environ, {"GEMINI_API_KEY": "test-gemini-key", "GROQ_API_KEY": ""}):
+            with patch("cloud_backend.main.urlopen", return_value=FakeResponse(payload)) as mocked:
+                main.assistant(main.AssistantRequest(message="Main bohat udaas hoon"))
+        body = json.loads(mocked.call_args.args[0].data.decode("utf-8"))
+        prompt = body["system_instruction"]
+        self.assertIn("Likely user mood: sad", prompt)
+        self.assertIn("respond gently, listen first", prompt)
 
     def test_recent_context_is_bounded_and_passed_to_gemini(self):
         payload = {

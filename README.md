@@ -62,6 +62,7 @@ A mobile-first HOSHI AI companion for Android, using a hosted backend and a resp
 - A shared `memory-privacy.js` helper applies privacy filters before local history save/edit. Node tests exercise common credential/token formats, recovery phrases, OTPs, contact information, and long numeric strings.
 - Python frontend-contract tests verify unique HTML IDs, script references, valid WebP headers, emotion mappings, memory controls, cache contents, and actionable voice-error recovery paths.
 - Current check links: [HOSHI basic checks #154](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40234981960) passed with a Chromium browser smoke test for the local command, mocked cloud chat, emotion state, memory toggle, stale response ordering, and web-only fallback. [Live backend smoke #26](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40234017983) passed. Current Render live visual validation and target-phone testing are still pending.
+- Deployment safety notes are in [`DEPLOYMENT_ROLLBACK.md`](https://github.com/shani001223-droid/Jarws-ai-/blob/main/DEPLOYMENT_ROLLBACK.md); actual live Render UI verification remains pending.
 
 ## Remaining real-device checks
 

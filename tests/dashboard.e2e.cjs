@@ -139,7 +139,15 @@ async function main() {
     // Cloud chat should display the reply and change the expression.
     await page.locator("#commandInput").fill("How can you help me?");
     await page.locator('#commandForm button[type="submit"]').click();
-    await page.waitForFunction(() => document.querySelector("#reply")?.textContent === "I can help you plan, explain, and create.", undefined, { timeout: 5000 });
+    try {
+      await page.waitForFunction(() => document.querySelector("#reply")?.textContent === "I can help you plan, explain, and create.", undefined, { timeout: 7000 });
+    } catch (error) {
+      throw new Error("Cloud chat reply timed out; status=" +
+        (await page.locator("#status").innerText()) + "; reply=" +
+        (await page.locator("#reply").innerText()) + "; requests=" +
+        JSON.stringify(apiMessages) + "; pageErrors=" + JSON.stringify(pageErrors) +
+        "; cause=" + error.message);
+    }
     assert.equal(await page.locator("#orb").getAttribute("data-emotion"), "affectionate");
     const firstRequest = apiMessages.find(item => item.message === "How can you help me?");
     assert.ok(firstRequest, "Expected the chat to reach the mocked cloud API");

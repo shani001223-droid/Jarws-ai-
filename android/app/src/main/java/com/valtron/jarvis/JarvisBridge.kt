@@ -1,6 +1,5 @@
 package com.valtron.jarvis
 
-import android.app.Activity
 import android.content.ComponentName
 import android.os.Handler
 import android.os.Looper
@@ -13,6 +12,16 @@ import android.webkit.JavascriptInterface
 class JarvisBridge(private val activity: MainActivity) {
     private val mainHandler = Handler(Looper.getMainLooper())
     private val allowedActions = setOf("back", "home", "swipe_up", "swipe_down")
+
+    @JavascriptInterface
+    fun speakNative(text: String, language: String, pitch: Float, rate: Float): Boolean {
+        return activity.speakNative(text, language, pitch, rate)
+    }
+
+    @JavascriptInterface
+    fun stopNativeSpeech(): Boolean {
+        return activity.stopNativeSpeech()
+    }
 
     @JavascriptInterface
     fun isEnabled(): Boolean {

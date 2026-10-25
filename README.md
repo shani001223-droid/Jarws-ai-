@@ -5,13 +5,15 @@ The phone should be a lightweight dashboard/control panel only. Heavy work belon
 
 ## Architecture
 - **Mobile dashboard (static PWA):** hosted as a small web page; shows status, chat/voice controls and settings. It should not contain provider secrets or heavy models.
-- **Cloud API:** `cloud_backend/main.py` is a FastAPI starter with `/health` and `/api/assistant` endpoints. At this stage it is a connectivity scaffold, not a connected AI model.
+- **Cloud API:** `cloud_backend/main.py` is a FastAPI starter with `/health` and `/api/assistant` endpoints. The dashboard sends non-basic chat to this API. Gemini replies require a valid `GEMINI_API_KEY` configured as a Render environment secret.
 - **Cloud workers (later):** scheduled jobs and queued workflows for reminders, social content, Flora marketing and Telegram integrations.
 - **Integrations:** add one at a time with minimum permissions and server-side credentials. Trading remains demo-only until independently tested.
 
 ## Current implementation
 - Responsive mobile dashboard at `index.html`.
-- Browser voice input/output where supported.
+- Browser voice input/output where supported, with Urdu/Roman Urdu and English command modes.
+- Basic local commands for time, date, Google, YouTube, greeting, and help.
+- Cloud status badge distinguishes API availability from AI-key readiness.
 - A foreground-only browser wake phrase prototype. It is not an always-on system wake word.
 - PWA manifest and service worker for a small app shell.
 - Initial FastAPI backend, requirements, environment template and Dockerfile under `cloud_backend/`.
@@ -23,13 +25,13 @@ To avoid heavy on-device processing, the realistic design is a small on-device w
 1. Create a Python web service on a provider with a suitable free tier (availability and free quotas can change).
 2. Set its root/build context to `cloud_backend/`, install `requirements.txt`, and run `uvicorn main:app --host 0.0.0.0 --port $PORT` (or use the included Dockerfile).
 3. Configure `ALLOWED_ORIGINS` to the exact HTTPS origin serving the dashboard. Do not use `*` in production.
-4. Open `/health` on the deployed service. It should return `ok: true` and `ai_connected: false` until an AI provider is configured.
-5. Connect the dashboard to the deployed `/api/assistant` endpoint in a separate, tested frontend change.
+4. Open `/health` on the deployed service. It returns `ok: true`; `ai_connected` is true only when `GEMINI_API_KEY` is present in the backend environment.
+5. The dashboard is connected to `/api/assistant`; check the dashboard status and Render logs if chat fails.
 
 ## Cost policy
 - Static dashboard and this starter backend do not require a paid AI API key.
 - Cloud hosts may offer free tiers but can have sleep, usage, or runtime limits. Confirm current terms before deployment.
-- No AI provider or billing is enabled by this code. We will select a provider only after checking free-tier limits and any costs.
+- Gemini is supported by the backend when its API key is configured. Check current Google AI Studio quotas and terms; do not assume unlimited free usage.
 
 ## Security
 - Never commit `.env` files, API keys, Telegram tokens, passwords or exchange secrets.

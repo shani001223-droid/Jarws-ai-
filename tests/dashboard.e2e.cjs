@@ -204,10 +204,22 @@ async function main() {
         "All five hero actions should remain available at " + viewport.width + "px");
       assert.equal(await page.locator('[data-ui-action="chat"]').isVisible(), true,
         "Chat shortcut should stay visible at " + viewport.width + "px");
-      const overflow = await page.evaluate(() =>
-        document.documentElement.scrollWidth > document.documentElement.clientWidth + 1
-      );
-      assert.equal(overflow, false, "No horizontal page overflow at " + viewport.width + "px");
+      const overflowInfo = await page.evaluate(() => ({
+        hasOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
+        scrollWidth: document.documentElement.scrollWidth,
+        clientWidth: document.documentElement.clientWidth,
+        offenders: Array.from(document.querySelectorAll("body *"))
+          .map(node => {
+            const rect = node.getBoundingClientRect();
+            return {tag: node.tagName, id: node.id, className: String(node.className || "").slice(0, 90),
+              left: Math.round(rect.left), right: Math.round(rect.right), width: Math.round(rect.width),
+              scrollWidth: node.scrollWidth, clientWidth: node.clientWidth};
+          })
+          .filter(node => node.width > 0 && (node.left < -1 || node.right > window.innerWidth + 1))
+          .slice(0, 12)
+      }));
+      assert.equal(overflowInfo.hasOverflow, false,
+        "No horizontal page overflow at " + viewport.width + "px: " + JSON.stringify(overflowInfo));
     }
 
     assert.deepEqual(pageErrors, [], "Dashboard should not throw uncaught browser errors");

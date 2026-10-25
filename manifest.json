@@ -1,7 +1,7 @@
 {
-  "name": "JARVIS Personal AI Assistant",
-  "short_name": "JARVIS",
-  "description": "Mobile-first personal assistant prototype",
+  "name": "HOSHI AI Companion",
+  "short_name": "HOSHI",
+  "description": "HOSHI mobile-first AI companion",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

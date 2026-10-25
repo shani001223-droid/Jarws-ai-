@@ -45,7 +45,7 @@ class FrontendContractTests(unittest.TestCase):
         self.assertIn("./assets/hoshi-expressions.webp", SERVICE_WORKER)
         self.assertIn("./memory-privacy.js", SERVICE_WORKER)
         self.assertIn('<script src="./memory-privacy.js"></script>', HTML)
-        self.assertIn('CACHE_NAME = "hoshi-shell-v13"', SERVICE_WORKER)
+        self.assertIn('CACHE_NAME = "hoshi-shell-v14"', SERVICE_WORKER)
         self.assertIn("./assets/hoshi-hero-background.svg", SERVICE_WORKER)
 
     def test_hoshi_app_icon_is_wired_for_favicon_pwa_and_offline_shell(self):
@@ -89,9 +89,9 @@ class FrontendContractTests(unittest.TestCase):
         self.assertIn("if(requestId!==cloudRequestSequence)return;", HTML)
         self.assertIn("if(requestId===cloudRequestSequence)", HTML)
 
-    def test_selected_browser_voice_is_not_overridden_by_native_tts(self):
-        self.assertIn("if(!$('voiceSelect').value&&window.JarvisBridge", HTML)
-        self.assertIn("Honor an explicitly selected browser/device voice", HTML)
+    def test_hoshi_voice_uses_native_engine_without_country_picker(self):
+        self.assertNotIn('id="voiceSelect"', HTML)
+        self.assertIn("One Hoshi delivery", HTML)
 
     def test_voice_errors_stop_restart_loop_and_keep_actionable_status(self):
         self.assertIn('lastVoiceError=""', HTML)
@@ -111,7 +111,7 @@ class FrontendContractTests(unittest.TestCase):
 
     def test_voice_speaking_state_and_network_timeouts_are_wired(self):
         self.assertIn("window.hoshiSetSpeaking=setSpeaking", HTML)
-        self.assertIn("u.onstart=()=>setSpeaking(true)", HTML)
+        self.assertIn("u.onstart=()=>{if(speechId===speechSequence)setSpeaking(true)}", HTML)
         self.assertIn("u.onerror=e=>", HTML)
         self.assertIn("AbortController", HTML)
         self.assertIn("65000", HTML)
@@ -123,7 +123,7 @@ class FrontendContractTests(unittest.TestCase):
         self.assertIn("Pakistani Urdu (ur-PK)", HTML)
 
     def test_memory_controls_and_local_preferences_are_present(self):
-        for element_id in ("chatHistory", "memoryToggle", "clearMemoryBtn", "voiceSelect",
+        for element_id in ("chatHistory", "memoryToggle", "clearMemoryBtn", "stopSpeakingBtn",
                            "languageToggle", "speakToggle", "wakeToggle"):
             self.assertIn(f'id="{element_id}"', HTML)
         for feature in ("Delete saved ", "Edit saved ", "hoshiLanguage",

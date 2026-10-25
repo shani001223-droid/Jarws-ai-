@@ -1,4 +1,4 @@
-const CACHE_NAME = "hoshi-shell-v13";
+const CACHE_NAME = "hoshi-shell-v14";
 const APP_SHELL = ["./", "./index.html", "./manifest.json", "./reminder-parser.js", "./assistant-commands.js", "./memory-privacy.js", "./assets/hoshi-expressions.webp", "./assets/hoshi-hero-background.svg", "./assets/hoshi-app-icon.svg"];
 
 self.addEventListener("install", event => {

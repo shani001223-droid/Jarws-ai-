@@ -63,6 +63,11 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
 
 @media(prefers-reduced-motion:reduce){.speech-wave i,.orb.speaking,.orb.speaking .companion-avatar::after{animation:none!important}.speech-wave{transition:none}}
 
+/* Hoshi voice studio */
+#voicePanel{grid-column:span 2;border-color:#55618c;background:radial-gradient(ellipse at top right,#49305b66,transparent 65%),linear-gradient(145deg,#10253a,#0b1727);padding:20px}
+.voice-heading{display:flex;align-items:center;gap:12px;margin-bottom:16px}.voice-heading h2{color:#effbff;margin:0 0 4px;letter-spacing:.16em}.voice-heading .pill{margin-left:auto;font-size:9px}.voice-star{display:grid;place-items:center;width:44px;height:44px;border-radius:15px;background:#a7cfff15;color:#e7b7ee;font-size:27px}.voice-intro{font-size:14px;color:#dbeafa;margin:0 0 4px;line-height:1.6}
+.voice-styles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.voice-styles button{min-width:0;padding:14px 6px;background:#081725;font-size:13px}.voice-styles button span{display:block;margin-top:7px;color:var(--muted);font-size:10px}.voice-styles button[aria-pressed="true"]{border-color:#d4b5ff;background:linear-gradient(145deg,#433058,#18394d);box-shadow:0 0 18px #b39eff18}.voice-fine-tune{border-top:1px solid #344562;padding-top:12px}.voice-fine-tune summary{cursor:pointer;color:#aec7dd;font-size:12px;margin-bottom:12px}.voice-fine-tune button{margin-top:12px;font-size:12px;min-height:36px}#stopSpeakingBtn:focus-visible,.voice-styles button:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+@media(max-width:540px){.bottom-workspace #voicePanel{grid-column:span 1;padding:16px}.voice-heading .pill{padding:6px}.voice-styles button{font-size:12px}}
 </style>
 </head>
 <body>
@@ -110,12 +115,19 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
 </aside></div>
 <div class="bottom-workspace">
 <div class="section" id="memoryPanel"><div class="statusrow"><h2>HOSHI MEMORY & CHAT HISTORY</h2><button class="toggle" type="button" id="memoryToggle">Local memory: ON</button></div><p class="small">Recent chat is saved locally. A small recent context is sent with AI requests for continuity. Messages that look like credentials, recovery phrases, OTPs, email addresses, phone numbers, or long numeric identifiers are filtered from local history. These checks are heuristic. Edit or delete individual entries, turn memory off, or clear history any time.</p><div id="chatHistory" class="chat-history" aria-live="polite">Your recent conversation will appear here.</div><div class="quick"><button type="button" id="clearMemoryBtn">Clear history</button></div></div>
-<div class="section" id="voicePanel"><h2>CUTE VOICE SETTINGS</h2><div class="voice-grid">
-<div><label for="voiceSelect" class="small">Device voice</label><select id="voiceSelect" aria-label="Choose speech voice"><option value="">Auto — best available</option></select></div>
-<div class="voice-setting"><label for="pitchSlider">Voice pitch</label><output id="pitchValue">1.22×</output><input id="pitchSlider" type="range" min="0.8" max="1.6" step="0.05" value="1.22" aria-label="Voice pitch"></div>
-<div class="voice-setting"><label for="rateSlider">Speaking speed</label><output id="rateValue">0.91×</output><input id="rateSlider" type="range" min="0.75" max="1.15" step="0.05" value="0.91" aria-label="Speaking speed"></div>
-<div class="voice-actions"><button type="button" id="previewVoiceBtn">▶ Preview voice</button><button type="button" id="resetVoiceBtn">Reset</button></div>
-<p class="small">Auto mode prefers an installed Pakistani Urdu (ur-PK) voice, then another Urdu voice, then an available Hindi or feminine-sounding fallback. Your installed speech engine decides the actual voice and accent; HOSHI cannot install a missing voice. Check Android Settings → Text-to-speech output to add or change voices.</p>
+<div class="section" id="voicePanel"><div class="voice-heading"><span class="voice-star" aria-hidden="true">✦</span><div><h2>HOSHI VOICE</h2><p class="small">A softer way to talk.</p></div><span class="pill">ON DEVICE</span></div><div class="voice-grid">
+<p class="voice-intro">Gentle, warm and a little playful. Choose Hoshi’s delivery.</p>
+<div class="voice-styles" role="group" aria-label="Hoshi voice delivery">
+<button type="button" data-voice-style="soft" aria-pressed="true">✧ Soft<span>Light &amp; gentle</span></button>
+<button type="button" data-voice-style="warm" aria-pressed="false">♡ Warm<span>Calm &amp; affectionate</span></button>
+<button type="button" data-voice-style="playful" aria-pressed="false">♫ Playful<span>Bright &amp; cheerful</span></button></div>
+<p id="voiceEngineStatus" class="small" role="status">Device speech · checking availability</p>
+<div class="voice-actions"><button type="button" class="primary" id="previewVoiceBtn">▶ Hear Hoshi</button><button type="button" id="stopSpeakingBtn">■ Stop speaking</button></div>
+<details class="voice-fine-tune"><summary>Fine tune delivery</summary>
+<div class="voice-setting"><label for="pitchSlider">Softness / pitch</label><output id="pitchValue">1.12×</output><input id="pitchSlider" type="range" min="0.8" max="1.4" step="0.01" value="1.12" aria-label="Voice pitch"></div>
+<div class="voice-setting"><label for="rateSlider">Speaking speed</label><output id="rateValue">0.88×</output><input id="rateSlider" type="range" min="0.75" max="1.15" step="0.01" value="0.88" aria-label="Speaking speed"></div>
+<button type="button" id="resetVoiceBtn">Restore soft voice</button></details>
+<p class="small">Delivery styles tune your device’s speech voice. They do not add a new anime voice. Pakistani Urdu (ur-PK) is preferred when installed. Voice quality and Urdu pronunciation depend on the installed speech engine.</p>
 </div></div>
 <div class="section" id="screenControlSection" style="display:none"><h2>BASIC PHONE CONTROLS</h2><p class="small">Optional Android Accessibility permission. Only the actions you tap run; HOSHI does not inspect screen text or upload screenshots. Screenshot requires Android 9 or newer.</p><div class="quick"><button type="button" id="screenPermissionBtn">Enable permission</button><button type="button" data-screen-action="screenshot">Take screenshot</button><button type="button" data-screen-action="back">Back</button><button type="button" data-screen-action="home">Home</button><button type="button" data-screen-action="swipe_up">Swipe up</button><button type="button" data-screen-action="swipe_down">Swipe down</button></div></div>
 <div class="section" id="settings"><div class="statusrow"><h2>WAKE WORD</h2><button class="toggle" id="wakeToggle">Hey HOSHI: OFF</button></div><p class="small">Wake-word detection works only while this page is open, foregrounded and microphone access is granted. This web prototype cannot listen reliably while the phone is locked or the app is closed.</p></div>
@@ -193,10 +205,13 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
    }
   }
  }
- function voiceKey(v){return v.name+"||"+v.lang}
- function refreshVoices(){if(!('speechSynthesis'in window))return;const list=window.speechSynthesis.getVoices();if(!list.length)return;const select=$('voiceSelect');const selected=select.value||localStorage.getItem('jarvisVoiceKey')||'';select.innerHTML='';const auto=document.createElement('option');auto.value='';auto.textContent='Auto — best available';select.appendChild(auto);list.slice().sort((a,b)=>a.lang.localeCompare(b.lang)||a.name.localeCompare(b.name)).forEach(v=>{const option=document.createElement('option');option.value=voiceKey(v);option.textContent=v.name+' — '+v.lang;select.appendChild(option)});select.value=list.some(v=>voiceKey(v)===selected)?selected:''}
- function chooseVoice(){const voices=window.speechSynthesis.getVoices();const selected=$('voiceSelect').value;if(selected){const found=voices.find(v=>voiceKey(v)===selected);if(found)return found}if(!voices.length)return null;const lang=(commandLanguage||'ur-PK').toLowerCase();const base=lang.split('-')[0];const female=/female|zira|samantha|aria|jenny|sara|siri|victoria|eva|sonia|karen|google.*female|neural.*f/i;const locale=v=>String(v.lang||'').toLowerCase();const isFemale=v=>female.test(String(v.name||''));const exact=voices.filter(v=>locale(v)===lang);const sameLanguage=voices.filter(v=>locale(v).split('-')[0]===base);if(base==='ur'){return exact.find(isFemale)||exact[0]||sameLanguage.find(isFemale)||sameLanguage[0]||voices.find(v=>locale(v)==='hi-in'&&isFemale(v))||voices.find(v=>locale(v).startsWith('hi')&&isFemale(v))||voices.find(isFemale)||voices[0]}return exact.find(isFemale)||exact[0]||sameLanguage.find(isFemale)||sameLanguage[0]||voices.find(isFemale)||voices[0]||null}
- function saveVoiceSettings(){const pitch=Number($('pitchSlider').value);const rate=Number($('rateSlider').value);$('pitchValue').textContent=pitch.toFixed(2)+'×';$('rateValue').textContent=rate.toFixed(2)+'×';try{localStorage.setItem('jarvisVoicePitch',String(pitch));localStorage.setItem('jarvisVoiceRate',String(rate));localStorage.setItem('jarvisVoiceKey',$('voiceSelect').value)}catch(e){}}
+ let speechSequence=0;
+ const voiceStyles={soft:[1.12,0.88],warm:[1.04,0.85],playful:[1.18,0.96]};
+ function refreshVoices(){const status=$('voiceEngineStatus');if(window.JarvisBridge&&typeof window.JarvisBridge.speakNative==='function'){status.textContent='Android speech · Hoshi delivery';return}const voice=chooseVoice();status.textContent=voice?'Device speech · Hoshi delivery':'Device speech unavailable · check text-to-speech settings'}
+ function chooseVoice(){if(!('speechSynthesis'in window))return null;const voices=window.speechSynthesis.getVoices();const lang=(commandLanguage||'ur-PK').toLowerCase(),base=lang.split('-')[0];const female=/female|uzma|zira|samantha|aria|jenny|sara|siri|victoria|eva|sonia|karen/i;const locale=v=>String(v.lang||'').toLowerCase();const exact=voices.filter(v=>locale(v)===lang),same=voices.filter(v=>locale(v).split('-')[0]===base);return exact.find(v=>female.test(v.name))||exact[0]||same.find(v=>female.test(v.name))||same[0]||voices.find(v=>locale(v).startsWith('hi')&&female.test(v.name))||voices.find(v=>female.test(v.name))||voices[0]||null}
+ function saveVoiceSettings(){const pitch=Number($('pitchSlider').value),rate=Number($('rateSlider').value);$('pitchValue').textContent=pitch.toFixed(2)+'×';$('rateValue').textContent=rate.toFixed(2)+'×';try{localStorage.setItem('jarvisVoicePitch',String(pitch));localStorage.setItem('jarvisVoiceRate',String(rate));localStorage.removeItem('jarvisVoiceKey')}catch(e){}}
+ function applyVoiceStyle(style,persist=true){const key=voiceStyles[style]?style:'soft';const [pitch,rate]=voiceStyles[key];$('pitchSlider').value=pitch;$('rateSlider').value=rate;document.querySelectorAll('[data-voice-style]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.voiceStyle===key)));if(persist){try{localStorage.setItem('hoshiVoiceStyle',key)}catch(e){}}saveVoiceSettings()}
+ function stopSpeaking(){speechSequence++;if(window.JarvisBridge&&typeof window.JarvisBridge.stopNativeSpeech==='function')window.JarvisBridge.stopNativeSpeech();if('speechSynthesis'in window)window.speechSynthesis.cancel();setSpeaking(false)}
  function getPersonality(){try{return localStorage.getItem('hoshiPersonality')||'balanced'}catch(e){return 'balanced'}}
  const MEMORY_KEY='hoshiConversationMemoryV1';
  let memoryEnabled=true;
@@ -215,21 +230,21 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
   function setSpeaking(active){orb.classList.toggle('speaking',!!active)}
   window.hoshiSetSpeaking=setSpeaking;
   window.hoshiVoiceError=()=>{setSpeaking(false);setStatus('VOICE OUTPUT FAILED · CHECK DEVICE TEXT-TO-SPEECH')};
- function say(text,emotion){
+ function say(text,emotion,preview=false){
    const message=String(text||'');
    const currentEmotion=emotion||guessEmotion(message);
    setEmotion(currentEmotion);
-   reply.textContent=message;
-   rememberTurn('assistant',message);
-   if(!voiceReplies)return;
+   if(!preview){reply.textContent=message;rememberTurn('assistant',message)}
+   if(!preview&&!voiceReplies)return;
+   stopSpeaking();const speechId=speechSequence;
    if(recognition&&listening){try{recognition.stop()}catch(e){}}
    const basePitch=Number($('pitchSlider').value)||1.12;
    const baseRate=Number($('rateSlider').value)||0.92;
    const voiceMood={happy:[0.05,0.03],excited:[0.08,0.06],playful:[0.06,0.05],affectionate:[0.04,-0.03],shy:[0.06,-0.05],sad:[-0.08,-0.08],concerned:[-0.05,-0.06],annoyed:[-0.04,0.02],thinking:[-0.02,-0.03],caring:[0,0]}[currentEmotion]||[0,0];
    const pitch=Math.max(0.8,Math.min(1.6,basePitch+voiceMood[0]));
    const rate=Math.max(0.75,Math.min(1.15,baseRate+voiceMood[1]));
-   // Honor an explicitly selected browser/device voice. Otherwise prefer Android's native TTS.
-   if(!$('voiceSelect').value&&window.JarvisBridge&&typeof window.JarvisBridge.speakNative==='function'){
+   // One Hoshi delivery: use Android native speech first, browser speech as fallback.
+   if(window.JarvisBridge&&typeof window.JarvisBridge.speakNative==='function'){
       const nativeStarted=window.JarvisBridge.speakNative(message,commandLanguage,pitch,rate); if(nativeStarted){setSpeaking(true);return;}
    }
    if(!('speechSynthesis'in window)||typeof SpeechSynthesisUtterance==='undefined'){
@@ -240,11 +255,11 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
    const u=new SpeechSynthesisUtterance(message);
    const voice=chooseVoice();if(voice)u.voice=voice;
    u.lang=voice?voice.lang:commandLanguage;u.rate=rate;u.pitch=pitch;u.volume=1;
-    u.onstart=()=>setSpeaking(true);
-    u.onend=()=>{setSpeaking(false);if(listening&&recognition){clearTimeout(restartTimer);restartTimer=setTimeout(()=>{try{recognition.start()}catch(e){}},350)}};
-    u.onerror=e=>{setSpeaking(false);if(e&&e.error!=='canceled'&&e.error!=='interrupted')setStatus('VOICE OUTPUT FAILED · CHECK DEVICE TEXT-TO-SPEECH')};
+    u.onstart=()=>{if(speechId===speechSequence)setSpeaking(true)};
+    u.onend=()=>{if(speechId!==speechSequence)return;setSpeaking(false);if(listening&&recognition){clearTimeout(restartTimer);restartTimer=setTimeout(()=>{try{recognition.start()}catch(e){}},350)}};
+    u.onerror=e=>{if(speechId!==speechSequence)return;setSpeaking(false);if(e&&e.error!=='canceled'&&e.error!=='interrupted')setStatus('VOICE OUTPUT FAILED · CHECK DEVICE TEXT-TO-SPEECH')};
    let spoken=false;
-   const speak=()=>{if(spoken)return;spoken=true;const current=chooseVoice();if(current){u.voice=current;u.lang=current.lang}synth.speak(u)};
+   const speak=()=>{if(spoken||speechId!==speechSequence)return;spoken=true;const current=chooseVoice();if(current){u.voice=current;u.lang=current.lang}synth.speak(u)};
    if(!synth.getVoices().length){
      const onVoices=()=>{synth.removeEventListener('voiceschanged',onVoices);refreshVoices();speak()};
      synth.addEventListener('voiceschanged',onVoices);setTimeout(speak,900);
@@ -267,7 +282,7 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
  else if(has([/\b(your name|who are you|tumhara naam|ap ka naam|aap ka naam)\b/,/تمہارا نام/,/آپ کا نام/]))say('Main HOSHI hoon, aap ki AI companion.');
  else if(has([/\b(open google|google kholo|google khol do|kholo google|google open)\b/,/گوگل کھولو/,/گوگل کھول دو/])){say(commandLanguage==='ur-PK'?'Google khol raha hoon.':'Opening Google.');window.open('https://www.google.com/','_blank','noopener')}
  else if(has([/\b(open youtube|youtube kholo|youtube khol do|kholo youtube|youtube open)\b/,/یوٹیوب کھولو/,/یوٹیوب کھول دو/])){say(commandLanguage==='ur-PK'?'YouTube khol raha hoon.':'Opening YouTube.');window.open('https://m.youtube.com/','_blank','noopener')}
- else if(has([/\b(stop speaking|bolna band|chup ho jao)\b/,/بولنا بند/])){if(window.JarvisBridge&&typeof window.JarvisBridge.stopNativeSpeech==='function')window.JarvisBridge.stopNativeSpeech();if('speechSynthesis'in window)window.speechSynthesis.cancel();reply.textContent='Theek hai, voice reply rok di.'}
+ else if(has([/\b(stop speaking|bolna band|chup ho jao)\b/,/بولنا بند/])){stopSpeaking();reply.textContent='Theek hai, voice reply rok di.'}
  else if(has([/^(help|madad|kya kar sakte ho|commands|what can you do)\b/,/مدد/,/کیا کر سکتے ہو/]))say('Main waqt aur tareekh bata sakta hoon, Google aur YouTube khol sakta hoon, aur Android app mein local reminders schedule kar sakta hoon. Basic Back, Home aur swipe controls ke liye aapki permission zaroori hai.');
  else {reply.textContent='HOSHI soch rahi hai…';askCloud(text);return;}
  setStatus(listening?(wakeEnabled?'LISTENING FOR WAKE WORD':'LISTENING'):'READY');setTimeout(()=>orb.classList.remove('active'),900)
@@ -307,9 +322,11 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
  };
  try{recognition.start()}catch(e){listening=false;lastVoiceError='COULD NOT START MICROPHONE · CHECK PERMISSIONS';$('wakeBtn').textContent='🎙 Start listening';setStatus(lastVoiceError)}
  }
- function stopListening(){listening=false;awaitingCommand=false;clearTimeout(restartTimer);if(recognition){try{recognition.onend=null;recognition.stop()}catch(e){}recognition=null}if('speechSynthesis'in window)window.speechSynthesis.cancel();$('wakeBtn').textContent='🎙 Start listening';setStatus('LISTENING STOPPED')}
- // Voice settings are stored locally on this device. Voice availability is controlled by Android.
- try{$('pitchSlider').value=localStorage.getItem('jarvisVoicePitch')||'1.22';$('rateSlider').value=localStorage.getItem('jarvisVoiceRate')||'0.91'}catch(e){}
+ function stopListening(){stopSpeaking();listening=false;awaitingCommand=false;clearTimeout(restartTimer);if(recognition){try{recognition.onend=null;recognition.stop()}catch(e){}recognition=null}if('speechSynthesis'in window)window.speechSynthesis.cancel();$('wakeBtn').textContent='🎙 Start listening';setStatus('LISTENING STOPPED')}
+ // Migrate old country selections to the single Hoshi delivery profile.
+ let savedVoiceStyle='soft',savedPitch=null,savedRate=null;try{savedVoiceStyle=localStorage.getItem('hoshiVoiceStyle')||'soft';if(localStorage.getItem('hoshiVoiceStyle')){savedPitch=Number(localStorage.getItem('jarvisVoicePitch'));savedRate=Number(localStorage.getItem('jarvisVoiceRate'))}}catch(e){}
+ applyVoiceStyle(savedVoiceStyle,false);
+ if(savedPitch>=0.8&&savedPitch<=1.4)$('pitchSlider').value=savedPitch;if(savedRate>=0.75&&savedRate<=1.15)$('rateSlider').value=savedRate;
  $('personalitySelect').value=getPersonality();$('personalitySelect').addEventListener('change',()=>{try{localStorage.setItem('hoshiPersonality',$('personalitySelect').value)}catch(e){}});
  $('memoryToggle').textContent='Local memory: '+(memoryEnabled?'ON':'OFF');
  $('utilityMemory').textContent=memoryEnabled?'ON':'OFF';
@@ -321,14 +338,15 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
  $('clearMemoryBtn').onclick=()=>{try{localStorage.removeItem(MEMORY_KEY)}catch(e){}renderHistory();renderRecentActivity();setStatus('HOSHI MEMORY CLEARED')};
  renderHistory();renderRecentActivity();updateClock();setInterval(updateClock,15000);
  $('pitchSlider').addEventListener('input',saveVoiceSettings);$('rateSlider').addEventListener('input',saveVoiceSettings);
- $('voiceSelect').addEventListener('change',()=>{saveVoiceSettings();});
- $('previewVoiceBtn').onclick=()=>say(commandLanguage==='ur-PK'?'Assalam-o-alaikum. Main HOSHI hoon. Aap batayein, main aapki kya madad kar sakti hoon?':'Hello there. I am HOSHI. Tell me how I can help you today.');
- $('resetVoiceBtn').onclick=()=>{ $('pitchSlider').value='1.22';$('rateSlider').value='0.91';$('voiceSelect').value='';saveVoiceSettings();say(commandLanguage==='ur-PK'?'Voice settings reset kar di hain.':'Voice settings have been reset.');};
+ document.querySelectorAll('[data-voice-style]').forEach(b=>b.addEventListener('click',()=>{stopSpeaking();applyVoiceStyle(b.dataset.voiceStyle)}));
+ $('stopSpeakingBtn').onclick=()=>{stopSpeaking();setStatus('VOICE STOPPED')};
+ $('previewVoiceBtn').onclick=()=>say(commandLanguage==='ur-PK'?'Suno… main Hoshi hoon. Aaram se batao, aaj tumhara din kaisa guzra?':'Hey… I am Hoshi. Take your time. Tell me about your day.','affectionate',true);
+ $('resetVoiceBtn').onclick=()=>{stopSpeaking();applyVoiceStyle('soft');setStatus('SOFT VOICE RESTORED')};
  if('speechSynthesis'in window){refreshVoices();window.speechSynthesis.addEventListener('voiceschanged',refreshVoices)}
- saveVoiceSettings();
+ saveVoiceSettings();refreshVoices();
  $('wakeBtn').onclick=()=>startListening();$('stopBtn').onclick=stopListening;
  $('testBtn').onclick=()=>askCloud('Test connection. Tell me whether the JARVIS cloud API received this message.');
- $('speakToggle').onclick=()=>{voiceReplies=!voiceReplies;try{localStorage.setItem('hoshiVoiceReplies',String(voiceReplies))}catch(e){}$('speakToggle').textContent=voiceReplies?'🔊 Voice replies: ON':'🔇 Voice replies: OFF';$('utilityVoice').textContent=voiceReplies?'ON':'OFF'};
+ $('speakToggle').onclick=()=>{voiceReplies=!voiceReplies;try{localStorage.setItem('hoshiVoiceReplies',String(voiceReplies))}catch(e){}$('speakToggle').textContent=voiceReplies?'🔊 Voice replies: ON':'🔇 Voice replies: OFF';$('utilityVoice').textContent=voiceReplies?'ON':'OFF';if(!voiceReplies)stopSpeaking()};
  $('languageToggle').onclick=()=>{commandLanguage=commandLanguage==='ur-PK'?'en-US':'ur-PK';try{localStorage.setItem('hoshiLanguage',commandLanguage)}catch(e){}$('languageToggle').textContent=commandLanguage==='ur-PK'?'🗣 Language: Urdu':'🗣 Language: English';if(listening){stopListening();startListening()}say(commandLanguage==='ur-PK'?'Urdu mode on. Ab Urdu ya Roman Urdu mein command bolain.':'English mode on. Speak your command in English.')};
  $('wakeToggle').onclick=()=>{wakeEnabled=!wakeEnabled;try{localStorage.setItem('hoshiWakeWord',String(wakeEnabled))}catch(e){}$('wakeToggle').textContent='Hey HOSHI: '+(wakeEnabled?'ON':'OFF');setStatus(listening?(wakeEnabled?'LISTENING FOR “HEY HOSHI”':'LISTENING'):'READY')};
  $('viewHistoryBtn').onclick=()=>{const panel=$('memoryPanel');if(panel)panel.scrollIntoView({behavior:'smooth',block:'start'})};

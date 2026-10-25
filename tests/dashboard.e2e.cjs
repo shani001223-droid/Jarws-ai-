@@ -276,6 +276,41 @@ async function main() {
       }
     }
 
+    // Voice preview must work when automatic replies are OFF without saving a chat turn.
+    await page.evaluate(() => {
+      window.__voiceCalls = [];
+      const listeners = {};
+      window.__voices = [];
+      Object.defineProperty(window, "speechSynthesis", {configurable: true, value: {
+        getVoices: () => window.__voices,
+        cancel: () => window.__voiceCalls.push("cancel"),
+        speak: u => window.__voiceCalls.push({text: u.text, pitch: u.pitch, rate: u.rate}),
+        addEventListener: (name, fn) => {listeners[name] = fn},
+        removeEventListener: name => {delete listeners[name]},
+      }});
+      window.__voiceReady = () => {window.__voices = [{name: "Urdu female", lang: "ur-PK"}];listeners.voiceschanged?.()};
+      Object.defineProperty(window, "SpeechSynthesisUtterance", {configurable: true, value: function(text){this.text=text}});
+    });
+    const beforePreview = await page.evaluate(() => ({reply: document.querySelector('#reply').textContent, memory: localStorage.getItem('hoshiConversationMemoryV1')}));
+    assert.equal(await page.locator('#voiceSelect').count(), 0);
+    await page.locator('#previewVoiceBtn').click();
+    await page.locator('#stopSpeakingBtn').click();
+    await page.evaluate(() => window.__voiceReady());
+    await page.waitForTimeout(1000);
+    assert.equal(await page.evaluate(() => window.__voiceCalls.filter(v => typeof v === 'object').length), 0,
+      'Stop must invalidate speech waiting for browser voices');
+    await page.locator('[data-voice-style="warm"]').click();
+    await page.locator('#previewVoiceBtn').click();
+    const spoken = await page.evaluate(() => window.__voiceCalls.filter(v => typeof v === 'object'));
+    assert.equal(spoken.length, 1, 'Preview speaks with automatic replies disabled');
+    assert.ok(spoken[0].rate < 0.9, 'Warm delivery is gentle');
+    assert.deepEqual(await page.evaluate(() => ({reply: document.querySelector('#reply').textContent, memory: localStorage.getItem('hoshiConversationMemoryV1')})), beforePreview,
+      'Preview must not overwrite chat or save a conversation');
+    await page.locator('.voice-fine-tune summary').click();
+    await page.locator('#resetVoiceBtn').click();
+    assert.equal(await page.locator('[data-voice-style="soft"]').getAttribute('aria-pressed'), 'true');
+    await page.screenshot({path: '/tmp/hoshi-voice-mobile.png', fullPage: true});
+
     assert.deepEqual(pageErrors, [], "Dashboard should not throw uncaught browser errors");
     console.log("PASS — dashboard loaded; local command, cloud chat, emotion, context privacy, request ordering, memory toggle, and graceful fallback worked.");
   } finally {

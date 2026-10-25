@@ -145,7 +145,7 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
    setTimeout(()=>orb.classList.remove('active'),900);
    return;
  }
- if(has([/\b(hello|hi|salam|assalam|hey hoshi)\b/,/السلام علیکم/,/سلام/]))say(commandLanguage==='ur-PK'?'Ji, main JARVIS hoon. Batayein, kya madad chahiye?':'I am online. Tell me what you need.');
+ if(has([/\b(hello|hi|salam|assalam|hey hoshi)\b/,/السلام علیکم/,/سلام/]))say(commandLanguage==='ur-PK'?'Ji, main HOSHI hoon. Batayein, kya madad chahiye?':'I am online. Tell me what you need.');
  else if(window.JarvisCommandUtils&&window.JarvisCommandUtils.isTimeCommand(text))say(commandLanguage==='ur-PK'?'Abhi waqt '+new Date().toLocaleTimeString('en-PK',{hour:'numeric',minute:'2-digit'})+' hai.':'The time is '+new Date().toLocaleTimeString());
  else if(window.JarvisCommandUtils&&window.JarvisCommandUtils.isDateCommand(text))say(commandLanguage==='ur-PK'?'Aaj ki tareekh '+new Date().toLocaleDateString('en-GB')+' hai.':'Today is '+new Date().toLocaleDateString());
  else if(has([/\b(your name|who are you|tumhara naam|ap ka naam|aap ka naam)\b/,/تمہارا نام/,/آپ کا نام/]))say('Main HOSHI hoon, aap ki AI companion.');
@@ -163,7 +163,7 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
  recognition.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++){if(!e.results[i].isFinal)continue;const heard=e.results[i][0].transcript.trim();const lower=heard.toLowerCase();input.value=heard;
  if(!wakeEnabled){processCommand(heard);continue}
  if(awaitingCommand){awaitingCommand=false;processCommand(heard);continue}
- if(lower.includes('hey jarvis')||lower.includes('hey, jarvis')||lower.includes('a hoshi')){const after=heard.replace(/hey[, ]*jarvis/i,'').trim();if(after){processCommand(after)}else{awaitingCommand=true;setStatus('HOSHI AWAKE · SAY YOUR COMMAND');reply.textContent='I’m listening. What can I do for you?';if(voiceReplies&&'speechSynthesis'in window){window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance('Yes?');u.lang='en-US';u.onend=()=>{if(listening&&recognition){try{recognition.start()}catch(e){}}};window.speechSynthesis.speak(u)}}}
+ if(lower.includes('hey hoshi')||lower.includes('hey, hoshi')||lower.includes('a hoshi')){const after=heard.replace(/hey[, ]*hoshi/i,'').trim();if(after){processCommand(after)}else{awaitingCommand=true;setStatus('HOSHI AWAKE · SAY YOUR COMMAND');reply.textContent='I’m listening. What can I do for you?';if(voiceReplies&&'speechSynthesis'in window){window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance('Yes?');u.lang='en-US';u.onend=()=>{if(listening&&recognition){try{recognition.start()}catch(e){}}};window.speechSynthesis.speak(u)}}}
  }}
  recognition.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed'){listening=false;setStatus('MICROPHONE PERMISSION REQUIRED');$('wakeBtn').textContent='🎙 Start listening'}else if(e.error!=='no-speech'&&e.error!=='aborted')setStatus('VOICE ERROR · '+e.error.toUpperCase())};
  recognition.onend=()=>{if(listening){clearTimeout(restartTimer);restartTimer=setTimeout(()=>{try{recognition.start()}catch(e){}},500)}else{$('wakeBtn').textContent='🎙 Start listening';setStatus('READY')}};
@@ -178,7 +178,7 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
  renderHistory();
  $('pitchSlider').addEventListener('input',saveVoiceSettings);$('rateSlider').addEventListener('input',saveVoiceSettings);
  $('voiceSelect').addEventListener('change',()=>{saveVoiceSettings();});
- $('previewVoiceBtn').onclick=()=>say(commandLanguage==='ur-PK'?'Assalam-o-alaikum. Main JARVIS hoon. Aap batayein, main aapki kya madad kar sakti hoon?':'Hello there. I am JARVIS. Tell me how I can help you today.');
+ $('previewVoiceBtn').onclick=()=>say(commandLanguage==='ur-PK'?'Assalam-o-alaikum. Main HOSHI hoon. Aap batayein, main aapki kya madad kar sakti hoon?':'Hello there. I am HOSHI. Tell me how I can help you today.');
  $('resetVoiceBtn').onclick=()=>{ $('pitchSlider').value='1.22';$('rateSlider').value='0.91';$('voiceSelect').value='';saveVoiceSettings();say(commandLanguage==='ur-PK'?'Voice settings reset kar di hain.':'Voice settings have been reset.');};
  if('speechSynthesis'in window){refreshVoices();window.speechSynthesis.addEventListener('voiceschanged',refreshVoices)}
  saveVoiceSettings();
@@ -186,7 +186,7 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
  $('testBtn').onclick=()=>askCloud('Test connection. Tell me whether the JARVIS cloud API received this message.');
  $('speakToggle').onclick=()=>{voiceReplies=!voiceReplies;$('speakToggle').textContent=voiceReplies?'🔊 Voice replies: ON':'🔇 Voice replies: OFF'};
  $('languageToggle').onclick=()=>{commandLanguage=commandLanguage==='ur-PK'?'en-US':'ur-PK';$('languageToggle').textContent=commandLanguage==='ur-PK'?'🗣 Language: Urdu':'🗣 Language: English';if(listening){stopListening();startListening()}say(commandLanguage==='ur-PK'?'Urdu mode on. Ab Urdu ya Roman Urdu mein command bolain.':'English mode on. Speak your command in English.')};
- $('wakeToggle').onclick=()=>{wakeEnabled=!wakeEnabled;$('wakeToggle').textContent='Hey JARVIS: '+(wakeEnabled?'ON':'OFF');setStatus(listening?(wakeEnabled?'LISTENING FOR “HEY JARVIS”':'LISTENING'):'READY')};
+ $('wakeToggle').onclick=()=>{wakeEnabled=!wakeEnabled;$('wakeToggle').textContent='Hey HOSHI: '+(wakeEnabled?'ON':'OFF');setStatus(listening?(wakeEnabled?'LISTENING FOR “HEY HOSHI”':'LISTENING'):'READY')};
  $('commandForm').onsubmit=e=>{e.preventDefault();processCommand(input.value);input.value=''};
  document.querySelectorAll('[data-cmd]').forEach(b=>b.onclick=()=>processCommand(b.dataset.cmd));
  if(window.JarvisBridge){

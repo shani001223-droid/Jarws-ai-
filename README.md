@@ -14,7 +14,7 @@ A mobile-first HOSHI AI companion for Android, using a hosted backend and a resp
 - `assets/hoshi-expressions.webp` is a compact 8-tile WebP sprite cropped from the final user-provided character sheet. The dashboard switches the sprite position for each response emotion; ten emotion labels map to the closest of the eight available expressions.
 - Local one-shot reminders can be listed/cancelled from **View / cancel reminders**, scheduled from **Set reminder**, or created by typing commands such as “remind me to drink water in 10 minutes,” “remind me in 2 hours to call mom,” or “mujhe 10 minute baad pani peene yaad dilao.” They use Android notifications and are scheduled again after reboot, without needing cloud AI to trigger.
 - Optional user-triggered Accessibility actions: Back, Home, Swipe up, and Swipe down. The service does not retrieve screen content or upload screen text.
-- GitHub Actions runs Python tests, JavaScript syntax checks, a live backend smoke test, and an Android debug APK build.
+- GitHub Actions runs Python tests, JavaScript syntax checks, a Chromium dashboard smoke test with a mocked cloud API, a live backend smoke test, and an Android debug APK build.
 
 ## Install the Android test APK
 
@@ -61,7 +61,7 @@ A mobile-first HOSHI AI companion for Android, using a hosted backend and a resp
 - The face is an 8-expression WebP sprite from the final character sheet. `data-emotion` switches the sprite position; service-worker cache `hoshi-shell-v10` precaches the sprite and privacy helper for offline loading.
 - A shared `memory-privacy.js` helper applies privacy filters before local history save/edit. Node tests exercise common credential/token formats, recovery phrases, OTPs, contact information, and long numeric strings.
 - Python frontend-contract tests verify unique HTML IDs, script references, valid WebP headers, emotion mappings, memory controls, cache contents, and actionable voice-error recovery paths.
-- Current check links: [HOSHI basic checks #142](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40234119379), [GitHub Pages publish #167](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40234119519), and [live backend smoke #26](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40234017983). Current Render live visual validation and target-phone testing are still pending.
+- Current check links: [HOSHI basic checks #154](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40234981960) passed with a Chromium browser smoke test for the local command, mocked cloud chat, emotion state, memory toggle, stale response ordering, and web-only fallback. [Live backend smoke #26](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40234017983) passed. Current Render live visual validation and target-phone testing are still pending.
 
 ## Remaining real-device checks
 

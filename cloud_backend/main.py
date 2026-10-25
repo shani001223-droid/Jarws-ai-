@@ -32,6 +32,27 @@ class AssistantRequest(BaseModel):
 class AssistantResponse(BaseModel):
     reply: str
     mode: str = "gemini"
+    emotion: str = "caring"
+
+
+def classify_emotion(message: str, reply: str) -> str:
+    """Choose a lightweight, explainable UI emotion label from conversation text."""
+    text = (message + " " + reply).casefold()
+    rules = (
+        ("sad", ("udaas", "sad", "rona", "ro raha", "ro rahi", "dard ho raha", "dukhi", "upset", "heartbroken")),
+        ("concerned", ("pareshan", "tension", "worried", "concern", "darr lag", "afraid", "help me", "takleef")),
+        ("annoyed", ("gussa", "naraz", "angry", "annoyed", "ghussa", "shikayat")),
+        ("shy", ("sharma", "shy", "blush", "blushing", "laaj", "cute ho")),
+        ("excited", ("excited", "zabardast", "amazing", "can't wait", "lets go", "let's go", "wah")),
+        ("playful", ("mazaq", "mazak", "joke", "tease", "masti", "funny", "haha", "hehe")),
+        ("affectionate", ("pyar", "pyaar", "love you", "miss you", "jaan", "sweetheart", "romantic", "hug")),
+        ("happy", ("khush", "happy", "great", "shukriya", "thank you", "thanks", "😊", "😄")),
+        ("thinking", ("kyun", "kaise", "why", "how", "explain", "socho", "think", "analyze")),
+    )
+    for emotion, keywords in rules:
+        if any(keyword in text for keyword in keywords):
+            return emotion
+    return "caring"
 
 
 def _groq_reply(message: str, language_hint: str) -> str:
@@ -206,7 +227,7 @@ def assistant(payload: AssistantRequest):
             if not reply:
                 reply = str(data.get("output_text") or "").strip()
             if reply:
-                return AssistantResponse(reply=reply, mode="gemini")
+                return AssistantResponse(reply=reply, mode="gemini", emotion=classify_emotion(message, reply))
             gemini_problem = "Gemini Interactions API returned no text (possibly blocked or empty output)."
             should_fallback = True
         except HTTPError as exc:
@@ -229,7 +250,7 @@ def assistant(payload: AssistantRequest):
 
         if should_fallback and groq_key:
             try:
-                return AssistantResponse(reply=_groq_reply(message, language_hint), mode="groq")
+                reply = _groq_reply(message, language_hint)\n                return AssistantResponse(reply=reply, mode="groq", emotion=classify_emotion(message, reply))
             except RuntimeError as groq_error:
                 raise HTTPException(
                     status_code=502,

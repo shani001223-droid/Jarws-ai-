@@ -1,6 +1,6 @@
 # HOSHI AI — Master Transformation Task List
 
-**Status:** Planning only — implementation has not started.  
+**Status:** Planning / verification — implementation has not started.  
 **Repository:** [shani001223-droid/Jarws-ai-](https://github.com/shani001223-droid/Jarws-ai-)  
 **Final design:** The two user-provided HOSHI character and dashboard images are the final design, not inspiration. Preserve the character appearance, layout, dark navy / electric-blue / cyan neon palette, and panel arrangement as closely as implementation permits.
 
@@ -43,6 +43,7 @@
 - [ ] Settings for voice, language, personality, memory, and auto-speak.
 - [ ] Low lag, reasonable data use, and graceful error handling.
 - [ ] Follow the final user-provided HOSHI dashboard image; do not redesign it without permission.
+- [ ] Verify the BTC panel and floating icon are removed from the frontend, while preserving unrelated working functionality.
 
 ## Phase 6 — Existing JARVIS features
 - [ ] Audit existing working features before changing code.
@@ -58,11 +59,24 @@
 - [ ] Deploy safely to existing hosting and provide rollback if needed.
 - [ ] Final report clearly separates working features, limitations, and pending work.
 
-## Deployment and CI verification checklist
-- [ ] Backend health check: https://jarws-ai-2.onrender.com — verify expected API health/response.
-- [ ] Frontend: https://jarws-ai-1.onrender.com — verify UI loads and confirm clean layout without the BTC panel or floating icon.
-- [ ] GitHub Actions: inspect latest commit's Python tests, JavaScript checks, and Android APK workflow; record each result.
-- [ ] Confirm deployment health and workflow status again after any implementation changes.
+## Render backend and frontend verification
+- [ ] Backend health endpoint: https://jarws-ai-2.onrender.com/health — verify HTTP status and health response.
+- [ ] Frontend: https://jarws-ai-1.onrender.com — verify the UI loads and has a clean look without the BTC panel/floating icon.
+- [ ] Confirm frontend/backend compatibility and check browser console/network errors.
+
+## GitHub Actions verification
+- [ ] Check the latest `JARVIS basic checks` workflow: Python compile/tests, JavaScript parser tests, and JavaScript syntax checks.
+- [ ] Check the latest `Build JARVIS Android APK` workflow: Android debug APK build and artifact upload.
+- [ ] Confirm relevant workflows for the latest commit are green; inspect logs for any failure.
+- [ ] Install the generated debug APK and verify core flows on the target Android phone.
+
+## Initial audit notes
+- [x] Read the repository README and inspect the CI workflow definition at `.github/workflows/ci.yml`.
+- [x] Inspect the Android APK workflow definition at `.github/workflows/android-apk.yml`.
+- [ ] Live Render backend health response: **not verified yet**.
+- [ ] Live frontend rendering and BTC/floating-icon removal: **not verified yet**.
+- [ ] Latest GitHub Actions run statuses: **not verified yet**.
+- [ ] Real-device Android testing: **pending**.
 
 ## Working rules
 1. This document records requirements; it does not mean implementation is complete.
@@ -70,3 +84,4 @@
 3. Keep the two user-provided HOSHI images as the final design source.
 4. Make changes in small, testable steps and avoid destructive rewrites.
 5. Use free options where practical; explain any unavoidable cost before proceeding.
+6. Mark items complete only after testing and evidence are available.

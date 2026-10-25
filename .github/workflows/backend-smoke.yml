@@ -43,15 +43,13 @@ jobs:
           body=""
           http_code="000"
           # Render can briefly return 502/503/504 while an automatic deploy or
-          # a cold start settles. Retry transient gateway/service failures, but
-          # still fail the check if no valid API response arrives after 3 tries.
+          # cold start settles. Retry transient gateway/service failures.
           for attempt in 1 2 3; do
-            response=$(curl -sS --max-time 60 -w '\n%{http_code}' \
+            http_code=$(curl -sS --max-time 60 -o /tmp/hoshi-live-reply.json -w '%{http_code}' \
               -X POST "$API_BASE/api/assistant" \
               -H 'Content-Type: application/json' \
               --data '{"message":"Automated live smoke test. Reply with exactly: HOSHI OK.","locale":"en"}' || true)
-            http_code="${response##*\n'}"
-            body="${response%\n'*}"
+            body=$(cat /tmp/hoshi-live-reply.json 2>/dev/null || true)
             if [ "$http_code" = "200" ]; then
               if echo "$body" | jq -e '(.reply | type == "string" and length > 0) and (.mode == "gemini" or .mode == "groq")' >/dev/null; then
                 echo "PASS — live AI provider: $(echo "$body" | jq -r '.mode')"

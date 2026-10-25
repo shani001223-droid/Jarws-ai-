@@ -309,7 +309,7 @@ async function main() {
     assert.ok(spoken[0].rate < 0.9, 'Warm delivery is gentle');
     assert.deepEqual(await page.evaluate(() => ({reply: document.querySelector('#reply').textContent, memory: localStorage.getItem('hoshiConversationMemoryV1')})), beforePreview,
       'Preview must not overwrite chat or save a conversation');
-    await page.route('https://jarws-ai-2.onrender.com/api/speech', route => route.fulfill({status: 200, contentType: 'audio/mpeg', headers: {'Access-Control-Allow-Origin': '*'}, body: Buffer.from('ID3mock-audio')}));
+    await page.route('https://jarws-ai-2.onrender.com/api/speech', route => route.fulfill({status: 200, contentType: 'audio/mpeg', headers: {'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type'}, body: Buffer.from('ID3mock-audio')}));
     await page.evaluate(() => {document.querySelector('#hoshiAudio').play = () => Promise.reject(new DOMException('Tap required', 'NotAllowedError'))});
     await page.evaluate(() => {window.__voices = [{name: 'English female', lang: 'en-US'}, {name: 'Hindi female', lang: 'hi-IN'}]});
     await page.locator('#previewVoiceBtn').click();

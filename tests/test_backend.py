@@ -26,7 +26,10 @@ class AssistantApiTests(unittest.TestCase):
 
     def test_emotion_classifier_handles_roman_urdu_and_playfulness(self):
         self.assertEqual(main.classify_emotion("Mujhe bohat khushi ho rahi hai", "Yay!"), "happy")
-        self.assertEqual(main.classify_emotion("Aaj dil udaas hai", "Main sun rahi hoon."), "sad")
+        self.assertEqual(main.classify_emotion("Aaj dil udaas hai", "Main sun rahi hoon."), "caring")
+        self.assertEqual(main.classify_emotion("Aaj dil udaas hai", "Theek hai, bolo."), "concerned")
+        self.assertEqual(main.classify_emotion("Tum se naraz hoon", "I'm sorry, I made a mistake."), "caring")
+        self.assertEqual(main.classify_emotion("Can we talk?", "I'm angry and annoyed today."), "annoyed")
         self.assertEqual(main.classify_emotion("Chalo thori masti karte hain", "Haha!"), "playful")
         self.assertEqual(main.classify_emotion("Can you explain this?", "Let's think it through."), "thinking")
 
@@ -67,6 +70,9 @@ class AssistantApiTests(unittest.TestCase):
         self.assertFalse(body["store"])
         self.assertIn("Roman Urdu", body["system_instruction"])
         self.assertIn("playful teasing", body["system_instruction"])
+        self.assertIn("Maintain continuity with recent turns", body["system_instruction"])
+        self.assertIn("warm reconciliation", body["system_instruction"])
+        self.assertIn("Never use fake distress", body["system_instruction"])
 
     def test_gemini_joins_multiple_text_blocks_with_real_newlines(self):
         payload = {

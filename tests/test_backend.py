@@ -41,6 +41,12 @@ class AssistantApiTests(unittest.TestCase):
         self.assertEqual(main.detect_user_mood("Kaise kaam karta hai?"), "curious")
         self.assertEqual(main.detect_user_mood("Hello HOSHI"), "neutral")
 
+    def test_user_mood_negation_does_not_trigger_false_emotion(self):
+        self.assertEqual(main.detect_user_mood("Main udaas nahi hoon"), "neutral")
+        self.assertEqual(main.detect_user_mood("Mujhe gussa nahi aa raha"), "neutral")
+        self.assertEqual(main.detect_user_mood("I am not sad, but very happy"), "positive")
+        self.assertEqual(main.detect_user_mood("I am not angry; I am worried"), "anxious")
+
     def test_user_mood_continues_only_for_short_acknowledgements(self):
         context = [
             "user: Mujhe aaj bohat udaasi mehsoos ho rahi hai",

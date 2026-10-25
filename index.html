@@ -52,7 +52,14 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
 @media(max-width:1050px){.assistant-card{grid-template-columns:minmax(0,1fr) minmax(140px,.65fr);min-height:570px;padding:19px}.assistant-card .orb{width:min(100%,145px)}}
 @media(max-width:850px){.assistant-card{min-height:500px;grid-template-columns:minmax(0,1fr) minmax(105px,.55fr);padding:16px;background-position:center,right center;background-size:cover,auto 82%}.assistant-card .orb{width:min(100%,112px)}.assistant-card>.orb-wrap{grid-row:1/5}.assistant-card>.hero-traits{flex-wrap:wrap}.assistant-card>.controls{grid-column:1/-1}}
 @media(max-width:540px){.assistant-card>.orb-wrap{grid-row:1/2}.assistant-card{grid-template-columns:minmax(0,1fr) 94px;grid-template-rows:auto auto auto 1fr auto;min-height:490px;padding:13px;background-image:linear-gradient(90deg,#071321f8 0%,#071321df 42%,#0713216b 100%),url("./assets/hoshi-hero-background.svg");background-size:cover,auto 68%;background-position:center,right top}.assistant-card .orb{width:88px}.assistant-card>.avatar-label{font-size:9px;letter-spacing:.14em}.assistant-card>.hero-traits{grid-column:1/-1;grid-row:2;gap:5px}.assistant-card>#status{grid-column:1/-1;grid-row:3}.assistant-card>#reply{grid-column:1/-1;grid-row:4;max-width:none}.assistant-card>.controls{grid-row:5}.speech-wave{height:22px;width:52px;bottom:7%}}
-@media(prefers-reduced-motion:reduce){.speech-wave i,.orb.speaking{animation:none!important}.speech-wave{transition:none}}
+
+/* Lightweight speaking-mouth approximation over the current face sprite.
+   This follows TTS start/stop state; it is not phoneme-timed lip-sync. */
+.orb .companion-avatar{position:relative;overflow:hidden}
+.orb .companion-avatar::after{content:"";position:absolute;left:50.5%;top:51.5%;width:5.2%;height:1.4%;border-radius:50%;background:rgba(65,24,54,.94);box-shadow:0 0 2px #ffd3e855;transform:translate(-50%,-50%);opacity:0;pointer-events:none}
+.orb.speaking .companion-avatar::after{opacity:.96;animation:hoshi-mouth-lite .22s steps(2,end) infinite}
+@keyframes hoshi-mouth-lite{0%,100%{width:5.2%;height:1.4%;border-radius:50%}50%{width:7.1%;height:5%;border-radius:48% 48% 55% 55%}}
+\n@media(prefers-reduced-motion:reduce){.speech-wave i,.orb.speaking,.orb.speaking .companion-avatar::after{animation:none!important}.speech-wave{transition:none}}
 
 </style>
 </head>

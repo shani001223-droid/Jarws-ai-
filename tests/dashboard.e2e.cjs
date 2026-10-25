@@ -143,18 +143,12 @@ async function main() {
       "The saved conversation should appear in history");
 
     // A delayed earlier request must not overwrite the newer reply.
+    const oldRequest = page.waitForRequest(request =>
+      request.url().endsWith("/api/assistant") && (request.postData() || "").includes("older slow request"),
+      { timeout: 3000 });
     await page.locator("#commandInput").fill("older slow request");
     await page.locator('#commandForm button[type="submit"]').click();
-    await page.waitForFunction(() => {
-      const box = document.querySelector("#reply");
-      return box && box.textContent.includes("soch rahi hai");
-    }, undefined, { timeout: 3000 }).catch(() => {});
-    await page.waitForFunction(() => {
-      const input = document.querySelector("#commandInput");
-      return input && input.value === "";
-    }, undefined, { timeout: 3000 });
-    // Ensure the first request reaches the mocked API before superseding it.
-    await page.waitForTimeout(100);
+    await oldRequest;
     await page.locator("#commandInput").fill("newer fast request");
     await page.locator('#commandForm button[type="submit"]').click();
     await page.waitForFunction(() => document.querySelector("#reply")?.textContent === "NEW RESPONSE", undefined, { timeout: 5000 });

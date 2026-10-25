@@ -34,5 +34,6 @@ def get_settings() -> Settings:
         gemini_timeout=_bounded_float("GEMINI_TIMEOUT_SECONDS", 15.0, 3.0, 30.0),
         groq_timeout=_bounded_float("GROQ_TIMEOUT_SECONDS", 15.0, 3.0, 30.0),
         memory_retention_days=_bounded_int("JARVIS_MEMORY_RETENTION_DAYS", 30, 1, 365),
+        allowed_origins=origins,
         db_path=os.path.abspath(os.getenv("JARVIS_DB_PATH", "/tmp/jarvis_memory.sqlite3").strip() or "/tmp/jarvis_memory.sqlite3"),
     )

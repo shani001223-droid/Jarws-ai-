@@ -58,7 +58,11 @@ async function main() {
       try {
         localStorage.setItem("hoshiVoiceReplies", "false");
       } catch (_) {}
-      // Keep this smoke test deterministic without installing a real service worker.
+      // Headless CI has no microphone. Keep the voice fallback deterministic.
+      try {
+        Object.defineProperty(window, "SpeechRecognition", { configurable: true, value: undefined });
+        Object.defineProperty(window, "webkitSpeechRecognition", { configurable: true, value: undefined });
+      } catch (_) {}
       try {
         Object.defineProperty(navigator, "serviceWorker", {
           configurable: true,
@@ -135,6 +139,18 @@ async function main() {
     // Local command path should work without a cloud call.
     await page.locator('[data-cmd="what time is it"]').first().click();
     await page.waitForFunction(() => /Abhi waqt|The time is/.test(document.querySelector("#reply")?.textContent || ""), undefined, { timeout: 3000 });
+
+    // Five hero shortcuts must be actionable, not decorative.
+    await page.locator('[data-ui-action="voice"]').click();
+    await page.waitForFunction(() => document.querySelector("#status")?.textContent === "VOICE RECOGNITION UNAVAILABLE");
+    await page.locator('[data-ui-action="vision"]').click();
+    await page.waitForFunction(() => document.querySelector("#status")?.textContent.includes("SCREENSHOT NEEDS THE HOSHI ANDROID APP"));
+    await page.locator('[data-ui-action="create"]').click();
+    assert.equal(await page.locator("#commandInput").getAttribute("placeholder"), "Tell HOSHI what you want to create…");
+    assert.equal(await page.evaluate(() => document.activeElement?.id), "commandInput");
+    await page.locator('[data-ui-action="more"]').click();
+    await page.locator('[data-ui-action="chat"]').click();
+    assert.equal(await page.evaluate(() => document.activeElement?.id), "commandInput");
 
     // Cloud chat should display the reply and change the expression.
     await page.locator("#commandInput").fill("Explain how to organize a study day");

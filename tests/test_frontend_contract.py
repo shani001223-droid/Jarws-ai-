@@ -54,6 +54,12 @@ class FrontendContractTests(unittest.TestCase):
             selector = rf'\.orb\[data-emotion="{emotion}"\] \.companion-avatar\{{background-position:'
             self.assertRegex(HTML, selector, f"No sprite position for {emotion}")
 
+    def test_new_cloud_request_supersedes_stale_reply(self):
+        self.assertIn("let cloudOnline=false, cloudRequestSequence=0, activeCloudController=null;", HTML)
+        self.assertIn("if(activeCloudController){try{activeCloudController.abort()}", HTML)
+        self.assertIn("if(requestId!==cloudRequestSequence)return;", HTML)
+        self.assertIn("if(requestId===cloudRequestSequence)", HTML)
+
     def test_selected_browser_voice_is_not_overridden_by_native_tts(self):
         self.assertIn("if(!$('voiceSelect').value&&window.JarvisBridge", HTML)
         self.assertIn("Honor an explicitly selected browser/device voice", HTML)

@@ -6,12 +6,12 @@ A mobile-first HOSHI AI companion for Android, using a hosted backend and a resp
 
 - HOSHI dashboard with responsive sidebar navigation, chat, voice, memory, settings, and external app shortcuts.
 - HOSHI identity prompt with language matching, affectionate/playful tone, honesty, and emotional boundaries.
-- Conversation emotion labels (happy, sad, affectionate, excited, shy, concerned, annoyed, playful, thinking, caring) with avatar styling and limited TTS pitch/speed modulation.
-- Optional local conversation memory with bounded recent context, entry-by-entry review/edit/delete, clear/disable controls, and basic filtering to avoid saving obvious secrets.
+- Conversation emotion labels (happy, sad, affectionate, excited, shy, concerned, annoyed, playful, thinking, caring), actual character-sheet expression sprite switching, and limited TTS pitch/speed modulation.
+- Optional local conversation memory with bounded recent context, entry-by-entry review/edit/delete, clear/disable controls, and a tested privacy filter for common credentials, token formats, recovery phrases, OTPs, email addresses, phone-like strings, and long numeric identifiers. Privacy detection is heuristic; it cannot guarantee detection of every sensitive detail.
 - Local persistence for language selection, voice-reply (auto-speak) toggle, wake-word toggle, personality, and voice tuning.
 - Cloud AI using Gemini Interactions API with Groq as a fallback provider.
 - Voice reply settings: choose an installed phone voice, adjust pitch/speed, and play a preview.
-- A cropped avatar from the final HOSHI character sheet is embedded in the dashboard.
+- `assets/hoshi-expressions.webp` is a compact 8-tile WebP sprite cropped from the final user-provided character sheet. The dashboard switches the sprite position for each response emotion; ten emotion labels map to the closest of the eight available expressions.
 - Local one-shot reminders can be listed/cancelled from **View / cancel reminders**, scheduled from **Set reminder**, or created by typing commands such as “remind me to drink water in 10 minutes,” “remind me in 2 hours to call mom,” or “mujhe 10 minute baad pani peene yaad dilao.” They use Android notifications and are scheduled again after reboot, without needing cloud AI to trigger.
 - Optional user-triggered Accessibility actions: Back, Home, Swipe up, and Swipe down. The service does not retrieve screen content or upload screen text.
 - GitHub Actions runs Python tests, JavaScript syntax checks, a live backend smoke test, and an Android debug APK build.
@@ -30,9 +30,9 @@ A mobile-first HOSHI AI companion for Android, using a hosted backend and a resp
 ## Important limitations
 
 - This is a debug/test APK, not a Play Store release. It has not been validated on the target Realme Note 50 during this session.
-- The full character sheet and full dashboard reference are not embedded as full-resolution files in the repository; only a compact avatar crop is embedded. The responsive dashboard implements the core layout but is not a pixel-perfect reproduction of every reference panel.
-- Emotional expressions are currently CSS effects and keyword/model labels, not a full animation rig. Lip-sync is not implemented.
-- Local memory stores recent turns in browser local storage. You can review and edit/delete individual entries; an edit containing an obvious password/token/OTP-like string is rejected by the current basic filter. When memory is enabled, a bounded recent context is sent to the backend with AI requests; turn memory off to stop that context being sent. These filters are heuristic, not a guarantee that every sensitive detail will be detected.
+- The full character sheet and full dashboard reference are not embedded as full-resolution files; the dashboard is responsive but not a pixel-perfect reproduction of every reference panel.
+- Eight compact expressions are available in a sprite and mapped to ten emotion labels. There is no full animation rig or lip-sync yet.
+- Local memory stores recent turns in browser local storage. Entry review/edit/delete and clear/disable controls are available. The privacy filter blocks common credential terms, token shapes, recovery-phrase language, OTPs, email addresses, phone-like strings, and long numbers; it is heuristic and cannot guarantee every secret is detected. If the privacy utility fails to load, local storage fails closed and does not save messages. When memory is enabled, a bounded recent context is sent to the backend with AI requests; turn memory off to stop that context being sent.
 - Voice quality and voice choices depend on the speech engines installed on the Android device. The dashboard can select and tune available voices but cannot install a premium neural voice on its own.
 - The hosted backend requires internet. Gemini free-tier limits can be exhausted; Groq is configured as the backup, but provider policies and free limits can change. Local reminders run on-device; Android power-saving may deliver them a little late.
 - API keys remain in the private Render environment; never place them in frontend code, an APK, or a public repository.
@@ -41,10 +41,11 @@ A mobile-first HOSHI AI companion for Android, using a hosted backend and a resp
 
 - Backend personality, emotion labels, recent-context support, and Groq fallback are implemented in `cloud_backend/main.py`.
 - Backend service deployed successfully after a transient syntax error was caught and fixed. Render logs showed `/health` returning HTTP 200 and no recent error-level application logs at the time of verification.
-- Frontend deployed successfully; its inline JavaScript passed a syntax compilation check in this session.
-- GitHub Actions **HOSHI basic checks run #89 passed** on commit `cda83d88e278b53b9968671cd27c2e6371a62da7`, including Python syntax/unit tests, reminder parser tests, JavaScript syntax checks, and inline dashboard JavaScript compilation.
-- GitHub Actions **HOSHI live backend smoke test run #22 passed** on commit `cda83d88e278b53b9968671cd27c2e6371a62da7`. It confirmed the deployed API version `0.9.1`, health response, and one live AI request; the request succeeded through the configured Groq fallback.
-- GitHub Actions **Build HOSHI Android APK run #22 passed** on commit `640f294f5e770a17863566e5a572797342e8b080`; the debug APK artifact is `hoshi-debug-apk`.
+- Frontend source build and static contract checks pass; a fresh live Render visual check after the latest sprite/privacy changes remains pending.
+- GitHub Actions **HOSHI basic checks run #112 passed** on implementation commit `e4141eea0e01396be09380bb4b2e2095a68e1a26`, including Python/unit tests, frontend-contract tests, privacy-filter tests, reminder/parser tests, and JavaScript syntax compilation.
+- GitHub Pages publish workflow **run #137 passed** on the same implementation/test commit. This verifies the static site build; it does not replace a live Render frontend/device check.
+- GitHub Actions **HOSHI live backend smoke test run #23 passed** after the Gemini multi-block reply fix, including a successful live AI request through the configured Groq fallback.
+- GitHub Actions **Build HOSHI Android APK run #24 passed** on commit `c5737b886e108c9aa368a9ce8efe27f88f8073a2`; the `hoshi-debug-apk` artifact was uploaded. No native Android source changes were made after that build.
 - Real-device voice/microphone testing and lip-sync remain pending.
 
 ## Services
@@ -55,9 +56,12 @@ A mobile-first HOSHI AI companion for Android, using a hosted backend and a resp
 
 ## Latest frontend improvements
 
-- Memory history now shows per-entry **Edit** and **Delete** controls in addition to the existing clear/disable controls. Text is rendered as text (not injected HTML), and edited content is limited to 500 characters.
-- Language selection, voice replies, and wake-word toggle state persist locally across reloads. Existing personality and voice tuning preferences remain persisted.
-- Commit: `824a41d6b5e2ffa352cc2d7496e147b36aca0ac2`. The automated workflow was started after the change; consult [the HOSHI basic checks workflow](https://github.com/shani001223-droid/Jarws-ai-/actions/workflows/ci.yml) for the final result.
+- Memory history has per-entry **Edit**/**Delete**, plus clear/disable controls. Text uses DOM text nodes, edited content is limited to 500 characters, and obvious sensitive strings are rejected.
+- Language selection, voice replies, wake-word toggle, personality, pitch, and rate persist locally across reloads.
+- The face is now an 8-expression WebP sprite from the final character sheet. `data-emotion` switches the sprite position; service-worker cache `hoshi-shell-v9` precaches the sprite and privacy helper for offline loading.
+- A shared `memory-privacy.js` helper applies privacy filters before local history save/edit. Node tests exercise common credential/token formats, recovery phrases, OTPs, contact information, and long numeric strings.
+- Python frontend-contract tests verify unique HTML IDs, script references, valid WebP headers, emotion mappings, memory control elements, and cache contents.
+- Current check links: [HOSHI basic checks #112](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40231996689), [GitHub Pages publish #137](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40231996381), [Android APK #24](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40231091328). Render live visual validation and target-phone testing are still pending.
 
 ## Remaining real-device checks
 

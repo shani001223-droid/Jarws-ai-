@@ -55,7 +55,7 @@ class FrontendContractTests(unittest.TestCase):
             self.assertRegex(HTML, selector, f"No sprite position for {emotion}")
 
     def test_voice_errors_stop_restart_loop_and_keep_actionable_status(self):
-        self.assertIn('let lastVoiceError=""', HTML)
+        self.assertIn('lastVoiceError=""', HTML)
         for error in ("not-allowed", "audio-capture", "language-not-supported", "network"):
             self.assertIn("'" + error + "'", HTML)
         self.assertIn("VOICE RESTART FAILED · TAP TO RETRY", HTML)

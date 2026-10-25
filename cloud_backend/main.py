@@ -146,9 +146,13 @@ def normalize_context_entries(context: Optional[list[str]]) -> list[str]:
     allowed_roles = {"user", "assistant"}
     for raw_item in context or []:
         # Convert tabs/newlines/control characters to ordinary spaces, then collapse.
+        raw_text = str(raw_item or "")
+        # Also normalize literal escaped sequences (backslash + n/r/t), which
+        # can arrive from JSON/stringified history and are otherwise printable.
+        raw_text = raw_text.replace("\\n", " ").replace("\\r", " ").replace("\\t", " ")
         safe_chars = "".join(
             char if char.isprintable() else " "
-            for char in str(raw_item or "")
+            for char in raw_text
         )
         line = " ".join(safe_chars.split()).strip()
         if not line:

@@ -1,48 +1,44 @@
-# JARVIS — Cloud-first Personal AI Assistant
+# JARVIS Assistant
 
-## Product decision
-The phone should be a lightweight dashboard/control panel only. Heavy work belongs on a cloud backend. Do not turn this into a large on-device AI app or download a model onto the phone.
+A mobile-first personal AI assistant prototype for Android, with a hosted AI backend and an optional floating companion icon.
 
-## Architecture
-- **Mobile dashboard (static PWA):** hosted as a small web page; shows status, chat/voice controls and settings. It should not contain provider secrets or heavy models.
-- **Cloud API:** `cloud_backend/main.py` is a FastAPI starter with `/health` and `/api/assistant` endpoints. The dashboard sends non-basic chat to this API. Gemini replies require a valid `GEMINI_API_KEY` configured as a Render environment secret.
-- **Cloud workers (later):** scheduled jobs and queued workflows for reminders, social content, Flora marketing and Telegram integrations.
-- **Integrations:** add one at a time with minimum permissions and server-side credentials. Trading remains demo-only until independently tested.
+## Current features
 
-## Current implementation
-- Responsive mobile dashboard at `index.html`.
-- Browser voice input/output where supported, with Urdu/Roman Urdu and English command modes.
-- Basic local commands for time, date, Google, YouTube, greeting, and help.
-- Cloud status badge distinguishes API availability from AI-key readiness.
-- A foreground-only browser wake phrase prototype. It is not an always-on system wake word.
-- PWA manifest and service worker for a small app shell.
-- Initial FastAPI backend, requirements, environment template and Dockerfile under `cloud_backend/`.
+- Hosted assistant dashboard with Urdu/Roman Urdu and English text commands.
+- Cloud AI using Gemini Interactions API with Groq as a fallback provider.
+- Voice reply settings: choose an installed phone voice, adjust pitch/speed, and play a preview.
+- Generated anime avatar shown on the dashboard and the draggable Android floating icon.
+- Floating icon size slider, saved locally on the phone.
+- The floating service has a persistent Android notification and an explicit Stop action.
+- GitHub Actions runs Python tests, JavaScript syntax checks, a live backend smoke test, and an Android debug APK build.
 
-## Important wake-word limitation
-To avoid heavy on-device processing, the realistic design is a small on-device wake-word detector that listens locally, then streams/processes audio in the cloud only after activation. Cloud-only continuous listening would require the phone to continuously send microphone audio, which drains battery, uses data and raises privacy concerns. A browser page cannot reliably listen while closed or the phone is locked. A native Android foreground service with a visible notification may be required for a true background wake word.
+## Install the Android test APK
 
-## Deploy the cloud API
-1. Create a Python web service on a provider with a suitable free tier (availability and free quotas can change).
-2. Set its root/build context to `cloud_backend/`, install `requirements.txt`, and run `uvicorn main:app --host 0.0.0.0 --port $PORT` (or use the included Dockerfile).
-3. Configure `ALLOWED_ORIGINS` to the exact HTTPS origin serving the dashboard. Do not use `*` in production.
-4. Open `/health` on the deployed service. It returns `ok: true`; `ai_connected` is true only when `GEMINI_API_KEY` is present in the backend environment.
-5. The dashboard is connected to `/api/assistant`; check the dashboard status and Render logs if chat fails.
+1. Open the latest successful **Build JARVIS Android APK** workflow in the [GitHub Actions page](https://github.com/shani001223-droid/Jarws-ai-/actions/workflows/android-apk.yml).
+2. Open its **Artifacts** section and download `jarvis-debug-apk`.
+3. Extract the ZIP, then open `app-debug.apk` on the Android phone.
+4. Android may ask you to allow your browser or file manager to install unknown apps. Allow it only for the app you used to download this APK, then install.
+5. Open **JARVIS Assistant** and keep internet access enabled.
+6. To use the draggable icon, tap **Enable floating icon** and grant Android's **Display over other apps** permission.
+7. The dashboard will ask for microphone permission when you deliberately start voice recognition. The floating icon can be stopped from the app or its persistent notification.
 
-## Cost policy
-- Static dashboard and this starter backend do not require a paid AI API key.
-- Cloud hosts may offer free tiers but can have sleep, usage, or runtime limits. Confirm current terms before deployment.
-- Gemini is supported by the backend when its API key is configured. Check current Google AI Studio quotas and terms; do not assume unlimited free usage.
+## Important limitations
 
-## Security
-- Never commit `.env` files, API keys, Telegram tokens, passwords or exchange secrets.
-- Put credentials in the cloud host's secret/environment settings.
-- Before adding account actions, use authentication, rate limits, logs that exclude secrets, and user confirmation for sensitive actions.
-- Never expose the cloud API publicly for consequential actions without authentication.
+- This is a debug/test APK, not a Play Store release. It has only been build-tested with GitHub Actions; it has not been validated on every phone model.
+- The floating icon opens the JARVIS dashboard; it does not yet independently tap buttons in other apps, read all screen contents, or control the whole phone.
+- Voice quality and voice choices depend on the speech engines installed on the Android device. The dashboard can select and tune available voices but cannot install a premium neural voice on its own.
+- The hosted backend requires internet. Gemini free-tier limits can be exhausted; Groq is configured as the backup, but provider policies and free limits can change.
+- API keys remain in the private Render environment; never place them in frontend code, an APK, or a public repository.
 
-## Roadmap
-1. Deploy and verify cloud API health.
-2. Connect dashboard chat to cloud API.
-3. Add server-side AI provider adapter after reviewing free quotas/costs.
-4. Add user authentication and private preferences/memory.
-5. Add a native Android shell for background wake word and permission-gated phone actions.
-6. Add workflow workers and integrations: reminders, Flora, social platforms, Telegram bot.
+## Services
+
+- Dashboard: https://jarws-ai-1.onrender.com
+- Backend health: https://jarws-ai-2.onrender.com/health
+- Repository: https://github.com/shani001223-droid/Jarws-ai-
+
+## Next roadmap
+
+1. Test the current APK on the target Android phone and refine the anime/voice experience.
+2. Add opt-in, clearly disclosed accessibility actions for limited user-triggered screen navigation.
+3. Add persistent reminders and local settings.
+4. Build separate, user-approved integrations for trading analysis, Flora business management, and social/video automation instead of giving one assistant unlimited access by default.

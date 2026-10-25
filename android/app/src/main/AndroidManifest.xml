@@ -7,6 +7,8 @@
 
     <application
         android:allowBackup="false"
+        android:icon="@drawable/jarvis_anime_avatar"
+        android:roundIcon="@drawable/jarvis_anime_avatar"
         android:label="JARVIS Assistant"
         android:usesCleartextTraffic="false"
         android:theme="@android:style/Theme.Material.Light.NoActionBar"

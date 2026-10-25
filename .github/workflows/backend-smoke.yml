@@ -1,4 +1,4 @@
-name: JARVIS live backend smoke test
+name: HOSHI live backend smoke test
 
 on:
   push:
@@ -43,7 +43,7 @@ jobs:
           response=$(curl -sS --max-time 60 -w '\n%{http_code}' \
             -X POST "$API_BASE/api/assistant" \
             -H 'Content-Type: application/json' \
-            --data '{"message":"Automated live smoke test. Reply with exactly: JARVIS OK.","locale":"en"}')
+            --data '{"message":"Automated live smoke test. Reply with exactly: HOSHI OK.","locale":"en"}')
           http_code="${response##*$'\n'}"
           body="${response%$'\n'*}"
           if [ "$http_code" != "200" ]; then

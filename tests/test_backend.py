@@ -84,7 +84,7 @@ class AssistantApiTests(unittest.TestCase):
             with patch("cloud_backend.main.urlopen", return_value=FakeResponse(payload)):
                 result = main.assistant(main.AssistantRequest(message="Give two lines"))
 
-        self.assertEqual(result.reply, "First line\\nSecond line")
+        self.assertEqual(result.reply, "First line" + chr(10) + "Second line")
         self.assertEqual(result.mode, "gemini")
 
     def test_recent_context_is_bounded_and_passed_to_gemini(self):

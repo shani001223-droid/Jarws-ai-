@@ -44,7 +44,7 @@
 - [x] Settings for voice, language, personality, memory, and auto-speak are available; language/voice-reply/wake-word selections persist locally, and an explicitly selected browser voice now bypasses the native-TTS override.
 - [x] User-facing cloud timeout/offline/provider errors and speech-recognition/TTS failure messages exist; overlapping AI requests now abort the earlier browser request and stale replies are ignored. Measured latency/data use and device-specific edge cases still need verification.
 - [x] Integrated the final-art hero background and animated speech waveform into the dark navy/cyan dashboard without replacing the user's design. The full dashboard remains a responsive adaptation, not a pixel-perfect copy of every panel.
-- [x] Source audit confirms no BTC/Bitcoin text or floating-icon selectors remain in `index.html`; live Render visual verification is still pending.
+- [x] Source audit confirms no BTC/Bitcoin text or floating-icon selectors remain in `index.html`; the live Render responsive smoke test passed. [Run #7](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40237284235).
 
 ## Phase 6 — Existing JARVIS features
 - [x] Audited the existing repository, CI, Android APK workflow, reminder functionality, voice/gesture bridge, and backend fallback before modifying them.
@@ -58,8 +58,8 @@
 - [x] Desktop Chromium browser smoke test checks dashboard load, local command, AI text chat, emotion state, context deduplication, saved history, memory toggle, stale-response protection, all five hero shortcuts, graceful web-mode fallback, and uncaught browser errors. [Run #160 passed](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40235361114).
 - [x] Cloud HTTP/provider errors, timeouts, offline failures, and speech recognition restart failures now produce user-facing recovery messages; physical TTS/microphone acceptance remains pending.
 - [ ] Test on a real Realme Note 50 Android device.
-- [ ] Deploy safely to existing hosting and provide rollback if needed.
-- [x] Added `DEPLOYMENT_ROLLBACK.md` with pre-release checks, service-by-service rollback steps, health/UI smoke checks, secret-handling guidance, and a reminder that dashboard rollbacks disable auto-deploys. Live verification of the current Render dashboard still remains pending.
+- [x] Deployed to existing Render hosting with auto-deploy and rollback steps documented in `DEPLOYMENT_ROLLBACK.md`; backend and frontend live smoke checks passed.
+- [x] Added `DEPLOYMENT_ROLLBACK.md` with pre-release checks, service-by-service rollback steps, health/UI smoke checks, secret-handling guidance, and a reminder that dashboard rollbacks disable auto-deploys. Current backend and frontend smoke checks passed.
 - [ ] Final report clearly separates working features, limitations, and pending work.
 
 ## Render backend and frontend verification
@@ -69,8 +69,8 @@
 
 ## GitHub Actions verification
 - [x] Latest confirmed backend/contract suite `HOSHI basic checks` run #202 passed, including context role-boundary injection regression, privacy, mood-negation, and frontend contract tests. [Run #202](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40237303519).
-- [x] `Build HOSHI Android APK` run #30 passed and uploaded `hoshi-debug-apk` after the Android TTS voice-selection improvement. [Run #30](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40235143457). Installing and testing it on the target phone remains pending by design.
-- [x] `HOSHI basic checks` run #160 passed with Chromium verifying the five hero shortcuts, text chat, emotion state, memory toggle, stale-response protection, and browser-mode fallbacks. [Run #160](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40235361114). Current Render frontend visual verification and Realme testing remain pending.
+- [x] `Build HOSHI Android APK` run #32 passed and uploaded `hoshi-debug-apk` after the native HOSHI launcher icon update. [Run #32](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40237013290). Installing and testing it on the target phone remains pending by design.
+- [x] `HOSHI basic checks` run #202 passed with backend role-boundary tests, frontend contract checks, and browser smoke tests. [Run #202](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40237303519). Realme testing remains pending.
 - [ ] Install the generated debug APK and verify core flows on the target Android phone (deferred until all other available tasks are complete, as requested).
 
 ## Initial audit notes
@@ -78,7 +78,7 @@
 - [x] Inspect the Android APK workflow definition at `.github/workflows/android-apk.yml`.
 - [x] Latest live backend smoke test #29 passed after mood-negation and retry workflow updates, confirming a valid live AI reply using the configured fallback provider. [Run #29](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40236085531).
 - [x] Re-checked the current Render frontend after hero-art/cache updates; the live responsive smoke test passed and the dashboard contains no BTC/floating-icon panel. [Run #7](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40237284235).
-- [x] GitHub Actions checks: basic checks #167 passed with current backend tests; Pages publish #192 passed for the negated-mood regression commit. [Checks #167](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40235947933) · [Pages #192](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40235947839).
+- [x] GitHub Actions checks: basic checks #202 passed after the role-boundary regression and hero-art cache updates. [Run #202](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40237303519).
 - [ ] Real-device Android testing: **pending**.
 
 ## Progress / verification log
@@ -92,30 +92,30 @@
 - [x] Phase 5 foundation: responsive dashboard navigation, app shortcuts, HOSHI branding, emotion-linked expression sprite, memory history controls, and Android notification/activity labels updated.
 - [x] Phase 6 foundation: existing Gemini/Groq fallback preserved; API keys remain environment variables; README documents current limitations.
 - [x] Frontend inline JavaScript compiles successfully in CI; dedicated frontend contract tests also pass.
-- [x] A previous Render frontend deployment reached **live**; current live visual confirmation after the latest frontend changes remains pending.
+- [x] Latest Render frontend deployment reached **live**; responsive visual smoke test passed after hero-art and speech-wave integration. [Run #7](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40237284235).
 - [x] Render backend deployment reached **live** at commit `21d6409ddfd45055e32e573fcfb3d2a8133ab253`; Render logs showed repeated `GET /health` responses with HTTP 200 and no recent error-level application logs during the check.
 - [x] Historical baseline checks were superseded by the newer #160 Chromium dashboard run, #167 backend/contract suite, and #29 live backend smoke test linked above.
 - [ ] Realme Note 50 device testing: pending by design; do not start until the remaining task list is addressed.
-- [ ] Pixel-perfect full dashboard reproduction, full-resolution character-sheet integration, lip-sync/advanced rigging, end-to-end voice acceptance, current Render-front-end live visual confirmation, and Realme Note 50 testing remain pending/limited.
+- [ ] Pixel-perfect full dashboard reproduction, a full animation rig/true lip-sync, end-to-end voice acceptance, and Realme Note 50 testing remain pending/limited. The optimized hero art and animated speech waveform are integrated, but they do not constitute a full animation rig.
 
 ## Latest implementation update (2026-10-26)
 
 - [x] Backend context input hardened: accepts only `user:` / `assistant:` history rows, collapses actual control characters and literal escaped newline/tab sequences, limits each entry and retains at most eight recent turns.
 - [x] Regression tests added for invalid context roles, multiline entries, literal escaped control sequences, and per-entry/eight-turn bounds.
 - [x] Provider request User-Agent and backend module branding updated from stale JARVIS 0.7.0 to HOSHI 0.9.1.
-- [x] Confirmed the newest GitHub Actions backend/contract and Chromium browser suites pass after context hardening, voice-selection, and mobile-overflow fixes. [Run #193](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40237061426).
-- [ ] Confirm the updated Render backend deployment and current frontend UI; physical Realme Note 50 test remains deferred until all other available tasks are complete.
+- [x] Confirmed the newest GitHub Actions backend/contract and Chromium browser suites pass after context role-boundary hardening, voice-selection, mobile-overflow fixes, and hero-art/speech-wave integration. [Run #202](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40237303519).
+- [x] Confirmed updated Render backend deployment and current frontend UI with live backend smoke #35 and live responsive dashboard smoke #7. Physical Realme Note 50 test remains deferred until all other available tasks are complete.
 
 - [x] Added `assets/hoshi-expressions.webp`, an 8-state sprite made from the final user-provided character sheet; the dashboard switches sprite positions based on `data-emotion`.
-- [x] Bumped the service-worker cache to `hoshi-shell-v10`; it precaches the emotion sprite and privacy helper and fetches the current online document before using offline cache.
+- [x] Bumped the service-worker cache to `hoshi-shell-v11`; it precaches the emotion sprite, privacy helper, and optimized hero art and fetches the current online document before using offline cache.
 - [x] Added reusable `memory-privacy.js` and Node tests for credentials, token formats, recovery phrase language, OTPs, email addresses, phone-like strings, and long numeric strings.
 - [x] Added Python frontend-contract checks for duplicate/missing HTML IDs, sprite file signature, emotion mappings, local memory controls, and service-worker cache contents.
 - [x] Corrected a Gemini multi-block reply separator bug and added a regression test; the assertion was corrected after the first test run exposed an over-escaped expectation.
 - [ ] Physical target-device testing remains deferred until the other pending work is addressed, as requested.
 
 - [x] Phase 2 mood signal added: deterministic English/Roman Urdu phrase detection plus safe continuity across short acknowledgements; negation handling prevents common phrases like “udaas nahi” and “not sad” being misread. Regression tests cover positive/negative wording, context carry, and neutral-context reset.
-- [x] Phase 3 voice failure handling improved: permission, missing microphone, unsupported language, network, and unknown speech-recognition errors stop automatic restart loops and display actionable states; explicitly selected browser voices are respected. Service-worker cache is `hoshi-shell-v10`.
-- [x] Current validation: Chromium dashboard smoke #160, backend/contract tests #167, and live backend smoke #29 passed. Current live Render dashboard visual confirmation, full conversational/voice acceptance, and physical device testing remain pending.
+- [x] Phase 3 voice failure handling improved: permission, missing microphone, unsupported language, network, and unknown speech-recognition errors stop automatic restart loops and display actionable states; explicitly selected browser voices are respected. Service-worker cache is `hoshi-shell-v11`.
+- [x] Current validation: basic checks #202, live backend smoke #35, and live Render responsive smoke #7 passed. Full conversational/voice acceptance and physical device testing remain pending.
 
 ## Working rules
 1. This document records requirements; it does not mean implementation is complete.

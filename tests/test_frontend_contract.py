@@ -45,7 +45,7 @@ class FrontendContractTests(unittest.TestCase):
         self.assertIn("./assets/hoshi-expressions.webp", SERVICE_WORKER)
         self.assertIn("./memory-privacy.js", SERVICE_WORKER)
         self.assertIn('<script src="./memory-privacy.js"></script>', HTML)
-        self.assertIn('CACHE_NAME = "hoshi-shell-v14"', SERVICE_WORKER)
+        self.assertIn('CACHE_NAME = "hoshi-shell-v15"', SERVICE_WORKER)
         self.assertIn("./assets/hoshi-hero-background.svg", SERVICE_WORKER)
 
     def test_hoshi_app_icon_is_wired_for_favicon_pwa_and_offline_shell(self):
@@ -92,6 +92,14 @@ class FrontendContractTests(unittest.TestCase):
     def test_hoshi_voice_uses_native_engine_without_country_picker(self):
         self.assertNotIn('id="voiceSelect"', HTML)
         self.assertIn("One Hoshi delivery", HTML)
+
+    def test_urdu_speech_never_substitutes_hindi_or_english(self):
+        self.assertIn("locale:commandLanguage", HTML)
+        self.assertIn("data.speech_text", HTML)
+        self.assertIn("URDU VOICE NOT INSTALLED", HTML)
+        self.assertIn("supportsUrduSpeech", HTML)
+        self.assertIn('"ur" -> listOf(Locale("ur", "PK"))', MAIN_ACTIVITY)
+        self.assertNotIn('engine.setLanguage(Locale.getDefault())', MAIN_ACTIVITY)
 
     def test_voice_errors_stop_restart_loop_and_keep_actionable_status(self):
         self.assertIn('lastVoiceError=""', HTML)

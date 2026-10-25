@@ -20,6 +20,9 @@ class JarvisBridge(private val activity: MainActivity) {
     }
 
     @JavascriptInterface
+    fun supportsUrduSpeech(): Boolean = activity.supportsUrduSpeech()
+
+    @JavascriptInterface
     fun stopNativeSpeech(): Boolean {
         return activity.stopNativeSpeech()
     }

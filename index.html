@@ -128,7 +128,7 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
 <div class="voice-setting"><label for="pitchSlider">Softness / pitch</label><output id="pitchValue">1.12×</output><input id="pitchSlider" type="range" min="0.8" max="1.4" step="0.01" value="1.12" aria-label="Voice pitch"></div>
 <div class="voice-setting"><label for="rateSlider">Speaking speed</label><output id="rateValue">0.88×</output><input id="rateSlider" type="range" min="0.75" max="1.15" step="0.01" value="0.88" aria-label="Speaking speed"></div>
 <button type="button" id="resetVoiceBtn">Restore soft voice</button></details>
-<p class="small">Delivery styles tune your device’s speech voice. They do not add a new anime voice. Pakistani Urdu (ur-PK) is preferred when installed. Voice quality and Urdu pronunciation depend on the installed speech engine.</p>
+<p class="small">Delivery styles tune your device’s speech voice. They do not add a new anime voice. Pakistani Urdu (ur-PK) is preferred when installed. Urdu mode never substitutes Hindi or English voices. Voice quality and Urdu pronunciation depend on the installed speech engine.</p>
 </div></div>
 <div class="section" id="screenControlSection" style="display:none"><h2>BASIC PHONE CONTROLS</h2><p class="small">Optional Android Accessibility permission. Only the actions you tap run; HOSHI does not inspect screen text or upload screenshots. Screenshot requires Android 9 or newer.</p><div class="quick"><button type="button" id="screenPermissionBtn">Enable permission</button><button type="button" data-screen-action="screenshot">Take screenshot</button><button type="button" data-screen-action="back">Back</button><button type="button" data-screen-action="home">Home</button><button type="button" data-screen-action="swipe_up">Swipe up</button><button type="button" data-screen-action="swipe_down">Swipe down</button></div></div>
 <div class="section" id="settings"><div class="statusrow"><h2>WAKE WORD</h2><button class="toggle" id="wakeToggle">Hey HOSHI: OFF</button></div><p class="small">Wake-word detection works only while this page is open, foregrounded and microphone access is granted. This web prototype cannot listen reliably while the phone is locked or the app is closed.</p></div>
@@ -186,11 +186,11 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
   activeCloudController=controller;
   const timeout=controller?setTimeout(()=>controller.abort(),65000):null;
   try{
-   const options={method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,locale:navigator.language||'en',personality:getPersonality(),context:getCloudContextForRequest(message)})};
+   const options={method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,locale:commandLanguage,personality:getPersonality(),context:getCloudContextForRequest(message)})};
    if(controller)options.signal=controller.signal;
    const r=await fetch(API_BASE+'/api/assistant',options);let data={};try{data=await r.json()}catch(_){}
    if(!r.ok){let detail=data.detail||'';if(r.status===502)detail=detail||'Gemini ne request reject ki. Render environment mein API key aur Google AI Studio access check karna hoga.';else if(r.status===504)detail=detail||'Gemini response time par nahi aaya. Yeh AI server timeout hai, zaroori nahi ke aapka internet kharab ho.';else if(r.status===429)detail=detail||'Gemini ki free quota ya rate limit poori ho gayi hai.';else if(r.status===503)detail=detail||'Render par GEMINI_API_KEY configured nahi hai.';else detail=detail||('Cloud API error: HTTP '+r.status);throw new Error(detail)}
-   say(data.reply||'Cloud received the message but returned no reply.',data.emotion);setStatus('CLOUD REPLIED · '+(data.mode||'API'));
+   setStatus('CLOUD REPLIED · '+(data.mode||'API'));say(data.reply||'Cloud received the message but returned no reply.',data.emotion,false,data.speech_text);
   }catch(e){
    if(requestId!==cloudRequestSequence)return;
    let message='Cloud request failed. Check the connection and try again.';
@@ -208,8 +208,8 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
  }
  let speechSequence=0;
  const voiceStyles={soft:[1.12,0.88],warm:[1.04,0.85],playful:[1.18,0.96]};
- function refreshVoices(){const status=$('voiceEngineStatus');if(window.JarvisBridge&&typeof window.JarvisBridge.speakNative==='function'){status.textContent='Android speech · Hoshi delivery';return}const voice=chooseVoice();status.textContent=voice?'Device speech · Hoshi delivery':'Device speech unavailable · check text-to-speech settings'}
- function chooseVoice(){if(!('speechSynthesis'in window))return null;const voices=window.speechSynthesis.getVoices();const lang=(commandLanguage||'ur-PK').toLowerCase(),base=lang.split('-')[0];const female=/female|uzma|zira|samantha|aria|jenny|sara|siri|victoria|eva|sonia|karen/i;const locale=v=>String(v.lang||'').toLowerCase();const exact=voices.filter(v=>locale(v)===lang),same=voices.filter(v=>locale(v).split('-')[0]===base);return exact.find(v=>female.test(v.name))||exact[0]||same.find(v=>female.test(v.name))||same[0]||voices.find(v=>locale(v).startsWith('hi')&&female.test(v.name))||voices.find(v=>female.test(v.name))||voices[0]||null}
+ function refreshVoices(){const status=$('voiceEngineStatus');if(window.JarvisBridge&&typeof window.JarvisBridge.supportsUrduSpeech==='function'&&window.JarvisBridge.supportsUrduSpeech()){status.textContent='Android Urdu speech ready';return}const voice=chooseVoice();status.textContent=voice?'Urdu / selected-language speech ready':'Selected-language voice unavailable · check text-to-speech settings'}
+ function chooseVoice(){if(!('speechSynthesis'in window))return null;const voices=window.speechSynthesis.getVoices();const lang=(commandLanguage||'ur-PK').toLowerCase(),base=lang.split('-')[0];const female=/female|uzma|zira|samantha|aria|jenny|sara|siri|victoria|eva|sonia|karen/i;const locale=v=>String(v.lang||'').toLowerCase();const exact=voices.filter(v=>locale(v)===lang),same=voices.filter(v=>locale(v).split('-')[0]===base);return exact.find(v=>female.test(v.name))||exact[0]||same.find(v=>female.test(v.name))||same[0]||(base==='ur'?null:voices.find(v=>female.test(v.name))||voices[0])||null}
  function saveVoiceSettings(){const pitch=Number($('pitchSlider').value),rate=Number($('rateSlider').value);$('pitchValue').textContent=pitch.toFixed(2)+'×';$('rateValue').textContent=rate.toFixed(2)+'×';try{localStorage.setItem('jarvisVoicePitch',String(pitch));localStorage.setItem('jarvisVoiceRate',String(rate));localStorage.removeItem('jarvisVoiceKey');if(!localStorage.getItem('hoshiVoiceStyle'))localStorage.setItem('hoshiVoiceStyle','soft')}catch(e){}}
  function applyVoiceStyle(style,persist=true){const key=voiceStyles[style]?style:'soft';const [pitch,rate]=voiceStyles[key];$('pitchSlider').value=pitch;$('rateSlider').value=rate;document.querySelectorAll('[data-voice-style]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.voiceStyle===key)));if(persist){try{localStorage.setItem('hoshiVoiceStyle',key)}catch(e){}}saveVoiceSettings()}
  function stopSpeaking(){speechSequence++;if(window.JarvisBridge&&typeof window.JarvisBridge.stopNativeSpeech==='function')window.JarvisBridge.stopNativeSpeech();if('speechSynthesis'in window)window.speechSynthesis.cancel();setSpeaking(false)}
@@ -230,14 +230,19 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
  function setEmotion(emotion){const allowed=["happy","sad","affectionate","excited","shy","concerned","annoyed","playful","thinking","caring"];const chosen=allowed.includes(emotion)?emotion:"caring";orb.dataset.emotion=chosen;orb.setAttribute("aria-label","HOSHI expression: "+chosen);const label=$("avatarLabel"),utility=$("utilityEmotion");if(label)label.textContent="HOSHI · "+chosen.toUpperCase();if(utility)utility.textContent=chosen.toUpperCase()}
   function setSpeaking(active){orb.classList.toggle('speaking',!!active)}
   window.hoshiSetSpeaking=setSpeaking;
+  window.hoshiUrduUnavailable=()=>{setSpeaking(false);setStatus('URDU VOICE NOT INSTALLED · CHECK ANDROID TEXT-TO-SPEECH')};
   window.hoshiVoiceError=()=>{setSpeaking(false);setStatus('VOICE OUTPUT FAILED · CHECK DEVICE TEXT-TO-SPEECH')};
- function say(text,emotion,preview=false){
+ function say(text,emotion,preview=false,speechText=null){
    const message=String(text||'');
    const currentEmotion=emotion||guessEmotion(message);
    setEmotion(currentEmotion);
    if(!preview){reply.textContent=message;rememberTurn('assistant',message)}
    if(!preview&&!voiceReplies)return;
    stopSpeaking();const speechId=speechSequence;
+   const urduMode=commandLanguage==='ur-PK';
+   const spokenMessage=String(speechText||message).replace(/[*_`#]/g,'').trim();
+   if(urduMode&&(!/[\u0600-\u06ff]/.test(spokenMessage)||/[\u0900-\u097f]/.test(spokenMessage))){setStatus('URDU SPEECH TEXT UNAVAILABLE · REPLY SHOWN IN CHAT');return}
+
    if(recognition&&listening){try{recognition.stop()}catch(e){}}
    const basePitch=Number($('pitchSlider').value)||1.12;
    const baseRate=Number($('rateSlider').value)||0.92;
@@ -245,22 +250,22 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
    const pitch=Math.max(0.8,Math.min(1.6,basePitch+voiceMood[0]));
    const rate=Math.max(0.75,Math.min(1.15,baseRate+voiceMood[1]));
    // One Hoshi delivery: use Android native speech first, browser speech as fallback.
-   if(window.JarvisBridge&&typeof window.JarvisBridge.speakNative==='function'){
-      const nativeStarted=window.JarvisBridge.speakNative(message,commandLanguage,pitch,rate); if(nativeStarted){setSpeaking(true);return;}
+   if(window.JarvisBridge&&typeof window.JarvisBridge.speakNative==='function'&&(!urduMode||(typeof window.JarvisBridge.supportsUrduSpeech==='function'&&window.JarvisBridge.supportsUrduSpeech()))){
+      const nativeStarted=window.JarvisBridge.speakNative(spokenMessage,commandLanguage,pitch,rate); if(nativeStarted){setSpeaking(true);return;}
    }
    if(!('speechSynthesis'in window)||typeof SpeechSynthesisUtterance==='undefined'){
      setStatus('VOICE OUTPUT UNAVAILABLE · CHECK DEVICE TEXT-TO-SPEECH');
      return;
    }
    const synth=window.speechSynthesis;synth.cancel();
-   const u=new SpeechSynthesisUtterance(message);
+   const u=new SpeechSynthesisUtterance(spokenMessage);
    const voice=chooseVoice();if(voice)u.voice=voice;
    u.lang=voice?voice.lang:commandLanguage;u.rate=rate;u.pitch=pitch;u.volume=1;
     u.onstart=()=>{if(speechId===speechSequence)setSpeaking(true)};
     u.onend=()=>{if(speechId!==speechSequence)return;setSpeaking(false);if(listening&&recognition){clearTimeout(restartTimer);restartTimer=setTimeout(()=>{try{recognition.start()}catch(e){}},350)}};
     u.onerror=e=>{if(speechId!==speechSequence)return;setSpeaking(false);if(e&&e.error!=='canceled'&&e.error!=='interrupted')setStatus('VOICE OUTPUT FAILED · CHECK DEVICE TEXT-TO-SPEECH')};
    let spoken=false;
-   const speak=()=>{if(spoken||speechId!==speechSequence)return;spoken=true;const current=chooseVoice();if(current){u.voice=current;u.lang=current.lang}synth.speak(u)};
+   const speak=()=>{if(spoken||speechId!==speechSequence)return;spoken=true;const current=chooseVoice();if(urduMode&&!current){setStatus('URDU VOICE NOT INSTALLED · CHECK ANDROID TEXT-TO-SPEECH');$('voiceEngineStatus').textContent='Urdu voice unavailable · install an Urdu voice or update the Hoshi APK';return}if(current){u.voice=current;u.lang=current.lang}synth.speak(u)};
    if(!synth.getVoices().length){
      const onVoices=()=>{synth.removeEventListener('voiceschanged',onVoices);refreshVoices();speak()};
      synth.addEventListener('voiceschanged',onVoices);setTimeout(speak,900);
@@ -272,19 +277,19 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
  const has=(patterns)=>patterns.some(p=>p.test(c));
  const reminder=window.JarvisBridge&&window.JarvisReminderParser?window.JarvisReminderParser(text):null;
  if(reminder&&reminder.title&&reminder.minutes>=1&&reminder.minutes<=10080&&window.JarvisBridge.scheduleReminder(reminder.title,reminder.minutes)){
-   say(commandLanguage==='ur-PK'?'Theek hai, reminder ki request bhej di hai. Notification permission maangi jaye to allow kar dena.':'Okay, I sent the local reminder request. Allow notifications if Android asks.');
+   say(commandLanguage==='ur-PK'?'Theek hai, reminder ki request bhej di hai. Notification permission maangi jaye to allow kar dena.':'Okay, I sent the local reminder request. Allow notifications if Android asks.',null,false,commandLanguage==='ur-PK'?'ٹھیک ہے، یاد دہانی کی درخواست بھیج دی ہے۔ اجازت مانگی جائے تو دے دیں۔':null);
    setStatus('LOCAL REMINDER REQUESTED');
    setTimeout(()=>orb.classList.remove('active'),900);
    return;
  }
- if(has([/\b(hello|hi|salam|assalam|hey hoshi)\b/,/السلام علیکم/,/سلام/]))say(commandLanguage==='ur-PK'?'Ji, main HOSHI hoon. Batayein, kya madad chahiye?':'I am online. Tell me what you need.');
- else if(window.JarvisCommandUtils&&window.JarvisCommandUtils.isTimeCommand(text))say(commandLanguage==='ur-PK'?'Abhi waqt '+new Date().toLocaleTimeString('en-PK',{hour:'numeric',minute:'2-digit'})+' hai.':'The time is '+new Date().toLocaleTimeString());
- else if(window.JarvisCommandUtils&&window.JarvisCommandUtils.isDateCommand(text))say(commandLanguage==='ur-PK'?'Aaj ki tareekh '+new Date().toLocaleDateString('en-GB')+' hai.':'Today is '+new Date().toLocaleDateString());
- else if(has([/\b(your name|who are you|tumhara naam|ap ka naam|aap ka naam)\b/,/تمہارا نام/,/آپ کا نام/]))say('Main HOSHI hoon, aap ki AI companion.');
- else if(has([/\b(open google|google kholo|google khol do|kholo google|google open)\b/,/گوگل کھولو/,/گوگل کھول دو/])){say(commandLanguage==='ur-PK'?'Google khol raha hoon.':'Opening Google.');window.open('https://www.google.com/','_blank','noopener')}
- else if(has([/\b(open youtube|youtube kholo|youtube khol do|kholo youtube|youtube open)\b/,/یوٹیوب کھولو/,/یوٹیوب کھول دو/])){say(commandLanguage==='ur-PK'?'YouTube khol raha hoon.':'Opening YouTube.');window.open('https://m.youtube.com/','_blank','noopener')}
+ if(has([/\b(hello|hi|salam|assalam|hey hoshi)\b/,/السلام علیکم/,/سلام/]))say(commandLanguage==='ur-PK'?'Ji, main HOSHI hoon. Batayein, kya madad chahiye?':'I am online. Tell me what you need.',null,false,commandLanguage==='ur-PK'?'جی، میں ہوشی ہوں۔ بتائیں، کیا مدد چاہیے؟':null);
+ else if(window.JarvisCommandUtils&&window.JarvisCommandUtils.isTimeCommand(text))say(commandLanguage==='ur-PK'?'Abhi waqt '+new Date().toLocaleTimeString('en-PK',{hour:'numeric',minute:'2-digit'})+' hai.':'The time is '+new Date().toLocaleTimeString(),null,false,commandLanguage==='ur-PK'?'ابھی وقت '+new Date().toLocaleTimeString('ur-PK',{hour:'numeric',minute:'2-digit'})+' ہے۔':null);
+ else if(window.JarvisCommandUtils&&window.JarvisCommandUtils.isDateCommand(text))say(commandLanguage==='ur-PK'?'Aaj ki tareekh '+new Date().toLocaleDateString('en-GB')+' hai.':'Today is '+new Date().toLocaleDateString(),null,false,commandLanguage==='ur-PK'?'آج کی تاریخ '+new Date().toLocaleDateString('ur-PK',{day:'numeric',month:'long',year:'numeric'})+' ہے۔':null);
+ else if(has([/\b(your name|who are you|tumhara naam|ap ka naam|aap ka naam)\b/,/تمہارا نام/,/آپ کا نام/]))say('Main HOSHI hoon, aap ki AI companion.',null,false,commandLanguage==='ur-PK'?'میں ہوشی ہوں، آپ کی اے آئی ساتھی۔':null);
+ else if(has([/\b(open google|google kholo|google khol do|kholo google|google open)\b/,/گوگل کھولو/,/گوگل کھول دو/])){say(commandLanguage==='ur-PK'?'Google khol raha hoon.':'Opening Google.',null,false,commandLanguage==='ur-PK'?'گوگل کھول رہی ہوں۔':null);window.open('https://www.google.com/','_blank','noopener')}
+ else if(has([/\b(open youtube|youtube kholo|youtube khol do|kholo youtube|youtube open)\b/,/یوٹیوب کھولو/,/یوٹیوب کھول دو/])){say(commandLanguage==='ur-PK'?'YouTube khol raha hoon.':'Opening YouTube.',null,false,commandLanguage==='ur-PK'?'یوٹیوب کھول رہی ہوں۔':null);window.open('https://m.youtube.com/','_blank','noopener')}
  else if(has([/\b(stop speaking|bolna band|chup ho jao)\b/,/بولنا بند/])){stopSpeaking();reply.textContent='Theek hai, voice reply rok di.'}
- else if(has([/^(help|madad|kya kar sakte ho|commands|what can you do)\b/,/مدد/,/کیا کر سکتے ہو/]))say('Main waqt aur tareekh bata sakta hoon, Google aur YouTube khol sakta hoon, aur Android app mein local reminders schedule kar sakta hoon. Basic Back, Home aur swipe controls ke liye aapki permission zaroori hai.');
+ else if(has([/^(help|madad|kya kar sakte ho|commands|what can you do)\b/,/مدد/,/کیا کر سکتے ہو/]))say('Main waqt aur tareekh bata sakta hoon, Google aur YouTube khol sakta hoon, aur Android app mein local reminders schedule kar sakta hoon. Basic Back, Home aur swipe controls ke liye aapki permission zaroori hai.',null,false,commandLanguage==='ur-PK'?'میں وقت اور تاریخ بتا سکتی ہوں۔ گوگل اور یوٹیوب کھول سکتی ہوں۔ فون میں یاد دہانی لگا سکتی ہوں۔ بنیادی فون کنٹرول کے لیے آپ کی اجازت ضروری ہے۔':null);
  else {reply.textContent='HOSHI soch rahi hai…';askCloud(text);return;}
  setStatus(listening?(wakeEnabled?'LISTENING FOR WAKE WORD':'LISTENING'):'READY');setTimeout(()=>orb.classList.remove('active'),900)
  }
@@ -295,7 +300,7 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
  recognition.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++){if(!e.results[i].isFinal)continue;const heard=e.results[i][0].transcript.trim();const lower=heard.toLowerCase();input.value=heard;
  if(!wakeEnabled){processCommand(heard);continue}
  if(awaitingCommand){awaitingCommand=false;processCommand(heard);continue}
- if(lower.includes('hey hoshi')||lower.includes('hey, hoshi')||lower.includes('a hoshi')){const after=heard.replace(/hey[, ]*hoshi/i,'').trim();if(after){processCommand(after)}else{awaitingCommand=true;setStatus('HOSHI AWAKE · SAY YOUR COMMAND');reply.textContent='I’m listening. What can I do for you?';if(voiceReplies&&'speechSynthesis'in window){window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance('Yes?');u.lang='en-US';u.onend=()=>{if(listening&&recognition){try{recognition.start()}catch(e){}}};window.speechSynthesis.speak(u)}}}
+ if(lower.includes('hey hoshi')||lower.includes('hey, hoshi')||lower.includes('a hoshi')){const after=heard.replace(/hey[, ]*hoshi/i,'').trim();if(after){processCommand(after)}else{awaitingCommand=true;setStatus('HOSHI AWAKE · SAY YOUR COMMAND');reply.textContent='I’m listening. What can I do for you?';if(voiceReplies)say(commandLanguage==='ur-PK'?'Ji, main sun rahi hoon.':'Yes, I am listening.','caring',true,commandLanguage==='ur-PK'?'جی، میں سن رہی ہوں۔':null)}}
  }}
  recognition.onerror=e=>{
   const error=String(e&&e.error||'unknown');
@@ -341,14 +346,14 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
  $('pitchSlider').addEventListener('input',saveVoiceSettings);$('rateSlider').addEventListener('input',saveVoiceSettings);
  document.querySelectorAll('[data-voice-style]').forEach(b=>b.addEventListener('click',()=>{stopSpeaking();applyVoiceStyle(b.dataset.voiceStyle)}));
  $('stopSpeakingBtn').onclick=()=>{stopSpeaking();setStatus('VOICE STOPPED')};
- $('previewVoiceBtn').onclick=()=>say(commandLanguage==='ur-PK'?'Suno… main Hoshi hoon. Aaram se batao, aaj tumhara din kaisa guzra?':'Hey… I am Hoshi. Take your time. Tell me about your day.','affectionate',true);
+ $('previewVoiceBtn').onclick=()=>say(commandLanguage==='ur-PK'?'Suno… main Hoshi hoon. Aaram se batao, aaj tumhara din kaisa guzra?':'Hey… I am Hoshi. Take your time. Tell me about your day.','affectionate',true,commandLanguage==='ur-PK'?'سنو، میں ہوشی ہوں۔ آرام سے بتاؤ، آج تمہارا دن کیسا گزرا؟':null);
  $('resetVoiceBtn').onclick=()=>{stopSpeaking();applyVoiceStyle('soft');setStatus('SOFT VOICE RESTORED')};
  if('speechSynthesis'in window){refreshVoices();window.speechSynthesis.addEventListener('voiceschanged',refreshVoices)}
  saveVoiceSettings();refreshVoices();
  $('wakeBtn').onclick=()=>startListening();$('stopBtn').onclick=stopListening;
  $('testBtn').onclick=()=>askCloud('Test connection. Tell me whether the JARVIS cloud API received this message.');
  $('speakToggle').onclick=()=>{voiceReplies=!voiceReplies;try{localStorage.setItem('hoshiVoiceReplies',String(voiceReplies))}catch(e){}$('speakToggle').textContent=voiceReplies?'🔊 Voice replies: ON':'🔇 Voice replies: OFF';$('utilityVoice').textContent=voiceReplies?'ON':'OFF';if(!voiceReplies)stopSpeaking()};
- $('languageToggle').onclick=()=>{commandLanguage=commandLanguage==='ur-PK'?'en-US':'ur-PK';try{localStorage.setItem('hoshiLanguage',commandLanguage)}catch(e){}$('languageToggle').textContent=commandLanguage==='ur-PK'?'🗣 Language: Urdu':'🗣 Language: English';if(listening){stopListening();startListening()}say(commandLanguage==='ur-PK'?'Urdu mode on. Ab Urdu ya Roman Urdu mein command bolain.':'English mode on. Speak your command in English.')};
+ $('languageToggle').onclick=()=>{commandLanguage=commandLanguage==='ur-PK'?'en-US':'ur-PK';try{localStorage.setItem('hoshiLanguage',commandLanguage)}catch(e){}$('languageToggle').textContent=commandLanguage==='ur-PK'?'🗣 Language: Urdu':'🗣 Language: English';refreshVoices();if(listening){stopListening();startListening()}say(commandLanguage==='ur-PK'?'Urdu mode on. Ab Urdu ya Roman Urdu mein command bolain.':'English mode on. Speak your command in English.',null,false,commandLanguage==='ur-PK'?'اردو زبان منتخب ہے۔ اب اردو میں بات کریں۔':null)};
  $('wakeToggle').onclick=()=>{wakeEnabled=!wakeEnabled;try{localStorage.setItem('hoshiWakeWord',String(wakeEnabled))}catch(e){}$('wakeToggle').textContent='Hey HOSHI: '+(wakeEnabled?'ON':'OFF');setStatus(listening?(wakeEnabled?'LISTENING FOR “HEY HOSHI”':'LISTENING'):'READY')};
  $('viewHistoryBtn').onclick=()=>{const panel=$('memoryPanel');if(panel)panel.scrollIntoView({behavior:'smooth',block:'start'})};
  $('screenshotQuickBtn').onclick=()=>{if(!window.JarvisBridge){setStatus('SCREENSHOT NEEDS THE HOSHI ANDROID APP');return}if(!window.JarvisBridge.isEnabled()){setStatus('ENABLE ANDROID ACCESSIBILITY FOR SCREENSHOT');window.JarvisBridge.requestSettings();return}const queued=window.JarvisBridge.performAction('screenshot');setStatus(queued?'SCREENSHOT ACTION REQUESTED · CHECK ANDROID SYSTEM UI':'SCREENSHOT ACTION UNAVAILABLE · ANDROID 9 OR NEWER REQUIRED')};

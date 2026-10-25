@@ -24,7 +24,7 @@ jobs:
           health=""
           for attempt in $(seq 1 30); do
             if health=$(curl -fsS --max-time 10 "$API_BASE/health"); then
-              if echo "$health" | jq -e ' .version == "0.7.0" and .gemini_api == "interactions" and .gemini_model == "gemini-3.8-flash" and .groq_model == "openai/gpt-oss-20b" and .ai_connected == true' >/dev/null; then
+              if echo "$health" | jq -e ' .version == "0.8.0" and .gemini_api == "interactions" and .gemini_model == "gemini-3.8-flash" and .groq_model == "openai/gpt-oss-20b" and .ai_connected == true' >/dev/null; then
                 echo "$health" | jq '{version, gemini_api, gemini_model, groq_model, groq_configured, ai_connected}'
                 break
               fi
@@ -35,6 +35,15 @@ jobs:
             fi
             sleep 5
           done
+      - name: Smoke test live BTC spot endpoint
+        env:
+          API_BASE: https://jarws-ai-2.onrender.com
+        run: |
+          set -euo pipefail
+          market=$(curl -fsS --max-time 25 "$API_BASE/api/market/btc")
+          echo "$market" | jq -e '.source == "Coinbase Exchange" and .symbol == "BTC-USD" and .market_type == "spot" and (.price_usd | type == "number" and . > 0) and (.high_24h_usd | type == "number") and (.low_24h_usd | type == "number") and (.change_24h_pct | type == "number")' >/dev/null
+          echo "PASS — Coinbase BTC-USD spot snapshot"
+          echo "$market" | jq '{source, symbol, price_usd, change_24h_pct, high_24h_usd, low_24h_usd}'
       - name: Send one live AI request
         env:
           API_BASE: https://jarws-ai-2.onrender.com

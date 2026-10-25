@@ -6,6 +6,7 @@ A mobile-first personal AI assistant prototype for Android, with a hosted AI bac
 
 - Hosted assistant dashboard with Urdu/Roman Urdu and English text commands.
 - Cloud AI using Gemini Interactions API with Groq as a fallback provider.
+- Read-only BTC-USD spot market snapshot (price, 24-hour change, high/low and volume) through the public Coinbase Exchange REST API; it does not place trades or provide futures/liquidation data.
 - Voice reply settings: choose an installed phone voice, adjust pitch/speed, and play a preview.
 - Generated anime avatar shown on the dashboard and the draggable Android floating icon.
 - Floating icon size slider, saved locally on the phone.
@@ -38,6 +39,7 @@ A mobile-first personal AI assistant prototype for Android, with a hosted AI bac
 
 - Dashboard: https://jarws-ai-1.onrender.com
 - Backend health: https://jarws-ai-2.onrender.com/health
+- BTC market snapshot: https://jarws-ai-2.onrender.com/api/market/btc
 - Repository: https://github.com/shani001223-droid/Jarws-ai-
 
 ## Next roadmap

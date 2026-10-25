@@ -61,6 +61,65 @@ class AssistantApiTests(unittest.TestCase):
         self.assertFalse(body["store"])
         self.assertIn("Roman Urdu", body["system_instruction"])
 
+    def test_btc_market_snapshot_combines_public_ticker_and_stats(self):
+        ticker = {
+            "price": "100.0",
+            "bid": "99.8",
+            "ask": "100.2",
+            "volume": "1400",
+            "time": "2026-10-25T10:00:00Z",
+        }
+        stats = {
+            "open": "80.0",
+            "high": "112.0",
+            "low": "72.0",
+            "last": "99.9",
+            "volume": "1200.5",
+            "volume_30day": "10000",
+        }
+        with patch.object(main, "_market_cache", {"payload": None, "fetched_at": 0.0}):
+            with patch("cloud_backend.main.time.monotonic", return_value=1000.0):
+                with patch(
+                    "cloud_backend.main.urlopen",
+                    side_effect=[FakeResponse(ticker), FakeResponse(stats)],
+                ) as mocked:
+                    result = main.btc_market()
+
+        self.assertEqual(result["source"], "Coinbase Exchange")
+        self.assertEqual(result["symbol"], "BTC-USD")
+        self.assertEqual(result["market_type"], "spot")
+        self.assertEqual(result["price_usd"], 100.0)
+        self.assertAlmostEqual(result["change_24h_pct"], 25.0)
+        self.assertEqual(result["high_24h_usd"], 112.0)
+        self.assertEqual(result["low_24h_usd"], 72.0)
+        self.assertEqual(result["volume_24h_btc"], 1200.5)
+        self.assertEqual(mocked.call_count, 2)
+        self.assertEqual(
+            mocked.call_args_list[0].args[0].full_url,
+            "https://api.exchange.coinbase.com/products/BTC-USD/ticker",
+        )
+        self.assertEqual(
+            mocked.call_args_list[1].args[0].full_url,
+            "https://api.exchange.coinbase.com/products/BTC-USD/stats",
+        )
+        self.assertEqual(
+            mocked.call_args_list[0].args[0].get_header("User-agent"),
+            "JARVIS-Cloud-Assistant/0.8.0 (+https://jarws-ai-1.onrender.com)",
+        )
+
+    def test_btc_market_snapshot_uses_short_cache(self):
+        cached = {
+            "source": "Coinbase Exchange",
+            "symbol": "BTC-USD",
+            "price_usd": 123.0,
+        }
+        with patch.object(main, "_market_cache", {"payload": cached, "fetched_at": 1000.0}):
+            with patch("cloud_backend.main.time.monotonic", return_value=1010.0):
+                with patch("cloud_backend.main.urlopen") as mocked:
+                    result = main.btc_market()
+        self.assertEqual(result["price_usd"], 123.0)
+        mocked.assert_not_called()
+
     def test_groq_403_error_is_diagnosable(self):
         error_body = io.BytesIO(json.dumps({"error": "Project does not have permission to use this model."}).encode("utf-8"))
         groq_error = HTTPError(

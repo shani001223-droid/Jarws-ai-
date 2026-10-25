@@ -9,6 +9,7 @@ HTML = (ROOT / "index.html").read_text(encoding="utf-8")
 SERVICE_WORKER = (ROOT / "sw.js").read_text(encoding="utf-8")
 BRIDGE = (ROOT / "android/app/src/main/java/com/valtron/jarvis/JarvisBridge.kt").read_text(encoding="utf-8")
 ACCESSIBILITY = (ROOT / "android/app/src/main/java/com/valtron/jarvis/JarvisAccessibilityService.kt").read_text(encoding="utf-8")
+MAIN_ACTIVITY = (ROOT / "android/app/src/main/java/com/valtron/jarvis/MainActivity.kt").read_text(encoding="utf-8")
 SPRITE_PATH = ROOT / "assets" / "hoshi-expressions.webp"
 
 
@@ -61,6 +62,17 @@ class FrontendContractTests(unittest.TestCase):
         self.assertIn("Build.VERSION.SDK_INT < Build.VERSION_CODES.P", BRIDGE)
         self.assertIn("GLOBAL_ACTION_TAKE_SCREENSHOT", ACCESSIBILITY)
         self.assertIn("Build.VERSION.SDK_INT >= Build.VERSION_CODES.P", ACCESSIBILITY)
+
+    def test_voice_speaking_state_and_network_timeouts_are_wired(self):
+        self.assertIn("window.hoshiSetSpeaking=setSpeaking", HTML)
+        self.assertIn("u.onstart=()=>setSpeaking(true)", HTML)
+        self.assertIn("u.onerror=e=>", HTML)
+        self.assertIn("AbortController", HTML)
+        self.assertIn("65000", HTML)
+        self.assertIn("7000", HTML)
+        self.assertIn("setOnUtteranceProgressListener", MAIN_ACTIVITY)
+        self.assertIn("window.hoshiSetSpeaking", MAIN_ACTIVITY)
+        self.assertIn("window.hoshiVoiceError", MAIN_ACTIVITY)
 
     def test_memory_controls_and_local_preferences_are_present(self):
         for element_id in ("chatHistory", "memoryToggle", "clearMemoryBtn", "voiceSelect",

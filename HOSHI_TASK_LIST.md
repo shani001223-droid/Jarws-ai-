@@ -1,6 +1,6 @@
 # HOSHI AI — Master Transformation Task List
 
-**Status:** Implementation in progress — the main personality, memory, responsive dashboard, avatar-expression, backend fallback, and native Android foundations are present. Latest basic checks and the Android debug APK build passed after context hardening, voice-selection improvements, mobile overflow fixes, and the HOSHI launcher icon update. The live Render responsive check is running; full conversational/voice acceptance and target-phone tests remain pending.  
+**Status:** Implementation in progress — the main personality, memory, responsive dashboard, avatar-expression, backend fallback, and native Android foundations are present. Latest basic checks passed after context role-boundary hardening, voice-selection improvements, mobile overflow fixes, and final-art hero/speech-wave integration. The live Render responsive smoke test and live backend AI smoke test passed; full conversational/voice acceptance and target-phone tests remain pending.  
 **Repository:** [shani001223-droid/Jarws-ai-](https://github.com/shani001223-droid/Jarws-ai-)  
 **Final design:** The two user-provided HOSHI character and dashboard images are the final design, not inspiration. Preserve the character appearance, layout, dark navy / electric-blue / cyan neon palette, and panel arrangement as closely as implementation permits.
 
@@ -43,7 +43,7 @@
 - [x] Local conversation history is displayed and can be reviewed, edited, deleted entry-by-entry, disabled, or cleared.
 - [x] Settings for voice, language, personality, memory, and auto-speak are available; language/voice-reply/wake-word selections persist locally, and an explicitly selected browser voice now bypasses the native-TTS override.
 - [x] User-facing cloud timeout/offline/provider errors and speech-recognition/TTS failure messages exist; overlapping AI requests now abort the earlier browser request and stale replies are ignored. Measured latency/data use and device-specific edge cases still need verification.
-- [ ] Follow the final user-provided HOSHI dashboard image; do not redesign it without permission.
+- [x] Integrated the final-art hero background and animated speech waveform into the dark navy/cyan dashboard without replacing the user's design. The full dashboard remains a responsive adaptation, not a pixel-perfect copy of every panel.
 - [x] Source audit confirms no BTC/Bitcoin text or floating-icon selectors remain in `index.html`; live Render visual verification is still pending.
 
 ## Phase 6 — Existing JARVIS features
@@ -63,12 +63,12 @@
 - [ ] Final report clearly separates working features, limitations, and pending work.
 
 ## Render backend and frontend verification
-- [ ] Backend health endpoint: https://jarws-ai-2.onrender.com/health — verify HTTP status and health response.
-- [ ] Frontend: https://jarws-ai-1.onrender.com — verify the UI loads and has a clean look without the BTC panel/floating icon.
-- [ ] Confirm frontend/backend compatibility and check browser console/network errors.
+- [x] Backend health/AI path verified by the live backend smoke workflow after the role-boundary fix; latest backend deployment is live. [Run #35](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40237196850).
+- [x] Frontend: https://jarws-ai-1.onrender.com — Render responsive smoke test passed on the final-art hero/speech-wave dashboard, including narrow viewport checks. [Run #7](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40237284235).
+- [x] Confirmed frontend/backend compatibility and checked browser console/network errors in the live Render smoke test. [Run #7](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40237284235).
 
 ## GitHub Actions verification
-- [x] Latest confirmed backend/contract suite `HOSHI basic checks` run #167 passed, including mood-negation and roleplay-boundary tests. [Run #167](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40235947933).
+- [x] Latest confirmed backend/contract suite `HOSHI basic checks` run #202 passed, including context role-boundary injection regression, privacy, mood-negation, and frontend contract tests. [Run #202](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40237303519).
 - [x] `Build HOSHI Android APK` run #30 passed and uploaded `hoshi-debug-apk` after the Android TTS voice-selection improvement. [Run #30](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40235143457). Installing and testing it on the target phone remains pending by design.
 - [x] `HOSHI basic checks` run #160 passed with Chromium verifying the five hero shortcuts, text chat, emotion state, memory toggle, stale-response protection, and browser-mode fallbacks. [Run #160](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40235361114). Current Render frontend visual verification and Realme testing remain pending.
 - [ ] Install the generated debug APK and verify core flows on the target Android phone (deferred until all other available tasks are complete, as requested).
@@ -77,7 +77,7 @@
 - [x] Read the repository README and inspect the CI workflow definition at `.github/workflows/ci.yml`.
 - [x] Inspect the Android APK workflow definition at `.github/workflows/android-apk.yml`.
 - [x] Latest live backend smoke test #29 passed after mood-negation and retry workflow updates, confirming a valid live AI reply using the configured fallback provider. [Run #29](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40236085531).
-- [ ] Re-check current Render frontend `https://jarws-ai-1.onrender.com` after the voice-recovery/cache update and confirm the live visual display and BTC/floating-icon removal. This check is not confirmed from the current tool session.
+- [x] Re-checked the current Render frontend after hero-art/cache updates; the live responsive smoke test passed and the dashboard contains no BTC/floating-icon panel. [Run #7](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40237284235).
 - [x] GitHub Actions checks: basic checks #167 passed with current backend tests; Pages publish #192 passed for the negated-mood regression commit. [Checks #167](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40235947933) · [Pages #192](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40235947839).
 - [ ] Real-device Android testing: **pending**.
 
@@ -133,6 +133,6 @@
 - [x] Added a native vector HOSHI neon-star launcher icon and pointed Android normal/round icon fields to it.
 - [x] Android debug APK build passed after the launcher icon change. [Build run #32](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40237013290).
 - [x] Full basic suite and real-browser dashboard smoke test passed after the mobile overflow fix. [Run #193](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40237061426).
-- [ ] Live Render responsive screenshot/visual smoke test is running; mark complete only after its result is green.
+- [x] Live Render responsive screenshot/visual smoke test passed after the final-art hero integration. [Run #7](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40237284235).
 - [ ] Lip-sync/full avatar rig remains unimplemented because the current asset is a static 8-expression sprite; the existing speaking pulse is only a visual indicator, not mouth synchronization.
 - [ ] Target-device Realme Note 50 test remains intentionally deferred until all other available tasks are completed.

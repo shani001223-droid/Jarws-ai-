@@ -1,5 +1,5 @@
-const CACHE_NAME = "jarvis-shell-v5";
-const APP_SHELL = ["./", "./index.html", "./manifest.json", "./reminder-parser.js"];
+const CACHE_NAME = "jarvis-shell-v6";
+const APP_SHELL = ["./", "./index.html", "./manifest.json", "./reminder-parser.js", "./assistant-commands.js"];
 
 self.addEventListener("install", event => {
   event.waitUntil(

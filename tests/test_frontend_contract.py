@@ -54,6 +54,9 @@ class FrontendContractTests(unittest.TestCase):
         self.assertIn('url("./assets/hoshi-hero-background.svg")', HTML)
         self.assertIn('<span class="speech-wave" aria-hidden="true">', HTML)
         self.assertIn(".orb.speaking .speech-wave{opacity:1}", HTML)
+        self.assertIn(".orb.speaking .companion-avatar::after", HTML)
+        self.assertIn("@keyframes hoshi-mouth-lite", HTML)
+        self.assertIn(".orb.speaking .companion-avatar::after{animation:none!important}", HTML)
         self.assertIn("@media(prefers-reduced-motion:reduce)", HTML)
 
     def test_each_ui_emotion_selects_a_character_expression(self):

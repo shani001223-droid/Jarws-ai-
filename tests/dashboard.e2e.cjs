@@ -124,16 +124,16 @@ async function main() {
 
     await page.goto(url, { waitUntil: "domcontentloaded" });
     assert.equal(await page.title(), "HOSHI — AI Companion");
-    await page.locator("#connection").getByText("AI KEYS CONFIGURED").waitFor({ timeout: 5000 });
+    await page.waitForFunction(() => document.querySelector("#connection")?.textContent === "AI KEYS CONFIGURED", undefined, { timeout: 5000 });
 
     // Local command path should work without a cloud call.
     await page.locator('[data-cmd="what time is it"]').click();
-    await page.locator("#reply").getByText(/Abhi waqt|The time is/).waitFor({ timeout: 3000 });
+    await page.waitForFunction(() => /Abhi waqt|The time is/.test(document.querySelector("#reply")?.textContent || ""), undefined, { timeout: 3000 });
 
     // Cloud chat should display the reply and change the expression.
     await page.locator("#commandInput").fill("How can you help me?");
     await page.locator('#commandForm button[type="submit"]').click();
-    await page.locator("#reply").getByText("I can help you plan, explain, and create.").waitFor({ timeout: 5000 });
+    await page.waitForFunction(() => document.querySelector("#reply")?.textContent === "I can help you plan, explain, and create.", undefined, { timeout: 5000 });
     assert.equal(await page.locator("#orb").getAttribute("data-emotion"), "affectionate");
     const firstRequest = apiMessages.find(item => item.message === "How can you help me?");
     assert.ok(firstRequest, "Expected the chat to reach the mocked cloud API");
@@ -147,21 +147,17 @@ async function main() {
     await page.locator('#commandForm button[type="submit"]').click();
     await page.waitForFunction(() => {
       const box = document.querySelector("#reply");
-      return box && box.textContent === "older slow request";
-    }, { timeout: 3000 }).catch(() => {});
+      return box && box.textContent.includes("soch rahi hai");
+    }, undefined, { timeout: 3000 }).catch(() => {});
     await page.waitForFunction(() => {
-      const state = window.__hoshiE2EState;
-      return true;
-    }, { timeout: 1000 }).catch(() => {});
-    await page.waitForFunction(() => {
-      const form = document.querySelector("#commandForm");
-      return form && document.querySelector("#commandInput") && document.querySelector("#commandInput").value === "";
-    }, { timeout: 3000 });
-    // The route is invoked once the fetch reaches the API; allow it to arrive before superseding it.
-    await page.waitForFunction(() => true, { timeout: 50 }).catch(() => {});
+      const input = document.querySelector("#commandInput");
+      return input && input.value === "";
+    }, undefined, { timeout: 3000 });
+    // Ensure the first request reaches the mocked API before superseding it.
+    await page.waitForTimeout(100);
     await page.locator("#commandInput").fill("newer fast request");
     await page.locator('#commandForm button[type="submit"]').click();
-    await page.locator("#reply").getByText("NEW RESPONSE").waitFor({ timeout: 5000 });
+    await page.waitForFunction(() => document.querySelector("#reply")?.textContent === "NEW RESPONSE", undefined, { timeout: 5000 });
     await page.waitForTimeout(650);
     assert.equal(await page.locator("#reply").innerText(), "NEW RESPONSE",
       "A late response from an earlier request must not replace the latest reply");
@@ -169,7 +165,7 @@ async function main() {
     // Memory off should disclose the state and clear local conversation history.
     await page.locator("#memoryToggle").click();
     assert.match(await page.locator("#chatHistory").innerText(), /Local memory is off/);
-    assert.equal(await page.evaluate(() => localStorage.getItem("hoshiConversationV1")), null,
+    assert.equal(await page.evaluate(() => localStorage.getItem("hoshiConversationMemoryV1")), null,
       "Turning memory off should clear stored conversation history");
 
     // Unsupported native bridge action should fail clearly instead of throwing.

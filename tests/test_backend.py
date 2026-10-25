@@ -24,6 +24,12 @@ class FakeResponse:
 
 class AssistantApiTests(unittest.TestCase):
 
+    def test_emotion_classifier_handles_roman_urdu_and_playfulness(self):
+        self.assertEqual(main.classify_emotion("Mujhe bohat khushi ho rahi hai", "Yay!"), "happy")
+        self.assertEqual(main.classify_emotion("Aaj dil udaas hai", "Main sun rahi hoon."), "sad")
+        self.assertEqual(main.classify_emotion("Chalo thori masti karte hain", "Haha!"), "playful")
+        self.assertEqual(main.classify_emotion("Can you explain this?", "Let's think it through."), "thinking")
+
     def test_health_reports_interactions_api_and_provider_flags(self):
         with patch.dict(os.environ, {
             "GEMINI_API_KEY": "test-gemini-key",

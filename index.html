@@ -222,7 +222,7 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
  else if(has([/\b(open google|google kholo|google khol do|kholo google|google open)\b/,/گوگل کھولو/,/گوگل کھول دو/])){say(commandLanguage==='ur-PK'?'Google khol raha hoon.':'Opening Google.');window.open('https://www.google.com/','_blank','noopener')}
  else if(has([/\b(open youtube|youtube kholo|youtube khol do|kholo youtube|youtube open)\b/,/یوٹیوب کھولو/,/یوٹیوب کھول دو/])){say(commandLanguage==='ur-PK'?'YouTube khol raha hoon.':'Opening YouTube.');window.open('https://m.youtube.com/','_blank','noopener')}
  else if(has([/\b(stop speaking|bolna band|chup ho jao)\b/,/بولنا بند/])){if(window.JarvisBridge&&typeof window.JarvisBridge.stopNativeSpeech==='function')window.JarvisBridge.stopNativeSpeech();if('speechSynthesis'in window)window.speechSynthesis.cancel();reply.textContent='Theek hai, voice reply rok di.'}
- else if(has([/\b(help|madad|kya kar sakte ho|commands)\b/,/مدد/,/کیا کر سکتے ہو/]))say('Main waqt aur tareekh bata sakta hoon, Google aur YouTube khol sakta hoon, aur Android app mein local reminders schedule kar sakta hoon. Basic Back, Home aur swipe controls ke liye aapki permission zaroori hai.');
+ else if(has([/^(help|madad|kya kar sakte ho|commands|what can you do)\b/,/مدد/,/کیا کر سکتے ہو/]))say('Main waqt aur tareekh bata sakta hoon, Google aur YouTube khol sakta hoon, aur Android app mein local reminders schedule kar sakta hoon. Basic Back, Home aur swipe controls ke liye aapki permission zaroori hai.');
  else {reply.textContent='HOSHI soch rahi hai…';askCloud(text);return;}
  setStatus(listening?(wakeEnabled?'LISTENING FOR WAKE WORD':'LISTENING'):'READY');setTimeout(()=>orb.classList.remove('active'),900)
  }

@@ -10,7 +10,7 @@ A mobile-first personal AI assistant prototype for Android, with a hosted AI bac
 - Generated anime avatar shown on the dashboard and the draggable Android floating icon.
 - Floating icon size slider, saved locally on the phone.
 - The floating service has a persistent Android notification and an explicit Stop action.
-- Local one-shot reminders can be scheduled from the native button or by typing commands such as “remind me to drink water in 10 minutes.” They use Android notifications and are scheduled again after reboot, without needing cloud AI to trigger.
+- Local one-shot reminders can be scheduled from the native button or by typing commands such as “remind me to drink water in 10 minutes,” “remind me in 2 hours to call mom,” or “mujhe 10 minute baad pani peene yaad dilao.” They use Android notifications and are scheduled again after reboot, without needing cloud AI to trigger.
 - Optional user-triggered Accessibility actions: Back, Home, Swipe up, and Swipe down. The service does not retrieve screen content or upload screen text.
 - GitHub Actions runs Python tests, JavaScript syntax checks, a live backend smoke test, and an Android debug APK build.
 

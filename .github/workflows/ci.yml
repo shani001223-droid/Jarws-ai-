@@ -30,6 +30,10 @@ jobs:
         run: python -m pip install -r cloud_backend/requirements.txt
       - name: Run backend unit tests
         run: python -m unittest discover -s tests -p "test_*.py"
+      - name: Test natural-language reminder parser
+        run: node --test tests/reminder-parser.test.cjs
+      - name: Check reminder parser JavaScript syntax
+        run: node --check reminder-parser.js
       - name: Check service worker JavaScript syntax
         run: node --check sw.js
       - name: Check dashboard inline JavaScript syntax

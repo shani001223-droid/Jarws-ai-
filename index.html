@@ -47,6 +47,7 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
 <div class="section"><h2>TRY A COMMAND</h2><p class="small">“Hey JARVIS” · “What time is it?” · “Open Google” · “Open YouTube” · “Help” · “Stop speaking”</p><div class="quick"><button data-cmd="what time is it">Time</button><button data-cmd="today's date">Date</button><button data-cmd="open Google">Google</button><button data-cmd="open YouTube">YouTube</button><button data-cmd="help">Help</button></div></div>
 <footer>Basic commands, time/date, Google and YouTube are available. Urdu/Roman Urdu and English commands supported where browser speech recognition permits.<br>AI keys may be configured while provider quota or permissions still prevent replies. Live AI access is checked when you send a message. Advanced phone control requires native Android permissions.</footer>
 </main>
+<script src="./reminder-parser.js"></script>
 <script>
 (()=> {
  const $=id=>document.getElementById(id), status=$('status'), reply=$('reply'), input=$('commandInput'), orb=$('orb');
@@ -65,22 +66,11 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
  function chooseVoice(){const voices=window.speechSynthesis.getVoices();const selected=$('voiceSelect').value;if(selected){const found=voices.find(v=>voiceKey(v)===selected);if(found)return found}const lang=(commandLanguage||'ur-PK').toLowerCase();const base=lang.split('-')[0];const female=/female|zira|samantha|aria|jenny|sara|siri|victoria|eva|sonia|karen|google.*female/i;return voices.find(v=>female.test(v.name)&&v.lang.toLowerCase().startsWith(base))||voices.find(v=>base==='ur'&&v.lang.toLowerCase().startsWith('hi'))||voices.find(v=>v.lang.toLowerCase().startsWith(base))||voices.find(v=>female.test(v.name))||voices[0]||null}
  function saveVoiceSettings(){const pitch=Number($('pitchSlider').value);const rate=Number($('rateSlider').value);$('pitchValue').textContent=pitch.toFixed(2)+'×';$('rateValue').textContent=rate.toFixed(2)+'×';try{localStorage.setItem('jarvisVoicePitch',String(pitch));localStorage.setItem('jarvisVoiceRate',String(rate));localStorage.setItem('jarvisVoiceKey',$('voiceSelect').value)}catch(e){}}
  function say(text){reply.textContent=text;if(!voiceReplies||!('speechSynthesis'in window))return;const synth=window.speechSynthesis;synth.cancel();if(recognition&&listening){try{recognition.stop()}catch(e){}}const u=new SpeechSynthesisUtterance(text);const voice=chooseVoice();if(voice)u.voice=voice;u.lang=voice?voice.lang:commandLanguage;u.rate=Number($('rateSlider').value)||0.91;u.pitch=Number($('pitchSlider').value)||1.22;u.volume=1;u.onend=()=>{if(listening&&recognition){clearTimeout(restartTimer);restartTimer=setTimeout(()=>{try{recognition.start()}catch(e){}},350)}};let spoken=false;const speak=()=>{if(spoken)return;spoken=true;const current=chooseVoice();if(current){u.voice=current;u.lang=current.lang}synth.speak(u)};if(!synth.getVoices().length){const onVoices=()=>{synth.removeEventListener('voiceschanged',onVoices);refreshVoices();speak()};synth.addEventListener('voiceschanged',onVoices);setTimeout(speak,900)}else speak()}
- function parseReminderCommand(raw){
-   const toMinutes=(amount,unit)=>{const n=Number(amount),u=String(unit).toLowerCase();if(/hour|hr|ghant/.test(u))return n*60;if(/day|din/.test(u))return n*1440;return n};
-   let m=raw.match(/(?:remind me|set a reminder)(?:\\s+to)?\\s+(.+?)\\s+(?:in|after)\\s+(\\d+)\\s*(minutes?|mins?|m|hours?|hrs?|days?)\\b/i);
-   if(m)return {title:m[1].trim(),minutes:toMinutes(m[2],m[3])};
-   m=raw.match(/(?:remind me|set a reminder)\\s+(?:in|after)\\s+(\\d+)\\s*(minutes?|mins?|m|hours?|hrs?|days?)\\s+(?:to\\s+)?(.+)/i);
-   if(m)return {title:m[3].trim(),minutes:toMinutes(m[1],m[2])};
-   m=raw.match(/^(?:mujhe\\s+)?(\\d+)\\s*(minutes?|mins?|m|ghanta|ghante|hours?|hrs?|din|days?)\\s+(?:baad|mein|me)\\s+(.+?)\\s+(?:ki\\s+)?yaad\\s+(?:dilao|dilana|dila\\s+dena)$/i);
-   if(m)return {title:m[3].trim(),minutes:toMinutes(m[1],m[2])};
-   m=raw.match(/^(?:mujhe\\s+)?(.+?)\\s+(\\d+)\\s*(minutes?|mins?|m|ghanta|ghante|hours?|hrs?|din|days?)\\s+(?:baad|mein|me)\\s+yaad\\s+(?:dilao|dilana|dila\\s+dena)$/i);
-   if(m)return {title:m[1].trim(),minutes:toMinutes(m[2],m[3])};
-   return null;
- }
+
  function processCommand(raw){const text=raw.trim(),c=text.toLowerCase().replace(/[!?.,،۔]/g,' ').replace(/\\s+/g,' ').trim();if(!c)return;
  setStatus('PROCESSING…');orb.classList.add('active');
  const has=(patterns)=>patterns.some(p=>p.test(c));
- const reminder=window.JarvisBridge?parseReminderCommand(text):null;
+ const reminder=window.JarvisBridge&&window.JarvisReminderParser?window.JarvisReminderParser(text):null;
  if(reminder&&reminder.title&&reminder.minutes>=1&&reminder.minutes<=10080&&window.JarvisBridge.scheduleReminder(reminder.title,reminder.minutes)){
    say(commandLanguage==='ur-PK'?'Theek hai, reminder ki request bhej di hai. Notification permission maangi jaye to allow kar dena.':'Okay, I sent the local reminder request. Allow notifications if Android asks.');
    setStatus('LOCAL REMINDER REQUESTED');

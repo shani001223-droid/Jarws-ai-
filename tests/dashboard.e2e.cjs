@@ -190,8 +190,9 @@ async function main() {
       "Current follow-up must not be duplicated in context");
 
     // The speaking indicator responds to the native/browser TTS bridge state.
+    await page.evaluate(() => window.hoshiSetSpeaking(true));
+    await page.waitForFunction(() => getComputedStyle(document.querySelector('.speech-wave')).opacity === '1');
     const speakingState = await page.evaluate(() => {
-      window.hoshiSetSpeaking(true);
       const wave = document.querySelector(".speech-wave");
       const active = {
         speakingClass: document.querySelector("#orb")?.classList.contains("speaking"),
@@ -201,13 +202,13 @@ async function main() {
           return avatar ? getComputedStyle(avatar, "::after").opacity : null;
         })(),
       };
-      window.hoshiSetSpeaking(false);
       return active;
     });
     assert.equal(speakingState.speakingClass, true, "Speaking state should activate the avatar");
     assert.equal(speakingState.waveOpacity, "1", "Speaking waveform should become visible");
     assert.ok(Number(speakingState.mouthOpacity) > 0.5,
       "The mouth overlay should animate into its speaking state");
+    await page.evaluate(() => window.hoshiSetSpeaking(false));
     const stoppedState = await page.locator(".companion-avatar").evaluate(node => ({
       mouthOpacity: getComputedStyle(node, "::after").opacity,
       speaking: node.closest("#orb")?.classList.contains("speaking"),

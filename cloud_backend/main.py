@@ -76,6 +76,50 @@ def classify_emotion(message: str, reply: str) -> str:
     return "caring"
 
 
+
+def _classify_text_mood(text: str) -> str:
+    """Use lightweight, language-aware phrase rules as a safe mood signal."""
+    value = str(text or "").casefold()
+    rules = (
+        ("sad", ("udaas", "udaasi", "dukhi", "sad", "heartbroken", "ro raha", "ro rahi", "rona aa", "dil toot", "feeling low")),
+        ("annoyed", ("gussa", "ghussa", "naraz", "angry", "annoyed", "tang aa gaya", "tang aa gayi", "fed up", "frustrated", "irritated")),
+        ("anxious", ("pareshan", "tension", "worried", "anxious", "anxiety", "darr lag", "dar lag", "afraid", "scared", "stress ho", "ghabra")),
+        ("affectionate", ("pyar", "pyaar", "love you", "miss you", "jaan", "sweetheart", "romantic", "hug")),
+        ("playful", ("mazaq", "mazak", "masti", "joke", "tease", "haha", "hehe", "lol", "funny")),
+        ("positive", ("khush", "khushi", "happy", "great", "shukriya", "thank you", "thanks", "zabardast", "amazing", "😊", "😄")),
+        ("curious", ("kyun", "kaise", "why", "how", "explain", "samjhao", "analyze", "analyse")),
+    )
+    for mood, phrases in rules:
+        if any(phrase in value for phrase in phrases):
+            return mood
+    return "neutral"
+
+
+def detect_user_mood(message: str, context: Optional[list[str]] = None) -> str:
+    """Detect explicit mood first; carry it forward only across short acknowledgements."""
+    current = _classify_text_mood(message)
+    if current != "neutral":
+        return current
+
+    normalized = " ".join(str(message or "").casefold().strip().split()).strip(" .,!؟?")
+    short_acknowledgements = {
+        "hmm", "hmmm", "hmm ok", "hmm okay", "ok", "okay", "acha", "achha",
+        "theek hai", "theek", "haan", "han", "yes", "huh", "hmm acha",
+        "hmm theek", "acha theek hai",
+    }
+    if normalized not in short_acknowledgements:
+        return "neutral"
+
+    # Only inspect the most recent prior user turn. Do not resurrect an old mood
+    # across unrelated topics if that latest turn did not contain a clear signal.
+    for entry in reversed((context or [])[-8:]):
+        item = str(entry or "").strip()
+        role, separator, content = item.partition(":")
+        if not separator or role.strip().casefold() != "user":
+            continue
+        return _classify_text_mood(content)
+    return "neutral"
+
 def _groq_reply(message: str, language_hint: str) -> str:
     """Ask Groq using its OpenAI-compatible chat completions API."""
     api_key = os.getenv("GROQ_API_KEY", "").strip()
@@ -210,9 +254,21 @@ def assistant(payload: AssistantRequest):
         "calm": "Use a calm, soft, thoughtful tone and avoid excessive teasing.",
     }
     style_hint = style_modes.get(str(payload.personality or "balanced").casefold(), style_modes["balanced"])
+    user_mood = detect_user_mood(message, recent_context)
+    mood_guidance = {
+        "sad": "The user may be sad; respond gently, listen first, and avoid jokes unless invited.",
+        "annoyed": "The user may be frustrated; stay respectful, acknowledge the issue, and do not escalate.",
+        "anxious": "The user may be anxious; be calm, clear, reassuring without false promises, and practical.",
+        "affectionate": "The user is using affectionate language; respond warmly but keep role-play fictional and age-appropriate.",
+        "playful": "The user sounds playful; light humor or teasing is welcome when it fits.",
+        "positive": "The user sounds positive; share their upbeat tone without becoming over-the-top.",
+        "curious": "The user seems curious; answer directly and explain the reasoning clearly.",
+        "neutral": "No strong mood signal is clear; use a natural, balanced tone and do not assume a feeling.",
+    }.get(user_mood, "Use a natural, balanced tone.")
 
     language_hint = (
         "You are HOSHI, a warm, clever, playful AI companion with a consistent identity. "
+        + "Likely user mood: " + user_mood + ". " + mood_guidance + " "
         + style_hint + " "
         "Use the user's language: if they write Roman Urdu, answer in natural Pakistani Roman Urdu; "
         "otherwise match their language. Keep replies conversational, specific, and varied rather than scripted. "

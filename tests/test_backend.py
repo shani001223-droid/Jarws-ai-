@@ -38,7 +38,7 @@ class AssistantApiTests(unittest.TestCase):
         self.assertEqual(main.detect_user_mood("I am really frustrated"), "annoyed")
         self.assertEqual(main.detect_user_mood("Mujhe bohat tension ho rahi hai"), "anxious")
         self.assertEqual(main.detect_user_mood("Chalo thori masti karte hain"), "playful")
-        self.assertEqual(main.detect_user_mood("Tum kaisay ho?"), "curious")
+        self.assertEqual(main.detect_user_mood("Kaise kaam karta hai?"), "curious")
         self.assertEqual(main.detect_user_mood("Hello HOSHI"), "neutral")
 
     def test_user_mood_continues_only_for_short_acknowledgements(self):

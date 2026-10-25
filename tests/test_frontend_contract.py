@@ -7,6 +7,8 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 HTML = (ROOT / "index.html").read_text(encoding="utf-8")
 SERVICE_WORKER = (ROOT / "sw.js").read_text(encoding="utf-8")
+BRIDGE = (ROOT / "android/app/src/main/java/com/valtron/jarvis/JarvisBridge.kt").read_text(encoding="utf-8")
+ACCESSIBILITY = (ROOT / "android/app/src/main/java/com/valtron/jarvis/JarvisAccessibilityService.kt").read_text(encoding="utf-8")
 SPRITE_PATH = ROOT / "assets" / "hoshi-expressions.webp"
 
 
@@ -50,6 +52,15 @@ class FrontendContractTests(unittest.TestCase):
         for emotion in emotions:
             selector = rf'\.orb\[data-emotion="{emotion}"\] \.companion-avatar\{{background-position:'
             self.assertRegex(HTML, selector, f"No sprite position for {emotion}")
+
+    def test_android_screenshot_is_explicit_and_api_gated(self):
+        self.assertIn('id="screenshotQuickBtn"', HTML)
+        self.assertIn('data-screen-action="screenshot"', HTML)
+        self.assertIn("does not inspect screen text or upload screenshots", HTML)
+        self.assertIn('"screenshot"', BRIDGE)
+        self.assertIn("Build.VERSION.SDK_INT < Build.VERSION_CODES.P", BRIDGE)
+        self.assertIn("GLOBAL_ACTION_TAKE_SCREENSHOT", ACCESSIBILITY)
+        self.assertIn("Build.VERSION.SDK_INT >= Build.VERSION_CODES.P", ACCESSIBILITY)
 
     def test_memory_controls_and_local_preferences_are_present(self):
         for element_id in ("chatHistory", "memoryToggle", "clearMemoryBtn", "voiceSelect",

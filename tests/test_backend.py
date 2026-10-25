@@ -93,6 +93,7 @@ class AssistantApiTests(unittest.TestCase):
         self.assertIn("Roman Urdu", body["system_instruction"])
         self.assertIn("playful teasing", body["system_instruction"])
         self.assertIn("Maintain continuity with recent turns", body["system_instruction"])
+        self.assertIn("Do not repeat greetings, stock lines", body["system_instruction"])
         self.assertIn("warm reconciliation", body["system_instruction"])
         self.assertIn("Never use fake distress", body["system_instruction"])
 

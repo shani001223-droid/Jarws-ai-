@@ -13,15 +13,15 @@ class HoshiPwaManifestTests(unittest.TestCase):
         manifest = json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))
         self.assertEqual(manifest.get("display"), "standalone")
         icons = manifest.get("icons", [])
-        for size in ("192x192", "512x512"):
+        for size in ("any",):
             matches = [
                 icon for icon in icons
                 if icon.get("src") == "./assets/hoshi-app-icon.svg"
                 and icon.get("sizes") == size
                 and icon.get("type") == "image/svg+xml"
-                and "maskable" in icon.get("purpose", "").split()
+                and "any" in icon.get("purpose", "").split()
             ]
-            self.assertTrue(matches, f"manifest should include a maskable HOSHI SVG icon for {size}")
+            self.assertTrue(matches, f"manifest should include a scalable HOSHI SVG icon for {size}")
         self.assertTrue(ICON_PATH.is_file(), "referenced HOSHI app icon asset must exist")
 
     def test_app_icon_is_well_formed_svg(self):

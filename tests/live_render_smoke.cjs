@@ -53,7 +53,7 @@ async function main() {
     await page.locator("#orb").waitFor({ state: "visible", timeout: 20000 });
     assert.equal(await page.title(), "HOSHI — AI Companion");
     assert.equal(await page.locator("#commandForm").count(), 1);
-    assert.equal(await page.locator("#voiceSelect").count(), 1);
+    assert.equal(await page.locator("#stopSpeakingBtn").count(), 1);
     assert.equal(await page.locator("#memoryToggle").count(), 1);
     assert.equal(await page.locator("[data-ui-action]").count(), 5,
       "The deployed dashboard must include Chat / Voice / Vision / Create / More shortcuts");

@@ -1,3 +1,9 @@
+## Hoshi voice studio update
+
+Country/device voice picker removed. Soft, Warm and Playful are delivery presets for the installed speech engine, not new voice models. Android native TTS remains first choice. Preview works with automatic replies disabled and does not save a chat turn. Stop Speaking invalidates delayed browser speech and stops native/browser output. Fine tuning is optional; old country voice selections are discarded.
+
+A studio-quality anime voice is not implemented or claimed. Actual Urdu pronunciation and voice quality require target-device listening. No paid/cloud TTS service was added.
+
 # HOSHI AI — Android Companion
 
 A mobile-first HOSHI AI companion for Android, using a hosted backend and a responsive web dashboard. The user-provided HOSHI character sheet is used for the dashboard avatar; the dark navy/cyan dashboard is implemented as a responsive layout.
@@ -12,7 +18,7 @@ A mobile-first HOSHI AI companion for Android, using a hosted backend and a resp
 - Local persistence for language selection, voice-reply (auto-speak) toggle, wake-word toggle, personality, and voice tuning.
 - Cloud requests sanitize client-provided conversation context: only `user:` and `assistant:` entries are retained, control characters and escaped newline/tab sequences are flattened, and the latest eight entries are bounded to under 500 characters each.
 - Cloud AI using Gemini Interactions API with Groq as a fallback provider.
-- Voice reply settings: choose an installed phone voice, adjust pitch/speed, and play a preview. Browser and native Android auto-selection prefer an installed Pakistani Urdu (`ur-PK`) voice where available, then Urdu and best-effort alternatives.
+- Voice reply settings: choose Soft, Warm or Playful delivery, optionally adjust pitch/speed, and play a preview. Browser and native Android auto-selection prefer an installed Pakistani Urdu (`ur-PK`) voice where available, then Urdu and best-effort alternatives.
 - `assets/hoshi-expressions.webp` is a compact 8-tile WebP sprite cropped from the final user-provided character sheet. The dashboard switches the sprite position for each response emotion; ten emotion labels map to the closest of the eight available expressions.
 - Local one-shot reminders can be listed/cancelled from **View / cancel reminders**, scheduled from **Set reminder**, or created by typing commands such as “remind me to drink water in 10 minutes,” “remind me in 2 hours to call mom,” or “mujhe 10 minute baad pani peene yaad dilao.” They use Android notifications and are scheduled again after reboot, without needing cloud AI to trigger.
 - Optional user-triggered Accessibility actions: Back, Home, Swipe up, and Swipe down. The service does not retrieve screen content or upload screen text.
@@ -59,10 +65,10 @@ A mobile-first HOSHI AI companion for Android, using a hosted backend and a resp
 ## Latest frontend improvements
 
 - Memory history has per-entry **Edit**/**Delete**, plus clear/disable controls. Text uses DOM text nodes, edited content is limited to 500 characters, and obvious sensitive strings are rejected.
-- Language selection, voice replies, wake-word toggle, personality, pitch, and rate persist locally across reloads. An explicitly selected browser/device voice is respected rather than always forcing native Android TTS. Overlapping cloud requests supersede prior requests so stale results do not overwrite newer replies.
+- Language selection, voice replies, wake-word toggle, personality, pitch, and rate persist locally across reloads. Android uses native TTS first; browser mode automatically selects an available voice. Overlapping cloud requests supersede prior requests so stale results do not overwrite newer replies.
 - Hero-level Chat / Voice / Vision / Create / More shortcuts have working click handlers with browser-mode fallbacks.
-- Automatic browser and native Android voice selection now prefer installed `ur-PK` voices when available, then other Urdu voices, then best-effort feminine-sounding fallbacks. An explicit browser voice selection takes priority. Accent and gender are device-engine-dependent; missing voices cannot be installed by HOSHI.
-- The face is an 8-expression WebP sprite from the final character sheet. `data-emotion` switches the sprite position; service-worker cache `hoshi-shell-v13` precaches the sprite, privacy helper, optimized hero artwork, and HOSHI app icon for offline loading. Speaking shows an animated waveform and a lightweight mouth overlay; it is not phoneme-synchronized lip-sync.
+- Automatic browser and native Android voice selection now prefer installed `ur-PK` voices when available, then other Urdu voices, then best-effort feminine-sounding fallbacks. Country/device voice selection has been removed. Accent and gender are device-engine-dependent; missing voices cannot be installed by HOSHI.
+- The face is an 8-expression WebP sprite from the final character sheet. `data-emotion` switches the sprite position; service-worker cache `hoshi-shell-v14` precaches the sprite, privacy helper, optimized hero artwork, and HOSHI app icon for offline loading. Speaking shows an animated waveform and a lightweight mouth overlay; it is not phoneme-synchronized lip-sync.
 - A shared `memory-privacy.js` helper applies privacy filters before local history save/edit. Node tests exercise common credential/token formats, recovery phrases, OTPs, contact information, and long numeric strings.
 - Python frontend-contract tests verify unique HTML IDs, script references, valid WebP headers, emotion mappings, memory controls, cache contents, and actionable voice-error recovery paths.
 - Previously confirmed runs: [HOSHI basic checks #202](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40237303519), [live Render dashboard smoke #7](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40237284235), [live backend smoke #35](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40237196850), and [Android APK #32](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40237013290). The latest multi-turn, waveform/mouth-lifecycle, narrow-phone, native Urdu voice, and PWA icon/cache regression additions need fresh automated run results.

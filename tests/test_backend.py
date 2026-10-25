@@ -26,6 +26,7 @@ class FakeResponse:
 class AssistantApiTests(unittest.TestCase):
 
     def setUp(self):
+        main.speech_cache.clear()
         isolate = patch.dict(os.environ, {"OPENROUTER_API_KEY": ""})
         isolate.start()
         self.addCleanup(isolate.stop)
@@ -37,6 +38,14 @@ class AssistantApiTests(unittest.TestCase):
         self.assertEqual(response.headers["cache-control"], "no-store")
         self.assertEqual(response.body, b"ID3test-audio")
         mocked.assert_awaited_once_with("میں ہوشی ہوں۔", "warm")
+
+    def test_repeated_audio_uses_bounded_short_lived_cache(self):
+        with patch("cloud_backend.main.synthesize_urdu", new=AsyncMock(return_value=b"ID3audio")) as mocked:
+            for _ in range(2):
+                response = asyncio.run(main.speech(main.SpeechRequest(text="میں ہوشی ہوں۔")))
+                self.assertEqual(response.body, b"ID3audio")
+        self.assertEqual(mocked.await_count, 1)
+        self.assertEqual(len(main.speech_cache), 1)
 
     def test_online_urdu_audio_rejects_wrong_script_before_provider(self):
         with patch("cloud_backend.main.synthesize_urdu", new=AsyncMock()) as mocked:

@@ -1,5 +1,8 @@
 """HOSHI cloud API with server-side Gemini and Groq fallback."""
 import asyncio
+import hashlib
+import time
+from collections import OrderedDict
 import json
 import os
 import re
@@ -48,7 +51,7 @@ class SpeechRequest(BaseModel):
 
 async def synthesize_urdu(text: str, style: str) -> bytes:
     import edge_tts
-    rate, pitch = {"soft": ("-5%", "+5Hz"), "warm": ("-8%", "+0Hz"), "playful": ("+0%", "+10Hz")}.get(style, ("-5%", "+5Hz"))
+    rate, pitch = {"soft": ("+0%", "+12Hz"), "warm": ("-3%", "+8Hz"), "playful": ("+3%", "+18Hz")}.get(style, ("+0%", "+12Hz"))
     audio = bytearray()
     async for chunk in edge_tts.Communicate(text, "ur-PK-UzmaNeural", rate=rate, pitch=pitch).stream():
         if chunk["type"] == "audio":
@@ -61,6 +64,7 @@ async def synthesize_urdu(text: str, style: str) -> bytes:
 
 
 speech_slots = asyncio.Semaphore(2)
+speech_cache = OrderedDict()
 
 
 @app.post("/api/speech")
@@ -68,6 +72,10 @@ async def speech(payload: SpeechRequest):
     text = payload.text.strip()
     if not re.search(r"[\u0600-\u06ff]", text) or re.search(r"[\u0900-\u097f]", text):
         raise HTTPException(status_code=400, detail="Urdu-script text is required for Urdu speech.")
+    cache_key = hashlib.sha256((payload.style + "\0" + text).encode()).digest()
+    cached = speech_cache.get(cache_key)
+    if cached and cached[0] > time.monotonic():
+        return Response(content=cached[1], media_type="audio/mpeg", headers={"Cache-Control": "no-store"})
     async def generate():
         async with speech_slots:
             return await synthesize_urdu(text, payload.style)
@@ -77,6 +85,10 @@ async def speech(payload: SpeechRequest):
         raise HTTPException(status_code=504, detail="Online Urdu voice timed out. Tap Hear Hoshi to retry.") from None
     except Exception:
         raise HTTPException(status_code=502, detail="Online Urdu voice is unavailable. Try again or install an Urdu device voice.") from None
+    speech_cache[cache_key] = (time.monotonic() + 120, audio)
+    speech_cache.move_to_end(cache_key)
+    while len(speech_cache) > 16:
+        speech_cache.popitem(last=False)
     return Response(content=audio, media_type="audio/mpeg", headers={"Cache-Control": "no-store"})
 
 
@@ -249,7 +261,7 @@ def _openrouter_reply(message: str, language_hint: str) -> str:
         data=json.dumps({
             "model": OPENROUTER_MODEL,
             "messages": [{"role": "system", "content": language_hint}, {"role": "user", "content": message}],
-            "max_tokens": 1024,
+            "max_tokens": 1024 if re.search(r"\b(detail|tafseel|code|script|plan|explain|samjhao)\b", message, re.I) else 384,
             "temperature": 0.7,
         }).encode("utf-8"),
         headers={"Content-Type": "application/json", "Authorization": "Bearer " + key},
@@ -436,6 +448,7 @@ def assistant(payload: AssistantRequest):
         + style_hint + " "
         "Use the user's language: if they write Roman Urdu, answer in natural Pakistani Roman Urdu; "
         "otherwise match their language. Keep replies conversational, specific, and varied rather than scripted. "
+        "For casual conversation, answer in one or two short sentences; give longer explanations only when requested. "
         "Do not repeat greetings, stock lines, or the same reassurance in every turn; do not merely paraphrase the user's last message, and do not force a question at the end of every reply. "
         "Show appropriate warmth, affection, excitement, shyness, concern, mild annoyance, or playful teasing "
         "when the conversation supports it. You may participate in clearly fictional, age-appropriate affectionate "

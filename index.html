@@ -64,9 +64,10 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
 @media(prefers-reduced-motion:reduce){.speech-wave i,.orb.speaking,.orb.speaking .companion-avatar::after{animation:none!important}.speech-wave{transition:none}}
 
 /* Hoshi voice studio */
-#voicePanel{grid-column:span 2;border-color:#55618c;background:radial-gradient(ellipse at top right,#49305b66,transparent 65%),linear-gradient(145deg,#10253a,#0b1727);padding:20px}
+.bottom-workspace #voicePanel{grid-column:span 2;border-color:#55618c;background:radial-gradient(ellipse at top right,#49305b66,transparent 65%),linear-gradient(145deg,#10253a,#0b1727);padding:20px}
 .voice-heading{display:flex;align-items:center;gap:12px;margin-bottom:16px}.voice-heading h2{color:#effbff;margin:0 0 4px;letter-spacing:.16em}.voice-heading .pill{margin-left:auto;font-size:9px}.voice-star{display:grid;place-items:center;width:44px;height:44px;border-radius:15px;background:#a7cfff15;color:#e7b7ee;font-size:27px}.voice-intro{font-size:14px;color:#dbeafa;margin:0 0 4px;line-height:1.6}
 .voice-styles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.voice-styles button{min-width:0;padding:14px 6px;background:#081725;font-size:13px}.voice-styles button span{display:block;margin-top:7px;color:var(--muted);font-size:10px}.voice-styles button[aria-pressed="true"]{border-color:#d4b5ff;background:linear-gradient(145deg,#433058,#18394d);box-shadow:0 0 18px #b39eff18}.voice-fine-tune{border-top:1px solid #344562;padding-top:12px}.voice-fine-tune summary{cursor:pointer;color:#aec7dd;font-size:12px;margin-bottom:12px}.voice-fine-tune button{margin-top:12px;font-size:12px;min-height:36px}#stopSpeakingBtn:focus-visible,.voice-styles button:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+@media(max-width:1050px){.bottom-workspace{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:540px){.bottom-workspace{display:flex;flex-direction:column}.bottom-workspace>.section{width:100%}.bottom-workspace #voicePanel{grid-column:span 1;padding:16px}.voice-heading .pill{padding:6px}.voice-styles button{font-size:12px}}
 </style>
 </head>

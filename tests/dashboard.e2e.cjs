@@ -137,7 +137,7 @@ async function main() {
     await page.waitForFunction(() => /Abhi waqt|The time is/.test(document.querySelector("#reply")?.textContent || ""), undefined, { timeout: 3000 });
 
     // Cloud chat should display the reply and change the expression.
-    await page.locator("#commandInput").fill("How can you help me?");
+    await page.locator("#commandInput").fill("Explain how to organize a study day");
     await page.locator('#commandForm button[type="submit"]').click();
     try {
       await page.waitForFunction(() => document.querySelector("#reply")?.textContent === "I can help you plan, explain, and create.", undefined, { timeout: 7000 });
@@ -149,11 +149,11 @@ async function main() {
         "; cause=" + error.message);
     }
     assert.equal(await page.locator("#orb").getAttribute("data-emotion"), "affectionate");
-    const firstRequest = apiMessages.find(item => item.message === "How can you help me?");
+    const firstRequest = apiMessages.find(item => item.message === "Explain how to organize a study day");
     assert.ok(firstRequest, "Expected the chat to reach the mocked cloud API");
-    assert.ok(!(firstRequest.context || []).includes("user: How can you help me?"),
+    assert.ok(!(firstRequest.context || []).includes("user: Explain how to organize a study day"),
       "Current user message must not be duplicated in recent context");
-    assert.ok((await page.locator("#chatHistory").innerText()).includes("How can you help me?"),
+    assert.ok((await page.locator("#chatHistory").innerText()).includes("Explain how to organize a study day"),
       "The saved conversation should appear in history");
 
     // A delayed earlier request must not overwrite the newer reply.

@@ -172,7 +172,8 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
    const voiceMood={happy:[0.05,0.03],excited:[0.08,0.06],playful:[0.06,0.05],affectionate:[0.04,-0.03],shy:[0.06,-0.05],sad:[-0.08,-0.08],concerned:[-0.05,-0.06],annoyed:[-0.04,0.02],thinking:[-0.02,-0.03],caring:[0,0]}[currentEmotion]||[0,0];
    const pitch=Math.max(0.8,Math.min(1.6,basePitch+voiceMood[0]));
    const rate=Math.max(0.75,Math.min(1.15,baseRate+voiceMood[1]));
-   if(window.JarvisBridge&&typeof window.JarvisBridge.speakNative==='function'){
+   // Honor an explicitly selected browser/device voice. Otherwise prefer Android's native TTS.
+   if(!$('voiceSelect').value&&window.JarvisBridge&&typeof window.JarvisBridge.speakNative==='function'){
       const nativeStarted=window.JarvisBridge.speakNative(message,commandLanguage,pitch,rate); if(nativeStarted){setSpeaking(true);return;}
    }
    if(!('speechSynthesis'in window)||typeof SpeechSynthesisUtterance==='undefined'){

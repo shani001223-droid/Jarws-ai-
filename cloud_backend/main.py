@@ -157,7 +157,7 @@ def _groq_reply(message: str, language_hint: str, history=None) -> str:
         headers={
             "Content-Type": "application/json",
             "Authorization": "Bearer " + api_key,
-            "User-Agent": "JARVIS-Cloud-Assistant/0.7.0 (+https://jarws-ai-1.onrender.com)",
+            "User-Agent": "JARVIS-Cloud-Assistant/0.9.0 (+https://jarws-ai-1.onrender.com)",
         },
         method="POST",
     )
@@ -289,7 +289,7 @@ def assistant(payload: AssistantRequest):
             headers={
                 "Content-Type": "application/json",
                 "x-goog-api-key": gemini_key,
-                "User-Agent": "JARVIS-Cloud-Assistant/0.7.0 (+https://jarws-ai-1.onrender.com)",
+                "User-Agent": "JARVIS-Cloud-Assistant/0.9.0 (+https://jarws-ai-1.onrender.com)",
             },
             method="POST",
         )

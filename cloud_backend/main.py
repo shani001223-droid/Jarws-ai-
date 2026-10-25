@@ -1,7 +1,6 @@
 """JARVIS cloud API with server-side Gemini and Groq fallback."""
 import json
 import os
-import time
 from typing import Optional
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -24,11 +23,6 @@ app.add_middleware(
 # Override these in Render Environment if you want to use different model IDs.
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash").strip()
 GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b").strip()
-
-# Cache public market data briefly to reduce provider requests.
-_MARKET_CACHE_SECONDS = 25
-_market_cache = {"payload": None, "fetched_at": 0.0}
-
 
 class AssistantRequest(BaseModel):
     message: str = Field(min_length=1, max_length=4000)
@@ -142,7 +136,6 @@ def health():
         "service": "jarvis-cloud-api",
         "version": app.version,
         "gemini_api": "interactions" if gemini_configured else None,
-        "market_data_source": "Coinbase Exchange (BTC-USD spot)",
         "ai_connected": gemini_configured or groq_configured,
         "gemini_configured": gemini_configured,
         "groq_configured": groq_configured,
@@ -152,78 +145,6 @@ def health():
         "groq_model": GROQ_MODEL if groq_configured else None,
     }
 
-
-
-def _coinbase_market_json(endpoint: str) -> dict:
-    url = "https://api.exchange.coinbase.com/products/BTC-USD/" + endpoint
-    req = Request(
-        url,
-        headers={
-            "Accept": "application/json",
-            "User-Agent": "JARVIS-Cloud-Assistant/0.8.0 (+https://jarws-ai-1.onrender.com)",
-        },
-        method="GET",
-    )
-    try:
-        with urlopen(req, timeout=12) as response:
-            payload = json.loads(response.read().decode("utf-8"))
-    except HTTPError as exc:
-        raise RuntimeError("Coinbase market endpoint returned HTTP " + str(exc.code) + ".") from None
-    except (URLError, TimeoutError):
-        raise RuntimeError("Coinbase market endpoint could not connect or timed out.") from None
-    except (json.JSONDecodeError, UnicodeDecodeError):
-        raise RuntimeError("Coinbase returned invalid market data.") from None
-    if not isinstance(payload, dict):
-        raise RuntimeError("Coinbase returned an unexpected market data shape.")
-    return payload
-
-
-@app.get("/api/market/btc")
-def btc_market():
-    """Read-only BTC-USD spot snapshot; it never places trades."""
-    now = time.monotonic()
-    cached = _market_cache.get("payload")
-    if cached and now - float(_market_cache.get("fetched_at", 0.0)) < _MARKET_CACHE_SECONDS:
-        return dict(cached)
-
-    try:
-        ticker = _coinbase_market_json("ticker")
-        stats = _coinbase_market_json("stats")
-        price = float(ticker["price"])
-        opened = float(stats["open"])
-        high = float(stats["high"])
-        low = float(stats["low"])
-        volume = float(stats["volume"])
-        bid = float(ticker.get("bid", price))
-        ask = float(ticker.get("ask", price))
-        values = (price, opened, high, low, volume, bid, ask)
-        if opened <= 0 or price <= 0 or high <= 0 or low <= 0 or volume < 0:
-            raise ValueError("Coinbase returned invalid market values.")
-        if not all(value == value and abs(value) != float("inf") for value in values):
-            raise ValueError("Coinbase returned non-finite market values.")
-    except (RuntimeError, KeyError, TypeError, ValueError) as exc:
-        raise HTTPException(
-            status_code=502,
-            detail="BTC spot market data is temporarily unavailable. " + str(exc),
-        ) from None
-
-    payload = {
-        "source": "Coinbase Exchange",
-        "symbol": "BTC-USD",
-        "market_type": "spot",
-        "price_usd": price,
-        "change_24h_pct": ((price - opened) / opened) * 100.0,
-        "high_24h_usd": high,
-        "low_24h_usd": low,
-        "volume_24h_btc": volume,
-        "bid_usd": bid,
-        "ask_usd": ask,
-        "last_trade_at": ticker.get("time"),
-        "disclaimer": "Spot snapshot only; may differ from USDT perpetual prices. Not a trade signal.",
-    }
-    _market_cache["payload"] = payload
-    _market_cache["fetched_at"] = now
-    return dict(payload)
 
 
 @app.post("/api/assistant", response_model=AssistantResponse)

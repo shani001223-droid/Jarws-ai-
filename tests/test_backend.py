@@ -69,10 +69,11 @@ class AssistantApiTests(unittest.TestCase):
             {},
             error_body,
         )
-        with patch.dict(os.environ, {"GROQ_API_KEY": "test-groq-key", "GROQ_MODEL": "test-model"}):
-            with patch("cloud_backend.main.urlopen", side_effect=groq_error):
-                with self.assertRaisesRegex(RuntimeError, "permission/model access") as caught:
-                    main._groq_reply("Hello", "Reply in English.")
+        with patch.dict(os.environ, {"GROQ_API_KEY": "test-groq-key"}):
+            with patch("cloud_backend.main.GROQ_MODEL", "test-model"):
+                with patch("cloud_backend.main.urlopen", side_effect=groq_error):
+                    with self.assertRaisesRegex(RuntimeError, "permission/model access") as caught:
+                        main._groq_reply("Hello", "Reply in English.")
         self.assertIn("test-model", str(caught.exception))
         self.assertIn("does not have permission", str(caught.exception))
 

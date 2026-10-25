@@ -96,7 +96,7 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
 (()=> {
  const $=id=>document.getElementById(id), status=$('status'), reply=$('reply'), input=$('commandInput'), orb=$('orb');
  const API_BASE='https://jarws-ai-2.onrender.com';
- let cloudOnline=false;
+ let cloudOnline=false, cloudRequestSequence=0, activeCloudController=null;
  let recognition=null, listening=false, wakeEnabled=false, awaitingCommand=false, voiceReplies=true, restartTimer=null, lastVoiceError="", commandLanguage="ur-PK", editingMemoryIndex=null;
  try{const savedLanguage=localStorage.getItem("hoshiLanguage");if(savedLanguage==="ur-PK"||savedLanguage==="en-US")commandLanguage=savedLanguage;voiceReplies=localStorage.getItem("hoshiVoiceReplies")!=="false";wakeEnabled=localStorage.getItem("hoshiWakeWord")==="true"}catch(e){}
  const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -120,8 +120,11 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
   }finally{if(timeout!==null)clearTimeout(timeout)}
  }
  async function askCloud(message){
+  const requestId=++cloudRequestSequence;
+  if(activeCloudController){try{activeCloudController.abort()}catch(_){}}
   setStatus('SENDING TO CLOUD…');orb.classList.add('active');
   const controller=typeof AbortController==='function'?new AbortController():null;
+  activeCloudController=controller;
   const timeout=controller?setTimeout(()=>controller.abort(),65000):null;
   try{
    const options={method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,locale:navigator.language||'en',personality:getPersonality(),context:getCloudContextForRequest(message)})};
@@ -130,12 +133,19 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
    if(!r.ok){let detail=data.detail||'';if(r.status===502)detail=detail||'Gemini ne request reject ki. Render environment mein API key aur Google AI Studio access check karna hoga.';else if(r.status===504)detail=detail||'Gemini response time par nahi aaya. Yeh AI server timeout hai, zaroori nahi ke aapka internet kharab ho.';else if(r.status===429)detail=detail||'Gemini ki free quota ya rate limit poori ho gayi hai.';else if(r.status===503)detail=detail||'Render par GEMINI_API_KEY configured nahi hai.';else detail=detail||('Cloud API error: HTTP '+r.status);throw new Error(detail)}
    say(data.reply||'Cloud received the message but returned no reply.',data.emotion);setStatus('CLOUD REPLIED · '+(data.mode||'API'));
   }catch(e){
+   if(requestId!==cloudRequestSequence)return;
    let message='Cloud request failed. Check the connection and try again.';
    if(e&&e.name==='AbortError')message='HOSHI cloud request timed out. Try once more or check the backend status.';
    else if(typeof navigator!=='undefined'&&navigator.onLine===false)message='Internet connection appears offline. Your message remains on this device.';
    else if(e&&e.message)message=e.message;
    say(message,'concerned');setStatus(e&&e.name==='AbortError'?'CLOUD REQUEST TIMED OUT':'CLOUD REQUEST FAILED');
-  }finally{if(timeout!==null)clearTimeout(timeout);setTimeout(()=>orb.classList.remove('active'),900)}
+  }finally{
+   if(timeout!==null)clearTimeout(timeout);
+   if(requestId===cloudRequestSequence){
+    if(activeCloudController===controller)activeCloudController=null;
+    setTimeout(()=>orb.classList.remove('active'),900);
+   }
+  }
  }
  function voiceKey(v){return v.name+"||"+v.lang}
  function refreshVoices(){if(!('speechSynthesis'in window))return;const list=window.speechSynthesis.getVoices();if(!list.length)return;const select=$('voiceSelect');const selected=select.value||localStorage.getItem('jarvisVoiceKey')||'';select.innerHTML='';const auto=document.createElement('option');auto.value='';auto.textContent='Auto — best available';select.appendChild(auto);list.slice().sort((a,b)=>a.lang.localeCompare(b.lang)||a.name.localeCompare(b.name)).forEach(v=>{const option=document.createElement('option');option.value=voiceKey(v);option.textContent=v.name+' — '+v.lang;select.appendChild(option)});select.value=list.some(v=>voiceKey(v)===selected)?selected:''}

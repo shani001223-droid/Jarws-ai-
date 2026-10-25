@@ -68,6 +68,25 @@ class AssistantApiTests(unittest.TestCase):
         self.assertIn("Roman Urdu", body["system_instruction"])
         self.assertIn("playful teasing", body["system_instruction"])
 
+    def test_gemini_joins_multiple_text_blocks_with_real_newlines(self):
+        payload = {
+            "steps": [
+                {
+                    "type": "model_output",
+                    "content": [
+                        {"type": "text", "text": "First line"},
+                        {"type": "text", "text": "Second line"},
+                    ],
+                }
+            ]
+        }
+        with patch.dict(os.environ, {"GEMINI_API_KEY": "test-gemini-key", "GROQ_API_KEY": ""}):
+            with patch("cloud_backend.main.urlopen", return_value=FakeResponse(payload)):
+                result = main.assistant(main.AssistantRequest(message="Give two lines"))
+
+        self.assertEqual(result.reply, "First line\\nSecond line")
+        self.assertEqual(result.mode, "gemini")
+
     def test_recent_context_is_bounded_and_passed_to_gemini(self):
         payload = {
             "steps": [

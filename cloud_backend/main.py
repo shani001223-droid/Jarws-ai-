@@ -63,16 +63,43 @@ def _groq_reply(message: str, language_hint: str) -> str:
         with urlopen(req, timeout=35) as response:
             data = json.loads(response.read().decode("utf-8"))
     except HTTPError as exc:
+        provider_message = ""
+        raw_error = ""
         try:
-            error_data = json.loads(exc.read().decode("utf-8"))
-            provider_message = str(error_data.get("error", {}).get("message", "")).strip()
+            raw_error = exc.read().decode("utf-8", errors="replace").strip()
+            error_data = json.loads(raw_error)
+            error_value = error_data.get("error") if isinstance(error_data, dict) else None
+            if isinstance(error_value, dict):
+                provider_message = str(
+                    error_value.get("message")
+                    or error_value.get("error")
+                    or error_value.get("type")
+                    or ""
+                ).strip()
+            elif isinstance(error_value, str):
+                provider_message = error_value.strip()
+            elif isinstance(error_data, dict):
+                provider_message = str(
+                    error_data.get("message") or error_data.get("detail") or ""
+                ).strip()
         except (json.JSONDecodeError, UnicodeDecodeError, AttributeError):
             provider_message = ""
+
         detail = "Groq fallback failed with HTTP " + str(exc.code) + "."
-        if exc.code == 429:
+        if exc.code == 401:
+            detail = "Groq rejected the API key (HTTP 401). Create an active Groq API key and update GROQ_API_KEY in Render."
+        elif exc.code == 403:
+            detail = (
+                "Groq denied this request (HTTP 403: permission/model access). "
+                "Check that GROQ_API_KEY is active and that the Groq project can use model "
+                + GROQ_MODEL + "."
+            )
+        elif exc.code == 429:
             detail = "Groq fallback rate limit or quota reached (HTTP 429)."
         if provider_message:
             detail += " Groq says: " + provider_message[:220]
+        elif raw_error and exc.code in (401, 403):
+            detail += " Provider response: " + " ".join(raw_error.split())[:160]
         raise RuntimeError(detail) from None
     except (URLError, TimeoutError):
         raise RuntimeError("Groq fallback could not connect or timed out.") from None

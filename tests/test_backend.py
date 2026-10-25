@@ -59,6 +59,22 @@ class AssistantApiTests(unittest.TestCase):
         self.assertFalse(body["store"])
         self.assertIn("Roman Urdu", body["system_instruction"])
 
+    def test_groq_403_error_is_diagnosable(self):
+        error_body = io.BytesIO(json.dumps({"error": "Project does not have permission to use this model."}).encode("utf-8"))
+        groq_error = HTTPError(
+            "https://api.groq.com/openai/v1/chat/completions",
+            403,
+            "Forbidden",
+            {},
+            error_body,
+        )
+        with patch.dict(os.environ, {"GROQ_API_KEY": "test-groq-key", "GROQ_MODEL": "test-model"}):
+            with patch("cloud_backend.main.urlopen", side_effect=groq_error):
+                with self.assertRaisesRegex(RuntimeError, "permission/model access") as caught:
+                    main._groq_reply("Hello", "Reply in English.")
+        self.assertIn("test-model", str(caught.exception))
+        self.assertIn("does not have permission", str(caught.exception))
+
     def test_gemini_http_404_falls_back_to_groq(self):
         error_body = io.BytesIO(json.dumps({"error": {"message": "test model error"}}).encode("utf-8"))
         gemini_error = HTTPError(

@@ -196,14 +196,24 @@ async function main() {
       const active = {
         speakingClass: document.querySelector("#orb")?.classList.contains("speaking"),
         waveOpacity: wave ? getComputedStyle(wave).opacity : null,
+        mouthOpacity: (() => {
+          const avatar = document.querySelector(".companion-avatar");
+          return avatar ? getComputedStyle(avatar, "::after").opacity : null;
+        })(),
       };
       window.hoshiSetSpeaking(false);
       return active;
     });
     assert.equal(speakingState.speakingClass, true, "Speaking state should activate the avatar");
     assert.equal(speakingState.waveOpacity, "1", "Speaking waveform should become visible");
-    assert.equal(await page.locator("#orb").evaluate(node => node.classList.contains("speaking")), false,
-      "Speaking indicator should clear after speech ends");
+    assert.ok(Number(speakingState.mouthOpacity) > 0.5,
+      "The mouth overlay should animate into its speaking state");
+    const stoppedState = await page.locator(".companion-avatar").evaluate(node => ({
+      mouthOpacity: getComputedStyle(node, "::after").opacity,
+      speaking: node.closest("#orb")?.classList.contains("speaking"),
+    }));
+    assert.equal(stoppedState.speaking, false, "Speaking class should clear after speech ends");
+    assert.equal(stoppedState.mouthOpacity, "0", "Mouth overlay should hide when speaking ends");
 
     // A delayed earlier request must not overwrite the newer reply.
     const oldRequest = page.waitForRequest(request =>

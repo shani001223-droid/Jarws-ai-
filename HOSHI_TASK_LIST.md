@@ -58,6 +58,7 @@
 - [x] Cloud HTTP/provider errors, timeouts, offline failures, and speech recognition restart failures now produce user-facing recovery messages; physical TTS/microphone acceptance remains pending.
 - [ ] Test on a real Realme Note 50 Android device.
 - [ ] Deploy safely to existing hosting and provide rollback if needed.
+- [x] Added `DEPLOYMENT_ROLLBACK.md` with pre-release checks, service-by-service rollback steps, health/UI smoke checks, secret-handling guidance, and a reminder that dashboard rollbacks disable auto-deploys. Live verification of the current Render dashboard still remains pending.
 - [ ] Final report clearly separates working features, limitations, and pending work.
 
 ## Render backend and frontend verification

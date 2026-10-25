@@ -233,7 +233,7 @@ def assistant(payload: AssistantRequest):
             with urlopen(req, timeout=35) as response:
                 data = json.loads(response.read().decode("utf-8"))
             steps = data.get("steps") or []
-            reply = "\\n".join(
+            reply = "\n".join(
                 str(block.get("text", ""))
                 for step in steps
                 if step.get("type") == "model_output"

@@ -16,7 +16,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
 import android.view.WindowManager
-import android.widget.TextView
+import android.widget.ImageView
 import kotlin.math.abs
 
 class FloatingAssistantService : Service() {
@@ -32,7 +32,7 @@ class FloatingAssistantService : Service() {
     }
 
     private lateinit var windowManager: WindowManager
-    private var bubble: TextView? = null
+    private var bubble: ImageView? = null
     private var layoutParams: WindowManager.LayoutParams? = null
 
     override fun onCreate() {
@@ -65,18 +65,17 @@ class FloatingAssistantService : Service() {
         val sizeDp = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
             .getInt(PREFS_SIZE_KEY, 62).coerceIn(44, 100)
         val size = dp(sizeDp)
-        val view = TextView(this).apply {
-            text = "✦"
-            textSize = sizeDp * 0.46f
-            gravity = Gravity.CENTER
-            setTextColor(Color.rgb(93, 225, 255))
-            contentDescription = "Open JARVIS assistant"
+        val view = ImageView(this).apply {
+            setImageResource(R.drawable.jarvis_anime_avatar)
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            contentDescription = "Open JARVIS anime assistant"
             elevation = dp(8).toFloat()
             background = GradientDrawable().apply {
                 shape = GradientDrawable.OVAL
                 setColor(Color.rgb(8, 25, 39))
                 setStroke(dp(2), Color.rgb(93, 225, 255))
             }
+            clipToOutline = true
             setOnClickListener {
                 val launch = Intent(this@FloatingAssistantService, MainActivity::class.java).apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
@@ -151,7 +150,6 @@ class FloatingAssistantService : Service() {
         val px = dp(sizeDp.coerceIn(44, 100))
         params.width = px
         params.height = px
-        view.textSize = sizeDp.coerceIn(44, 100) * 0.46f
         try {
             windowManager.updateViewLayout(view, params)
         } catch (_: IllegalArgumentException) {

@@ -24,6 +24,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
 import java.util.Locale
 
 class MainActivity : Activity() {
@@ -36,6 +37,7 @@ class MainActivity : Activity() {
     }
 
     private var textToSpeech: TextToSpeech? = null
+    private var dashboardWebView: WebView? = null
     private var ttsReady = false
     private var pendingSpeech: NativeSpeech? = null
     private var pendingWebPermission: PermissionRequest? = null
@@ -50,6 +52,12 @@ class MainActivity : Activity() {
             runOnUiThread {
                 if (result == TextToSpeech.SUCCESS) {
                     ttsReady = true
+                    textToSpeech?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+                        override fun onStart(utteranceId: String?) = notifyHoshiSpeaking(true)
+                        override fun onDone(utteranceId: String?) = notifyHoshiSpeaking(false)
+                        override fun onError(utteranceId: String?) = notifyHoshiVoiceError()
+                        override fun onError(utteranceId: String?, errorCode: Int) = notifyHoshiVoiceError()
+                    })
                     textToSpeech?.setPitch(1.12f)
                     val queued = pendingSpeech
                     pendingSpeech = null
@@ -96,6 +104,7 @@ class MainActivity : Activity() {
         ))
 
         val webView = WebView(this)
+        dashboardWebView = webView
         webView.setBackgroundColor(Color.rgb(7, 17, 30))
         webView.addJavascriptInterface(JarvisBridge(this), "JarvisBridge")
         webView.settings.apply {
@@ -280,8 +289,8 @@ class MainActivity : Activity() {
         AlertDialog.Builder(this)
             .setTitle("Enable basic screen controls?")
             .setMessage(
-                "HOSHI will only perform Back, Home, and swipe gestures when you tap those buttons. " +
-                    "It will not read screen text or send screen contents to the cloud. " +
+                "HOSHI only performs a Back, Home, swipe, or screenshot action when you tap that button. " +
+                    "Screenshots use Android system capture and are not read or uploaded by HOSHI. " +
                     "You can disable the service anytime in Android Accessibility settings."
             )
             .setNegativeButton("Cancel", null)
@@ -303,6 +312,22 @@ class MainActivity : Activity() {
             else speakNativeOnUiThread(request)
         }
         return true
+    }
+
+    private fun notifyHoshiSpeaking(speaking: Boolean) {
+        runOnUiThread {
+            dashboardWebView?.evaluateJavascript(
+                "window.hoshiSetSpeaking && window.hoshiSetSpeaking($speaking)", null
+            )
+        }
+    }
+
+    private fun notifyHoshiVoiceError() {
+        runOnUiThread {
+            dashboardWebView?.evaluateJavascript(
+                "window.hoshiVoiceError && window.hoshiVoiceError()", null
+            )
+        }
     }
 
     private fun speakNativeOnUiThread(request: NativeSpeech) {
@@ -346,7 +371,7 @@ class MainActivity : Activity() {
     }
 
     fun stopNativeSpeech(): Boolean {
-        runOnUiThread { textToSpeech?.stop(); pendingSpeech = null }
+        runOnUiThread { textToSpeech?.stop(); pendingSpeech = null; notifyHoshiSpeaking(false) }
         return true
     }
 

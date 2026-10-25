@@ -9,7 +9,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-app = FastAPI(title="JARVIS Cloud API", version="0.6.0")
+app = FastAPI(title="JARVIS Cloud API", version="0.7.0")
 
 origins = [item.strip() for item in os.getenv("ALLOWED_ORIGINS", "*").split(",") if item.strip()]
 app.add_middleware(
@@ -56,6 +56,7 @@ def _groq_reply(message: str, language_hint: str) -> str:
         headers={
             "Content-Type": "application/json",
             "Authorization": "Bearer " + api_key,
+            "User-Agent": "JARVIS-Cloud-Assistant/0.7.0 (+https://jarws-ai-1.onrender.com)",
         },
         method="POST",
     )
@@ -178,6 +179,7 @@ def assistant(payload: AssistantRequest):
             headers={
                 "Content-Type": "application/json",
                 "x-goog-api-key": gemini_key,
+                "User-Agent": "JARVIS-Cloud-Assistant/0.7.0 (+https://jarws-ai-1.onrender.com)",
             },
             method="POST",
         )

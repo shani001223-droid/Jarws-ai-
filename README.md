@@ -7,7 +7,8 @@ A mobile-first HOSHI AI companion for Android, using a hosted backend and a resp
 - HOSHI dashboard with responsive sidebar navigation, chat, voice, memory, settings, and external app shortcuts.
 - HOSHI identity prompt with language matching, affectionate/playful tone, honesty, and emotional boundaries.
 - Conversation emotion labels (happy, sad, affectionate, excited, shy, concerned, annoyed, playful, thinking, caring) with avatar styling and limited TTS pitch/speed modulation.
-- Optional local conversation memory, bounded recent context, clear/disable controls, and basic filtering to avoid saving obvious secrets.
+- Optional local conversation memory with bounded recent context, entry-by-entry review/edit/delete, clear/disable controls, and basic filtering to avoid saving obvious secrets.
+- Local persistence for language selection, voice-reply (auto-speak) toggle, wake-word toggle, personality, and voice tuning.
 - Cloud AI using Gemini Interactions API with Groq as a fallback provider.
 - Voice reply settings: choose an installed phone voice, adjust pitch/speed, and play a preview.
 - A cropped avatar from the final HOSHI character sheet is embedded in the dashboard.
@@ -31,7 +32,7 @@ A mobile-first HOSHI AI companion for Android, using a hosted backend and a resp
 - This is a debug/test APK, not a Play Store release. It has not been validated on the target Realme Note 50 during this session.
 - The full character sheet and full dashboard reference are not embedded as full-resolution files in the repository; only a compact avatar crop is embedded. The responsive dashboard implements the core layout but is not a pixel-perfect reproduction of every reference panel.
 - Emotional expressions are currently CSS effects and keyword/model labels, not a full animation rig. Lip-sync is not implemented.
-- Local memory stores recent turns in browser local storage. When memory is enabled, a bounded recent context is sent to the backend with AI requests; turn memory off to stop that context being sent.
+- Local memory stores recent turns in browser local storage. You can review and edit/delete individual entries; an edit containing an obvious password/token/OTP-like string is rejected by the current basic filter. When memory is enabled, a bounded recent context is sent to the backend with AI requests; turn memory off to stop that context being sent. These filters are heuristic, not a guarantee that every sensitive detail will be detected.
 - Voice quality and voice choices depend on the speech engines installed on the Android device. The dashboard can select and tune available voices but cannot install a premium neural voice on its own.
 - The hosted backend requires internet. Gemini free-tier limits can be exhausted; Groq is configured as the backup, but provider policies and free limits can change. Local reminders run on-device; Android power-saving may deliver them a little late.
 - API keys remain in the private Render environment; never place them in frontend code, an APK, or a public repository.
@@ -51,6 +52,12 @@ A mobile-first HOSHI AI companion for Android, using a hosted backend and a resp
 - Dashboard: https://jarws-ai-1.onrender.com
 - Backend health: https://jarws-ai-2.onrender.com/health
 - Repository: https://github.com/shani001223-droid/Jarws-ai-
+
+## Latest frontend improvements
+
+- Memory history now shows per-entry **Edit** and **Delete** controls in addition to the existing clear/disable controls. Text is rendered as text (not injected HTML), and edited content is limited to 500 characters.
+- Language selection, voice replies, and wake-word toggle state persist locally across reloads. Existing personality and voice tuning preferences remain persisted.
+- Commit: `824a41d6b5e2ffa352cc2d7496e147b36aca0ac2`. The automated workflow was started after the change; consult [the HOSHI basic checks workflow](https://github.com/shani001223-droid/Jarws-ai-/actions/workflows/ci.yml) for the final result.
 
 ## Remaining real-device checks
 

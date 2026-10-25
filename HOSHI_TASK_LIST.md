@@ -17,7 +17,7 @@
 - [x] Rule-based mood detection for English and Roman Urdu covers sadness, frustration, anxiety, affection, playfulness, positivity, and curiosity; short acknowledgements can carry forward only the immediately previous user mood. This is a lightweight heuristic, not a trained emotion model.
 - [x] Bounded recent-turn context is sent to the AI; robust context construction avoids accidentally dropping the last saved turn when a message is filtered from memory. Topic tracking remains basic.
 - [x] A suitable emotion label is returned with cloud replies, with a deterministic fallback classifier.
-- [ ] Natural personality; reduce repetitive, scripted, robotic replies.
+- [x] Added prompt guidance against repetitive greetings/stock lines, echoing the user, and forced end-of-reply questions; multi-turn conversation quality acceptance still pending.
 - [x] Honesty and respectful disagreement guidance is included in the assistant prompt.
 
 ## Phase 3 — Voice and expressions
@@ -31,7 +31,7 @@
 ## Phase 4 — Memory and personalization
 - [x] Preference memory for language, tone, and assistant settings (language, personality, voice replies, wake-word toggle, and voice tuning persist locally).
 - [x] Maintain bounded recent conversation context for cloud replies.
-- [ ] Relationship-role-play continuity when relevant, including playful annoyance and reconciliation.
+- [x] Recent-turn context and explicit continuity guidance cover fictional affectionate role-play, playful annoyance, apology, and reconciliation; full multi-turn acceptance still pending.
 - [x] User controls to review, edit, delete individual entries, disable memory, and clear memory.
 - [x] Local-memory filter blocks common credential language, token formats, recovery phrases, OTPs, email addresses, phone-like strings, and long numeric identifiers. It is heuristic, not a guarantee.
 
@@ -40,8 +40,8 @@
 - [x] HOSHI home screen with avatar, chat, microphone/voice controls, and settings exists in the frontend.
 - [x] Emotion-driven avatar expression sprite positions and glow changes are mapped to the response emotion label.
 - [x] Local conversation history is displayed and can be reviewed, edited, deleted entry-by-entry, disabled, or cleared.
-- [x] Settings for voice, language, personality, memory, and auto-speak are available; language/voice-reply/wake-word selections now persist locally.
-- [x] User-facing cloud timeout/offline/provider errors and speech-recognition/TTS failure messages exist; measured latency/data use and device-specific edge cases still need verification.
+- [x] Settings for voice, language, personality, memory, and auto-speak are available; language/voice-reply/wake-word selections persist locally, and an explicitly selected browser voice now bypasses the native-TTS override.
+- [x] User-facing cloud timeout/offline/provider errors and speech-recognition/TTS failure messages exist; overlapping AI requests now abort the earlier browser request and stale replies are ignored. Measured latency/data use and device-specific edge cases still need verification.
 - [ ] Follow the final user-provided HOSHI dashboard image; do not redesign it without permission.
 - [x] Source audit confirms no BTC/Bitcoin text or floating-icon selectors remain in `index.html`; live Render visual verification is still pending.
 
@@ -104,8 +104,8 @@
 - [ ] Physical target-device testing remains deferred until the other pending work is addressed, as requested.
 
 - [x] Phase 2 mood signal added: deterministic English/Roman Urdu phrase detection plus safe continuity across short acknowledgements; backend tests cover key moods, context carry, and neutral-context reset.
-- [x] Phase 3 voice failure handling improved: permission, missing microphone, unsupported language, network, and unknown speech-recognition errors stop automatic restart loops and display actionable states; service-worker cache bumped to `hoshi-shell-v10`.
-- [x] Current validation: HOSHI basic checks #134 and GitHub Pages publish #159 passed; live backend smoke test #25 passed after the mood implementation.
+- [x] Phase 3 voice failure handling improved: permission, missing microphone, unsupported language, network, and unknown speech-recognition errors stop automatic restart loops and display actionable states; explicitly selected browser voices are respected. Service-worker cache is `hoshi-shell-v10`.
+- [x] Current validation: HOSHI basic checks #142 and GitHub Pages publish #167 passed; live backend smoke test #26 passed after the non-repetitive reply prompt change.
 
 ## Working rules
 1. This document records requirements; it does not mean implementation is complete.

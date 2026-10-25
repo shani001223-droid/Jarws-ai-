@@ -101,6 +101,8 @@ class FrontendContractTests(unittest.TestCase):
         self.assertIn("setOnUtteranceProgressListener", MAIN_ACTIVITY)
         self.assertIn("window.hoshiSetSpeaking", MAIN_ACTIVITY)
         self.assertIn("window.hoshiVoiceError", MAIN_ACTIVITY)
+        self.assertIn('it.locale.language == "ur" && it.locale.country == "PK"', MAIN_ACTIVITY)
+        self.assertIn("Pakistani Urdu (ur-PK)", HTML)
 
     def test_memory_controls_and_local_preferences_are_present(self):
         for element_id in ("chatHistory", "memoryToggle", "clearMemoryBtn", "voiceSelect",

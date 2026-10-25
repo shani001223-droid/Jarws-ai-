@@ -58,10 +58,11 @@ A mobile-first HOSHI AI companion for Android, using a hosted backend and a resp
 
 - Memory history has per-entry **Edit**/**Delete**, plus clear/disable controls. Text uses DOM text nodes, edited content is limited to 500 characters, and obvious sensitive strings are rejected.
 - Language selection, voice replies, wake-word toggle, personality, pitch, and rate persist locally across reloads. An explicitly selected browser/device voice is respected rather than always forcing native Android TTS. Overlapping cloud requests supersede prior requests so stale results do not overwrite newer replies.
+- Hero-level Chat / Voice / Vision / Create / More shortcuts have working click handlers with browser-mode fallbacks.
 - The face is an 8-expression WebP sprite from the final character sheet. `data-emotion` switches the sprite position; service-worker cache `hoshi-shell-v10` precaches the sprite and privacy helper for offline loading.
 - A shared `memory-privacy.js` helper applies privacy filters before local history save/edit. Node tests exercise common credential/token formats, recovery phrases, OTPs, contact information, and long numeric strings.
 - Python frontend-contract tests verify unique HTML IDs, script references, valid WebP headers, emotion mappings, memory controls, cache contents, and actionable voice-error recovery paths.
-- Current check links: [HOSHI basic checks #154](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40234981960) passed with a Chromium browser smoke test for the local command, mocked cloud chat, emotion state, memory toggle, stale response ordering, and web-only fallback. [Live backend smoke #26](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40234017983) passed. Current Render live visual validation and target-phone testing are still pending.
+- Current check links: [HOSHI basic checks #160](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40235361114) passed with Chromium smoke coverage for the functional Chat / Voice / Vision / Create / More actions, local command, mocked cloud chat, emotion state, memory toggle, stale response ordering, and web-only fallback. [Live backend smoke #26](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40234017983) passed. Current Render live visual validation and target-phone testing are still pending.
 - Deployment safety notes are in [`DEPLOYMENT_ROLLBACK.md`](https://github.com/shani001223-droid/Jarws-ai-/blob/main/DEPLOYMENT_ROLLBACK.md); actual live Render UI verification remains pending.
 
 ## Remaining real-device checks

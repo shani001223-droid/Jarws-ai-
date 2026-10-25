@@ -272,6 +272,7 @@ def assistant(payload: AssistantRequest):
         + style_hint + " "
         "Use the user's language: if they write Roman Urdu, answer in natural Pakistani Roman Urdu; "
         "otherwise match their language. Keep replies conversational, specific, and varied rather than scripted. "
+        "Do not repeat greetings, stock lines, or the same reassurance in every turn; do not merely paraphrase the user's last message, and do not force a question at the end of every reply. "
         "Show appropriate warmth, affection, excitement, shyness, concern, mild annoyance, or playful teasing "
         "when the conversation supports it. You may participate in clearly fictional, age-appropriate affectionate "
         "role-play, but never use guilt, emotional blackmail, coercion, or pressure to create dependency. "

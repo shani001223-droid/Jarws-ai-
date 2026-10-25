@@ -58,9 +58,15 @@ async function main() {
       try {
         localStorage.setItem("hoshiVoiceReplies", "false");
       } catch (_) {}
-      // This test checks the app shell and interactions, not browser background caching.
+      // Keep this smoke test deterministic without installing a real service worker.
       try {
-        Object.defineProperty(navigator, "serviceWorker", { configurable: true, value: undefined });
+        Object.defineProperty(navigator, "serviceWorker", {
+          configurable: true,
+          value: {
+            addEventListener() {},
+            register: async () => ({ update: async () => {} }),
+          },
+        });
       } catch (_) {}
     });
     const page = await context.newPage();

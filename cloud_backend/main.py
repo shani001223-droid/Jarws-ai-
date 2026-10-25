@@ -80,6 +80,22 @@ def classify_emotion(message: str, reply: str) -> str:
 def _classify_text_mood(text: str) -> str:
     """Use lightweight, language-aware phrase rules as a safe mood signal."""
     value = str(text or "").casefold()
+    # Remove common negated mood phrases before matching so "not sad" or
+    # "udaas nahi" doesn't get misread as the opposite of what the user said.
+    negated_phrases = (
+        "not sad", "not upset", "not heartbroken", "not feeling low",
+        "not angry", "not annoyed", "not frustrated", "not irritated",
+        "not anxious", "not worried", "not afraid", "not scared",
+        "not happy", "not excited", "not in love", "don't love you",
+        "do not love you", "don't miss you", "do not miss you",
+        "udaas nahi", "udaas nahin", "udaas nhi", "dukhi nahi", "dukhi nahin",
+        "gussa nahi", "gussa nahin", "ghussa nahi", "ghussa nahin",
+        "naraz nahi", "naraz nahin", "pareshan nahi", "pareshan nahin",
+        "tension nahi", "tension nahin", "khush nahi", "khush nahin",
+        "pyar nahi", "pyar nahin", "pyaar nahi", "pyaar nahin",
+    )
+    for phrase in negated_phrases:
+        value = value.replace(phrase, " ")
     rules = (
         ("sad", ("udaas", "udaasi", "dukhi", "sad", "heartbroken", "ro raha", "ro rahi", "rona aa", "dil toot", "feeling low")),
         ("annoyed", ("gussa", "ghussa", "naraz", "angry", "annoyed", "tang aa gaya", "tang aa gayi", "fed up", "frustrated", "irritated")),

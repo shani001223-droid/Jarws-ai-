@@ -39,12 +39,12 @@ A mobile-first HOSHI AI companion for Android, using a hosted backend and a resp
 
 ## HOSHI implementation and verification status
 
-- Backend personality, emotion labels, contextual mood guidance for English/Roman Urdu, recent-context support, and Groq fallback are implemented in `cloud_backend/main.py`. Mood detection is rule-based and carries an earlier mood only across short acknowledgements.
+- Backend personality, contextual mood guidance for English/Roman Urdu, recent-context support, reduced repetitive phrasing guidance, and Groq fallback are implemented in `cloud_backend/main.py`. Mood detection is rule-based and carries an earlier mood only across short acknowledgements.
 - Backend service deployed successfully after a transient syntax error was caught and fixed. Render logs showed `/health` returning HTTP 200 and no recent error-level application logs at the time of verification.
 - Frontend source build and static contract checks pass; a fresh live Render visual check after the latest sprite/privacy changes remains pending.
-- GitHub Actions **HOSHI basic checks run #134 passed** on the latest implementation/test commit, including Python/unit tests, frontend-contract tests, privacy-filter tests, reminder/parser tests, and JavaScript syntax compilation. [Run #134](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40233713878).
-- GitHub Pages publish workflow **run #159 passed** after the current frontend changes. This verifies the static site build; it does not replace a live Render frontend/device check. [Run #159](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40233713936).
-- GitHub Actions **HOSHI live backend smoke test run #25 passed** after the contextual mood update, including a successful live AI request through the configured provider. [Run #25](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40233515129).
+- GitHub Actions **HOSHI basic checks run #142 passed** on the latest implementation/test commit, including Python/unit tests, frontend-contract tests, privacy-filter tests, reminder/parser tests, and JavaScript syntax compilation. [Run #142](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40234119379).
+- GitHub Pages publish workflow **run #167 passed** after the current frontend changes. This verifies the static site build; it does not replace a live Render frontend/device check. [Run #167](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40234119519).
+- GitHub Actions **HOSHI live backend smoke test run #26 passed** after the non-repetitive reply prompt change, including a successful live AI request through the configured provider. [Run #26](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40234017983).
 - GitHub Actions **Build HOSHI Android APK run #29 passed**; the `hoshi-debug-apk` artifact was uploaded. Recent mood, web voice-recovery, and service-worker updates do not change Android native source.
 - Real-device voice/microphone testing and lip-sync remain pending.
 
@@ -57,11 +57,11 @@ A mobile-first HOSHI AI companion for Android, using a hosted backend and a resp
 ## Latest frontend improvements
 
 - Memory history has per-entry **Edit**/**Delete**, plus clear/disable controls. Text uses DOM text nodes, edited content is limited to 500 characters, and obvious sensitive strings are rejected.
-- Language selection, voice replies, wake-word toggle, personality, pitch, and rate persist locally across reloads.
+- Language selection, voice replies, wake-word toggle, personality, pitch, and rate persist locally across reloads. An explicitly selected browser/device voice is respected rather than always forcing native Android TTS. Overlapping cloud requests supersede prior requests so stale results do not overwrite newer replies.
 - The face is an 8-expression WebP sprite from the final character sheet. `data-emotion` switches the sprite position; service-worker cache `hoshi-shell-v10` precaches the sprite and privacy helper for offline loading.
 - A shared `memory-privacy.js` helper applies privacy filters before local history save/edit. Node tests exercise common credential/token formats, recovery phrases, OTPs, contact information, and long numeric strings.
 - Python frontend-contract tests verify unique HTML IDs, script references, valid WebP headers, emotion mappings, memory controls, cache contents, and actionable voice-error recovery paths.
-- Current check links: [HOSHI basic checks #134](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40233713878), [GitHub Pages publish #159](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40233713936), and [live backend smoke #25](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40233515129). Current Render live visual validation and target-phone testing are still pending.
+- Current check links: [HOSHI basic checks #142](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40234119379), [GitHub Pages publish #167](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40234119519), and [live backend smoke #26](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40234017983). Current Render live visual validation and target-phone testing are still pending.
 
 ## Remaining real-device checks
 

@@ -88,7 +88,7 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
  $('wakeToggle').onclick=()=>{wakeEnabled=!wakeEnabled;$('wakeToggle').textContent='Hey JARVIS: '+(wakeEnabled?'ON':'OFF');setStatus(listening?(wakeEnabled?'LISTENING FOR “HEY JARVIS”':'LISTENING'):'READY')};
  $('commandForm').onsubmit=e=>{e.preventDefault();processCommand(input.value);input.value=''};
  document.querySelectorAll('[data-cmd]').forEach(b=>b.onclick=()=>processCommand(b.dataset.cmd));
- if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+ if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>{let refreshing=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!refreshing){refreshing=true;location.reload()}});navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(reg=>reg.update()).catch(()=>{});});
  checkCloud();setInterval(checkCloud,60000);
  if(!Recognition){setStatus('TEXT MODE · VOICE SUPPORT DEPENDS ON BROWSER')}
 })();

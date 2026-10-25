@@ -31,11 +31,12 @@ class AssistantApiTests(unittest.TestCase):
         }):
             health = main.health()
 
-        self.assertEqual(health["version"], "0.5.0")
+        self.assertEqual(health["version"], "0.6.0")
         self.assertEqual(health["gemini_api"], "interactions")
         self.assertTrue(health["gemini_configured"])
         self.assertTrue(health["groq_configured"])
         self.assertEqual(health["gemini_model"], "gemini-3.8-flash")
+        self.assertEqual(health["groq_model"], "openai/gpt-oss-20b")
     def test_gemini_uses_interactions_api_and_extracts_model_output(self):
         payload = {
             "status": "completed",

@@ -38,7 +38,9 @@ class FrontendContractTests(unittest.TestCase):
         self.assertEqual(image[:4], b"RIFF", "Sprite is not a RIFF image")
         self.assertEqual(image[8:12], b"WEBP", "Sprite is not a WebP image")
         self.assertIn("./assets/hoshi-expressions.webp", SERVICE_WORKER)
-        self.assertIn('CACHE_NAME = "hoshi-shell-v8"', SERVICE_WORKER)
+        self.assertIn("./memory-privacy.js", SERVICE_WORKER)
+        self.assertIn('<script src="./memory-privacy.js"></script>', HTML)
+        self.assertIn('CACHE_NAME = "hoshi-shell-v9"', SERVICE_WORKER)
 
     def test_each_ui_emotion_selects_a_character_expression(self):
         emotions = (

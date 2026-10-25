@@ -1,44 +1,46 @@
-# JARVIS — Mobile-first Personal AI Assistant
+# JARVIS — Cloud-first Personal AI Assistant
 
-A mobile-first prototype for Android, initially targeting the user's Realme Note 50. This is the first UI/voice milestone, not yet a full AI agent or native Android application.
+## Product decision
+The phone should be a lightweight dashboard/control panel only. Heavy work belongs on a cloud backend. Do not turn this into a large on-device AI app or download a model onto the phone.
 
-## Current prototype
-- Responsive dark mobile interface.
-- Text command input and browser speech output.
-- Browser speech-recognition controls where supported.
-- Optional “Hey JARVIS” wake phrase while the page is open and foregrounded.
-- Basic local commands: time, date, greetings, help, open Google, open YouTube.
-- PWA manifest and a small service-worker cache for the app shell.
+## Architecture
+- **Mobile dashboard (static PWA):** hosted as a small web page; shows status, chat/voice controls and settings. It should not contain provider secrets or heavy models.
+- **Cloud API:** `cloud_backend/main.py` is a FastAPI starter with `/health` and `/api/assistant` endpoints. At this stage it is a connectivity scaffold, not a connected AI model.
+- **Cloud workers (later):** scheduled jobs and queued workflows for reminders, social content, Flora marketing and Telegram integrations.
+- **Integrations:** add one at a time with minimum permissions and server-side credentials. Trading remains demo-only until independently tested.
 
-## Important limitations
-- Wake-word detection is NOT a system-wide or always-on Android service. The browser must remain open/foregrounded and microphone access must be granted. It may stop when the screen locks, the browser is backgrounded, or Android suspends the tab.
-- Browser speech recognition support varies by browser, device, language and network.
-- The current command handler is local demo logic. A real AI backend, secure tool routing, persistent memory and account integrations are not connected.
-- The app cannot freely control every app or website. Native Android accessibility and other platform permissions require a native Android implementation and explicit user consent.
-- Do not put API keys, Telegram tokens, passwords or exchange secrets in browser code or this public repository.
+## Current implementation
+- Responsive mobile dashboard at `index.html`.
+- Browser voice input/output where supported.
+- A foreground-only browser wake phrase prototype. It is not an always-on system wake word.
+- PWA manifest and service worker for a small app shell.
+- Initial FastAPI backend, requirements, environment template and Dockerfile under `cloud_backend/`.
 
-## Architecture roadmap
-1. Stage 1 — Mobile voice shell (current): responsive interface, text/voice commands, wake-word prototype.
-2. Stage 2 — AI core: small backend API, provider abstraction, safe intent/tool router, user-approved memory. Keep provider keys server-side.
-3. Stage 3 — Native Android shell: package with a maintained Android framework; implement microphone lifecycle and foreground service only within Android policy, with a visible notification and battery/privacy controls.
-4. Stage 4 — Phone actions: explicit, permission-gated accessibility/intent actions; ask before sending messages, purchases, account changes or other sensitive actions.
-5. Stage 5 — Integrations: calendar/reminders, then Flora marketing/social workflows, then existing JARVES Telegram bot. Trading remains demo-only until independently tested.
+## Important wake-word limitation
+To avoid heavy on-device processing, the realistic design is a small on-device wake-word detector that listens locally, then streams/processes audio in the cloud only after activation. Cloud-only continuous listening would require the phone to continuously send microphone audio, which drains battery, uses data and raises privacy concerns. A browser page cannot reliably listen while closed or the phone is locked. A native Android foreground service with a visible notification may be required for a true background wake word.
 
-## Free-first choices and costs
-- Static web app/PWA and GitHub repository: can be developed without a paid service.
-- Browser speech recognition: availability and limits are controlled by the browser; it is not guaranteed to work offline.
-- AI brain: no paid provider is configured yet. A hosted model/API may have free quotas but can impose limits or later charges. Do not enable billing until cost and quota are reviewed.
-- Native Android build and 24/7 backend hosting may need a cloud build/runtime. We will choose a free tier where available and explain any unavoidable cost before using it.
+## Deploy the cloud API
+1. Create a Python web service on a provider with a suitable free tier (availability and free quotas can change).
+2. Set its root/build context to `cloud_backend/`, install `requirements.txt`, and run `uvicorn main:app --host 0.0.0.0 --port $PORT` (or use the included Dockerfile).
+3. Configure `ALLOWED_ORIGINS` to the exact HTTPS origin serving the dashboard. Do not use `*` in production.
+4. Open `/health` on the deployed service. It should return `ok: true` and `ai_connected: false` until an AI provider is configured.
+5. Connect the dashboard to the deployed `/api/assistant` endpoint in a separate, tested frontend change.
 
-## Test on phone
-1. Open the repository in GitHub and confirm index.html, manifest.json, and sw.js exist.
-2. Publish the repository with GitHub Pages (Settings → Pages → deploy from main branch, root folder), if Pages is available.
-3. Open the HTTPS Pages URL in Chrome on Android.
-4. Grant microphone permission, tap Start listening, and test “Hey JARVIS”, “what time is it”, and “open Google”.
-5. Test with screen unlocked and app foregrounded. This web prototype is not expected to listen after the phone is locked.
+## Cost policy
+- Static dashboard and this starter backend do not require a paid AI API key.
+- Cloud hosts may offer free tiers but can have sleep, usage, or runtime limits. Confirm current terms before deployment.
+- No AI provider or billing is enabled by this code. We will select a provider only after checking free-tier limits and any costs.
 
-## Security principles
-- Keep secrets out of GitHub and client-side JavaScript.
-- Prefer least-privilege permissions.
-- Ask for confirmation before consequential external actions.
-- Do not claim automation succeeded unless the connected service confirms it.
+## Security
+- Never commit `.env` files, API keys, Telegram tokens, passwords or exchange secrets.
+- Put credentials in the cloud host's secret/environment settings.
+- Before adding account actions, use authentication, rate limits, logs that exclude secrets, and user confirmation for sensitive actions.
+- Never expose the cloud API publicly for consequential actions without authentication.
+
+## Roadmap
+1. Deploy and verify cloud API health.
+2. Connect dashboard chat to cloud API.
+3. Add server-side AI provider adapter after reviewing free quotas/costs.
+4. Add user authentication and private preferences/memory.
+5. Add a native Android shell for background wake word and permission-gated phone actions.
+6. Add workflow workers and integrations: reminders, Flora, social platforms, Telegram bot.

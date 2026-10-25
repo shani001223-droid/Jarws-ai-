@@ -23,7 +23,7 @@ footer{margin-top:17px;text-align:center;font-size:11px;color:#718da3;line-heigh
 </head>
 <body>
 <main class="app">
-<header><div><h1>JARVIS</h1><div class="tag">PERSONAL AI SYSTEM · PROTOTYPE 01</div></div><div class="pill" id="connection">LOCAL MODE</div></header>
+<header><div><h1>JARVIS</h1><div class="tag">PERSONAL AI SYSTEM · PROTOTYPE 01</div></div><div class="pill" id="connection">CHECKING CLOUD…</div></header>
 <div class="orb" id="orb" aria-hidden="true">✦</div>
 <div id="status" role="status" aria-live="polite">READY · TAP START LISTENING</div>
 <p id="reply" aria-live="polite">Hello. I am JARVIS. Tap “Start listening” and say “Hey JARVIS” to activate the voice command mode.</p>
@@ -36,14 +36,18 @@ footer{margin-top:17px;text-align:center;font-size:11px;color:#718da3;line-heigh
 <form id="commandForm"><input id="commandInput" autocomplete="off" placeholder="Type a command…" aria-label="Command"><button class="primary" type="submit">Send</button></form>
 <div class="section"><div class="statusrow"><h2>WAKE WORD</h2><button class="toggle" id="wakeToggle">Hey JARVIS: OFF</button></div><p class="small">Wake-word detection works only while this page is open, foregrounded and microphone access is granted. This web prototype cannot listen reliably while the phone is locked or the app is closed.</p></div>
 <div class="section"><h2>TRY A COMMAND</h2><p class="small">“Hey JARVIS” · “What time is it?” · “Open Google” · “Open YouTube” · “Help” · “Stop speaking”</p><div class="quick"><button data-cmd="what time is it">Time</button><button data-cmd="today's date">Date</button><button data-cmd="open Google">Google</button><button data-cmd="open YouTube">YouTube</button><button data-cmd="help">Help</button></div></div>
-<footer>Stage 1: mobile voice interface and wake-word prototype.<br>Cloud AI, Android screen control and background wake-word are not connected yet.</footer>
+<footer>Cloud API connected when online · AI model is not connected yet.<br>Android screen control and background wake-word still need a separate implementation.</footer>
 </main>
 <script>
 (()=> {
  const $=id=>document.getElementById(id), status=$('status'), reply=$('reply'), input=$('commandInput'), orb=$('orb');
+ const API_BASE='https://jarws-ai.onrender.com';
+ let cloudOnline=false;
  let recognition=null, listening=false, wakeEnabled=false, awaitingCommand=false, voiceReplies=true, restartTimer=null;
  const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
  function setStatus(s){status.textContent=s}
+ async function checkCloud(){const badge=$('connection');try{const r=await fetch(API_BASE+'/health',{method:'GET',cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);const data=await r.json();cloudOnline=!!data.ok;badge.textContent=cloudOnline?'CLOUD ONLINE':'CLOUD ERROR';badge.style.color=cloudOnline?'#5de1ff':'#ff9b9b';return cloudOnline}catch(e){cloudOnline=false;badge.textContent='CLOUD OFFLINE';badge.style.color='#ff9b9b';return false}}
+ async function askCloud(message){setStatus('SENDING TO CLOUD…');orb.classList.add('active');try{const r=await fetch(API_BASE+'/api/assistant',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,locale:navigator.language||'en'})});if(!r.ok)throw new Error('HTTP '+r.status);const data=await r.json();say(data.reply||'Cloud received the message but returned no reply.');setStatus('CLOUD REPLIED · '+(data.mode||'API'));}catch(e){say('I could not reach the cloud server. Check your internet connection and try again.');setStatus('CLOUD REQUEST FAILED');}finally{setTimeout(()=>orb.classList.remove('active'),900)}}
  function say(text){reply.textContent=text;if(voiceReplies&&'speechSynthesis'in window){window.speechSynthesis.cancel();if(recognition&&listening){try{recognition.stop()}catch(e){}}const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.onend=()=>{if(listening&&recognition){clearTimeout(restartTimer);restartTimer=setTimeout(()=>{try{recognition.start()}catch(e){}},350)}};window.speechSynthesis.speak(u)}}
  function processCommand(raw){const text=raw.trim(),c=text.toLowerCase();if(!c)return;
  setStatus('PROCESSING…');orb.classList.add('active');
@@ -55,7 +59,7 @@ footer{margin-top:17px;text-align:center;font-size:11px;color:#718da3;line-heigh
  else if(c.includes('open youtube')){say('Opening YouTube.');window.open('https://m.youtube.com/','_blank','noopener')}
  else if(c.includes('stop speaking')){if('speechSynthesis'in window)window.speechSynthesis.cancel();reply.textContent='Voice reply stopped.'}
  else if(c==='help'||c.includes('what can you do'))say('I can respond to basic commands, tell the time and date, and open Google or YouTube. Cloud AI and advanced phone control are planned next.');
- else say('I heard: '+text+'. This command needs the AI brain, which is not connected yet.');
+ else {reply.textContent='Sending to JARVIS cloud…';askCloud(text);return;}
  setStatus(listening?'LISTENING FOR WAKE WORD':'READY');setTimeout(()=>orb.classList.remove('active'),900)
  }
  function startListening(){if(!Recognition){say('Speech recognition is not supported in this browser. Try Chrome, or use the text command box.');setStatus('VOICE RECOGNITION UNAVAILABLE');return}
@@ -73,13 +77,14 @@ footer{margin-top:17px;text-align:center;font-size:11px;color:#718da3;line-heigh
  }
  function stopListening(){listening=false;awaitingCommand=false;clearTimeout(restartTimer);if(recognition){try{recognition.onend=null;recognition.stop()}catch(e){}recognition=null}if('speechSynthesis'in window)window.speechSynthesis.cancel();$('wakeBtn').textContent='🎙 Start listening';setStatus('LISTENING STOPPED')}
  $('wakeBtn').onclick=()=>startListening();$('stopBtn').onclick=stopListening;
- $('testBtn').onclick=()=>processCommand('hello');
+ $('testBtn').onclick=()=>askCloud('Test connection. Tell me whether the JARVIS cloud API received this message.');
  $('speakToggle').onclick=()=>{voiceReplies=!voiceReplies;$('speakToggle').textContent=voiceReplies?'🔊 Voice replies: ON':'🔇 Voice replies: OFF'};
  $('wakeToggle').onclick=()=>{wakeEnabled=!wakeEnabled;$('wakeToggle').textContent='Hey JARVIS: '+(wakeEnabled?'ON':'OFF');setStatus(listening?(wakeEnabled?'LISTENING FOR “HEY JARVIS”':'LISTENING'):'READY')};
  $('commandForm').onsubmit=e=>{e.preventDefault();processCommand(input.value);input.value=''};
  document.querySelectorAll('[data-cmd]').forEach(b=>b.onclick=()=>processCommand(b.dataset.cmd));
  if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
- if(!Recognition){$('connection').textContent='TEXT MODE';setStatus('TEXT MODE · VOICE SUPPORT DEPENDS ON BROWSER')}
+ checkCloud();setInterval(checkCloud,60000);
+ if(!Recognition){setStatus('TEXT MODE · VOICE SUPPORT DEPENDS ON BROWSER')}
 })();
 </script>
 </body>

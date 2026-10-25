@@ -40,17 +40,35 @@ jobs:
           API_BASE: https://jarws-ai-2.onrender.com
         run: |
           set -euo pipefail
-          response=$(curl -sS --max-time 60 -w '\n%{http_code}' \
-            -X POST "$API_BASE/api/assistant" \
-            -H 'Content-Type: application/json' \
-            --data '{"message":"Automated live smoke test. Reply with exactly: HOSHI OK.","locale":"en"}')
-          http_code="${response##*$'\n'}"
-          body="${response%$'\n'*}"
-          if [ "$http_code" != "200" ]; then
-            echo "Live assistant request failed with HTTP $http_code"
-            echo "$body"
-            exit 1
-          fi
-          echo "$body" | jq -e '(.reply | type == "string" and length > 0) and (.mode == "gemini" or .mode == "groq")' >/dev/null
-          echo "PASS — live AI provider: $(echo "$body" | jq -r '.mode')"
-          echo "Reply: $(echo "$body" | jq -r '.reply')"
+          body=""
+          http_code="000"
+          # Render can briefly return 502/503/504 while an automatic deploy or
+          # a cold start settles. Retry transient gateway/service failures, but
+          # still fail the check if no valid API response arrives after 3 tries.
+          for attempt in 1 2 3; do
+            response=$(curl -sS --max-time 60 -w '\n%{http_code}' \
+              -X POST "$API_BASE/api/assistant" \
+              -H 'Content-Type: application/json' \
+              --data '{"message":"Automated live smoke test. Reply with exactly: HOSHI OK.","locale":"en"}' || true)
+            http_code="${response##*\n'}"
+            body="${response%\n'*}"
+            if [ "$http_code" = "200" ]; then
+              if echo "$body" | jq -e '(.reply | type == "string" and length > 0) and (.mode == "gemini" or .mode == "groq")' >/dev/null; then
+                echo "PASS — live AI provider: $(echo "$body" | jq -r '.mode')"
+                echo "Reply: $(echo "$body" | jq -r '.reply')"
+                exit 0
+              fi
+              echo "HTTP 200 returned invalid assistant JSON on attempt $attempt"
+              echo "$body"
+              exit 1
+            fi
+            echo "Live assistant request returned HTTP $http_code on attempt $attempt"
+            if [ "$http_code" != "000" ] && [ "$http_code" != "502" ] && [ "$http_code" != "503" ] && [ "$http_code" != "504" ]; then
+              echo "$body"
+              exit 1
+            fi
+            if [ "$attempt" -lt 3 ]; then sleep $((attempt * 10)); fi
+          done
+          echo "Live assistant request failed after retries (HTTP $http_code)"
+          echo "$body"
+          exit 1

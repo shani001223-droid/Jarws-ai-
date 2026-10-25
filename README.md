@@ -39,7 +39,7 @@ A mobile-first HOSHI AI companion for Android, using a hosted backend and a resp
 
 ## HOSHI implementation and verification status
 
-- Backend personality, contextual mood guidance for English/Roman Urdu, recent-context support, reduced repetitive phrasing guidance, and Groq fallback are implemented in `cloud_backend/main.py`. Mood detection is rule-based and carries an earlier mood only across short acknowledgements.
+- Backend personality, contextual mood guidance for English/Roman Urdu, recent-context support, anti-repetition guidance, negation-aware mood detection, and Groq fallback are implemented in `cloud_backend/main.py`. Mood detection remains a lightweight rule-based heuristic and carries prior mood only across short acknowledgements.
 - Backend service deployed successfully after a transient syntax error was caught and fixed. Render logs showed `/health` returning HTTP 200 and no recent error-level application logs at the time of verification.
 - Frontend source build and static contract checks pass; a fresh live Render visual check after the latest sprite/privacy changes remains pending.
 - GitHub Actions **HOSHI basic checks run #142 passed** on the latest implementation/test commit, including Python/unit tests, frontend-contract tests, privacy-filter tests, reminder/parser tests, and JavaScript syntax compilation. [Run #142](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40234119379).

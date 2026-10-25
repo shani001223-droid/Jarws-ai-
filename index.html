@@ -9,11 +9,16 @@
 <title>HOSHI — AI Companion</title>
 <style>
 :root{color-scheme:dark;--bg:#07111e;--panel:#0d1b2b;--cyan:#5de1ff;--muted:#9ab2c6;--line:#1c4862;--violet:#9275ff;--pink:#ffb6d5}
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 0,#102b42 0,var(--bg) 58%);color:#eaf8ff;font:16px system-ui,-apple-system,Arial,sans-serif;padding:18px;display:flex;justify-content:center}
-.app{width:100%;max-width:520px;margin:auto;padding:22px 17px 28px;background:#0b1725eF;border:1px solid var(--line);border-radius:26px;box-shadow:0 18px 60px #0008}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 0,#102b42 0,var(--bg) 58%);color:#eaf8ff;font:16px system-ui,-apple-system,Arial,sans-serif;padding:0}
+.dashboard-shell{width:100%;max-width:1600px;min-height:100vh;margin:0 auto;display:grid;grid-template-columns:220px minmax(0,1fr);gap:22px;padding:22px}
+.sidebar{position:sticky;top:22px;height:calc(100vh - 44px);min-height:460px;display:flex;flex-direction:column;padding:22px 14px;background:linear-gradient(180deg,#0d1d2e,#08131f);border:1px solid var(--line);border-radius:22px;box-shadow:0 18px 60px #0005}
+.brand-mark{font-size:26px;letter-spacing:.18em;font-weight:800;color:#eaf8ff}.brand-mark span{color:var(--cyan)}.sidebar-caption{font-size:10px;letter-spacing:.2em;color:var(--muted);margin:7px 0 28px}.sidebar nav{display:flex;flex-direction:column;gap:8px}.nav-link{display:flex;align-items:center;gap:12px;text-decoration:none;color:#a9c2d6;padding:12px;border-radius:12px;border:1px solid transparent}.nav-link:hover,.nav-link:focus{background:#12334a;color:#eaf8ff;border-color:#28617c}.sidebar-footer{margin-top:auto;font-size:10px;color:var(--muted);letter-spacing:.08em}.online-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#67e9bd;box-shadow:0 0 12px #67e9bd;margin-right:7px}
+.app{width:100%;max-width:1180px;min-width:0;margin:0 auto;padding:24px;background:#0b1725eF;border:1px solid var(--line);border-radius:26px;box-shadow:0 18px 60px #0008}
+.app-shortcuts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:12px}.app-shortcuts a{display:flex;align-items:center;gap:9px;min-width:0;text-decoration:none;color:#eaf8ff;padding:12px;border:1px solid #21455e;border-radius:12px;background:#0b1b2a;font-size:13px}.app-shortcuts a span{color:var(--cyan);font-size:18px}.app-shortcuts a:hover{border-color:var(--cyan);background:#10283b}.anchor-target{scroll-margin-top:18px}
 header{display:flex;justify-content:space-between;align-items:center;gap:12px}h1{margin:0;color:var(--cyan);letter-spacing:.2em;font-size:27px}.tag{color:var(--muted);font-size:10px;letter-spacing:.16em;margin-top:4px}.pill{border:1px solid var(--line);border-radius:99px;padding:7px 10px;font-size:11px;color:var(--muted);white-space:nowrap}
 .orb{width:132px;height:132px;border-radius:50%;margin:27px auto 18px;display:grid;place-items:center;border:2px solid #b7f3ff;color:var(--cyan);font-size:46px;background:radial-gradient(circle,#12425a,#081523 68%);box-shadow:0 0 30px #1acfff35,inset 0 0 24px #1acfff25;position:relative;overflow:hidden;transition:width .2s,height .2s,box-shadow .2s}.orb:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,#eafcff,#b9e4f2 42%,#788ec1 72%,#e9faff);clip-path:ellipse(46% 48% at 50% 47%);opacity:.98}.orb:after{content:"";position:absolute;left:17%;right:17%;top:18%;height:64%;border-radius:48% 48% 43% 43%;background:linear-gradient(110deg,#f8fdff 0%,#c8e3f4 34%,#fff 55%,#a5c4e4 100%);box-shadow:0 0 0 2px #d8f5ff;clip-path:polygon(8% 0,90% 0,100% 55%,77% 79%,65% 100%,50% 84%,35% 100%,20% 76%,0 50%)}.orb{isolation:isolate}.orb.active:after{filter:brightness(1.2)}
 .orb:before,.orb:after{display:none}.orb img.companion-avatar{display:block;width:100%;height:100%;object-fit:cover;border-radius:50%}.orb.active{animation:pulse 1.6s infinite}.orb[data-emotion="happy"],.orb[data-emotion="excited"]{box-shadow:0 0 38px #f5d78b88,inset 0 0 26px #f5d78b55}.orb[data-emotion="sad"]{filter:saturate(.65);box-shadow:0 0 28px #759dff66}.orb[data-emotion="affectionate"],.orb[data-emotion="shy"]{box-shadow:0 0 38px #ffb6d588,inset 0 0 26px #ffb6d555}.orb[data-emotion="annoyed"]{box-shadow:0 0 34px #ff806688}.orb[data-emotion="concerned"],.orb[data-emotion="thinking"]{box-shadow:0 0 34px #9275ff77}.orb[data-emotion="playful"]{animation:pulse 1.1s infinite}@keyframes pulse{50%{box-shadow:0 0 48px #1acfff88,inset 0 0 28px #1acfff55;transform:scale(1.025)}}
+@media(max-width:850px){.dashboard-shell{grid-template-columns:1fr;padding:10px;gap:10px}.sidebar{position:static;height:auto;min-height:0;padding:10px 12px}.brand-mark{font-size:20px}.sidebar-caption,.sidebar-footer{display:none}.sidebar nav{flex-direction:row;overflow-x:auto;gap:5px}.nav-link{flex:0 0 auto;padding:9px 11px;font-size:12px}.app{padding:17px 12px;border-radius:20px}.app-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr))}}
 #status{text-align:center;color:var(--cyan);font-size:12px;letter-spacing:.12em;min-height:19px}#reply{line-height:1.6;min-height:58px;text-align:center;overflow-wrap:anywhere;margin:16px 2px 20px}
 .controls{display:grid;grid-template-columns:1fr 1fr;gap:9px}button{font:inherit;cursor:pointer;min-height:47px;padding:11px 12px;border:1px solid #28617c;border-radius:13px;background:#10283b;color:#effbff}button.primary{background:linear-gradient(135deg,#126080,#12364d);border-color:var(--cyan)}button:active{transform:scale(.985)}button:disabled{opacity:.5}
 form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;border:1px solid var(--line);border-radius:12px;background:#06101a;color:white;font:inherit}form button{min-width:82px}
@@ -22,9 +27,23 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
 </style>
 </head>
 <body>
+<div class="dashboard-shell">
+<aside class="sidebar" aria-label="HOSHI navigation">
+<div class="brand-mark">H<span>OSHI</span></div>
+<div class="sidebar-caption">PERSONAL AI</div>
+<nav>
+<a href="#home" class="nav-link">⌂ <span>Home</span></a>
+<a href="#chat" class="nav-link">◌ <span>Chat</span></a>
+<a href="#voicePanel" class="nav-link">♫ <span>Voice</span></a>
+<a href="#appLinks" class="nav-link">▦ <span>Apps</span></a>
+<a href="#memoryPanel" class="nav-link">◷ <span>Memory</span></a>
+<a href="#settings" class="nav-link">⚙ <span>Settings</span></a>
+</nav>
+<div class="sidebar-footer"><span class="online-dot"></span> HOSHI SYSTEM READY</div>
+</aside>
 <main class="app">
 <header><div><h1>HOSHI</h1><div class="tag">YOUR AI COMPANION · ONLINE</div></div><div class="pill" id="connection">CHECKING CLOUD…</div></header>
-<div class="assistant-card"><div class="avatar-label" id="avatarLabel">HOSHI · CARING</div><div class="orb-wrap"><div class="orb" id="orb" role="img" aria-label="HOSHI anime companion"><img class="companion-avatar" src="./assets/jarvis-anime-avatar.webp" alt="HOSHI companion avatar"></div></div>
+<div class="assistant-card" id="home"><div class="avatar-label" id="avatarLabel">HOSHI · CARING</div><div class="orb-wrap"><div class="orb" id="orb" role="img" aria-label="HOSHI anime companion"><img class="companion-avatar" src="./assets/jarvis-anime-avatar.webp" alt="HOSHI companion avatar"></div></div>
 <div id="status" role="status" aria-live="polite">READY · TAP START LISTENING</div>
 <p id="reply" aria-live="polite">Salam! Main HOSHI hoon. Mujh se baat karo — main sun rahi hoon.</p>
 <div class="controls">
@@ -35,6 +54,7 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
 <button id="languageToggle">🗣 Language: Urdu</button>
 </div>
 <form id="commandForm"><input id="commandInput" autocomplete="off" placeholder="Type a command…" aria-label="Command"><button class="primary" type="submit">Send</button></form>
+<div id="chat" class="anchor-target"></div>
 <div class="section" id="memoryPanel"><div class="statusrow"><h2>HOSHI MEMORY & CHAT HISTORY</h2><button class="toggle" type="button" id="memoryToggle">Local memory: ON</button></div><p class="small">Recent chat is stored on this device only. Obvious password, API key, token, and OTP messages are not saved. Turn memory off or clear history any time.</p><div id="chatHistory" class="chat-history" aria-live="polite">Your recent conversation will appear here.</div><div class="quick"><button type="button" id="clearMemoryBtn">Clear history</button></div></div>
 <div class="section" id="voicePanel"><h2>CUTE VOICE SETTINGS</h2><div class="voice-grid">
 <div><label for="voiceSelect" class="small">Device voice</label><select id="voiceSelect" aria-label="Choose speech voice"><option value="">Auto — best available</option></select></div>
@@ -44,10 +64,22 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
 <p class="small">Voices depend on the speech engine installed on your phone. To add Urdu or a more natural female voice, check Android Settings → Text-to-speech output.</p>
 </div></div>
 <div class="section" id="screenControlSection" style="display:none"><h2>BASIC PHONE CONTROLS</h2><p class="small">Optional Android Accessibility permission. Only the actions you tap run; screen text is not read or sent to the cloud.</p><div class="quick"><button type="button" id="screenPermissionBtn">Enable permission</button><button type="button" data-screen-action="back">Back</button><button type="button" data-screen-action="home">Home</button><button type="button" data-screen-action="swipe_up">Swipe up</button><button type="button" data-screen-action="swipe_down">Swipe down</button></div></div>
-<div class="section"><div class="statusrow"><h2>WAKE WORD</h2><button class="toggle" id="wakeToggle">Hey HOSHI: OFF</button></div><p class="small">Wake-word detection works only while this page is open, foregrounded and microphone access is granted. This web prototype cannot listen reliably while the phone is locked or the app is closed.</p></div>
+<div class="section" id="settings"><div class="statusrow"><h2>WAKE WORD</h2><button class="toggle" id="wakeToggle">Hey HOSHI: OFF</button></div><p class="small">Wake-word detection works only while this page is open, foregrounded and microphone access is granted. This web prototype cannot listen reliably while the phone is locked or the app is closed.</p></div>
 <div class="section"><h2>TRY A COMMAND</h2><p class="small">“Hey HOSHI” · “What time is it?” · “Open Google” · “Open YouTube” · “Help” · “Stop speaking”</p><div class="quick"><button data-cmd="what time is it">Time</button><button data-cmd="today's date">Date</button><button data-cmd="open Google">Google</button><button data-cmd="open YouTube">YouTube</button><button data-cmd="help">Help</button></div></div>
+<div class="section" id="appLinks"><h2>APP SHORTCUTS · OPEN EXTERNAL SERVICES</h2><p class="small">These are website shortcuts, not account-connected integrations. Sign in to each service yourself if needed.</p><div class="app-shortcuts">
+<a href="https://www.tradingview.com/" target="_blank" rel="noopener noreferrer"><span>◈</span>TradingView</a>
+<a href="https://www.coinglass.com/" target="_blank" rel="noopener noreferrer"><span>◉</span>Coinglass</a>
+<a href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer"><span>▶</span>YouTube</a>
+<a href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer"><span>✳</span>ChatGPT</a>
+<a href="https://gemini.google.com/" target="_blank" rel="noopener noreferrer"><span>✧</span>Gemini</a>
+<a href="https://www.notion.so/" target="_blank" rel="noopener noreferrer"><span>▤</span>Notion</a>
+<a href="https://web.telegram.org/" target="_blank" rel="noopener noreferrer"><span>➤</span>Telegram</a>
+<a href="https://web.whatsapp.com/" target="_blank" rel="noopener noreferrer"><span>◌</span>WhatsApp</a>
+<a href="https://drive.google.com/" target="_blank" rel="noopener noreferrer"><span>▣</span>Google Drive</a>
+</div></div>
 <footer>Basic commands, time/date, Google and YouTube are available. Urdu/Roman Urdu and English commands supported where browser speech recognition permits.<br>AI keys may be configured while provider quota or permissions still prevent replies. Live AI access is checked when you send a message. Advanced phone control requires native Android permissions.</footer>
 </main>
+</div>
 <script src="./assistant-commands.js"></script>
 <script src="./reminder-parser.js"></script>
 <script>

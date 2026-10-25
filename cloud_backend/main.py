@@ -155,7 +155,7 @@ def health():
     groq_configured = bool(os.getenv("GROQ_API_KEY", "").strip())
     return {
         "ok": True,
-        "service": "jarvis-cloud-api",
+        "service": "hoshi-cloud-api",
         "version": app.version,
         "gemini_api": "interactions" if gemini_configured else None,
         "ai_connected": gemini_configured or groq_configured,

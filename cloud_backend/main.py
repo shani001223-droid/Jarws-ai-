@@ -28,6 +28,7 @@ class AssistantRequest(BaseModel):
     message: str = Field(min_length=1, max_length=4000)
     locale: Optional[str] = "en"
     context: list[str] = Field(default_factory=list, max_length=12)
+    personality: str = Field(default="balanced", max_length=24)
 
 
 class AssistantResponse(BaseModel):
@@ -183,8 +184,17 @@ def assistant(payload: AssistantRequest):
         + "\n".join(recent_context) + "\nCurrent user message: " + message
     )
 
+    style_modes = {
+        "balanced": "Keep warmth, affection, and playfulness balanced.",
+        "playful": "Use a little more playful teasing, light jokes, and energetic warmth when appropriate.",
+        "affectionate": "Use a gentler, more affectionate and reassuring tone when appropriate.",
+        "calm": "Use a calm, soft, thoughtful tone and avoid excessive teasing.",
+    }
+    style_hint = style_modes.get(str(payload.personality or "balanced").casefold(), style_modes["balanced"])
+
     language_hint = (
         "You are HOSHI, a warm, clever, playful AI companion with a consistent identity. "
+        + style_hint + " "
         "Use the user's language: if they write Roman Urdu, answer in natural Pakistani Roman Urdu; "
         "otherwise match their language. Keep replies conversational, specific, and varied rather than scripted. "
         "Show appropriate warmth, affection, excitement, shyness, concern, mild annoyance, or playful teasing "

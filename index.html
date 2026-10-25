@@ -97,7 +97,7 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
  const $=id=>document.getElementById(id), status=$('status'), reply=$('reply'), input=$('commandInput'), orb=$('orb');
  const API_BASE='https://jarws-ai-2.onrender.com';
  let cloudOnline=false;
- let recognition=null, listening=false, wakeEnabled=false, awaitingCommand=false, voiceReplies=true, restartTimer=null, commandLanguage="ur-PK", editingMemoryIndex=null;
+ let recognition=null, listening=false, wakeEnabled=false, awaitingCommand=false, voiceReplies=true, restartTimer=null, lastVoiceError="", commandLanguage="ur-PK", editingMemoryIndex=null;
  try{const savedLanguage=localStorage.getItem("hoshiLanguage");if(savedLanguage==="ur-PK"||savedLanguage==="en-US")commandLanguage=savedLanguage;voiceReplies=localStorage.getItem("hoshiVoiceReplies")!=="false";wakeEnabled=localStorage.getItem("hoshiWakeWord")==="true"}catch(e){}
  const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
   function setStatus(s){status.textContent=s}
@@ -215,7 +215,7 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
  else {reply.textContent='HOSHI soch rahi hai…';askCloud(text);return;}
  setStatus(listening?(wakeEnabled?'LISTENING FOR WAKE WORD':'LISTENING'):'READY');setTimeout(()=>orb.classList.remove('active'),900)
  }
- function startListening(){if(!Recognition){say('Speech recognition is not supported in this browser. Try Chrome, or use the text command box.');setStatus('VOICE RECOGNITION UNAVAILABLE');return}
+ function startListening(){lastVoiceError="";if(!Recognition){say('Speech recognition is not supported in this browser. Try Chrome, or use the text command box.');setStatus('VOICE RECOGNITION UNAVAILABLE');return}
  if(recognition&&listening)return;
  recognition=new Recognition();recognition.lang=commandLanguage;recognition.continuous=true;recognition.interimResults=false;
  recognition.onstart=()=>{listening=true;$('wakeBtn').textContent='🎙 Listening…';setStatus(wakeEnabled?'LISTENING FOR “HEY HOSHI”':'LISTENING');};
@@ -224,9 +224,31 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
  if(awaitingCommand){awaitingCommand=false;processCommand(heard);continue}
  if(lower.includes('hey hoshi')||lower.includes('hey, hoshi')||lower.includes('a hoshi')){const after=heard.replace(/hey[, ]*hoshi/i,'').trim();if(after){processCommand(after)}else{awaitingCommand=true;setStatus('HOSHI AWAKE · SAY YOUR COMMAND');reply.textContent='I’m listening. What can I do for you?';if(voiceReplies&&'speechSynthesis'in window){window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance('Yes?');u.lang='en-US';u.onend=()=>{if(listening&&recognition){try{recognition.start()}catch(e){}}};window.speechSynthesis.speak(u)}}}
  }}
- recognition.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed'){listening=false;setStatus('MICROPHONE PERMISSION REQUIRED');$('wakeBtn').textContent='🎙 Start listening'}else if(e.error!=='no-speech'&&e.error!=='aborted')setStatus('VOICE ERROR · '+e.error.toUpperCase())};
- recognition.onend=()=>{if(listening){clearTimeout(restartTimer);restartTimer=setTimeout(()=>{try{recognition.start()}catch(e){}},500)}else{$('wakeBtn').textContent='🎙 Start listening';setStatus('READY')}};
- try{recognition.start()}catch(e){setStatus('COULD NOT START MICROPHONE')}
+ recognition.onerror=e=>{
+  const error=String(e&&e.error||'unknown');
+  if(error==='no-speech'||error==='aborted')return;
+  const messages={
+   'not-allowed':'MICROPHONE PERMISSION REQUIRED',
+   'service-not-allowed':'MICROPHONE PERMISSION REQUIRED',
+   'audio-capture':'NO MICROPHONE FOUND · CHECK DEVICE',
+   'language-not-supported':'VOICE LANGUAGE NOT SUPPORTED · CHANGE LANGUAGE',
+   'network':'VOICE NETWORK ERROR · CHECK CONNECTION THEN RETRY'
+  };
+  lastVoiceError=messages[error]||('VOICE ERROR · '+error.toUpperCase());
+  listening=false;awaitingCommand=false;clearTimeout(restartTimer);
+  $('wakeBtn').textContent='🎙 Start listening';setStatus(lastVoiceError);
+  try{recognition.stop()}catch(_){}
+ };
+ recognition.onend=()=>{
+  if(listening){
+   clearTimeout(restartTimer);
+   restartTimer=setTimeout(()=>{
+    try{recognition.start()}
+    catch(e){listening=false;lastVoiceError='VOICE RESTART FAILED · TAP TO RETRY';$('wakeBtn').textContent='🎙 Start listening';setStatus(lastVoiceError)}
+   },500);
+  }else{$('wakeBtn').textContent='🎙 Start listening';if(!lastVoiceError)setStatus('READY')}
+ };
+ try{recognition.start()}catch(e){listening=false;lastVoiceError='COULD NOT START MICROPHONE · CHECK PERMISSIONS';$('wakeBtn').textContent='🎙 Start listening';setStatus(lastVoiceError)}
  }
  function stopListening(){listening=false;awaitingCommand=false;clearTimeout(restartTimer);if(recognition){try{recognition.onend=null;recognition.stop()}catch(e){}recognition=null}if('speechSynthesis'in window)window.speechSynthesis.cancel();$('wakeBtn').textContent='🎙 Start listening';setStatus('LISTENING STOPPED')}
  // Voice settings are stored locally on this device. Voice availability is controlled by Android.

@@ -1,3 +1,7 @@
+## Online Urdu speech fallback
+
+If a matching native/browser Urdu voice is unavailable or fails, `/api/speech` generates MP3 with `edge-tts` and `ur-PK-UzmaNeural`. This uses Microsoft's online speech service through an unofficial client, requires internet and can become unavailable. No key or paid speech account is introduced. Spoken reply text is sent to that service only when voice output/preview is requested; audio stays in memory, responses use no-store, and there is no file persistence. Stop aborts pending synthesis playback and discards the audio URL. The visible audio player permits tap-to-play if browser autoplay is blocked. Native Urdu speech remains first choice.
+
 ## OpenRouter free provider
 
 In the Render **Jarws-ai--2** backend Environment, set `OPENROUTER_API_KEY` privately and `OPENROUTER_MODEL=openrouter/free`, then save/deploy. Never paste the key into chat, frontend code, GitHub or the APK. When the key is configured OpenRouter is primary. Without it the existing Gemini/Groq path is unchanged. OpenRouter errors are reported directly; there is no silent paid upgrade or retry loop. Only `openrouter/free` or a model ID ending in `:free` is allowed. Free requests still have account/provider limits and availability can vary.
@@ -14,7 +18,7 @@ Urdu mode selects only Urdu device voices. Hindi/English/default-language substi
 
 Country/device voice picker removed. Soft, Warm and Playful are delivery presets for the installed speech engine, not new voice models. Android native TTS remains first choice. Preview works with automatic replies disabled and does not save a chat turn. Stop Speaking invalidates delayed browser speech and stops native/browser output. Fine tuning is optional; old country voice selections are discarded.
 
-A studio-quality anime voice is not implemented or claimed. Actual Urdu pronunciation and voice quality require target-device listening. No paid/cloud TTS service was added.
+A studio-quality anime voice is not implemented or claimed. Actual Urdu pronunciation and voice quality require target-device listening. No paid TTS service is configured. The online Urdu fallback is described above.
 
 # HOSHI AI — Android Companion
 
@@ -80,7 +84,7 @@ A mobile-first HOSHI AI companion for Android, using a hosted backend and a resp
 - Language selection, voice replies, wake-word toggle, personality, pitch, and rate persist locally across reloads. Android uses native TTS first; browser mode automatically selects an available voice. Overlapping cloud requests supersede prior requests so stale results do not overwrite newer replies.
 - Hero-level Chat / Voice / Vision / Create / More shortcuts have working click handlers with browser-mode fallbacks.
 - Automatic browser and native Android voice selection now prefer installed `ur-PK` voices when available, then other Urdu voices, then best-effort feminine-sounding fallbacks. Country/device voice selection has been removed. Accent and gender are device-engine-dependent; missing voices cannot be installed by HOSHI.
-- The face is an 8-expression WebP sprite from the final character sheet. `data-emotion` switches the sprite position; service-worker cache `hoshi-shell-v15` precaches the sprite, privacy helper, optimized hero artwork, and HOSHI app icon for offline loading. Speaking shows an animated waveform and a lightweight mouth overlay; it is not phoneme-synchronized lip-sync.
+- The face is an 8-expression WebP sprite from the final character sheet. `data-emotion` switches the sprite position; service-worker cache `hoshi-shell-v16` precaches the sprite, privacy helper, optimized hero artwork, and HOSHI app icon for offline loading. Speaking shows an animated waveform and a lightweight mouth overlay; it is not phoneme-synchronized lip-sync.
 - A shared `memory-privacy.js` helper applies privacy filters before local history save/edit. Node tests exercise common credential/token formats, recovery phrases, OTPs, contact information, and long numeric strings.
 - Python frontend-contract tests verify unique HTML IDs, script references, valid WebP headers, emotion mappings, memory controls, cache contents, and actionable voice-error recovery paths.
 - Previously confirmed runs: [HOSHI basic checks #202](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40237303519), [live Render dashboard smoke #7](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40237284235), [live backend smoke #35](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40237196850), and [Android APK #32](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40237013290). The latest multi-turn, waveform/mouth-lifecycle, narrow-phone, native Urdu voice, and PWA icon/cache regression additions need fresh automated run results.

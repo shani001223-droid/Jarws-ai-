@@ -18,7 +18,7 @@ Urdu mode selects only Urdu device voices. Hindi/English/default-language substi
 
 Country/device voice picker removed. Soft, Warm and Playful are delivery presets for the installed speech engine, not new voice models. Android native TTS remains first choice. Preview works with automatic replies disabled and does not save a chat turn. Stop Speaking invalidates delayed browser speech and stops native/browser output. Fine tuning is optional; old country voice selections are discarded.
 
-A studio-quality anime voice is not implemented or claimed. Actual Urdu pronunciation and voice quality require target-device listening. No paid/cloud TTS service was added.
+A studio-quality anime voice is not implemented or claimed. Actual Urdu pronunciation and voice quality require target-device listening. No paid TTS service is configured. The online Urdu fallback is described above.
 
 # HOSHI AI — Android Companion
 

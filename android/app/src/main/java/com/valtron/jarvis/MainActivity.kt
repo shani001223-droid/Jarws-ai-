@@ -65,7 +65,7 @@ class MainActivity : Activity() {
         }
 
         val title = TextView(this).apply {
-            text = "J A R V I S"
+            text = "H O S H I"
             textSize = 22f
             setTextColor(Color.rgb(93, 225, 255))
             gravity = Gravity.CENTER_VERTICAL
@@ -280,7 +280,7 @@ class MainActivity : Activity() {
         AlertDialog.Builder(this)
             .setTitle("Enable basic screen controls?")
             .setMessage(
-                "JARVIS will only perform Back, Home, and swipe gestures when you tap those buttons. " +
+                "HOSHI will only perform Back, Home, and swipe gestures when you tap those buttons. " +
                     "It will not read screen text or send screen contents to the cloud. " +
                     "You can disable the service anytime in Android Accessibility settings."
             )

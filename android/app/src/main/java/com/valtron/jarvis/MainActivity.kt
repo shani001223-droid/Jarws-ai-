@@ -348,10 +348,14 @@ class MainActivity : Activity() {
         if (available != null) engine.setLanguage(available)
         try {
             val voices = engine.voices.orEmpty().filter { available == null || it.locale.language == available.language }
-            val preferred = voices.firstOrNull {
-                it.name.contains("female", ignoreCase = true) ||
-                it.name.contains("feminine", ignoreCase = true) ||
-                it.name.contains("sfg", ignoreCase = true)
+            // Best-effort preference only: installed TTS engines expose different voice names,
+            // and a feminine-sounding Urdu voice cannot be guaranteed if the device lacks one.
+            val feminineVoiceHints = listOf(
+                "female", "feminine", "sfg", "zira", "samantha", "aria",
+                "jenny", "sara", "siri", "victoria", "sonia", "karen"
+            )
+            val preferred = voices.firstOrNull { voice ->
+                feminineVoiceHints.any { hint -> voice.name.contains(hint, ignoreCase = true) }
             }
             if (preferred != null) engine.voice = preferred
         } catch (_: Exception) {

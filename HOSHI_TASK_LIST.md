@@ -38,6 +38,7 @@
 ## Phase 5 — JARVIS interface and Android
 - [x] Responsive UI breakpoints for desktop, tablet, and phone widths are implemented; Realme Note 50 runtime/layout verification remains pending.
 - [x] HOSHI home screen with avatar, chat, microphone/voice controls, and settings exists in the frontend.
+- [x] Added functional hero-level Chat / Voice / Vision / Create / More shortcuts with responsive styling; Chromium smoke test covers click actions and browser-only voice/screenshot fallback (run #160).
 - [x] Emotion-driven avatar expression sprite positions and glow changes are mapped to the response emotion label.
 - [x] Local conversation history is displayed and can be reviewed, edited, deleted entry-by-entry, disabled, or cleared.
 - [x] Settings for voice, language, personality, memory, and auto-speak are available; language/voice-reply/wake-word selections persist locally, and an explicitly selected browser voice now bypasses the native-TTS override.
@@ -69,7 +70,7 @@
 ## GitHub Actions verification
 - [x] `HOSHI basic checks` run #112 passed on commit `e4141eea0e01396be09380bb4b2e2095a68e1a26`; it includes Python tests, JavaScript parser tests, privacy-filter tests, frontend contract checks, and JS syntax compilation.
 - [x] `Build HOSHI Android APK` run #24 passed and uploaded `hoshi-debug-apk` on commit `c5737b886e108c9aa368a9ce8efe27f88f8073a2`. No Android source files changed after that APK build; regenerate after future native Android changes.
-- [x] Latest `HOSHI basic checks` run #154 passed, including the new Chromium browser interaction suite. [Run #154](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40234981960). Previous live backend smoke #26 and Pages publishes #167/#169 passed; current Render frontend visual verification is still pending.
+- [x] `HOSHI basic checks` run #160 passed with Chromium verifying the five hero shortcuts, text chat, emotion state, memory toggle, stale-response protection, and browser-mode fallbacks. [Run #160](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40235361114). Current Render frontend visual verification and Realme testing remain pending.
 - [ ] Install the generated debug APK and verify core flows on the target Android phone.
 
 ## Initial audit notes
@@ -107,7 +108,7 @@
 
 - [x] Phase 2 mood signal added: deterministic English/Roman Urdu phrase detection plus safe continuity across short acknowledgements; backend tests cover key moods, context carry, and neutral-context reset.
 - [x] Phase 3 voice failure handling improved: permission, missing microphone, unsupported language, network, and unknown speech-recognition errors stop automatic restart loops and display actionable states; explicitly selected browser voices are respected. Service-worker cache is `hoshi-shell-v10`.
-- [x] Current validation: HOSHI basic checks #154 passed, including a real Chromium browser run against the local dashboard with a mocked cloud API. Live backend smoke test #26 passed after the non-repetitive reply prompt change; Render frontend visual verification and device tests remain pending.
+- [x] Current validation: HOSHI basic checks #160 passed, including a Chromium browser run against the local dashboard with a mocked cloud API and the latest hero shortcuts. Live backend smoke test #26 passed after the non-repetitive reply prompt change; Render frontend visual verification and device tests remain pending.
 
 ## Working rules
 1. This document records requirements; it does not mean implementation is complete.

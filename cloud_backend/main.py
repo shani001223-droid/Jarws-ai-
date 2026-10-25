@@ -138,28 +138,39 @@ def assistant(payload: AssistantRequest):
     # error, timeout, or malformed response triggers Groq when its key is set.
     if gemini_key:
         body = {
-            "systemInstruction": {"parts": [{"text": language_hint}]},
-            "contents": [{"role": "user", "parts": [{"text": message}]}],
-            "generationConfig": {"temperature": 0.7, "maxOutputTokens": 1024},
+            "model": GEMINI_MODEL,
+            "input": message,
+            "system_instruction": language_hint,
+            # Keep this stateless request from being stored as a conversation.
+            "store": False,
         }
         req = Request(
-            f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={gemini_key}",
+            "https://generativelanguage.googleapis.com/v1beta/interactions",
             data=json.dumps(body).encode("utf-8"),
-            headers={"Content-Type": "application/json"},
+            headers={
+                "Content-Type": "application/json",
+                "x-goog-api-key": gemini_key,
+            },
             method="POST",
         )
-        gemini_problem = "Gemini did not return a usable response."
+        gemini_problem = "Gemini Interactions API did not return a usable response."
         should_fallback = False
         try:
             with urlopen(req, timeout=35) as response:
                 data = json.loads(response.read().decode("utf-8"))
-            parts = (data.get("candidates") or [{}])[0].get("content", {}).get("parts", [])
-            reply = "\n".join(
-                str(part.get("text", "")) for part in parts if part.get("text")
+            steps = data.get("steps") or []
+            reply = "\\n".join(
+                str(block.get("text", ""))
+                for step in steps
+                if step.get("type") == "model_output"
+                for block in (step.get("content") or [])
+                if block.get("type") == "text" and block.get("text")
             ).strip()
+            if not reply:
+                reply = str(data.get("output_text") or "").strip()
             if reply:
                 return AssistantResponse(reply=reply, mode="gemini")
-            gemini_problem = "Gemini returned no text (possibly blocked or empty output)."
+            gemini_problem = "Gemini Interactions API returned no text (possibly blocked or empty output)."
             should_fallback = True
         except HTTPError as exc:
             try:

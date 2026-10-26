@@ -427,8 +427,9 @@ async function main() {
     assert.match(await page.locator('#memoryToggle').innerText(), /ON/);
     await page.locator('[data-tab="chat"]').click();
     await page.locator('#commandInput').fill('Explain a calm evening');
+    const firstMemoryReply=page.waitForResponse(r=>r.url().endsWith('/api/assistant')&&r.request().postDataJSON().message==='Explain a calm evening');
     await page.locator('#commandForm button').click();
-    await page.waitForFunction(()=>document.querySelector('#reply').textContent.includes('I can help'));
+    await firstMemoryReply;
     const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('hoshiConversationMemoryV1')));
     assert.ok(saved.some(item=>item.role==='user'&&item.content==='Explain a calm evening'));
     await page.evaluate(()=>localStorage.setItem('hoshiConversationMemoryV1',JSON.stringify([
@@ -448,8 +449,9 @@ async function main() {
     assert.equal(await page.evaluate(()=>localStorage.getItem('hoshiConversationMemoryV1')),null);
     await page.locator('[data-tab="chat"]').click();
     await page.locator('#commandInput').fill('Explain the moon');
+    const afterOptOutReply=page.waitForResponse(r=>r.url().endsWith('/api/assistant')&&r.request().postDataJSON().message==='Explain the moon');
     await page.locator('#commandForm button').click();
-    await page.waitForFunction(()=>document.querySelector('#reply').textContent.includes('I can help'));
+    await afterOptOutReply;
     assert.deepEqual(apiMessages.at(-1).context,[],'No prior chat sent after consent revoked');
     assert.equal(await page.evaluate(()=>localStorage.getItem('hoshiConversationMemoryV1')),null);
     assert.deepEqual(pageErrors,[]);

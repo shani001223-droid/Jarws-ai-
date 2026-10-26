@@ -14,7 +14,7 @@
 - [ ] **06** Verify deployment, rollback and APK builds. Acceptance: implementation or evidence, passing tests, limitations recorded.
 
 ## Phase 2 — Intelligent Brain
-- [ ] **07** Classify chat, device and backend tasks. Acceptance: implementation or evidence, passing tests, limitations recorded.
+- [x] **07** Classify chat, device and backend tasks. Acceptance: implementation or evidence, passing tests, limitations recorded.
 - [ ] **08** Convert user goals into clear deliverables. Acceptance: implementation or evidence, passing tests, limitations recorded.
 - [ ] **09** Break large goals into verified milestones. Acceptance: implementation or evidence, passing tests, limitations recorded.
 - [ ] **10** Route to available free models intelligently. Acceptance: implementation or evidence, passing tests, limitations recorded.
@@ -97,4 +97,4 @@
 
 ## Additional implementation checkpoints
 - Task 06 **blocked/unfinished**: branch CI works, previous main APK was successful, but current branch APK build and live Render deployment/rollback are not newly verified; Render connector requires explicit workspace selection. Do not mark completed.
-- Task 07 **partial**: the deterministic task router and `POST /api/agent/route` now classify chat, executable product-ads, BTC screen analysis, and game/anime backend projects. It explicitly reports unavailable executors rather than pretending to have made outputs. New regression tests passed: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40301113491. Still requires client dispatch wiring and real game/anime/trading executors before marking fully complete.
+- Task 07 **verified routing layer**: backend `task_router.py` and `/api/agent/route` plus browser `hoshi-task-router.js` classify chat, device, Flora ad execution and unavailable BTC/game/anime workflows. The UI never claims an unimplemented worker completed work. Browser dispatch, offline precache, JS unit tests and Playwright E2E passed: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40306542927. **This verifies classification only, not actual game/anime/screen executors.**

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#07111e">
 <meta name="description" content="HOSHI — your mobile-first AI companion">
+<link rel="stylesheet" href="./trading.css">
 <link rel="manifest" href="./manifest.json">
 <link rel="icon" type="image/svg+xml" href="./assets/hoshi-app-icon.svg">
 <title>HOSHI — AI Companion</title>
@@ -106,13 +107,16 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 <button type="button" data-hoshi-command="take screenshot">▣ Screenshot</button>
 </div><button type="button" id="enablePhoneAccess" class="primary">Enable phone Accessibility permission</button>
 <div class="hoshi-draft"><label for="hoshiDraft">Writing pad · local to this device</label><textarea id="hoshiDraft" rows="3" maxlength="2000" placeholder="Hoshi, note likho…"></textarea><div class="hoshi-tool-grid"><button type="button" id="useHoshiReply">Use AI reply</button><button type="button" id="copyHoshiDraft">Copy text</button><button type="button" id="shareHoshiDraft">Share draft</button></div><p id="draftStatus" class="small" role="status">Draft is not automatically sent.</p></div></section></div><div data-panel="trading" hidden>
-<p class="small">Live keyless market data · public Binance Spot reference only. No real or demo orders are placed.</p>
-<div class="trading-selects"><label>Pair<select id="tradePair" aria-label="Trading pair"><option>BTCUSDT</option><option>ETHUSDT</option><option>SOLUSDT</option><option>BNBUSDT</option></select></label><label>Timeframe<select id="tradeInterval" aria-label="Chart timeframe"><option>5m</option><option>1m</option><option>15m</option><option>1h</option><option>4h</option><option>1d</option></select></label></div>
-<div class="trade-card"><div class="trade-label">Spot market price · USDT</div><div id="tradePrice" class="trade-price">—</div><div id="tradeChange" class="trade-muted">24h change: —</div><div id="tradeSource" class="trade-muted">Source: Binance Spot · read-only</div></div>
-<div class="trade-card"><div class="trade-label">Historical close-price trend (not a futures chart)</div><svg id="tradeChart" viewBox="0 0 320 120" width="100%" role="img" aria-label="Public spot candle close prices"><text x="8" y="60" fill="#9ab2c6" font-size="12">Tap Refresh to load candles</text></svg><div id="tradeIndicators" class="trade-muted">EMA 9 · SMA 20 · RSI 14: waiting for candles</div></div>
-<div class="trade-card"><div class="trade-label">Crypto Market Sentiment</div><div id="tradeSentiment" class="trade-muted">Fear &amp; Greed: waiting for data</div><div class="trade-muted">Source: <a href="https://alternative.me/crypto/fear-and-greed-index/" target="_blank" rel="noopener noreferrer">Alternative.me</a> · sentiment is not a trade signal</div></div>
-<p id="tradeStatus" class="small" role="status" aria-live="polite">Open this tab to fetch current public market information.</p><button type="button" id="tradeRefresh" class="primary">↻ Refresh market data</button>
-<p class="small">No API keys needed. Availability depends on the provider, your network and Render. If a request fails, old prices are hidden rather than represented as live.</p></div><div data-panel="influencer" hidden><p>AI Influencer tools are not connected yet.</p></div><div data-panel="outfit" hidden><p class="small">Choose a look. It applies to the main screen and is saved on this device.</p><div id="outfitGrid" class="outfit-grid"></div><p id="outfitFeedback" class="small" role="status"></p></div><div data-panel="settings" hidden><button type="button" id="nativeRemindersBtn" hidden>View / cancel reminders</button></div></section></main>
+<div id="tradeDashboard" class="trade-dashboard">
+<aside class="trade-rail"><div class="trade-logo"><img src="./assets/hoshi-app-icon.svg" width="36" height="36" alt=""><div>Hoshi AI<small>Trading Assistant</small></div></div><nav aria-label="Trading workspace"><button type="button" data-trade-target="tradeOverview" aria-pressed="true">↗ Trading</button><button type="button" data-trade-target="tradeAnalysis">◈ Analysis</button><button type="button" data-trade-target="tradeNews">▤ News</button><button type="button" data-trade-target="tradeWatchlist">☆ Watchlist</button><button type="button" data-trade-target="tradeExecution">▣ Positions</button></nav><div class="trade-rail-note">Trade smart.<br>Understand the chart.<span>✧ With Hoshi</span></div></aside>
+<div class="trade-content">
+<header class="trade-toolbar"><div class="trade-mode"><span class="trade-mode-active">◈ Spot</span><span class="trade-readonly">● Read only</span></div><div class="trade-toolbar-actions"><a id="tradeExternal" href="https://www.tradingview.com/chart/?symbol=BINANCE%3ABTCUSDT" target="_blank" rel="noopener noreferrer">TradingView ↗</a><button type="button" id="tradeRefresh" aria-label="Refresh market data">↻ Refresh</button></div></header>
+<section id="tradeOverview" class="trade-overview trade-box"><div class="trade-pair-row"><label class="trade-pair-label"><span class="trade-coin">₿</span><select id="tradePair" aria-label="Trading pair"><option value="BTCUSDT">BTC / USDT</option><option value="ETHUSDT">ETH / USDT</option><option value="SOLUSDT">SOL / USDT</option><option value="BNBUSDT">BNB / USDT</option></select></label><strong id="tradePrice" class="trade-price">—</strong><span id="tradeChange" class="trade-change">24h change: —</span></div><div class="trade-summary"><span id="tradeSource">Binance Spot · waiting for data</span><span>24h volume <strong id="tradeVolume">—</strong></span><label>Timeframe <select id="tradeInterval" aria-label="Chart timeframe"><option>5m</option><option>1m</option><option>15m</option><option>1h</option><option>4h</option><option>1d</option></select></label></div></section>
+<div class="trade-hero-grid"><section class="trade-chart-box trade-box"><div class="trade-card-head"><h3>Market chart</h3><div class="trade-chart-tools"><button type="button" id="tradeCandles" aria-pressed="true">Candles</button><button type="button" id="tradeLine" aria-pressed="false">Line</button><button type="button" id="tradeRange" aria-pressed="false" title="Show the high and low of displayed candles">Range</button></div></div><div class="trade-chart-legend"><span class="trade-positive">EMA 9</span><span class="trade-violet">SMA 20</span><span>Binance Spot · OHLCV</span></div><svg id="tradeChart" viewBox="0 0 720 360" width="100%" role="img" aria-label="Public Binance Spot candlestick chart"><text x="20" y="170" fill="#9ab2c6" font-size="14">Loading market candles…</text></svg><div id="tradeChartNote" class="trade-muted">Historical spot candles · volume below · range is not a trade signal</div></section><aside class="trade-companion trade-box"><img src="./assets/outfits/kimono.webp" alt="Hoshi with silver-white hair, blue eyes and her blue floral kimono" width="1024" height="1536" loading="lazy"><div class="trade-companion-top">✧ Hoshi’s market room</div><div class="trade-companion-caption">“Pehle chart samjho,<br>phir apna faisla karo.” ♡<button type="button" id="tradeAsk">✧ Ask Hoshi</button></div></aside></div>
+<div class="trade-info-grid"><section id="tradeAnalysis" class="trade-box"><h3>◈ Market analysis</h3><div id="tradeIndicators" class="trade-muted">EMA 9 · SMA 20 · RSI 14: waiting for candles</div><p class="trade-muted">Indicators describe past prices. They do not predict returns.</p><button type="button" id="tradeFocusChart">View chart ↑</button></section><section class="trade-box"><h3>◉ Market sentiment</h3><div id="tradeGauge" class="trade-gauge" role="meter" aria-label="Crypto Fear and Greed Index" aria-valuemin="0" aria-valuemax="100"><span id="tradeGaugeValue">—</span></div><div id="tradeSentiment" class="trade-muted">Fear &amp; Greed: waiting for data</div><a class="trade-small-link" href="https://alternative.me/crypto/fear-and-greed-index/" target="_blank" rel="noopener noreferrer">Source: Alternative.me ↗</a></section><section id="tradeNews" class="trade-box"><h3>▤ Market news</h3><span class="trade-status-chip">Feed not connected</span><p class="trade-muted">No verified news headlines are loaded here.</p><a href="https://www.binance.com/en/square/news/all" target="_blank" rel="noopener noreferrer">Open Binance News ↗</a></section></div>
+<div class="trade-bottom-grid"><section id="tradeExecution" class="trade-box"><h3>▣ Orders &amp; positions</h3><span class="trade-status-chip">Account not connected</span><p class="trade-muted">No real or demo orders are placed. Positions, profit, leverage and balances are unavailable.</p><button type="button" disabled>Order placement unavailable</button></section><section id="tradeWatchlist" class="trade-box"><div class="trade-card-head"><h3>☆ Watchlist</h3><button type="button" id="tradeWatchToggle">+ Add pair</button></div><div id="tradeWatchRows"></div><p class="trade-muted">Saved on this device. Select a pair to fetch its current spot data.</p></section></div>
+<footer class="trade-footer"><p id="tradeStatus" role="status" aria-live="polite">Open this tab to fetch public market information.</p><span>Keyless public data · Refresh for latest values · provider/network availability applies</span></footer>
+</div></div></div><div data-panel="influencer" hidden><p>AI Influencer tools are not connected yet.</p></div><div data-panel="outfit" hidden><p class="small">Choose a look. It applies to the main screen and is saved on this device.</p><div id="outfitGrid" class="outfit-grid"></div><p id="outfitFeedback" class="small" role="status"></p></div><div data-panel="settings" hidden><button type="button" id="nativeRemindersBtn" hidden>View / cancel reminders</button></div></section></main>
 <div class="dashboard-shell">
 <aside class="sidebar" aria-label="HOSHI navigation">
 <div class="brand-mark">H<span>OSHI</span></div>
@@ -209,10 +213,10 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  if(window.JarvisBridge&&typeof window.JarvisBridge.showReminders==='function'){$('nativeRemindersBtn').hidden=false;$('nativeRemindersBtn').onclick=()=>window.JarvisBridge.showReminders()}
  $('stopBtn').hidden=true;$('testBtn').hidden=true;
  let activeTab='chat';
- function showTab(tab){activeTab=tab;$('nightSheet').hidden=false;shell.querySelectorAll('[data-panel]').forEach(p=>p.hidden=p.dataset.panel!==tab);shell.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===tab)));$('sheetTitle').textContent={chat:'Chat',trading:'Trading',influencer:'AI Influencer',outfit:'Outfit',settings:'Settings'}[tab];if(tab==='chat')input.focus();if(tab==='trading')loadTradingData()}
+ function showTab(tab){activeTab=tab;$('nightSheet').scrollTop=0;shell.classList.toggle('trading-open',tab==='trading');$('nightSheet').classList.toggle('trading-sheet',tab==='trading');$('nightSheet').hidden=false;shell.querySelectorAll('[data-panel]').forEach(p=>p.hidden=p.dataset.panel!==tab);shell.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===tab)));$('sheetTitle').textContent={chat:'Chat',trading:'Trading',influencer:'AI Influencer',outfit:'Outfit',settings:'Settings'}[tab];if(tab==='chat')input.focus();if(tab==='trading')loadTradingData()}
  shell.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
- shell.querySelector('.sheet-close').onclick=()=>{$('nightSheet').hidden=true;input.blur()};
- document.addEventListener('keydown',e=>{if(e.key==='Escape')$('nightSheet').hidden=true});
+ shell.querySelector('.sheet-close').onclick=()=>{$('nightSheet').hidden=true;shell.classList.remove('trading-open');$('nightSheet').classList.remove('trading-sheet');input.blur()};
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'){$('nightSheet').hidden=true;shell.classList.remove('trading-open');$('nightSheet').classList.remove('trading-sheet')}});
  const outfitDefinitions=[{id:'original',name:'Original room',asset:'./assets/hoshi-nightroom.webp'},
  ...[['kimono','Blue kimono'],['casual','Casual pink'],['winter','Winter cozy'],['traditional','Red yukata'],['techwear','Techwear'],['royal','Royal gown'],['cafe','Cafe barista'],['miko','Shrine style'],['street','Street fashion'],['rain','Rain coat'],['mage','Fantasy mage'],['artist','Creative studio'],['office','Office style'],['stage','Stage idol']].map(([id,name])=>({id,name,asset:'./assets/outfits/'+id+'.webp'}))];
  const outfitImages=new Map();let outfitRequest=0;
@@ -233,30 +237,34 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
    return await res.json();
   }finally{clearTimeout(timeout)}
  }
+ let tradePlotData=null,tradeChartMode='candles',tradeShowRange=false;
  function showTradePlot(data){
-  const svg=$('tradeChart');svg.replaceChildren();
-  const candles=Array.isArray(data.candles)?data.candles:[];
-  const values=candles.map(c=>Number(c.close));
-  if(values.length<15||values.some(v=>!Number.isFinite(v)||v<=0))throw new Error('Invalid candle values');
-  const low=Math.min(...values), high=Math.max(...values),range=high-low||1;
-  const path=values.map((v,i)=>(i===0?'M':'L')+(8+i*304/(values.length-1)).toFixed(1)+','+(104-(v-low)/range*88).toFixed(1)).join(' ');
-  const ns='http://www.w3.org/2000/svg';
-  const line=document.createElementNS(ns,'path');
-  line.setAttribute('d',path);line.setAttribute('fill','none');line.setAttribute('stroke','#70dcff');line.setAttribute('stroke-width','2');
-  line.setAttribute('stroke-linecap','round');svg.appendChild(line);
-  const label=document.createElementNS(ns,'text');
-  label.setAttribute('x','8');label.setAttribute('y','116');label.setAttribute('fill','#8fb5c9');label.setAttribute('font-size','9');
-  label.textContent='80 candles max · '+data.interval+' · Binance Spot';
-  svg.appendChild(label);
-  const ind=data.indicators||{};
-  const fmt=n=>Number.isFinite(Number(n))?Number(n).toLocaleString('en-US',{maximumFractionDigits:2}):'—';
-  $('tradeIndicators').textContent='EMA 9: '+fmt(ind.ema9)+' · SMA 20: '+fmt(ind.sma20)+' · RSI 14: '+fmt(ind.rsi14);
+  const candles=Array.isArray(data.candles)?data.candles.slice(-80):[];
+  if(candles.length<15||candles.some(c=>['open','high','low','close'].some(k=>!Number.isFinite(Number(c[k]))||Number(c[k])<=0)||Number(c.high)<Math.max(Number(c.open),Number(c.close),Number(c.low))||Number(c.low)>Math.min(Number(c.open),Number(c.close))))throw new Error('Invalid candle values');
+  tradePlotData=data;
+  const svg=$('tradeChart'),ns='http://www.w3.org/2000/svg';svg.replaceChildren();
+  const add=(tag,attrs,text,parent=svg)=>{const n=document.createElementNS(ns,tag);Object.entries(attrs).forEach(([k,v])=>n.setAttribute(k,String(v)));if(text!==undefined)n.textContent=text;parent.append(n);return n};
+  const values=candles.map(c=>Number(c.close)),low=Math.min(...candles.map(c=>Number(c.low))),high=Math.max(...candles.map(c=>Number(c.high))),range=(high-low)||high*.001;
+  const x=i=>20+i*590/(candles.length-1),y=v=>260-(v-low)/range*226,fmt=n=>n!==null&&n!==undefined&&Number.isFinite(Number(n))?Number(n).toLocaleString('en-US',{maximumFractionDigits:2}):'—';
+  for(let i=0;i<=5;i++){const yy=34+i*226/5;add('line',{x1:12,y1:yy,x2:625,y2:yy,stroke:'#153049','stroke-width':.7,'stroke-dasharray':'3 4'});add('text',{x:632,y:yy+4,fill:'#809bbd','font-size':10,'class':'trade-chart-axis'},fmt(high-i*range/5))}
+  for(let i=0;i<=6;i++)add('line',{x1:20+i*590/6,y1:25,x2:20+i*590/6,y2:315,stroke:'#10273c','stroke-width':.7});
+  if(tradeChartMode==='candles')candles.forEach((c,i)=>{const up=Number(c.close)>=Number(c.open),color=up?'#00d8a2':'#fa5b7f',xx=x(i),top=y(Math.max(Number(c.open),Number(c.close))),bottom=y(Math.min(Number(c.open),Number(c.close)));const group=add('g',{'data-candle':i});add('line',{x1:xx,y1:y(Number(c.high)),x2:xx,y2:y(Number(c.low)),stroke:color,'stroke-width':1},undefined,group);add('rect',{x:xx-2.3,y:top,width:4.6,height:Math.max(1.5,bottom-top),fill:color,rx:.4},undefined,group);add('title',{},'O '+fmt(c.open)+' · H '+fmt(c.high)+' · L '+fmt(c.low)+' · C '+fmt(c.close),group)});
+  const path=series=>series.map((v,i)=>v===null?'':(i===0||series[i-1]===null?'M':'L')+x(i).toFixed(1)+','+y(v).toFixed(1)).join(' ');
+  if(tradeChartMode==='line')add('path',{d:path(values),fill:'none',stroke:'#6bdcff','stroke-width':2,'data-close-line':'true'});
+  let ema=values[0];const emaSeries=values.map(v=>(ema=v*2/10+ema*8/10));const smaSeries=values.map((_,i)=>i<19?null:values.slice(i-19,i+1).reduce((a,b)=>a+b,0)/20);
+  for(const [series,color] of [[emaSeries,'#00bfaa'],[smaSeries,'#b37cff']])add('path',{d:path(series),fill:'none',stroke:color,'stroke-width':1.3,opacity:.9});
+  const maxVol=Math.max(1,...candles.map(c=>Number(c.volume)||0));candles.forEach((c,i)=>{const volume=Math.max(0,Number(c.volume)||0),height=volume/maxVol*39;add('rect',{x:x(i)-2.3,y:312-height,width:4.6,height,fill:Number(c.close)>=Number(c.open)?'#00d8a2':'#fa5b7f',opacity:.4})});
+  if(tradeShowRange)for(const [value,name,color] of [[high,'High','#ff6a91'],[low,'Low','#57adff']]){add('line',{x1:12,y1:y(value),x2:620,y2:y(value),stroke:color,'stroke-width':1,'stroke-dasharray':'7 4','data-range-level':name});add('text',{x:28,y:y(value)-7,fill:color,'font-size':10},'Visible '+name+' '+fmt(value))}
+  add('text',{x:15,y:340,fill:'#8fb5c9','font-size':10},candles.length+' candles · '+data.interval+' · volume below');
+  const last=values.at(-1);add('line',{x1:12,y1:y(last),x2:625,y2:y(last),stroke:'#00d8a2','stroke-dasharray':'2 4',opacity:.6});
+  const ind=data.indicators||{};$('tradeIndicators').textContent='EMA 9: '+fmt(ind.ema9)+' · SMA 20: '+fmt(ind.sma20)+' · RSI 14: '+fmt(ind.rsi14);
+  $('tradeChartNote').textContent=tradeShowRange?'Visible candle high/low only · not support/resistance forecasts or a trade signal':'Historical spot candles · volume below · EMA starts at first displayed close';
  }
  async function loadTradingData(){
   const id=++tradeRequestId,pair=$('tradePair').value,interval=$('tradeInterval').value;
-  const button=$('tradeRefresh');button.disabled=true;$('tradeStatus').textContent='Fetching public data…';
+  const button=$('tradeRefresh');button.disabled=true;$('tradeExternal').href='https://www.tradingview.com/chart/?symbol=BINANCE%3A'+encodeURIComponent(pair);tradePlotData=null;$('tradeChartNote').textContent='Fetching historical spot candles…';$('tradeVolume').textContent='—';$('tradeSource').textContent='Binance Spot · fetching…';$('tradeChange').removeAttribute('data-direction');$('tradeGauge').removeAttribute('aria-valuenow');$('tradeGaugeValue').textContent='—';$('tradeStatus').textContent='Fetching public data…';
   $('tradePrice').textContent='—';$('tradeChange').textContent='24h change: —';$('tradeSentiment').textContent='Fear & Greed: —';
-  $('tradeIndicators').textContent='Indicators unavailable until candles load';$('tradeChart').replaceChildren();
+  $('tradeIndicators').textContent='Indicators unavailable until candles load';$('tradeChart').replaceChildren();renderTradeWatch();
   try{
    const results=await Promise.allSettled([
     tradeFetch('/api/public/market?symbol='+encodeURIComponent(pair)),
@@ -267,17 +275,29 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
    const errors=[];
    if(results[0].status==='fulfilled'){
     const d=results[0].value,price=Number(d.price),change=Number(d.change_24h_pct);
-    if(Number.isFinite(price)&&price>0){$('tradePrice').textContent=price.toLocaleString('en-US',{maximumFractionDigits:4});$('tradeChange').textContent='24h change: '+(Number.isFinite(change)?change.toFixed(2)+'%':'—');$('tradeSource').textContent='Binance Spot · fetched '+new Date(d.fetched_at*1000).toLocaleTimeString();}else errors.push('Price invalid');
+    if(Number.isFinite(price)&&price>0){$('tradeChange').dataset.direction=change>=0?'up':'down';const volume=Number(d.volume_quote_24h);$('tradeVolume').textContent=Number.isFinite(volume)&&volume>=0?volume.toLocaleString('en-US',{notation:'compact',maximumFractionDigits:2})+' USDT':'—';$('tradePrice').textContent=price.toLocaleString('en-US',{maximumFractionDigits:4});$('tradeChange').textContent='24h change: '+(Number.isFinite(change)?change.toFixed(2)+'%':'—');$('tradeSource').textContent='Binance Spot · fetched '+new Date(d.fetched_at*1000).toLocaleTimeString();}else errors.push('Price invalid');
    }else errors.push('Spot price unavailable');
    if(results[1].status==='fulfilled'){try{showTradePlot(results[1].value)}catch(_){errors.push('Candles invalid')}}else errors.push('Candles unavailable');
-   if(results[2].status==='fulfilled'){const d=results[2].value;$('tradeSentiment').textContent='Fear & Greed: '+d.value+'/100 · '+d.classification+' (Alternative.me)';}else errors.push('Sentiment unavailable');
+   if(results[2].status==='fulfilled'){const d=results[2].value;if(!Number.isFinite(Number(d.value))||Number(d.value)<0||Number(d.value)>100)throw new Error('Invalid sentiment');$('tradeGauge').setAttribute('aria-valuenow',String(d.value));$('tradeGauge').style.setProperty('--sentiment',Number(d.value));$('tradeGaugeValue').textContent=d.value;$('tradeSentiment').textContent='Fear & Greed: '+d.value+'/100 · '+d.classification+' (Alternative.me)';}else errors.push('Sentiment unavailable');
    $('tradeStatus').textContent=errors.length?errors.join(' · ')+' · Refresh to retry.':'Public market sources loaded. Informational data only.';
   }catch(_){if(id===tradeRequestId)$('tradeStatus').textContent='Public market data unavailable. Refresh to retry.'}
-  finally{if(id===tradeRequestId)button.disabled=false}
+  finally{if(id===tradeRequestId){button.disabled=false;renderTradeWatch();if(!$('tradeChart').childElementCount)$('tradeChartNote').textContent='Chart unavailable. Refresh to retry.';if($('tradePrice').textContent==='—')$('tradeSource').textContent='Binance Spot · price unavailable'}}
  }
  $('tradePair').addEventListener('change',loadTradingData);
  $('tradeInterval').addEventListener('change',loadTradingData);
  $('tradeRefresh').addEventListener('click',loadTradingData);
+ const tradeAllowedPairs=['BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT'];let tradeWatchPairs=['BTCUSDT','ETHUSDT'];
+ try{const saved=JSON.parse(localStorage.getItem('hoshiTradeWatchV1'));if(Array.isArray(saved))tradeWatchPairs=[...new Set(saved.filter(p=>tradeAllowedPairs.includes(p)))]}catch(_){}
+ function renderTradeWatch(){const rows=$('tradeWatchRows');rows.replaceChildren();for(const pair of tradeWatchPairs){const row=document.createElement('div');row.className='trade-watch-row';const pick=document.createElement('button');pick.type='button';pick.textContent=pair.replace('USDT',' / USDT');pick.setAttribute('aria-label','View '+pair);pick.onclick=()=>{$('tradePair').value=pair;loadTradingData();$('tradeOverview').scrollIntoView({block:'start'})};const price=document.createElement('span');price.className='trade-watch-price';price.textContent=pair===$('tradePair').value?$('tradePrice').textContent:'—';const remove=document.createElement('button');remove.type='button';remove.textContent='×';remove.setAttribute('aria-label','Remove '+pair+' from watchlist');remove.onclick=()=>{tradeWatchPairs=tradeWatchPairs.filter(p=>p!==pair);saveTradeWatch()};row.append(pick,price,remove);rows.append(row)}$('tradeWatchToggle').textContent=tradeWatchPairs.includes($('tradePair').value)?'✓ Saved pair':'+ Add pair';$('tradeWatchToggle').disabled=tradeWatchPairs.includes($('tradePair').value);if(!tradeWatchPairs.length){const text=document.createElement('p');text.className='trade-muted';text.textContent='Select a pair above, then add it here.';rows.append(text)}}
+ function saveTradeWatch(){try{localStorage.setItem('hoshiTradeWatchV1',JSON.stringify(tradeWatchPairs))}catch(_){}renderTradeWatch()}
+ $('tradeWatchToggle').onclick=()=>{const pair=$('tradePair').value;if(!tradeWatchPairs.includes(pair))tradeWatchPairs.push(pair);saveTradeWatch()};
+ for(const [id,mode] of [['tradeCandles','candles'],['tradeLine','line']])$(id).onclick=()=>{tradeChartMode=mode;$('tradeCandles').setAttribute('aria-pressed',String(mode==='candles'));$('tradeLine').setAttribute('aria-pressed',String(mode==='line'));if(tradePlotData)showTradePlot(tradePlotData)};
+ $('tradeRange').onclick=()=>{tradeShowRange=!tradeShowRange;$('tradeRange').setAttribute('aria-pressed',String(tradeShowRange));if(tradePlotData)showTradePlot(tradePlotData)};
+ document.querySelectorAll('[data-trade-target]').forEach(button=>button.onclick=()=>{document.querySelectorAll('[data-trade-target]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));$(button.dataset.tradeTarget).scrollIntoView({block:'start'})});
+ $('tradeFocusChart').onclick=()=>$('tradeOverview').scrollIntoView({block:'start'});
+ $('tradeAsk').onclick=()=>{const text=$('tradePair').value+' '+$('tradeInterval').value+' spot market. Price: '+$('tradePrice').textContent+'. '+$('tradeIndicators').textContent+'. In indicators ka matlab samjhao; yeh sirf public market information hai.';showTab('chat');input.value=text;input.focus()};
+ renderTradeWatch();
+
  let voiceListenStartedAt=0,voiceTimes={listen:null,ai:null,audio:null};
  const voiceClock=()=>performance.now();
  function displayVoiceTimes(){const val=n=>n===null?'—':(n/1000).toFixed(2)+'s';
@@ -656,3 +676,4 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 </script>
 </body>
 </html>
+

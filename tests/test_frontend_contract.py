@@ -128,7 +128,8 @@ class FrontendContractTests(unittest.TestCase):
         self.assertIn("Intent.createChooser(share", MAIN_ACTIVITY)
 
     def test_spoken_requests_use_fast_ai_mode_but_writing_actions_are_local(self):
-        self.assertIn("askCloud(text,source==='voice')", HTML)
+        self.assertIn("askCloud(text,fastRequest)", HTML)
+        self.assertIn("const fastRequest=source==='voice'", HTML)
         self.assertIn("processCommand(command,'voice')", HTML)
         self.assertIn("AI REPLIED IN ", HTML)
         self.assertIn("fast})", HTML)

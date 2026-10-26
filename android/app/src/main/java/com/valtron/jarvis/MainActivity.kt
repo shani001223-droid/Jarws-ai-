@@ -35,6 +35,7 @@ import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import org.json.JSONObject
+import org.json.JSONArray
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import java.util.Locale
@@ -213,11 +214,19 @@ class MainActivity : Activity() {
                 override fun onEvent(eventType: Int, params: Bundle?) {}
                 override fun onResults(results: Bundle?) {
                     if (!nativeMicActive || nativeRecognizer !== recognizer) return
-                    val heard = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                        ?.firstOrNull().orEmpty().trim()
+                    // Android recognizers frequently transcribe Roman Urdu with
+                    // more than one plausible script/spelling. Let the local
+                    // client choose a wake-bearing candidate when needed.
+                    val alternatives = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                        ?.asSequence()?.map { it.trim() }?.filter { it.isNotBlank() }
+                        ?.take(3)?.toList().orEmpty()
                     stopNativeListeningInternal()
-                    if (heard.isNotBlank()) sendNativeSpeechEvent("hoshiNativeSpeechResult", heard)
-                    else sendNativeSpeechEvent("hoshiNativeSpeechError", "No speech recognized")
+                    if (alternatives.isNotEmpty()) {
+                        val encoded = JSONArray(alternatives).toString()
+                        dashboardWebView?.evaluateJavascript(
+                            "window.hoshiNativeSpeechResult && window.hoshiNativeSpeechResult($encoded)", null
+                        )
+                    } else sendNativeSpeechEvent("hoshiNativeSpeechError", "No speech recognized")
                 }
                 override fun onError(error: Int) {
                     if (!nativeMicActive || nativeRecognizer !== recognizer) return
@@ -241,7 +250,7 @@ class MainActivity : Activity() {
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE, locale)
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, locale)
                 putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, false)
-                putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
+                putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3)
             }
             recognizer.startListening(intent)
         } catch (_: Exception) {

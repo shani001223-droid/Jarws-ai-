@@ -424,7 +424,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  }
  function startListening(){lastVoiceError="";if(!Recognition){say('Speech recognition is not supported in this browser. Try Chrome, or use the text command box.');setStatus('VOICE RECOGNITION UNAVAILABLE');return}
  if(recognition&&listening)return;
- recognition=new Recognition();recognition.lang=commandLanguage;recognition.continuous=true;recognition.interimResults=false;
+ recognition=new Recognition();recognition.lang=commandLanguage;recognition.continuous=false;recognition.interimResults=false;
  recognition.onstart=()=>{listening=true;$('wakeBtn').textContent='🎙 Listening…';setStatus(wakeEnabled?'LISTENING FOR “HEY HOSHI”':'LISTENING');};
  recognition.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++){if(!e.results[i].isFinal)continue;const heard=e.results[i][0].transcript.trim();const lower=heard.toLowerCase();input.value=heard;
  if(!wakeEnabled){processCommand(heard);continue}
@@ -446,11 +446,8 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
   $('wakeBtn').textContent='🎙 Start listening';setStatus(lastVoiceError);
   try{recognition.stop()}catch(_){}
  };
- recognition.onend=()=>{
-  if(listening){
-   clearTimeout(restartTimer);
-   restartTimer=setTimeout(()=>{
-    try{recognition.start()}
+ recognition.onend=()=>{listening=false;awaitingCommand=false;clearTimeout(restartTimer);$('wakeBtn').textContent='🎙 Start listening';if(!lastVoiceError&&status.textContent.startsWith('LISTENING'))setStatus('MIC STOPPED · TAP MIC AGAIN')};
+ try{recognition.start()}
     catch(e){listening=false;lastVoiceError='VOICE RESTART FAILED · TAP TO RETRY';$('wakeBtn').textContent='🎙 Start listening';setStatus(lastVoiceError)}
    },500);
   }else{$('wakeBtn').textContent='🎙 Start listening';if(!lastVoiceError)setStatus('READY')}

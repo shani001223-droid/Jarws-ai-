@@ -532,7 +532,11 @@ async function main() {
         isEnabled: () => true, requestSettings: () => {},
         performAction: () => true,
         chooseScreenshotForLocalOcr: () => { window.__localOcrPickers++; return true; },
-        performLocalUiAction: (action,payload) => window.hoshiExecuteLocalUiAction(action,payload)
+        performLocalUiAction: (action,payload,id) => {
+          setTimeout(() => window.hoshiLocalUiActionResult(id,
+            window.hoshiExecuteLocalUiAction(action,payload)), 0);
+          return true; // Native queues first, verifies DOM state asynchronously.
+        }
       };
     });
     await page.reload();
@@ -565,18 +569,25 @@ async function main() {
     const messagesBeforeLocalActions=apiMessages.length;
     await page.locator('#localUiDraft').fill('Hoshi meri trading research ka draft');
     await page.locator('#localUiTypeBtn').click();
+    await page.waitForFunction(()=>document.querySelector('#localUiStatus').textContent.includes('Verified:'));
     assert.equal(await page.locator('#commandInput').inputValue(),
       'Hoshi meri trading research ka draft');
     assert.equal(await page.locator('[data-tab="chat"]').getAttribute('aria-selected'),'true');
     assert.equal(apiMessages.length,messagesBeforeLocalActions,'Draft typing must not submit AI requests');
     await page.locator('[data-tab="settings"]').click();
     await page.locator('#localUiScrollDownBtn').click();
-    assert.match(await page.locator('#localUiStatus').textContent(),/queued/i);
+    await page.waitForFunction(()=>/Verified:|Not verified:/.test(document.querySelector('#localUiStatus').textContent));
+    const beforeStale=await page.locator('#localUiStatus').textContent();
+    await page.evaluate(()=>window.hoshiLocalUiActionResult(999999,true));
+    assert.equal(await page.locator('#localUiStatus').textContent(),beforeStale,'Ignore stale action IDs');
     await page.locator('#localUiChatBtn').click();
+    await page.waitForFunction(()=>document.querySelector('#localUiStatus').textContent.includes('Verified:'));
     assert.equal(await page.locator('[data-tab="chat"]').getAttribute('aria-selected'),'true');
     await page.locator('[data-tab="settings"]').click();
     await page.evaluate(()=>{window.JarvisBridge.isEnabled=()=>false});
     await page.locator('#localUiScrollUpBtn').click();
+    assert.match(await page.locator('#localUiStatus').textContent(),/permission first/i);
+    await page.evaluate(()=>window.hoshiLocalUiActionResult(999999,false));
     assert.match(await page.locator('#localUiStatus').textContent(),/permission first/i);
     assert.equal(apiMessages.length,messagesBeforeLocalActions);
     assert.deepEqual(pageErrors,[]);

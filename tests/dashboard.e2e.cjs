@@ -502,6 +502,11 @@ async function main() {
     assert.equal(apiMessages.length,messagesBeforeOcr,'OCR must not upload to backend');
     await page.locator('#screenOcrClearBtn').click();
     assert.equal(await page.locator('#screenOcrOutput').innerText(), '');
+    await page.evaluate(() => window.hoshiLocalOcrResult(JSON.stringify({
+      engine:'on-device-latin',blocks:[{text:'LATE SENSITIVE RESULT'}]
+    })));
+    assert.equal(await page.locator('#screenOcrOutput').innerText(), '', 'Clear must ignore late OCR results');
+    await page.locator('#screenOcrBtn').click();
     await page.evaluate(() => window.hoshiLocalOcrError('No screenshot selected'));
     assert.match(await page.locator('#screenOcrStatus').innerText(), /No screenshot selected/);
     assert.deepEqual(pageErrors,[]);

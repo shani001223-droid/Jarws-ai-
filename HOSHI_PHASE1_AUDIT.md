@@ -54,3 +54,12 @@ Keep this audit as a source of truth. Only mark tasks done with implementation +
 - A bounded local-only store filters likely credentials, validates allowed roles, supports per-turn editing/deletion, JSON export and explicit history clear. Exports are generated in-browser without an upload endpoint. Heuristic secret detection is not a substitute for data minimization.
 - Browser and unit tests verify default-off, opt-in, filtered export, opt-out and context suppression: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40318081029
 - Storage is browser/device-local and can disappear on uninstall or cache/data clearing; cross-device durable storage, encrypted backups, user authentication and physical-device testing are **not** claimed. Task 06 Render deployment/rollback is still pending.
+
+
+## Docker backend import failure reproduced and fixed in development (26 October 2026)
+
+- Render's extra Docker web service `Jarws-ai-` is failing on the deployed `main` Dockerfile because `cloud_backend/Dockerfile` did `COPY main.py .` but `main.py` imports sibling `ad_studio.py`. The Render logs show exactly `ModuleNotFoundError: No module named 'ad_studio'` followed by unsuccessful deployment/port probe.
+- Fixed on development branch only by copying all required `cloud_backend/*.py` files into the image with `COPY *.py ./`. No secrets or model weights are added.
+- Added `.github/workflows/docker-backend-smoke.yml` that **builds a real Python Docker image, starts its Uvicorn server and executes no-key /health + agent routing + capabilities HTTP probes**. This passed for development commit `82bf4835abac3883ee2ecd35cdfd6955256df1dc`: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40325617352
+- This **does not repair the currently deployed duplicate Docker Render service** until a deliberate reviewed release merges and deploys the change. Primary `Jarws-ai--2` Python backend is a separate live service; do not conflate the two.
+- Retain roadmap Task 06 unchecked because full production release, rollback and physical Realme Note 50 acceptance have not been verified. GitHub CI's Docker smoke is not a substitute for those.

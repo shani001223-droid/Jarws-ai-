@@ -4,6 +4,7 @@ import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
+from threading import Event
 
 from cloud_backend.job_records import JobRecordStore, JobStateError
 from cloud_backend.job_queue import (
@@ -127,6 +128,25 @@ class ScheduledJobQueueTests(unittest.TestCase):
         with self.assertRaises(JobStateError):
             self.queue.cancel_pending(second, now_ms=1003)
         self.assertEqual(self.store.get(second)["status"], "running")
+
+    def test_explicit_worker_poll_respects_stop_and_tick_limits(self):
+        job_id = self.create("chart_analysis")
+        self.queue.enqueue(job_id, now_ms=0)
+        stopped = Event()
+        def trusted_handler(_):
+            stopped.set()
+            return WorkerOutcome(detail_code="preflight_only")
+        processed = self.queue.poll(
+            {"chart_analysis": trusted_handler}, stopped,
+            interval_seconds=0.1, max_ticks=3
+        )
+        self.assertEqual(processed, 1)
+        self.assertEqual(self.store.get(job_id)["status"], "failed")
+        self.assertEqual(self.queue.poll({}, stopped, max_ticks=1), 0)
+        with self.assertRaises(ValueError):
+            self.queue.poll({}, Event(), interval_seconds=0)
+        with self.assertRaises(ValueError):
+            self.queue.poll({}, Event(), max_ticks=0)
 
     def test_invalid_success_and_no_handler_do_not_mutate_queue(self):
         job_id = self.create()

@@ -478,6 +478,32 @@ async function main() {
     await afterOptOutReply;
     assert.deepEqual(apiMessages.at(-1).context,[],'No prior chat sent after consent revoked');
     assert.equal(await page.evaluate(()=>localStorage.getItem('hoshiConversationMemoryV1')),null);
+    // Explicit OCR must not forward screenshot text to the backend or execute HTML.
+    await context.addInitScript(() => {
+      window.__localOcrPickers = 0;
+      window.JarvisBridge = {
+        isEnabled: () => true, requestSettings: () => {},
+        performAction: () => true,
+        chooseScreenshotForLocalOcr: () => { window.__localOcrPickers++; return true; }
+      };
+    });
+    await page.reload();
+    await page.locator('#screenOcrBtn').click();
+    assert.equal(await page.evaluate(() => window.__localOcrPickers), 1);
+    const messagesBeforeOcr = apiMessages.length;
+    await page.evaluate(() => window.hoshiLocalOcrResult(JSON.stringify({
+      engine:'on-device-latin',width:1080,height:2400,
+      blocks:[{text:'Roman Urdu screenshot',box:[10,20,300,50]},
+              {text:'<img src=x onerror=alert(1)>',box:[10,60,400,100]}],
+      truncated:false
+    })));
+    assert.match(await page.locator('#screenOcrOutput').innerText(), /Roman Urdu screenshot/);
+    assert.equal(await page.locator('#screenOcrOutput img').count(), 0, 'OCR text must not render as HTML');
+    assert.equal(apiMessages.length,messagesBeforeOcr,'OCR must not upload to backend');
+    await page.locator('#screenOcrClearBtn').click();
+    assert.equal(await page.locator('#screenOcrOutput').innerText(), '');
+    await page.evaluate(() => window.hoshiLocalOcrError('No screenshot selected'));
+    assert.match(await page.locator('#screenOcrStatus').innerText(), /No screenshot selected/);
     assert.deepEqual(pageErrors,[]);
     console.log('PASS — nightroom layout, chat, voice settings, tabs and narrow phone widths');
   } finally {

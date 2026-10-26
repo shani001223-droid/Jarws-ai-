@@ -60,9 +60,7 @@ class ScheduledJobQueueTests(unittest.TestCase):
         for job_id in ids:
             self.queue.enqueue(job_id, now_ms=1000)
         def claim(_):
-            return ScheduledJobQueue(JobRecordStore(self.db), max_running=1).claim_due(
-                {"build_game"}, now_ms=1000
-            )
+            return self.queue.claim_due({"build_game"}, now_ms=1000)
         with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
             claims = list(pool.map(claim, range(20)))
         winners = [c for c in claims if c is not None]

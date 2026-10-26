@@ -35,11 +35,16 @@ Those are historical results for the identified commits, **not** acceptance of n
 
 ## Phase 1 checkpoint
 - [x] Task 01, initial repository architecture/capability audit completed at baseline (source + existing CI); production deployment metrics/device acceptance still pending.
-- [ ] Task 02, remove provably unused/broken code safely (no speculative deletions).
-- [ ] Task 03, error logging and validation improvements.
-- [ ] Task 04, scoped permission design and integration.
-- [ ] Task 05, comprehensive tests for new features.
+- [x] Task 02, remove provably unused/broken code safely (no speculative deletions).
+- [x] Task 03, error logging and validation improvements.
+- [x] Task 04, scoped permission design and integration.
+- [x] Task 05, comprehensive tests for new features.
 - [ ] Task 06, verified merge/deployment/rollback.
 - [ ] Tasks 07–60, **not implemented by this audit**.
 
 Keep this audit as a source of truth. Only mark tasks done with implementation + passing verification.
+
+## Verified follow-up commits
+- Tasks 02-03: provider JSON validation, sanitized logging and regression tests passed: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40299987975
+- Tasks 04-05: backend action permission matrix denies unapproved high-risk operations; Python/JS/browser checks passed: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40300338206
+- Task 06 remains pending production deployment/workspace and new APK verification; prior main APK checks are historical baseline only.

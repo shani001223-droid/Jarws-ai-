@@ -6,6 +6,10 @@ import android.app.AlertDialog
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.ContentValues
+import android.provider.MediaStore
+import android.os.Environment
+import android.util.Base64
 import android.net.Uri
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -293,6 +297,48 @@ class MainActivity : Activity() {
                 Toast.makeText(this, "App could not be opened.", Toast.LENGTH_SHORT).show()
             }
         }
+        return true
+    }
+
+    /** Save only validated Hoshi-generated ZIP bytes to user-visible Downloads.
+     * Decoding and disk IO happen on a worker thread, never the voice/UI thread.
+     * Android 10+ MediaStore does not require a storage permission. */
+    fun saveAdZip(encoded: String, suggestedFilename: String): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return false
+        if (encoded.isEmpty() || encoded.length > 8_000_000) return false
+        val safeName = suggestedFilename.replace(Regex("[^A-Za-z0-9_.-]"), "_").take(58)
+        if (!safeName.endsWith(".zip") || safeName.startsWith(".")) return false
+        Thread {
+            var uri: Uri? = null
+            try {
+                val decoded = Base64.decode(encoded, Base64.DEFAULT)
+                if (decoded.size !in 20..5_000_000 ||
+                    decoded[0] != 0x50.toByte() || decoded[1] != 0x4b.toByte()) {
+                    throw IllegalArgumentException("Invalid creative ZIP")
+                }
+                val values = ContentValues().apply {
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, safeName)
+                    put(MediaStore.MediaColumns.MIME_TYPE, "application/zip")
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/Hoshi")
+                    put(MediaStore.MediaColumns.IS_PENDING, 1)
+                }
+                uri = contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+                    ?: throw IllegalStateException("Cannot open Downloads")
+                contentResolver.openOutputStream(uri!!)?.use { output ->
+                    output.write(decoded)
+                } ?: throw IllegalStateException("Cannot write ZIP")
+                val completed = ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) }
+                contentResolver.update(uri!!, completed, null, null)
+                runOnUiThread {
+                    if (!isFinishing) Toast.makeText(this, "Hoshi ads saved: Downloads/Hoshi", Toast.LENGTH_LONG).show()
+                }
+            } catch (_: Exception) {
+                uri?.let { try { contentResolver.delete(it, null, null) } catch (_: Exception) {} }
+                runOnUiThread {
+                    if (!isFinishing) Toast.makeText(this, "Could not save ads. Try Chrome download.", Toast.LENGTH_LONG).show()
+                }
+            }
+        }.start()
         return true
     }
 

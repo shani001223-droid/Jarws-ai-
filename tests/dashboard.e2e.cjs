@@ -648,6 +648,13 @@ async function main() {
     assert.equal(historyText.includes('Hoshi meri trading research ka draft'),false,
       'History must not contain unsent draft payloads');
     assert.equal(apiMessages.length,messagesBeforeLocalActions,'Safety controls must not send AI requests');
+    await page.evaluate(()=>{
+      document.querySelector('#commandInput').value='Halted command should never reach AI';
+      document.querySelector('#commandForm').requestSubmit();
+      document.querySelector('#wakeBtn').click();
+    });
+    assert.match(await page.locator('#status').innerText(),/EMERGENCY STOP ACTIVE/);
+    assert.equal(apiMessages.length,messagesBeforeLocalActions,'Halted assistant must not dispatch a new AI request');
     await page.locator('#actionResumeBtn').click();
     await page.locator('#actionHistoryClearBtn').click();
     assert.equal(await page.locator('#actionHistory li').count(),0);

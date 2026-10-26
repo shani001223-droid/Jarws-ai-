@@ -28,6 +28,9 @@ def choose_providers(
     gemini: bool,
     groq: bool,
     openjarvis: bool,
+    zai: bool = False,
+    mistral: bool = False,
+    nvidia: bool = False,
 ) -> ProviderPlan:
     """Build a nonduplicated failover order using only explicitly configured services."""
     agent_first = bool(openjarvis and wants_agent(message, fast=fast))
@@ -38,6 +41,9 @@ def choose_providers(
         + (["openrouter"] if openrouter else [])
         + (["gemini"] if gemini else [])
         + (["groq"] if groq else [])
+        + (["zai"] if zai else [])
+        + (["mistral"] if mistral else [])
+        + (["nvidia"] if nvidia else [])
     )
     order = tuple(dict.fromkeys(priority))
     return ProviderPlan(order, order[0] if order else None, fast_voice_first, agent_first)

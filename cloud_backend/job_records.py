@@ -8,6 +8,7 @@ ephemeral disk does NOT survive a rebuild/redeploy.
 from __future__ import annotations
 
 import hashlib
+from contextlib import contextmanager
 import re
 import secrets
 import sqlite3
@@ -63,11 +64,15 @@ class JobRecordStore:
                 detail_code TEXT NOT NULL DEFAULT ''
             )""")
 
+    @contextmanager
     def _connect(self):
         conn = sqlite3.connect(str(self.path), timeout=5, isolation_level=None)
-        conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA busy_timeout=5000")
-        return conn
+        try:
+            conn.row_factory = sqlite3.Row
+            conn.execute("PRAGMA busy_timeout=5000")
+            yield conn
+        finally:
+            conn.close()
 
     @staticmethod
     def _row(row):

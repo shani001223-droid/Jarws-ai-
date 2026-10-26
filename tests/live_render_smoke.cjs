@@ -3,7 +3,7 @@
 const assert = require("node:assert/strict");
 const { chromium } = require("playwright");
 
-const DASHBOARD_URL = "https://jarws-ai-1.onrender.com/?live-smoke=1";
+const DASHBOARD_URL = "https://jarws-ai-1.onrender.com/?live-smoke=" + Date.now();
 const HEALTH_URL = "https://jarws-ai-2.onrender.com/health";
 
 async function waitForPublicEndpoints() {
@@ -15,8 +15,8 @@ async function waitForPublicEndpoints() {
       if (health.ok && data.service === "hoshi-cloud-api" && data.version === "0.9.1") {
         const response = await fetch(DASHBOARD_URL, { signal: AbortSignal.timeout(15000) });
         const html = await response.text();
-        if (response.ok && /HOSHI — AI Companion/.test(html)) return;
-        lastError = "Dashboard returned HTTP " + response.status;
+        if (response.ok && /HOSHI — AI Companion/.test(html) && html.includes('id="nightroom"')) return;
+        lastError = "Dashboard returned HTTP " + response.status + " or has not published the nightroom revision yet";
       } else {
         lastError = "Backend health check did not match expected HOSHI API: HTTP " + health.status;
       }

@@ -29,6 +29,7 @@ try:  # Handles either cloud_backend package import or direct uvicorn main:app.
     from .goal_spec import goal_to_deliverables
     from .milestone_planner import plan_milestones
     from .provider_policy import choose_providers
+    from .free_llm_providers import available_free_providers, ask_free_provider, OptionalProviderError
 except ImportError:
     from openjarvis_bridge import ask_openjarvis, endpoint as openjarvis_endpoint, wants_agent, OpenJarvisUnavailable
     from agent_tools import try_calculate
@@ -37,6 +38,7 @@ except ImportError:
     from goal_spec import goal_to_deliverables
     from milestone_planner import plan_milestones
     from provider_policy import choose_providers
+    from free_llm_providers import available_free_providers, ask_free_provider, OptionalProviderError
 
 app = FastAPI(title="HOSHI AI Cloud API", version="0.9.1")
 
@@ -542,6 +544,7 @@ def health():
     gemini_configured = bool(os.getenv("GEMINI_API_KEY", "").strip())
     groq_configured = bool(os.getenv("GROQ_API_KEY", "").strip())
     openrouter_configured = bool(os.getenv("OPENROUTER_API_KEY", "").strip())
+    extra_providers = available_free_providers()
     try:
         openjarvis_configured = openjarvis_endpoint() is not None
     except OpenJarvisUnavailable:
@@ -551,7 +554,9 @@ def health():
         "service": "hoshi-cloud-api",
         "version": app.version,
         "gemini_api": "interactions" if gemini_configured else None,
-        "ai_connected": openjarvis_configured or openrouter_configured or gemini_configured or groq_configured,
+        "ai_connected": bool(openjarvis_configured or openrouter_configured or gemini_configured or groq_configured or extra_providers),
+        "extra_free_providers_configured": list(extra_providers),
+        "extra_free_providers_verified_online": False,
         "reply_fallback_enabled": True,
         "voice_fast_path": True,
         "openjarvis_configured": openjarvis_configured,
@@ -561,7 +566,7 @@ def health():
         "openrouter_model": OPENROUTER_MODEL if openrouter_configured else None,
         "gemini_configured": gemini_configured,
         "groq_configured": groq_configured,
-        "primary_provider": "openrouter" if openrouter_configured else ("gemini" if gemini_configured else ("groq" if groq_configured else None)),
+        "primary_provider": "openrouter" if openrouter_configured else ("gemini" if gemini_configured else ("groq" if groq_configured else (extra_providers[0] if extra_providers else None))),
         "fallback_provider": ("gemini" if gemini_configured else ("groq" if groq_configured else None)) if openrouter_configured else ("groq" if gemini_configured and groq_configured else None),
         "gemini_model": GEMINI_MODEL,
         "groq_model": GROQ_MODEL if groq_configured else None,
@@ -654,12 +659,31 @@ def assistant(payload: AssistantRequest):
     # OpenJarvis orchestrator and its configured tools/memory run on a real,
     # separate OpenJarvis server. No model/server is provisioned implicitly.
     # A bounded agent call is used for complex non-voice requests only.
+    extra_providers = available_free_providers()
     provider_plan = choose_providers(
         message, fast=payload.fast,
         openrouter=bool(os.getenv("OPENROUTER_API_KEY", "").strip()),
         gemini=bool(gemini_key), groq=bool(groq_key),
         openjarvis=bool(os.getenv("OPENJARVIS_URL", "").strip() and os.getenv("OPENJARVIS_MODEL", "").strip()),
+        zai="zai" in extra_providers,
+        mistral="mistral" in extra_providers,
+        nvidia="nvidia" in extra_providers,
     )
+    def try_directory_fallback():
+        """Try only configured free-tier providers and never expose secret error bodies."""
+        for provider in provider_plan.order:
+            if provider not in extra_providers:
+                continue
+            try:
+                reply = ask_free_provider(provider, request_input, language_hint)
+                answer = make_assistant_response(reply, provider, message, payload.locale)
+                if str(payload.locale or "").lower().startswith("ur") and not answer.speech_text:
+                    continue
+                return answer
+            except (OptionalProviderError, RuntimeError, HTTPException) as exc:
+                _safe_log_failure("assistant.free_" + provider, exc)
+        return None
+
     openjarvis_problem = None
     if provider_plan.agent_first:
         try:
@@ -718,6 +742,9 @@ def assistant(payload: AssistantRequest):
             _safe_log_failure("assistant.openrouter", error)
             openrouter_problem = str(error.detail) if isinstance(error, HTTPException) else str(error)
             if not (gemini_key or groq_key):
+                extra_result = try_directory_fallback()
+                if extra_result is not None:
+                    return extra_result
                 raise HTTPException(status_code=502, detail=openrouter_problem) from None
 
     # Gemini is primary when OpenRouter is missing or failed. Temporary overload
@@ -793,16 +820,25 @@ def assistant(payload: AssistantRequest):
                 reply = _groq_reply(request_input, language_hint)
                 return make_assistant_response(reply, "groq", message, payload.locale)
             except (RuntimeError, HTTPException) as groq_error:
+                extra_result = try_directory_fallback()
+                if extra_result is not None:
+                    return extra_result
                 raise HTTPException(
                     status_code=502,
                     detail=gemini_problem + " Groq fallback also failed: " + str(groq_error),
                 ) from None
         if should_fallback:
+            extra_result = try_directory_fallback()
+            if extra_result is not None:
+                return extra_result
             raise HTTPException(
                 status_code=503,
                 detail=gemini_problem + (" Fast Groq already failed; no repeated call." if quick_groq_problem
                     else " Groq fallback is unavailable because GROQ_API_KEY is missing from this running service."),
             ) from None
+        extra_result = try_directory_fallback()
+        if extra_result is not None:
+            return extra_result
         raise HTTPException(status_code=502, detail=gemini_problem) from None
 
     # If Gemini is not configured, Groq can serve requests on its own.
@@ -811,7 +847,14 @@ def assistant(payload: AssistantRequest):
             reply = _groq_reply(request_input, language_hint)
             return make_assistant_response(reply, "groq", message, payload.locale)
         except (RuntimeError, HTTPException) as groq_error:
+            extra_result = try_directory_fallback()
+            if extra_result is not None:
+                return extra_result
             raise HTTPException(status_code=502, detail=str(groq_error)) from None
+
+    extra_result = try_directory_fallback()
+    if extra_result is not None:
+        return extra_result
 
     if openrouter_problem:
         raise HTTPException(status_code=502, detail=openrouter_problem) from None
@@ -822,7 +865,7 @@ def assistant(payload: AssistantRequest):
 
     raise HTTPException(
         status_code=503,
-        detail="No AI key is configured in the running service. Add OPENROUTER_API_KEY, GEMINI_API_KEY or GROQ_API_KEY to the Render Environment Group, attach it to this service, and redeploy.",
+        detail="No usable AI provider is configured or responding. Set a free provider API key in the backend secret environment and verify its free-tier eligibility.",
     )
 
 

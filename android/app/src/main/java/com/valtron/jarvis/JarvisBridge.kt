@@ -85,11 +85,18 @@ class JarvisBridge(private val activity: MainActivity) {
 
     @JavascriptInterface
     fun performAction(action: String): Boolean {
+        // The Android accessibility toggle alone does not prove the service
+        // is connected. Fail closed rather than reporting a fake queued action.
         if (action !in allowedActions || !isEnabled()) return false
         if (action == "screenshot" && Build.VERSION.SDK_INT < Build.VERSION_CODES.P) return false
-        val queued = mainHandler.post {
-            JarvisAccessibilityService.instance?.performBasicAction(action)
+        if (JarvisAccessibilityService.instance == null) return false
+        // Returning true means only that the request was queued on the UI
+        // thread, NOT that Android completed the gesture or took a screenshot.
+        return mainHandler.post {
+            val liveService = JarvisAccessibilityService.instance
+            if (isEnabled() && liveService != null) {
+                liveService.performBasicAction(action)
+            }
         }
-        return queued
     }
 }

@@ -89,13 +89,13 @@ class JarvisBridge(private val activity: MainActivity) {
     }
 
     /**
-     * Explicit, bounded controls for Hoshi's OWN WebView only.
-     * No arbitrary Android taps, keyboard injection, app switching or submission.
-     * Success means queued, never that the DOM operation was confirmed.
+     * Bounded Hoshi-only UI action with a caller-generated request ID.
+     * The immediate Boolean only acknowledges queuing. Actual DOM evidence
+     * is delivered asynchronously by MainActivity without leaking draft text.
      */
     @JavascriptInterface
-    fun performLocalUiAction(action: String, payload: String): Boolean {
-        if (action !in localUiActions || !isEnabled() ||
+    fun performLocalUiAction(action: String, payload: String, requestId: Int): Boolean {
+        if (requestId !in 1..1_000_000_000 || action !in localUiActions || !isEnabled() ||
             JarvisAccessibilityService.instance == null) return false
         if (action == "type_draft") {
             if (payload.length !in 1..240 || payload.isBlank() ||
@@ -103,7 +103,9 @@ class JarvisBridge(private val activity: MainActivity) {
         } else if (payload.isNotEmpty()) return false
         return mainHandler.post {
             if (isEnabled() && JarvisAccessibilityService.instance != null) {
-                activity.dispatchLocalUiAction(action, payload)
+                activity.dispatchLocalUiAction(action, payload, requestId)
+            } else {
+                activity.reportLocalUiActionResult(requestId, false)
             }
         }
     }

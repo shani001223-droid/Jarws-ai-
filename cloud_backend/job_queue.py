@@ -247,7 +247,10 @@ class ScheduledJobQueue:
                 "UPDATE hoshi_job_queue SET state='canceled', updated_ms=? WHERE job_id=?",
                 (now, job_id)
             )
-            return self.status(job_id)
+            return self._queue_row(conn.execute(
+                "SELECT job_id,state,due_ms,attempts FROM hoshi_job_queue WHERE job_id=?",
+                (job_id,)
+            ).fetchone())
 
     def run_once(self, handlers: Mapping[str, Callable[[str], WorkerOutcome]],
                  now_ms: int | None = None) -> dict | None:

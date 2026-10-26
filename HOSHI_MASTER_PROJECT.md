@@ -87,6 +87,8 @@ Existing `assets/` visuals are source assets actually in this repo. Previously s
 
 These are **reference filenames**, not files automatically imported from Library into GitHub. The final selection/ordering across older image variations must be reviewed against the user's approved imagery before any visual replacement. User's latest priority: postpone appearance changes, improve intelligence and real work first.
 
+**ChatGPT Library consolidation (26 October 2026):** all located Hoshi/JARVIS reference files and historical downloadable artifacts were **moved, not deleted**, into the Library folder `/HOSHI AI - Master Project/`. It contains 51 files: this portable handoff `HOSHI_AI_Master_Project_Handoff.md`, an archived Library copy of the roadmap, and 49 organized assets/prototypes under `01-Character-and-Emotions/`, `02-Interfaces-and-Trading/`, `03-Outfits-and-Poses/`, and `04-Legacy-JARVIS/`. **The current canonical task progress is in GitHub**; the Library roadmap is a historical snapshot. Archived JARVIS APKs are not current release APKs and must not be assumed safe/current on the phone. ChatGPT conversations themselves cannot be moved into a ChatGPT Project through GitHub or Library organization; users may group them with the ChatGPT Projects UI.
+
 ## 7. Rules for every new coding session / automated run
 
 1. Read **this file**, the current `HOSHI_60_TASK_MASTER_ROADMAP.md`, relevant real source files, current PR head and GitHub CI status. Preserve earlier decisions, don't recreate the project.

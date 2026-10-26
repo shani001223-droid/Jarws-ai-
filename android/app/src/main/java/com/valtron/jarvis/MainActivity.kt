@@ -356,6 +356,26 @@ class MainActivity : Activity() {
         return true
     }
 
+    /**
+     * Dispatch only allowlisted local Hoshi DOM actions, never other apps.
+     * This method must run on the Android UI thread (JarvisBridge posts it).
+     * WebView page-origin is rechecked at execution time to avoid navigation races.
+     */
+    fun dispatchLocalUiAction(action: String, payload: String) {
+        if (isFinishing || isDestroyed) return
+        val view = dashboardWebView ?: return
+        val page = Uri.parse(view.url ?: return)
+        if (page.scheme != "https" || page.host != "jarws-ai-1.onrender.com") return
+        if (action !in setOf("tap_chat", "tap_settings", "type_draft", "scroll_up", "scroll_down")) return
+        if (action == "type_draft") {
+            if (payload.length !in 1..240 || payload.isBlank() ||
+                payload.any { it.code < 32 || it.code == 127 }) return
+        } else if (payload.isNotEmpty()) return
+        val script = "window.hoshiExecuteLocalUiAction && window.hoshiExecuteLocalUiAction(" +
+            JSONObject.quote(action) + "," + JSONObject.quote(payload) + ")"
+        view.evaluateJavascript(script, null)
+    }
+
     /** User-selected screenshot only: no background capture or remote upload. */
     fun chooseScreenshotForLocalOcr(): Boolean {
         if (isFinishing || isDestroyed || !localOcrBusy.compareAndSet(false, true)) return false

@@ -78,7 +78,13 @@ async function main() {
     }
     await page.setViewportSize({width:390,height:844});
     await page.locator('#nightSheet').evaluate(n=>n.scrollTop=0);
-    await page.screenshot({ path: "/tmp/hoshi-live-dashboard.png", fullPage: true });
+    // Let public fetches and image decoding settle before capturing this fixed viewport.
+    await page.waitForFunction(()=>!document.querySelector('#tradeRefresh').disabled,{},{timeout:25000});
+    await page.locator('.trade-companion img').evaluate(async img=>{await img.decode()});
+    console.log('Live trading source status:',await page.locator('#tradeStatus').innerText());
+    assert.deepEqual(badResponses, [], "The live dashboard should not return broken same-origin assets");
+    assert.deepEqual(pageErrors, [], "The live dashboard should not throw uncaught browser errors");
+    await page.screenshot({ path: "/tmp/hoshi-live-dashboard.png", fullPage: false, animations: "disabled", timeout: 45000 });
     assert.deepEqual(badResponses, [], "The live dashboard should not return broken same-origin assets");
     assert.deepEqual(pageErrors, [], "The live dashboard should not throw uncaught browser errors");
     console.log("PASS — live Render trading dashboard layout, wardrobe selection, core controls, responsive widths, and browser console.");

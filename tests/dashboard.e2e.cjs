@@ -162,6 +162,9 @@ async function main() {
     assert.equal(await page.title(), 'HOSHI — AI Companion');
     await page.locator('.nightroom').waitFor({state:'visible'});
     assert.equal(await page.locator('.night-tabs button').count(), 5);
+    assert.equal(await page.locator('.room-life').count(),0,'Removed unwanted Hoshi room-life stage');
+    assert.equal(await page.locator('.life-toggle').count(),0,'Removed room activity menu');
+    assert.equal(await page.locator('#roomMotionToggle').count(),0,'Removed room animation setting');
     assert.equal(await page.locator('.sidebar').isVisible(), false);
     assert.equal(await page.locator('#voicePanel').isVisible(), false);
     assert.equal(await page.locator('#nightSheet').isVisible(), false);
@@ -174,6 +177,7 @@ async function main() {
     await page.locator('#commandForm button').click();
     await page.waitForFunction(()=>document.querySelector('#reply').textContent.includes('I can help'));
     assert.equal(apiMessages.at(-1).locale,'ur-PK');
+    assert.equal(apiMessages.at(-1).fast,true,'Simple text questions use fast one-shot Groq path');
     // No cloud model should be called for concrete Android actions or writing drafts.
     await page.evaluate(() => {
       window.__phoneActions = [];
@@ -298,37 +302,6 @@ async function main() {
     }
     await page.setViewportSize({width:390,height:844});
     await page.screenshot({path:'/tmp/hoshi-nightroom-mobile.png',fullPage:true});
-    // Hoshi room-life: original art + five tabs remain while activities visibly change.
-    assert.equal(await page.locator('.room-life .life-expression .life-face').count(),1);
-    assert.equal(await page.locator('.room-life').getAttribute('data-activity'),'idle');
-    await page.locator('.life-toggle').click();
-    await page.locator('[data-life-activity="gaming"]').click();
-    assert.equal(await page.locator('.room-life').getAttribute('data-activity'),'gaming');
-    await page.locator('.life-toggle').click();
-    await page.locator('[data-life-activity="reels"]').click();
-    assert.equal(await page.locator('.room-life').getAttribute('data-activity'),'reels');
-    const initialActions=apiMessages.length;
-    await page.locator('[data-tab="chat"]').click();
-    await page.locator('#commandInput').fill('dance karo');
-    await page.locator('#commandForm button').click();
-    assert.equal(await page.locator('.room-life').getAttribute('data-activity'),'dance');
-    assert.equal(await page.locator('.life-expression').getAttribute('data-emotion'),'happy');
-    assert.equal(apiMessages.length,initialActions,'Room command must not trigger a model request');
-    await page.evaluate(()=>window.hoshiSetSpeaking(true));
-    assert.equal(await page.locator('.room-life').getAttribute('data-conversation'),'speaking');
-    await page.evaluate(()=>window.hoshiSetSpeaking(false));
-    assert.equal(await page.locator('.room-life').getAttribute('data-conversation'),'idle');
-    await page.locator('[data-tab="settings"]').click();
-    assert.match(await page.locator('#roomTipsToggle').innerText(),/OFF/);
-    await page.locator('#roomMotionToggle').click();
-    assert.equal(await page.locator('#nightroom').evaluate(n=>n.classList.contains('life-motion-off')),true);
-    await page.locator('#roomMotionToggle').click();
-    await page.locator('#roomTipsToggle').click();
-    await page.locator('[data-tab="trading"]').click();
-    await page.waitForFunction(()=>document.querySelector('.room-life-tip').hidden===false);
-    assert.match(await page.locator('.room-life-tip').innerText(),/Trading chart/i);
-    await page.locator('.room-life-tip button').click();
-    assert.equal(await page.locator('.room-life-tip').isVisible(),false);
     // Reproduce the previous repeated-mic bug without relying on physical hardware.
     const voiceContext = await browser.newContext({viewport:{width:390,height:844}});
     await voiceContext.addInitScript(() => {

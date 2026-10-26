@@ -45,10 +45,7 @@ class FrontendContractTests(unittest.TestCase):
         self.assertIn("./assets/hoshi-expressions.webp", SERVICE_WORKER)
         self.assertIn("./memory-privacy.js", SERVICE_WORKER)
         self.assertIn('<script src="./memory-privacy.js"></script>', HTML)
-        self.assertIn('CACHE_NAME = "hoshi-shell-v22"', SERVICE_WORKER)
-        self.assertIn('"./hoshi-room.js"', SERVICE_WORKER)
-        self.assertIn('"./hoshi-room.css"', SERVICE_WORKER)
-        self.assertNotIn('new URL("./index.html", "./trading.css",', SERVICE_WORKER)
+        self.assertIn('CACHE_NAME = "hoshi-shell-v23"', SERVICE_WORKER)
         self.assertIn("./assets/hoshi-hero-background.svg", SERVICE_WORKER)
 
     def test_hoshi_app_icon_is_wired_for_favicon_pwa_and_offline_shell(self):
@@ -131,7 +128,8 @@ class FrontendContractTests(unittest.TestCase):
         self.assertIn("Intent.createChooser(share", MAIN_ACTIVITY)
 
     def test_spoken_requests_use_fast_ai_mode_but_writing_actions_are_local(self):
-        self.assertIn("askCloud(text,source==='voice')", HTML)
+        self.assertIn("askCloud(text,fastRequest)", HTML)
+        self.assertIn("const fastRequest=source==='voice'", HTML)
         self.assertIn("processCommand(command,'voice')", HTML)
         self.assertIn("AI REPLIED IN ", HTML)
         self.assertIn("fast})", HTML)

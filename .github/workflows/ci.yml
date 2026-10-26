@@ -38,10 +38,6 @@ jobs:
         run: node --test tests/memory-privacy.test.cjs
       - name: Check reminder parser JavaScript syntax
         run: node --check reminder-parser.js
-      - name: Test Hoshi room activities, emotions, and privacy safeguards
-        run: node --test tests/hoshi-room.test.cjs
-      - name: Check Hoshi room animation script syntax
-        run: node --check hoshi-room.js
       - name: Check memory privacy JavaScript syntax
         run: node --check memory-privacy.js
       - name: Check service worker JavaScript syntax

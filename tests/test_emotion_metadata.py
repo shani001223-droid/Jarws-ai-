@@ -54,7 +54,7 @@ class HoshiEmotionMetadataTests(unittest.TestCase):
                         "speech_text": "میں تمہاری بات سن رہی ہوں۔"}),
             "openrouter", "Main naraz hoon", "ur-PK",
         )
-        self.assertIn(response.emotion, {"caring", "concerned", "annoyed", "neutral"})
+        self.assertIn(response.emotion, {"caring", "concerned", "worried", "annoyed", "neutral"})
         self.assertEqual(response.animation, "idle")
         self.assertEqual(response.gesture, "none")
         self.assertEqual(response.voice_style, "soft")

@@ -420,7 +420,7 @@ async function main() {
     await voiceContext.close();
 
     // Task 17: consent is OFF by default; no previous chat is silently stored.
-    await page.locator('[data-tab="settings"]').click();
+    await page.locator('[data-tab="chat"]').click();
     assert.match(await page.locator('#memoryToggle').innerText(), /OFF/);
     assert.equal(await page.evaluate(()=>localStorage.getItem('hoshiConversationMemoryV1')),null);
     await page.locator('#memoryToggle').click();

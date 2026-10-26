@@ -31,6 +31,16 @@
     if(/^(?:hoshi\s+)?(?:room idle|normal ho jao|dance band karo|music band karo|stop music|back to room|بس کرو)$/.test(s))return "idle";
     return null;
   }
+  function parseEmotionCommand(raw) {
+    const s=String(raw||"").toLowerCase().trim().replace(/[!?.,]/g," ").replace(/\s+/g," ");
+    if(/^(?:hoshi\s+)?(?:hasso|hanso|hans kar dikhao|laugh|smile karo|muskurayo|ہنسو|مسکراؤ)$/.test(s))return "playful";
+    if(/^(?:hoshi\s+)?(?:sharmao|sharma kar dikhao|blush karo|شرماؤ)$/.test(s))return "shy";
+    if(/^(?:hoshi\s+)?(?:sad ho jao|udas ho jao|sad face|اداس ہو جاؤ)$/.test(s))return "sad";
+    if(/^(?:hoshi\s+)?(?:ro kar dikhao|cry face|cry karo|رو کر دکھاؤ)$/.test(s))return "crying";
+    if(/^(?:hoshi\s+)?(?:gussa dikhao|angry face|naraz ho jao|غصہ دکھاؤ)$/.test(s))return "angry";
+    if(/^(?:hoshi\s+)?(?:smile normal|normal face|chehra normal)$/.test(s))return "caring";
+    return null;
+  }
   function create(documentRef, options) {
     const doc=documentRef,config=options||{},room=doc.getElementById("nightroom");
     if(!room)return null;
@@ -143,5 +153,5 @@
       getState:()=>({activity,emotion,conversation,suggestions,motion,musicPlaying:melodyTimer!==null}),
     });
   }
-  root.HoshiRoomLife=Object.freeze({create,parseActivityCommand,validateEmotion,validateActivity,EMOTIONS,ACTIVITIES});
+  root.HoshiRoomLife=Object.freeze({create,parseActivityCommand,parseEmotionCommand,validateEmotion,validateActivity,EMOTIONS,ACTIVITIES});
 })(typeof window!=="undefined"?window:globalThis);

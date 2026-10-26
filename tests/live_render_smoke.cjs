@@ -61,6 +61,8 @@ async function main() {
     assert.equal(await page.locator('#voicePanel').isVisible(),true);
     await page.waitForFunction(()=>Boolean(window.HoshiDiagnostics&&window.HoshiDiagnostics.snapshot().last_api_response),{},{timeout:20000});
     await page.locator('#clientDiagnostics summary').click();
+    // details.toggle is queued: wait for its report update before parsing.
+    await page.waitForFunction(()=>{try{return Boolean(JSON.parse(document.querySelector('#clientDiagnosticReport').textContent).last_api_response)}catch(_){return false}});
     const safeReport=JSON.parse(await page.locator('#clientDiagnosticReport').innerText());
     assert.equal(safeReport.scope,'this_page_only');
     assert.match(safeReport.last_api_response.request_id,/^[0-9a-f-]{36}$/);

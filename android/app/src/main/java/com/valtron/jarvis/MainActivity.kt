@@ -269,27 +269,25 @@ class MainActivity : Activity() {
         runOnUiThread {
             if (isFinishing) return@runOnUiThread
             try {
-                val intent = when (action) {
-                    "settings" -> Intent(Settings.ACTION_SETTINGS)
-                    "browser" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/"))
-                    "tradingview" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://www.tradingview.com/"))
-                    "youtube" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/"))
-                    "whatsapp" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/"))
-                    else -> Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/"))
+                val packageName = when (action) {
+                    "youtube" -> "com.google.android.youtube"
+                    "whatsapp" -> "com.whatsapp"
+                    "telegram" -> "org.telegram.messenger"
+                    else -> null
                 }
-                if (action == "youtube") {
-                    intent.setPackage("com.google.android.youtube")
-                }
-                if (action == "whatsapp") {
-                    intent.setPackage("com.whatsapp")
-                }
-                if (action == "telegram") {
-                    intent.setPackage("org.telegram.messenger")
-                }
-                try { startActivity(intent) }
-                catch (_: Exception) {
-                    intent.setPackage(null)
-                    startActivity(intent)
+                val app = packageName?.let { packageManager.getLaunchIntentForPackage(it) }
+                if (app != null) {
+                    startActivity(app)
+                } else {
+                    val fallback = when (action) {
+                        "settings" -> Intent(Settings.ACTION_SETTINGS)
+                        "browser" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/"))
+                        "tradingview" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://www.tradingview.com/"))
+                        "youtube" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/"))
+                        "whatsapp" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://www.whatsapp.com/"))
+                        else -> Intent(Intent.ACTION_VIEW, Uri.parse("https://web.telegram.org/"))
+                    }
+                    startActivity(fallback)
                 }
             } catch (_: Exception) {
                 Toast.makeText(this, "App could not be opened.", Toast.LENGTH_SHORT).show()

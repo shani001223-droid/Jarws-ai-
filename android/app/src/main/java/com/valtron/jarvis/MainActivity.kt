@@ -16,6 +16,8 @@ import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.text.InputType
 import android.provider.Settings
 import android.view.Gravity
@@ -64,6 +66,7 @@ class MainActivity : Activity() {
     // WebView @JavascriptInterface calls can arrive off the UI thread.
     // Reserve the picker synchronously to prevent duplicate picker launches.
     private val localOcrBusy = AtomicBoolean(false)
+    private val safeIntentHandler = Handler(Looper.getMainLooper())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -279,39 +282,79 @@ class MainActivity : Activity() {
     }
 
     /**
-     * User-requested shortcuts only. Never silently send a message, post online
-     * or interact with a trading account.
+     * Task 23: fixed, user-requested Android app shortcuts only. A true return
+     * means the UI-thread request was queued, not that an app actually opened.
+     * No caller-provided URL, component, recipient, message or trade payload.
+     * These shortcuts do not need Accessibility permission.
      */
-    fun openKnownApp(action: String): Boolean {
-        if (action !in setOf("youtube", "whatsapp", "telegram", "browser", "settings", "tradingview")) return false
-        runOnUiThread {
-            if (isFinishing) return@runOnUiThread
-            try {
-                val packageName = when (action) {
-                    "youtube" -> "com.google.android.youtube"
-                    "whatsapp" -> "com.whatsapp"
-                    "telegram" -> "org.telegram.messenger"
-                    else -> null
-                }
-                val app = packageName?.let { packageManager.getLaunchIntentForPackage(it) }
-                if (app != null) {
-                    startActivity(app)
-                } else {
-                    val fallback = when (action) {
-                        "settings" -> Intent(Settings.ACTION_SETTINGS)
-                        "browser" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/"))
-                        "tradingview" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://www.tradingview.com/"))
-                        "youtube" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/"))
-                        "whatsapp" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://www.whatsapp.com/"))
-                        else -> Intent(Intent.ACTION_VIEW, Uri.parse("https://web.telegram.org/"))
-                    }
-                    startActivity(fallback)
-                }
-            } catch (_: Exception) {
-                Toast.makeText(this, "App could not be opened.", Toast.LENGTH_SHORT).show()
-            }
+    fun openKnownApp(action: String, requestId: Int = 0): Boolean {
+        if (action !in setOf("youtube", "whatsapp", "telegram", "browser", "settings", "tradingview") ||
+            requestId !in 0..1_000_000_000 || isFinishing || isDestroyed) return false
+        return safeIntentHandler.post { dispatchKnownAppLaunch(action, requestId) }
+    }
+
+    private fun dispatchKnownAppLaunch(action: String, requestId: Int) {
+        if (isFinishing || isDestroyed) return
+        val view = dashboardWebView ?: return
+        val originalUrl = view.url ?: return
+        val page = Uri.parse(originalUrl)
+        // The bridge is reachable from JavaScript; never trust it after navigation.
+        if (page.scheme != "https" || page.host != "jarws-ai-1.onrender.com") return
+        val packageName = when (action) {
+            "youtube" -> "com.google.android.youtube"
+            "whatsapp" -> "com.whatsapp"
+            "telegram" -> "org.telegram.messenger"
+            "tradingview" -> "com.tradingview.tradingviewapp"
+            else -> null
         }
-        return true
+        val accepted = try {
+            val installed = packageName?.let { packageManager.getLaunchIntentForPackage(it) }
+            if (installed != null) {
+                try {
+                    startActivity(installed)
+                    true
+                } catch (_: Exception) {
+                    launchFixedAppFallback(action)
+                }
+            } else {
+                launchFixedAppFallback(action)
+            }
+        } catch (_: Exception) {
+            false
+        }
+        if (!accepted) Toast.makeText(this, "App unavailable on this device.", Toast.LENGTH_SHORT).show()
+        reportKnownAppLaunchResult(requestId, action, accepted, view, originalUrl)
+    }
+
+    private fun launchFixedAppFallback(action: String): Boolean {
+        // Only these constant destinations may leave Hoshi; no user/AI URLs.
+        val intent = when (action) {
+            "settings" -> Intent(Settings.ACTION_SETTINGS)
+            "browser" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/"))
+            "youtube" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/"))
+            "whatsapp" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://www.whatsapp.com/"))
+            "telegram" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://web.telegram.org/"))
+            "tradingview" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://www.tradingview.com/"))
+            else -> return false
+        }
+        return try {
+            startActivity(intent)
+            true // Android accepted the intent, not proof of destination rendering.
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    private fun reportKnownAppLaunchResult(
+        requestId: Int, action: String, accepted: Boolean, view: WebView, originalUrl: String
+    ) {
+        if (requestId == 0 || isFinishing || isDestroyed ||
+            dashboardWebView !== view || view.url != originalUrl) return
+        val outcome = if (accepted) "true" else "false"
+        view.evaluateJavascript(
+            "window.hoshiKnownAppLaunchResult && window.hoshiKnownAppLaunchResult(" +
+                requestId + "," + JSONObject.quote(action) + "," + outcome + ")", null
+        )
     }
 
     /** Save only validated Hoshi-generated ZIP bytes to user-visible Downloads.

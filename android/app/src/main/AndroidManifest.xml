@@ -12,6 +12,7 @@
         <package android:name="com.google.android.youtube" />
         <package android:name="com.whatsapp" />
         <package android:name="org.telegram.messenger" />
+        <package android:name="com.tradingview.tradingviewapp" />
     </queries>
 
     <application

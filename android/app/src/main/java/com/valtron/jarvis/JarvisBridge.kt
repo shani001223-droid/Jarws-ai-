@@ -30,6 +30,13 @@ class JarvisBridge(private val activity: MainActivity) {
     @JavascriptInterface
     fun openKnownApp(action: String): Boolean = activity.openKnownApp(action)
 
+    /** A queued request ID lets the dashboard distinguish accepted vs failed intent handoff. */
+    @JavascriptInterface
+    fun openKnownAppVerified(action: String, requestId: Int): Boolean {
+        if (requestId !in 1..1_000_000_000) return false
+        return activity.openKnownApp(action, requestId)
+    }
+
     @JavascriptInterface
     fun saveAdZip(base64Zip: String, filename: String): Boolean = activity.saveAdZip(base64Zip, filename)
 

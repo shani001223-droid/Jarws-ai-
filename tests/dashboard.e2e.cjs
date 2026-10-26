@@ -267,6 +267,32 @@ async function main() {
       ['open','whatsapp'],['screen','back'],
       ['copy','Kal subah meeting hai'],['share','Kal subah meeting hai'],['permission']
     ]);
+    // Task 23: native app handoff is explicitly user-initiated and status-only.
+    await page.evaluate(()=>{
+      window.__verifiedIntents=[];
+      window.JarvisBridge.isEnabled=()=>false; // App launch must not need Accessibility.
+      window.JarvisBridge.openKnownAppVerified=(name,id)=>{
+        window.__verifiedIntents.push({name,id});return true;
+      };
+    });
+    await page.locator('#commandInput').fill('open Telegram');
+    await page.locator('#commandForm button').click();
+    const intent=await page.evaluate(()=>window.__verifiedIntents.at(-1));
+    assert.equal(intent.name,'telegram');
+    assert.match(await page.locator('#reply').innerText(),/Requesting telegram app/);
+    await page.evaluate(({id})=>window.hoshiKnownAppLaunchResult(id+1,'telegram',true),intent);
+    assert.match(await page.locator('#reply').innerText(),/Requesting telegram app/,'Ignore stale callback');
+    await page.evaluate(({id})=>window.hoshiKnownAppLaunchResult(id,'whatsapp',true),intent);
+    assert.match(await page.locator('#reply').innerText(),/Requesting telegram app/,'Ignore mismatched app');
+    await page.evaluate(({id})=>window.hoshiKnownAppLaunchResult(id,'telegram',false),intent);
+    assert.match(await page.locator('#reply').innerText(),/Could not open telegram/);
+    await page.locator('#commandInput').fill('open TradingView');
+    await page.locator('#commandForm button').click();
+    const secondIntent=await page.evaluate(()=>window.__verifiedIntents.at(-1));
+    assert.equal(secondIntent.name,'tradingview');
+    await page.evaluate(({id})=>window.hoshiKnownAppLaunchResult(id,'tradingview',true),secondIntent);
+    assert.match(await page.locator('#reply').innerText(),/Android accepted tradingview launch request/);
+    assert.equal(apiMessages.length,beforeLocalCommands,'Safe app intents never call AI');
     assert.match(await page.locator('#draftStatus').innerText(), /Accessibility/);
     await page.locator('[data-tab="settings"]').click();
     assert.equal(await page.locator('#voicePanel').isVisible(), true);

@@ -40,6 +40,7 @@ try:  # Handles either cloud_backend package import or direct uvicorn main:app.
     from .persona_policy import personality_guardrails
     from .job_records import JobRecordStore, JobCapacityError, JobStateError
     from .job_queue import ScheduledJobQueue, QueueCapacityError
+    from .verified_artifact_store import VerifiedArtifactStore, ArtifactStorageError
 except ImportError:
     from openjarvis_bridge import ask_openjarvis, endpoint as openjarvis_endpoint, wants_agent, OpenJarvisUnavailable
     from agent_tools import try_calculate
@@ -53,6 +54,7 @@ except ImportError:
     from persona_policy import personality_guardrails
     from job_records import JobRecordStore, JobCapacityError, JobStateError
     from job_queue import ScheduledJobQueue, QueueCapacityError
+    from verified_artifact_store import VerifiedArtifactStore, ArtifactStorageError
 
 app = FastAPI(title="HOSHI AI Cloud API", version="0.9.1")
 
@@ -202,6 +204,69 @@ def schedule_job_record(job_id: str, payload: JobScheduleRequest,
     return {"job": job, "queue": scheduled, "executed": False,
             "worker_available": False,
             "note": "Scheduled metadata only; no background executor is configured."}
+
+
+
+def _private_artifact_store(request: FastAPIRequest) -> VerifiedArtifactStore:
+    """Operator-authenticated artifact reads; no public upload/write route.
+
+    Both the metadata database and a private 0700 absolute artifact directory
+    must be configured on persistent storage. A successful response is never
+    proof that a worker ran or a job was completed.
+    """
+    jobs = _private_job_store(request)
+    root = os.getenv("HOSHI_ARTIFACT_ROOT", "").strip()
+    if not root:
+        raise HTTPException(status_code=503, detail="Private artifact storage is not configured.")
+    try:
+        return VerifiedArtifactStore(jobs, root)
+    except Exception as exc:
+        _safe_log_failure("artifacts.storage", exc)
+        raise HTTPException(status_code=503, detail="Private artifact storage unavailable.") from None
+
+
+@app.get("/api/agent/jobs/{job_id}/artifacts")
+def get_job_artifacts(job_id: str, request: FastAPIRequest):
+    """Read bounded verification metadata/checkpoints with server-only auth."""
+    store = _private_artifact_store(request)
+    try:
+        if store.jobs.get(job_id) is None:
+            raise HTTPException(status_code=404, detail="Job not found.")
+        metadata = store.metadata(job_id)
+        checkpoints = store.checkpoints(job_id)
+    except HTTPException:
+        raise
+    except ArtifactStorageError:
+        raise HTTPException(status_code=404, detail="Job not found.") from None
+    except Exception as exc:
+        _safe_log_failure("artifacts.lookup", exc)
+        raise HTTPException(status_code=503, detail="Private artifact lookup unavailable.") from None
+    return {"artifact": metadata, "checkpoints": checkpoints,
+            "persisted": metadata is not None,
+            "note": "Metadata only. Download rechecks the ZIP digest; no worker is auto-started."}
+
+
+@app.get("/api/agent/jobs/{job_id}/artifacts/download")
+def download_job_artifact(job_id: str, request: FastAPIRequest):
+    """Download only the fixed verified ZIP; rehash every read, never cache."""
+    store = _private_artifact_store(request)
+    try:
+        if store.jobs.get(job_id) is None or store.metadata(job_id) is None:
+            raise HTTPException(status_code=404, detail="Verified artifact not found.")
+        data = store.read_verified(job_id)
+    except HTTPException:
+        raise
+    except ArtifactStorageError as exc:
+        _safe_log_failure("artifacts.integrity", exc)
+        raise HTTPException(status_code=503, detail="Verified artifact unavailable or damaged.") from None
+    except Exception as exc:
+        _safe_log_failure("artifacts.download", exc)
+        raise HTTPException(status_code=503, detail="Private artifact storage unavailable.") from None
+    return Response(content=data, media_type="application/zip", headers={
+        "Cache-Control": "no-store",
+        "X-Content-Type-Options": "nosniff",
+        "Content-Disposition": 'attachment; filename="flora_ads.zip"',
+    })
 
 
 

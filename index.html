@@ -93,6 +93,13 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 #tradeRefresh{width:100%;min-height:40px;margin:9px 0}
 .hoshi-tools{margin-top:12px}.hoshi-tool-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:9px 0}.hoshi-tool-grid button{min-height:37px;padding:7px 5px;font-size:12px}.hoshi-draft{margin-top:12px}.hoshi-draft label{display:block;margin-bottom:7px;font-size:12px;color:#aed8eb}.hoshi-draft textarea{display:block;width:100%;min-height:80px;max-height:190px;background:#09172a;border:1px solid #396481;border-radius:10px;color:#e7f9ff;padding:10px;font:14px system-ui;resize:vertical}
 #voiceTiming{font-size:11px;letter-spacing:.02em;text-align:center;color:#acd3e6;margin-top:7px;opacity:.9}
+#adStudioResult{margin:12px 0;padding:12px;border-radius:14px;background:#0c1c2edb;border:1px solid #967746;color:#eef4ff}
+#adStudioResult[hidden]{display:none!important}
+#adStudioResult h3{font-size:16px;color:#f6ddae;margin:0 0 10px}
+#adStudioResult p{font-size:12px;line-height:1.55;overflow-wrap:anywhere;color:#dce8f6}
+#adStudioResult img{display:block;width:min(100%,300px);height:auto;margin:8px auto 12px;border-radius:8px;border:1px solid #bf9856}
+#adStudioResult button{width:100%;min-height:43px;margin:5px 0;background:#9b783e;color:#fff8eb;border:1px solid #d3a95d;border-radius:11px;font-weight:650}
+#adStudioResult .ad-caption{white-space:pre-wrap;font-size:12px}
 </style>
 </head>
 <body>
@@ -106,7 +113,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 <button type="button" data-hoshi-command="swipe up">↑ Swipe</button>
 <button type="button" data-hoshi-command="take screenshot">▣ Screenshot</button>
 </div><button type="button" id="enablePhoneAccess" class="primary">Enable phone Accessibility permission</button>
-<div class="hoshi-draft"><label for="hoshiDraft">Writing pad · local to this device</label><textarea id="hoshiDraft" rows="3" maxlength="2000" placeholder="Hoshi, note likho…"></textarea><div class="hoshi-tool-grid"><button type="button" id="useHoshiReply">Use AI reply</button><button type="button" id="copyHoshiDraft">Copy text</button><button type="button" id="shareHoshiDraft">Share draft</button></div><p id="draftStatus" class="small" role="status">Draft is not automatically sent.</p></div></section></div><div data-panel="trading" hidden>
+<div class="hoshi-draft"><label for="hoshiDraft">Writing pad · local to this device</label><textarea id="hoshiDraft" rows="3" maxlength="2000" placeholder="Hoshi, note likho…"></textarea><div class="hoshi-tool-grid"><button type="button" id="useHoshiReply">Use AI reply</button><button type="button" id="copyHoshiDraft">Copy text</button><button type="button" id="shareHoshiDraft">Share draft</button></div><p id="draftStatus" class="small" role="status">Draft is not automatically sent.</p></div></section><section id="adStudioResult" hidden aria-live="polite"></section></div><div data-panel="trading" hidden>
 <div id="tradeDashboard" class="trade-dashboard">
 <aside class="trade-rail"><div class="trade-logo"><img src="./assets/hoshi-app-icon.svg" width="36" height="36" alt=""><div>Hoshi AI<small>Trading Assistant</small></div></div><nav aria-label="Trading workspace"><button type="button" data-trade-target="tradeOverview" aria-pressed="true">↗ Trading</button><button type="button" data-trade-target="tradeAnalysis">◈ Analysis</button><button type="button" data-trade-target="tradeNews">▤ News</button><button type="button" data-trade-target="tradeWatchlist">☆ Watchlist</button><button type="button" data-trade-target="tradeExecution">▣ Positions</button></nav><div class="trade-rail-note">Trade smart.<br>Understand the chart.<span>✧ With Hoshi</span></div></aside>
 <div class="trade-content">
@@ -199,6 +206,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 <script src="./assistant-commands.js"></script>
 <script src="./reminder-parser.js"></script>
 <script src="./memory-privacy.js"></script>
+<script src="./hoshi-product-ads.js"></script>
 <script>
 (()=> {
  const $=id=>document.getElementById(id), status=$('status'), reply=$('reply'), input=$('commandInput'), orb=$('orb');
@@ -209,7 +217,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  $('nightMic').append($('wakeBtn'));$('wakeBtn').setAttribute('aria-label','Start or stop microphone');
  const chatPanel=shell.querySelector('[data-panel="chat"]'),settingsPanel=shell.querySelector('[data-panel="settings"]');
  $('nightAudioRetry').onclick=()=>{$('hoshiAudio').play().then(()=>{$('nightAudioRetry').hidden=true}).catch(()=>setStatus('AUDIO BLOCKED · CHECK MEDIA SETTINGS'))};
- chatPanel.append($('commandForm'),$('memoryPanel'));
+ chatPanel.append($('commandForm'),$('adStudioResult'),$('memoryPanel'));
  settingsPanel.append(document.querySelector('.controls'),document.querySelector('.bottom-workspace'));
  if(window.JarvisBridge&&typeof window.JarvisBridge.showReminders==='function'){$('nativeRemindersBtn').hidden=false;$('nativeRemindersBtn').onclick=()=>window.JarvisBridge.showReminders()}
  $('stopBtn').hidden=true;$('testBtn').hidden=true;
@@ -600,6 +608,16 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
     return false;
   }
  function processCommand(raw,source='text'){const text=String(raw||'').trim(),c=window.JarvisCommandUtils?window.JarvisCommandUtils.normalize(text):text.toLowerCase().replace(/[!?.,،۔]/g,' ').replace(/\s+/g,' ').trim();if(!c)return;
+ if(window.HoshiAdStudio&&window.HoshiAdStudio.isIntent(text)){
+  rememberTurn('user',text);showTab('chat');
+  window.HoshiAdStudio.execute({
+   message:text,backend:API_BASE,container:$('adStudioResult'),bridge:window.JarvisBridge,
+   onStatus:setStatus,
+   onSuccess:()=>say('Flora product ads ready hain. Download se ZIP save kar lo.','happy',false,
+     commandLanguage==='ur-PK'?'فلورا کے پروڈکٹ ایڈز تیار ہیں۔ ڈاؤن لوڈ سے محفوظ کر لو۔':null)
+  });
+  return;
+ }
  if(handlePhoneOrWritingCommand(text))return;
  rememberTurn('user',text);setStatus('PROCESSING…');orb.classList.add('active');
  const has=(patterns)=>patterns.some(p=>p.test(c));

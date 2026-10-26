@@ -51,7 +51,7 @@ jobs:
               --data '{"message":"Automated live smoke test. Reply with exactly: HOSHI OK.","locale":"en"}' || true)
             body=$(cat /tmp/hoshi-live-reply.json 2>/dev/null || true)
             if [ "$http_code" = "200" ]; then
-              if echo "$body" | jq -e '(.reply | type == "string" and length > 0) and (.mode == "gemini" or .mode == "groq")' >/dev/null; then
+              if echo "$body" | jq -e '(.reply | type == "string" and length > 0) and (.mode == "gemini" or .mode == "groq" or .mode == "openrouter")' >/dev/null; then
                 echo "PASS — live AI provider: $(echo "$body" | jq -r '.mode')"
                 echo "Reply: $(echo "$body" | jq -r '.reply')"
                 exit 0

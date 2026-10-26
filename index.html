@@ -320,7 +320,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
    let data={};try{data=await r.json()}catch(_){}if(requestId!==cloudRequestSequence)return;
    recordVoiceTiming('full_model_response_ms',performance.now()-modelStartedAt);
    if(!r.ok){let detail=data.detail||'';if(r.status===502)detail=detail||'Gemini ne request reject ki. Render environment mein API key aur Google AI Studio access check karna hoga.';else if(r.status===504)detail=detail||'Gemini response time par nahi aaya. Yeh AI server timeout hai, zaroori nahi ke aapka internet kharab ho.';else if(r.status===429)detail=detail||'Gemini ki free quota ya rate limit poori ho gayi hai.';else if(r.status===503)detail=detail||'Render par GEMINI_API_KEY configured nahi hai.';else detail=detail||('Cloud API error: HTTP '+r.status);throw new Error(detail)}
-   setStatus('CLOUD REPLIED · '+(data.mode||'API'));say(data.reply||'Cloud received the message but returned no reply.',data.emotion,false,data.speech_text);
+   setStatus('CLOUD REPLIED · '+(data.mode||'API'));say(data.reply||'Cloud received the message but returned no reply.',data.emotion,false,data.speech_text,data);
   }catch(e){
    if(requestId!==cloudRequestSequence)return;
    let message='Cloud request failed. Check the connection and try again.';
@@ -362,6 +362,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
   try{
    let style='soft';try{style=localStorage.getItem('hoshiVoiceStyle')||'soft'}catch(_){}
    if(['happy','excited','playful'].includes(request.emotion))style='playful';else if(['sad','shy','concerned','affectionate','caring'].includes(request.emotion))style='warm';
+   if(request.style&&request.style!=='soft')style=request.style==='gentle'?'warm':request.style;
    const response=await fetch(API_BASE+'/api/speech',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:request.text,style}),signal:controller.signal});
    if(!response.ok)throw new Error('Online speech unavailable');
    const blob=await response.blob();if(request.id!==speechSequence)return;
@@ -397,15 +398,44 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  function renderHistory(){const box=$('chatHistory');if(!box)return;const history=getConversationContext();box.replaceChildren();if(!memoryEnabled){editingMemoryIndex=null;box.textContent='Local memory is off.';return}if(!history.length){editingMemoryIndex=null;box.textContent='No saved conversation yet.';return}const start=Math.max(0,history.length-8);history.slice(-8).forEach((item,offset)=>{const index=start+offset;const row=document.createElement('div');row.className='history-item '+(item.role==='user'?'user':'assistant');if(editingMemoryIndex===index){const editor=document.createElement('textarea');editor.className='history-editor';editor.maxLength=500;editor.setAttribute('aria-label','Edit saved '+(item.role==='user'?'user':'HOSHI')+' message');editor.value=item.content;row.appendChild(editor);const actions=document.createElement('div');actions.className='history-actions';actions.appendChild(makeHistoryButton('Save','Save edited memory entry',()=>{const revised=editor.value.trim();if(!revised){setStatus('MEMORY ENTRY NOT SAVED · TEXT IS EMPTY');return}if(looksSensitive(revised)){setStatus('MEMORY ENTRY NOT SAVED · REMOVE SECRET OR SENSITIVE DETAILS');return}const latest=getConversationContext();if(!latest[index]){editingMemoryIndex=null;renderHistory();return}latest[index].content=revised.slice(0,500);try{persistHistory(latest);editingMemoryIndex=null;renderHistory();setStatus('MEMORY ENTRY UPDATED')}catch(e){setStatus('MEMORY UPDATE FAILED · STORAGE UNAVAILABLE')}}));actions.appendChild(makeHistoryButton('Cancel','Cancel editing memory entry',()=>{editingMemoryIndex=null;renderHistory()}));row.appendChild(actions)}else{const content=document.createElement('div');content.className='history-content';content.textContent=(item.role==='user'?'You: ':'HOSHI: ')+item.content;row.appendChild(content);const actions=document.createElement('div');actions.className='history-actions';actions.appendChild(makeHistoryButton('Edit','Edit saved '+(item.role==='user'?'user':'HOSHI')+' message',()=>{editingMemoryIndex=index;renderHistory()}));actions.appendChild(makeHistoryButton('Delete','Delete saved '+(item.role==='user'?'user':'HOSHI')+' message',()=>{const latest=getConversationContext();if(!latest[index])return;latest.splice(index,1);try{persistHistory(latest);editingMemoryIndex=null;renderHistory();setStatus('MEMORY ENTRY DELETED')}catch(e){setStatus('MEMORY DELETE FAILED · STORAGE UNAVAILABLE')}}));row.appendChild(actions)}box.appendChild(row)})}
  function rememberTurn(role,content){if(!memoryEnabled||!String(content||'').trim()||looksSensitive(content))return;try{const history=getConversationContext();history.push({role,content:String(content).slice(0,500),at:Date.now()});persistHistory(history);editingMemoryIndex=null;renderHistory();renderRecentActivity()}catch(e){const box=$('chatHistory');if(box)box.textContent='Local memory is unavailable in this browser.'}}
  function guessEmotion(text){const value=String(text||"").toLowerCase();if(/udaas|sad|dukhi|rona|upset|sorry/i.test(value))return "sad";if(/pareshan|tension|worried|concern|darr/i.test(value))return "concerned";if(/gussa|naraz|angry|annoyed/i.test(value))return "annoyed";if(/sharma|shy|blush/i.test(value))return "shy";if(/excited|zabardast|amazing|wah/i.test(value))return "excited";if(/mazak|mazaq|masti|haha|hehe|joke/i.test(value))return "playful";if(/pyar|pyaar|love you|miss you|jaan|hug/i.test(value))return "affectionate";if(/khush|happy|great|shukriya|thank you|😊|😄/i.test(value))return "happy";if(/kyun|kaise|why|how|explain|think/i.test(value))return "thinking";return "caring"}
- function setEmotion(emotion){const allowed=["happy","sad","affectionate","excited","shy","concerned","annoyed","playful","thinking","caring"];const chosen=allowed.includes(emotion)?emotion:"caring";orb.dataset.emotion=chosen;shell.dataset.emotion=chosen;const moodNames={happy:'😊 Khush',sad:'🌧 Udaas',affectionate:'♡ Affectionate',excited:'✦ Excited',shy:'🌸 Shy',concerned:'☁ Concerned',annoyed:'〰 Naraz',playful:'✧ Playful',thinking:'⋯ Thinking',caring:'♡ Caring'};$('nightMood').textContent=moodNames[chosen]||'♡ Caring';orb.setAttribute("aria-label","HOSHI expression: "+chosen);const label=$("avatarLabel"),utility=$("utilityEmotion");if(label)label.textContent="HOSHI · "+chosen.toUpperCase();if(utility)utility.textContent=chosen.toUpperCase()}
+ function setEmotion(emotion,metadata=null){
+  // Sprite aliases only: the bedroom portrait is a single approved image,
+  // so these states do NOT pretend to render unprovided body-part layers.
+  const spriteFor={neutral:'caring',happy:'happy',excited:'excited',playful:'playful',
+   shy:'shy',affectionate:'affectionate',curious:'thinking',thinking:'thinking',
+   confused:'thinking',worried:'concerned',sad:'sad',crying:'sad',annoyed:'annoyed',
+   angry:'annoyed',apologetic:'caring',sleepy:'thinking',caring:'caring'};
+  const canonical=Object.prototype.hasOwnProperty.call(spriteFor,emotion)?emotion:'neutral';
+  const chosen=spriteFor[canonical];
+  orb.dataset.emotion=chosen;shell.dataset.emotion=chosen;shell.dataset.characterEmotion=canonical;
+  const moodNames={neutral:'♡ Neutral',happy:'😊 Khush',sad:'🌧 Udaas',
+   affectionate:'♡ Affectionate',excited:'✦ Excited',shy:'🌸 Shy',concerned:'☁ Concerned',
+   worried:'☁ Worried',annoyed:'〰 Naraz',angry:'〰 Angry',playful:'✧ Playful',
+   thinking:'⋯ Thinking',curious:'✧ Curious',confused:'⋯ Confused',
+   crying:'🌧 Crying',apologetic:'♡ Sorry',sleepy:'☾ Sleepy',caring:'♡ Caring'};
+  $('nightMood').textContent=moodNames[canonical]||'♡ Neutral';
+  orb.setAttribute('aria-label','HOSHI expression: '+canonical);
+  const label=$('avatarLabel'),utility=$('utilityEmotion');
+  if(label)label.textContent='HOSHI · '+canonical.toUpperCase();
+  if(utility)utility.textContent=canonical.toUpperCase();
+  const allowedAnimation=['idle','smile','sad_eyes','thinking','blush','excited'];
+  const allowedGesture=['none','look_down','head_tilt','small_wave'];
+  const intensity=metadata&&metadata.emotion_intensity;
+  window.hoshiEmotionState={
+   emotion:canonical,visualSprite:chosen,
+   emotion_intensity:typeof intensity==='number'&&Number.isFinite(intensity)&&intensity>=0&&intensity<=1?intensity:0.45,
+   animation:metadata&&allowedAnimation.includes(metadata.animation)?metadata.animation:'idle',
+   gesture:metadata&&allowedGesture.includes(metadata.gesture)?metadata.gesture:'none'
+  };
+ }
   function setSpeaking(active){orb.classList.toggle('speaking',!!active);shell.classList.toggle('speaking',!!active)}
   window.hoshiSetSpeaking=setSpeaking;
   window.hoshiUrduUnavailable=()=>{setSpeaking(false);playOnlineUrdu(currentSpeech)};
   window.hoshiVoiceError=()=>{setSpeaking(false);if(commandLanguage==='ur-PK')playOnlineUrdu(currentSpeech);else setStatus('VOICE OUTPUT FAILED · CHECK DEVICE TEXT-TO-SPEECH')};
- function say(text,emotion,preview=false,speechText=null){
+ function say(text,emotion,preview=false,speechText=null,metadata=null){
    const message=String(text||'');
    const currentEmotion=emotion||guessEmotion(message);
-   setEmotion(currentEmotion);
+   setEmotion(currentEmotion,metadata);
    if(!preview){reply.textContent=message;rememberTurn('assistant',message)}
    if(!preview&&!voiceReplies)return;
    stopSpeaking();const speechId=speechSequence;
@@ -419,7 +449,8 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
    const voiceMood={happy:[0.05,0.03],excited:[0.08,0.06],playful:[0.06,0.05],affectionate:[0.04,-0.03],shy:[0.06,-0.05],sad:[-0.08,-0.08],concerned:[-0.05,-0.06],annoyed:[-0.04,0.02],thinking:[-0.02,-0.03],caring:[0,0]}[currentEmotion]||[0,0];
    const pitch=Math.max(0.8,Math.min(1.6,basePitch+voiceMood[0]));
    const rate=Math.max(0.75,Math.min(1.15,baseRate+voiceMood[1]));
-   currentSpeech={id:speechId,text:spokenMessage,emotion:currentEmotion};
+   currentSpeech={id:speechId,text:spokenMessage,emotion:currentEmotion,
+    style:metadata&&['soft','warm','playful','gentle'].includes(metadata.voice_style)?metadata.voice_style:null};
    if(urduMode){playOnlineUrdu(currentSpeech);return}
    // One Hoshi delivery: online Urdu first; device speech handles other languages.
    if(window.JarvisBridge&&typeof window.JarvisBridge.speakNative==='function'&&(!urduMode||(typeof window.JarvisBridge.supportsUrduSpeech==='function'&&window.JarvisBridge.supportsUrduSpeech()))){

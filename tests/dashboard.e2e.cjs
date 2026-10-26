@@ -488,6 +488,7 @@ async function main() {
       };
     });
     await page.reload();
+    await page.locator('[data-tab="chat"]').click();
     await page.locator('#screenOcrBtn').click();
     assert.equal(await page.evaluate(() => window.__localOcrPickers), 1);
     const messagesBeforeOcr = apiMessages.length;

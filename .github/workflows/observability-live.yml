@@ -1,0 +1,26 @@
+name: HOSHI live request diagnostics
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "cloud_backend/observability.py"
+      - "cloud_backend/main.py"
+      - "tests/live_observability.py"
+      - ".github/workflows/observability-live.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  trace-and-private-boundary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify deployed request IDs and private diagnostics access boundary
+        run: python tests/live_observability.py

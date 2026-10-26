@@ -26,6 +26,11 @@ except ImportError:
     from openjarvis_bridge import ask_openjarvis, endpoint as openjarvis_endpoint, wants_agent, OpenJarvisUnavailable
     from agent_tools import try_calculate
 
+try:
+    from .observability import install_observability
+except ImportError:
+    from observability import install_observability
+
 app = FastAPI(title="HOSHI AI Cloud API", version="0.9.1")
 
 origins = [item.strip() for item in os.getenv("ALLOWED_ORIGINS", "*").split(",") if item.strip()]
@@ -35,7 +40,11 @@ app.add_middleware(
     allow_credentials=False,
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type", "Authorization"],
+    expose_headers=["X-Request-ID"],
 )
+
+# Observe all API responses, including CORS/error responses, without reading bodies.
+install_observability(app)
 
 # Override these in Render Environment if you want to use different model IDs.
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash").strip()
@@ -915,3 +924,4 @@ def public_weather(latitude: float = Query(default=24.86, ge=-90, le=90),
                 "note": "Free non-commercial API; do not call continuously."}
     except (KeyError, ValueError, TypeError) as exc:
         raise HTTPException(status_code=503, detail="Weather data is unavailable.") from exc
+

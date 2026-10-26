@@ -406,7 +406,7 @@ def _openrouter_reply(message: str, language_hint: str) -> str:
         method="POST",
     )
     try:
-        with urlopen(req, timeout=12) as response:
+        with urlopen(req, timeout=7) as response:
             data = json.loads(response.read().decode("utf-8"))
     except HTTPError as exc:
         explanations = {
@@ -466,7 +466,7 @@ def _groq_reply(message: str, language_hint: str, *, quick: bool = False) -> str
         method="POST",
     )
     try:
-        with urlopen(req, timeout=6 if quick else 12) as response:
+        with urlopen(req, timeout=5 if quick else 7) as response:
             data = json.loads(response.read().decode("utf-8"))
     except HTTPError as exc:
         provider_message = ""
@@ -580,6 +580,7 @@ def health():
 
 @app.post("/api/assistant", response_model=AssistantResponse)
 def assistant(payload: AssistantRequest):
+    request_started_at = time.monotonic()
     gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
     groq_key = os.getenv("GROQ_API_KEY", "").strip()
 
@@ -678,8 +679,17 @@ def assistant(payload: AssistantRequest):
         for provider in provider_plan.order:
             if provider not in extra_providers:
                 continue
+            # The client times out around 32 seconds. Do not launch a slow
+            # optional call if the cumulative provider chain already consumed
+            # the budget. Keep at least 1s for encoding/transferring the reply.
+            remaining = 29.0 - (time.monotonic() - request_started_at)
+            if remaining < 2.0:
+                break
             try:
-                reply = ask_free_provider(provider, request_input, language_hint)
+                reply = ask_free_provider(
+                    provider, request_input, language_hint,
+                    timeout=min(5.0, remaining - 1.0),
+                )
                 answer = make_assistant_response(reply, provider, message, payload.locale)
                 if str(payload.locale or "").lower().startswith("ur") and not answer.speech_text:
                     continue
@@ -775,7 +785,7 @@ def assistant(payload: AssistantRequest):
         gemini_problem = "Gemini Interactions API did not return a usable response."
         should_fallback = False
         try:
-            with urlopen(req, timeout=12) as response:
+            with urlopen(req, timeout=7) as response:
                 data = json.loads(response.read().decode("utf-8"))
             steps = data.get("steps") or []
             reply = "\n".join(

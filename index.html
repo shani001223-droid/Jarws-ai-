@@ -152,6 +152,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 <button type="button" data-voice-style="warm" aria-pressed="false">♡ Warm<span>Calm &amp; affectionate</span></button>
 <button type="button" data-voice-style="playful" aria-pressed="false">♫ Playful<span>Bright &amp; cheerful</span></button></div>
 <p id="voiceEngineStatus" class="small" role="status">Device speech · checking availability</p>
+ <p id="voiceTimingOutput" class="small" aria-live="off">Voice timing: waiting for first request · first model token unavailable without streaming</p>
 <div class="voice-actions"><button type="button" class="primary" id="previewVoiceBtn">▶ Hear Hoshi</button><button type="button" id="stopSpeakingBtn">■ Stop speaking</button></div>
 <audio id="hoshiAudio" controls hidden preload="none" aria-label="Hoshi Urdu voice playback" style="width:100%;max-width:100%"></audio>
 <p class="small">Urdu uses the online Hoshi voice so the phone does not substitute a different speaker. Spoken replies are sent to Microsoft. Turn voice replies off to disable it. If automatic playback is blocked, tap Play above.</p>
@@ -191,7 +192,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  $('nightConversation').append(reply,status);
  $('nightMic').append($('wakeBtn'));$('wakeBtn').setAttribute('aria-label','Start or stop microphone');
  const chatPanel=shell.querySelector('[data-panel="chat"]'),settingsPanel=shell.querySelector('[data-panel="settings"]');
- $('nightAudioRetry').onclick=()=>{$('hoshiAudio').play().then(()=>{$('nightAudioRetry').hidden=true}).catch(()=>setStatus('AUDIO BLOCKED · CHECK MEDIA SETTINGS'))};
+ $('nightAudioRetry').onclick=()=>{const audio=$('hoshiAudio');if(audio.getAttribute('src'))audio.play().then(()=>{$('nightAudioRetry').hidden=true}).catch(()=>setStatus('AUDIO BLOCKED · CHECK MEDIA SETTINGS'));else if(currentSpeech)playOnlineUrdu(currentSpeech)};
  chatPanel.append($('commandForm'),$('memoryPanel'));
  settingsPanel.append(document.querySelector('.controls'),document.querySelector('.bottom-workspace'));
  if(window.JarvisBridge&&typeof window.JarvisBridge.showReminders==='function'){$('nativeRemindersBtn').hidden=false;$('nativeRemindersBtn').onclick=()=>window.JarvisBridge.showReminders()}
@@ -270,6 +271,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  function endNativeMic(){nativeMicActive=false;listening=false;clearTimeout(nativeMicTimeout);nativeMicTimeout=null;$('wakeBtn').textContent='🎙 Start listening'}
  window.hoshiNativeListeningState=active=>{if(nativeMicActive&&active)setStatus('LISTENING · SPEAK NOW')};
  window.hoshiNativeSpeechResult=heard=>{
+   if(nativeMicActive&&voiceMicStartedAt)recordVoiceTiming('speech_recognition_ms',performance.now()-voiceMicStartedAt);
   if(!nativeMicActive)return;endNativeMic();
   const text=String(heard||'').trim();if(!text){setStatus('NO SPEECH HEARD · TAP MIC TO RETRY');return}
   input.value=text;
@@ -304,6 +306,8 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  async function askCloud(message){
   const requestId=++cloudRequestSequence;
   if(activeCloudController){try{activeCloudController.abort()}catch(_){}}
+  if(!voiceTurnStartedAt||performance.now()-voiceTurnStartedAt>2000)voiceTurnStartedAt=performance.now();
+  const modelStartedAt=performance.now();
   setStatus('SENDING TO CLOUD…');setEmotion('thinking');orb.classList.add('active');
   const controller=typeof AbortController==='function'?new AbortController():null;
   activeCloudController=controller;
@@ -311,7 +315,10 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
   try{
    const options={method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,locale:commandLanguage,personality:getPersonality(),context:getCloudContextForRequest(message)})};
    if(controller)options.signal=controller.signal;
-   const r=await fetch(API_BASE+'/api/assistant',options);if(requestId!==cloudRequestSequence)return;let data={};try{data=await r.json()}catch(_){}if(requestId!==cloudRequestSequence)return;
+   const r=await fetch(API_BASE+'/api/assistant',options);if(requestId!==cloudRequestSequence)return;
+   recordVoiceTiming('model_response_headers_ms',performance.now()-modelStartedAt);
+   let data={};try{data=await r.json()}catch(_){}if(requestId!==cloudRequestSequence)return;
+   recordVoiceTiming('full_model_response_ms',performance.now()-modelStartedAt);
    if(!r.ok){let detail=data.detail||'';if(r.status===502)detail=detail||'Gemini ne request reject ki. Render environment mein API key aur Google AI Studio access check karna hoga.';else if(r.status===504)detail=detail||'Gemini response time par nahi aaya. Yeh AI server timeout hai, zaroori nahi ke aapka internet kharab ho.';else if(r.status===429)detail=detail||'Gemini ki free quota ya rate limit poori ho gayi hai.';else if(r.status===503)detail=detail||'Render par GEMINI_API_KEY configured nahi hai.';else detail=detail||('Cloud API error: HTTP '+r.status);throw new Error(detail)}
    setStatus('CLOUD REPLIED · '+(data.mode||'API'));say(data.reply||'Cloud received the message but returned no reply.',data.emotion,false,data.speech_text);
   }catch(e){
@@ -330,6 +337,15 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
   }
  }
  let speechSequence=0, speechAudioUrl=null, speechAudioController=null, currentSpeech=null, cloudSpeechAttempt=-1;
+ // Only timings are exposed locally. Never include transcripts, audio, keys or screenshots.
+ const voiceTimings={speech_recognition_ms:null,model_response_headers_ms:null,first_model_token_ms:null,full_model_response_ms:null,tts_generation_ms:null,first_audio_playback_ms:null,total_response_ms:null};
+ let voiceTurnStartedAt=0,voiceAudioStartedAt=0,voiceMicStartedAt=0,firstAudioRecordedFor=-1;
+ function recordVoiceTiming(key,elapsed){
+  if(!Object.prototype.hasOwnProperty.call(voiceTimings,key))return;
+  voiceTimings[key]=Number.isFinite(elapsed)&&elapsed>=0?Math.round(elapsed):null;
+  const out=$('voiceTimingOutput');if(out){const ms=k=>voiceTimings[k]===null?'—':voiceTimings[k]+'ms';out.textContent='Mic '+ms('speech_recognition_ms')+' · AI '+ms('full_model_response_ms')+' · TTS '+ms('tts_generation_ms')+' · Play '+ms('first_audio_playback_ms')+' · Total '+ms('total_response_ms')+' · First token n/a (non-streaming)'}
+ }
+ window.hoshiVoiceTimings=voiceTimings;
  const voiceStyles={soft:[1.12,0.88],warm:[1.04,0.85],playful:[1.18,0.96]};
  function refreshVoices(){const status=$('voiceEngineStatus');if(window.JarvisBridge&&typeof window.JarvisBridge.supportsUrduSpeech==='function'&&window.JarvisBridge.supportsUrduSpeech()){status.textContent='Hoshi online Urdu voice · internet required';return}const voice=chooseVoice();status.textContent=voice?'Urdu / selected-language speech ready':'Online Urdu fallback available · internet required'}
  function chooseVoice(){if(!('speechSynthesis'in window))return null;const voices=window.speechSynthesis.getVoices();const lang=(commandLanguage||'ur-PK').toLowerCase(),base=lang.split('-')[0];const female=/female|uzma|zira|samantha|aria|jenny|sara|siri|victoria|eva|sonia|karen/i;const locale=v=>String(v.lang||'').toLowerCase();const exact=voices.filter(v=>locale(v)===lang),same=voices.filter(v=>locale(v).split('-')[0]===base);return exact.find(v=>female.test(v.name))||exact[0]||same.find(v=>female.test(v.name))||same[0]||(base==='ur'?null:voices.find(v=>female.test(v.name))||voices[0])||null}
@@ -340,6 +356,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
   if(!request||request.id!==speechSequence||cloudSpeechAttempt===request.id)return;
   cloudSpeechAttempt=request.id;
   const controller=new AbortController();speechAudioController=controller;
+  const ttsStartedAt=performance.now();voiceAudioStartedAt=ttsStartedAt;
   const timeout=setTimeout(()=>controller.abort(),30000);
   setStatus('PREPARING URDU AUDIO…');
   try{
@@ -348,15 +365,23 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
    const response=await fetch(API_BASE+'/api/speech',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:request.text,style}),signal:controller.signal});
    if(!response.ok)throw new Error('Online speech unavailable');
    const blob=await response.blob();if(request.id!==speechSequence)return;
+   recordVoiceTiming('tts_generation_ms',performance.now()-ttsStartedAt);
    if(!blob.size)throw new Error('Empty audio');
-   const audio=$('hoshiAudio');speechAudioUrl=URL.createObjectURL(blob);audio.src=speechAudioUrl;audio.hidden=false;
-   audio.onplaying=()=>{if(request.id===speechSequence){$('nightAudioRetry').hidden=true;setSpeaking(true);setStatus('HOSHI SPEAKING · URDU')}};
+   const audio=$('hoshiAudio');speechAudioUrl=URL.createObjectURL(blob);audio.src=speechAudioUrl;audio.preload='auto';audio.hidden=false;
+   audio.onplaying=()=>{if(request.id===speechSequence){
+    $('nightAudioRetry').hidden=true;setSpeaking(true);setStatus('HOSHI SPEAKING · URDU');
+    if(firstAudioRecordedFor!==request.id){firstAudioRecordedFor=request.id;
+     recordVoiceTiming('first_audio_playback_ms',performance.now()-voiceAudioStartedAt);
+     if(voiceTurnStartedAt)recordVoiceTiming('total_response_ms',performance.now()-voiceTurnStartedAt);
+    }
+   }};
+   audio.onwaiting=()=>{if(request.id===speechSequence){setSpeaking(false);setStatus('AUDIO BUFFERING…')}};
    audio.onpause=()=>{if(request.id===speechSequence)setSpeaking(false)};
-   audio.onended=()=>{if(request.id===speechSequence){setSpeaking(false);setStatus('READY')}};
-   audio.onerror=()=>{if(request.id===speechSequence){setSpeaking(false);setStatus('AUDIO PLAYBACK FAILED · CHECK INTERNET OR TRY AGAIN')}};
+   audio.onended=()=>{if(request.id===speechSequence){setSpeaking(false);setStatus('READY');voiceTurnStartedAt=0}};
+   audio.onerror=()=>{if(request.id===speechSequence){setSpeaking(false);audio.removeAttribute('src');$('nightAudioRetry').hidden=false;setStatus('AUDIO FAILED · TAP SUNO HOSHI TO RETRY')}};
    try{await audio.play()}catch(_){if(request.id===speechSequence){$('nightAudioRetry').hidden=false;setStatus('URDU AUDIO READY · TAP SUNO HOSHI')}}
-  }catch(error){if(request.id===speechSequence){setSpeaking(false);setStatus('URDU AUDIO UNAVAILABLE · TAP HEAR HOSHI TO RETRY')}}
-  finally{clearTimeout(timeout);if(speechAudioController===controller)speechAudioController=null}
+  }catch(error){if(request.id===speechSequence){setSpeaking(false);$('nightAudioRetry').hidden=false;setStatus('URDU AUDIO UNAVAILABLE · TAP SUNO HOSHI TO RETRY')}}
+  finally{clearTimeout(timeout);if(speechAudioController===controller)speechAudioController=null;if(cloudSpeechAttempt===request.id)cloudSpeechAttempt=-1}
  }
  function getPersonality(){try{return localStorage.getItem('hoshiPersonality')||'balanced'}catch(e){return 'balanced'}}
  const MEMORY_KEY='hoshiConversationMemoryV1';
@@ -444,7 +469,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
   if(listening){stopListening();return}
   stopSpeaking();lastVoiceError="";
   if(window.JarvisBridge&&typeof window.JarvisBridge.startNativeListening==='function'){
-    nativeMicActive=true;listening=true;$('wakeBtn').textContent='🎙 Listening…';
+    voiceMicStartedAt=performance.now();voiceTurnStartedAt=voiceMicStartedAt;nativeMicActive=true;listening=true;$('wakeBtn').textContent='🎙 Listening…';
     setStatus('STARTING ANDROID MICROPHONE…');
     try{if(!window.JarvisBridge.startNativeListening(commandLanguage)){
       endNativeMic();setStatus('NATIVE MIC UNAVAILABLE · TYPE A COMMAND');return
@@ -453,7 +478,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
     return;
   }
   if(!Recognition){setStatus('MIC UNSUPPORTED · USE HOSHI ANDROID APP OR TYPE A COMMAND');return}
-  const instance=new Recognition();recognition=instance;
+  const instance=new Recognition();recognition=instance;voiceMicStartedAt=performance.now();voiceTurnStartedAt=voiceMicStartedAt;
   instance.lang=commandLanguage;instance.continuous=false;instance.interimResults=false;
   instance.maxAlternatives=1;let submitted=false,sessionEnded=false;
   listening=true;$('wakeBtn').textContent='🎙 Listening…';setStatus('STARTING MICROPHONE…');
@@ -469,7 +494,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
    for(let i=e.resultIndex;i<e.results.length;i++){
     if(!e.results[i].isFinal)continue;
     const heard=String(e.results[i][0].transcript||'').trim();if(!heard)continue;
-    submitted=true;finish();input.value=heard;
+    recordVoiceTiming('speech_recognition_ms',performance.now()-voiceMicStartedAt);submitted=true;finish();input.value=heard;
     if(wakeEnabled){
       const cleaned=heard.replace(/^hey[, ]*hoshi[,: ]*/i,'').trim();
       if(cleaned===heard){setStatus('SAY HEY HOSHI · TAP MIC AGAIN');return}

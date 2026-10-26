@@ -7,8 +7,8 @@
 
 ## Phase 1 — Foundation & Reliability
 - [x] **01** Audit current code and capabilities. Acceptance: implementation or evidence, passing tests, limitations recorded.
-- [ ] **02** Remove only demonstrably obsolete or duplicate code. Acceptance: implementation or evidence, passing tests, limitations recorded.
-- [ ] **03** Harden error handling, logging and diagnostics. Acceptance: implementation or evidence, passing tests, limitations recorded.
+- [x] **02** Remove only demonstrably obsolete or duplicate code. Acceptance: implementation or evidence, passing tests, limitations recorded.
+- [x] **03** Harden error handling, logging and diagnostics. Acceptance: implementation or evidence, passing tests, limitations recorded.
 - [ ] **04** Introduce permission and action risk gates. Acceptance: implementation or evidence, passing tests, limitations recorded.
 - [ ] **05** Run regression tests after every implementation step. Acceptance: implementation or evidence, passing tests, limitations recorded.
 - [ ] **06** Verify deployment, rollback and APK builds. Acceptance: implementation or evidence, passing tests, limitations recorded.
@@ -89,3 +89,6 @@
 - Task 01 initial source/CI audit: [HOSHI_PHASE1_AUDIT.md](HOSHI_PHASE1_AUDIT.md)
 - All remaining milestones: planned unless a dated test-supported completion note is added below.
 - Use branch `hoshi/dnd-foundation-20261026` and draft PR #24 for changes; main remains protected until CI green.
+## Verified phase 1 progress (26 Oct 2026)
+- Task 02: duplicate imports cleaned; `urllib.request.Request` vs FastAPI request alias collision found by CI and fixed. Green full checks: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40299493480
+- Task 03: malformed AI provider responses no longer leak uncaught shape exceptions; defensive error handling and sanitized diagnostics for ad renderer and Urdu TTS; regression tests in `tests/test_provider_payload_resilience.py` and `tests/test_safe_errors.py`. Green full checks: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40299987975

@@ -13,6 +13,7 @@ from urllib.request import Request, urlopen
 from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from cloud_backend.emotions import companion_state
 
 app = FastAPI(title="HOSHI AI Cloud API", version="0.9.1")
 
@@ -43,6 +44,10 @@ class AssistantResponse(BaseModel):
     mode: str = "gemini"
     emotion: str = "caring"
     speech_text: Optional[str] = None
+    emotion_intensity: float = Field(default=0.45, ge=0.0, le=1.0)
+    animation: str = "idle"
+    gesture: str = "none"
+    voice_style: str = "soft"
 
 
 class SpeechRequest(BaseModel):
@@ -97,6 +102,7 @@ def make_assistant_response(raw: str, mode: str, message: str, locale: str) -> A
     """Keep readable chat separate from Urdu-script speech, without another API call."""
     reply = raw.strip()
     speech_text = None
+    provider_metadata = None
     if str(locale or "").lower().startswith("ur"):
         candidate = re.sub(r"^```(?:json)?\s*|\s*```$", "", reply).strip()
         try:
@@ -105,6 +111,7 @@ def make_assistant_response(raw: str, mode: str, message: str, locale: str) -> A
             value = None
         if isinstance(value, dict) and isinstance(value.get("reply"), str) and value["reply"].strip():
             reply = value["reply"].strip()[:6000]
+            provider_metadata = value
             spoken = value.get("speech_text")
             if isinstance(spoken, str) and re.search(r"[\u0600-\u06ff]", spoken) and not re.search(r"[\u0900-\u097f]", spoken):
                 speech_text = spoken.strip()[:6000]
@@ -113,7 +120,8 @@ def make_assistant_response(raw: str, mode: str, message: str, locale: str) -> A
         # Backward-compatible plain Urdu replies are already suitable for speech.
         if speech_text is None and re.search(r"[\u0600-\u06ff]", reply) and not re.search(r"[\u0900-\u097f]", reply):
             speech_text = reply
-    return AssistantResponse(reply=reply, mode=mode, emotion=classify_emotion(message, reply), speech_text=speech_text)
+    state = companion_state(provider_metadata, fallback_emotion=classify_emotion(message, reply))
+    return AssistantResponse(reply=reply, mode=mode, speech_text=speech_text, **state)
 
 
 def classify_emotion(message: str, reply: str) -> str:
@@ -269,7 +277,7 @@ def _openrouter_reply(message: str, language_hint: str) -> str:
         method="POST",
     )
     try:
-        with urlopen(req, timeout=18) as response:
+        with urlopen(req, timeout=10) as response:
             data = json.loads(response.read().decode("utf-8"))
     except HTTPError as exc:
         explanations = {
@@ -329,7 +337,7 @@ def _groq_reply(message: str, language_hint: str) -> str:
         method="POST",
     )
     try:
-        with urlopen(req, timeout=18) as response:
+        with urlopen(req, timeout=10) as response:
             data = json.loads(response.read().decode("utf-8"))
     except HTTPError as exc:
         provider_message = ""
@@ -543,7 +551,7 @@ def assistant(payload: AssistantRequest):
         gemini_problem = "Gemini Interactions API did not return a usable response."
         should_fallback = False
         try:
-            with urlopen(req, timeout=18) as response:
+            with urlopen(req, timeout=10) as response:
                 data = json.loads(response.read().decode("utf-8"))
             steps = data.get("steps") or []
             reply = "\n".join(

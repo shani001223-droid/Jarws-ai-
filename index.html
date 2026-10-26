@@ -618,7 +618,15 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  else if(has([/\b(open youtube|youtube kholo|youtube khol do|kholo youtube|youtube open)\b/,/یوٹیوب کھولو/,/یوٹیوب کھول دو/])){say(commandLanguage==='ur-PK'?'YouTube khol raha hoon.':'Opening YouTube.',null,false,commandLanguage==='ur-PK'?'یوٹیوب کھول رہی ہوں۔':null);window.open('https://m.youtube.com/','_blank','noopener')}
  else if(has([/\b(stop speaking|bolna band|chup ho jao)\b/,/بولنا بند/])){stopSpeaking();reply.textContent='Theek hai, voice reply rok di.'}
  else if(has([/^(help|madad|kya kar sakte ho|commands|what can you do)\b/,/مدد/,/کیا کر سکتے ہو/]))say('Main waqt aur tareekh bata sakta hoon, Google aur YouTube khol sakta hoon, aur Android app mein local reminders schedule kar sakta hoon. Basic Back, Home aur swipe controls ke liye aapki permission zaroori hai.',null,false,commandLanguage==='ur-PK'?'میں وقت اور تاریخ بتا سکتی ہوں۔ گوگل اور یوٹیوب کھول سکتی ہوں۔ فون میں یاد دہانی لگا سکتی ہوں۔ بنیادی فون کنٹرول کے لیے آپ کی اجازت ضروری ہے۔':null);
- else {reply.textContent='HOSHI soch rahi hai…';askCloud(text,source==='voice');return;}
+ else {
+   reply.textContent='HOSHI soch rahi hai…';
+   // Short everyday questions go straight to low-latency Groq when available.
+   // Real OpenJarvis agent, deeper context and full token budgets stay available
+   // for detailed questions (if an OpenJarvis server has been configured).
+   const detailed=/\b(why|kyun|kaise|explain|samjhao|detail|tafs[e]?el|research|compare|analysis|analyze|plan|strategy|report|code|write|likho|banao|step|investigate|summarize)\b/i.test(text);
+   const fastRequest=source==='voice'||(text.length<=140&&!detailed);
+   askCloud(text,fastRequest);return;
+  }
  setStatus(listening?(wakeEnabled?'LISTENING FOR WAKE WORD':'LISTENING'):'READY');setTimeout(()=>orb.classList.remove('active'),900)
  }
  function startListening(){

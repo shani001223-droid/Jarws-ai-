@@ -694,6 +694,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
     return false;
   }
  function processCommand(raw,source='text'){const text=String(raw||'').trim(),c=window.JarvisCommandUtils?window.JarvisCommandUtils.normalize(text):text.toLowerCase().replace(/[!?.,،۔]/g,' ').replace(/\s+/g,' ').trim();if(!c)return;
+ if(actionSafety.snapshot().state==='halted'){setStatus('EMERGENCY STOP ACTIVE · TAP RESUME IN SETTINGS');return;}
  if(window.HoshiAdStudio&&window.HoshiAdStudio.isIntent(text)){
   rememberTurn('user',text);showTab('chat');
   window.HoshiAdStudio.execute({
@@ -851,7 +852,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  $('resetVoiceBtn').onclick=()=>{stopSpeaking();applyVoiceStyle('soft');setStatus('SOFT VOICE RESTORED')};
  if('speechSynthesis'in window){refreshVoices();window.speechSynthesis.addEventListener('voiceschanged',refreshVoices)}
  saveVoiceSettings();refreshVoices();
- $('wakeBtn').onclick=()=>{stopSpeaking();if(listening)stopListening();else startListening()};$('stopBtn').onclick=stopListening;
+ $('wakeBtn').onclick=()=>{if(actionSafety.snapshot().state==='halted'){setStatus('EMERGENCY STOP ACTIVE · TAP RESUME IN SETTINGS');return;}stopSpeaking();if(listening)stopListening();else startListening()};$('stopBtn').onclick=stopListening;
  $('testBtn').onclick=()=>askCloud('Test connection. Tell me whether the JARVIS cloud API received this message.');
  $('speakToggle').onclick=()=>{voiceReplies=!voiceReplies;try{localStorage.setItem('hoshiVoiceReplies',String(voiceReplies))}catch(e){}$('speakToggle').textContent=voiceReplies?'🔊 Voice replies: ON':'🔇 Voice replies: OFF';$('utilityVoice').textContent=voiceReplies?'ON':'OFF';if(!voiceReplies)stopSpeaking()};
  $('languageToggle').onclick=()=>{commandLanguage=commandLanguage==='ur-PK'?'en-US':'ur-PK';try{localStorage.setItem('hoshiLanguage',commandLanguage)}catch(e){}$('languageToggle').textContent=commandLanguage==='ur-PK'?'🗣 Language: Urdu':'🗣 Language: English';refreshVoices();if(listening)stopListening();say(commandLanguage==='ur-PK'?'Urdu mode on. Ab Urdu ya Roman Urdu mein command bolain.':'English mode on. Speak your command in English.',null,false,commandLanguage==='ur-PK'?'اردو زبان منتخب ہے۔ اب اردو میں بات کریں۔':null)};

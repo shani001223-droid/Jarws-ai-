@@ -70,7 +70,7 @@ class AssistantApiTests(unittest.TestCase):
         self.assertEqual(result.mode, "openrouter")
         self.assertEqual(result.speech_text, "میں ہوشی ہوں۔")
         self.assertEqual(health["primary_provider"], "openrouter")
-        self.assertIsNone(health["fallback_provider"])
+        self.assertEqual(health["fallback_provider"], "gemini")
         self.assertEqual(mocked.call_count, 1)
         req = mocked.call_args.args[0]
         self.assertEqual(req.full_url, "https://openrouter.ai/api/v1/chat/completions")
@@ -78,7 +78,7 @@ class AssistantApiTests(unittest.TestCase):
         self.assertEqual(body["model"], "openrouter/free")
         self.assertIn("user: Salam", body["messages"][1]["content"])
         self.assertIn("speech_text", body["messages"][0]["content"])
-        self.assertEqual(mocked.call_args.kwargs["timeout"], 35)
+        self.assertEqual(mocked.call_args.kwargs["timeout"], 18)
 
     def test_openrouter_rejects_paid_model_before_network(self):
         with patch.dict(os.environ, {"OPENROUTER_API_KEY": "test"}):
@@ -104,6 +104,64 @@ class AssistantApiTests(unittest.TestCase):
                 with patch("cloud_backend.main.urlopen", return_value=FakeResponse(data)):
                     with self.assertRaisesRegex(RuntimeError, "no usable reply"):
                         main._openrouter_reply("hello", "system")
+
+    def test_openrouter_fails_over_to_groq_on_rate_limit_without_paid_model(self):
+        error = HTTPError("https://openrouter.ai/api/v1/chat/completions", 429, "limited", {}, None)
+        answer = json.dumps({"reply": "Main Hoshi hoon.", "speech_text": "میں ہوشی ہوں۔"})
+        groq_payload = {"choices": [{"message": {"content": answer}}]}
+        with patch.dict(os.environ, {"OPENROUTER_API_KEY": "test-openrouter",
+                                     "GROQ_API_KEY": "test-groq", "GEMINI_API_KEY": ""}):
+            with patch("cloud_backend.main.urlopen", side_effect=[error, FakeResponse(groq_payload)]) as mocked:
+                result = main.assistant(main.AssistantRequest(message="Salam", locale="ur-PK"))
+        self.assertEqual(result.mode, "groq")
+        self.assertEqual(result.speech_text, "میں ہوشی ہوں۔")
+        self.assertEqual(mocked.call_count, 2)
+        self.assertEqual(mocked.call_args.args[0].full_url, "https://api.groq.com/openai/v1/chat/completions")
+
+    def test_openrouter_bad_urdu_json_uses_backup_instead_of_sending_json_to_chat(self):
+        broken = '{"reply":'
+        answer = json.dumps({"reply": "Ji main sun rahi hoon.", "speech_text": "جی میں سن رہی ہوں۔"})
+        with patch.dict(os.environ, {"OPENROUTER_API_KEY": "test-openrouter",
+                                     "GROQ_API_KEY": "test-groq", "GEMINI_API_KEY": ""}):
+            with patch("cloud_backend.main.urlopen", side_effect=[
+                FakeResponse({"choices": [{"message": {"content": broken}}]}),
+                FakeResponse({"choices": [{"message": {"content": answer}}]}),
+            ]):
+                result = main.assistant(main.AssistantRequest(message="Tum kya kar rahi ho?", locale="ur-PK"))
+        self.assertEqual(result.mode, "groq")
+        self.assertEqual(result.reply, "Ji main sun rahi hoon.")
+        self.assertNotIn("{", result.reply)
+
+    def test_openrouter_missing_urdu_speech_text_falls_back(self):
+        raw = json.dumps({"reply": "Ji, batao.", "speech_text": "Ji, batao."})
+        fixed = json.dumps({"reply": "Ji, batao.", "speech_text": "جی، بتاؤ۔"})
+        with patch.dict(os.environ, {"OPENROUTER_API_KEY": "test-openrouter",
+                                     "GROQ_API_KEY": "test-groq", "GEMINI_API_KEY": ""}):
+            with patch("cloud_backend.main.urlopen", side_effect=[
+                FakeResponse({"choices": [{"message": {"content": raw}}]}),
+                FakeResponse({"choices": [{"message": {"content": fixed}}]}),
+            ]):
+                result = main.assistant(main.AssistantRequest(message="Suno", locale="ur-PK"))
+        self.assertEqual(result.mode, "groq")
+        self.assertEqual(result.speech_text, "جی، بتاؤ۔")
+
+    def test_truncated_openrouter_output_is_rejected_even_if_it_has_some_text(self):
+        with patch.dict(os.environ, {"OPENROUTER_API_KEY": "test"}):
+            with patch("cloud_backend.main.urlopen", return_value=FakeResponse({
+                "choices": [{"message": {"content": "Main Hoshi"}, "finish_reason": "length"}],
+            })):
+                with self.assertRaisesRegex(RuntimeError, "cut off"):
+                    main._openrouter_reply("Hello", "system")
+
+    def test_openrouter_timeout_and_token_budget_do_not_hold_voice_for_35_seconds(self):
+        with patch.dict(os.environ, {"OPENROUTER_API_KEY": "test"}):
+            with patch("cloud_backend.main.urlopen", return_value=FakeResponse({
+                "choices": [{"message": {"content": "Main Hoshi hoon"}}],
+            })) as mocked:
+                main._openrouter_reply("salam", "system")
+        body = json.loads(mocked.call_args.args[0].data)
+        self.assertGreaterEqual(body["max_tokens"], 700)
+        self.assertEqual(mocked.call_args.kwargs["timeout"], 18)
 
     def test_urdu_response_separates_chat_and_pronunciation_text(self):
         raw = json.dumps({"reply": "Main Hoshi hoon.", "speech_text": "میں ہوشی ہوں۔"})

@@ -261,14 +261,14 @@ def _openrouter_reply(message: str, language_hint: str) -> str:
         data=json.dumps({
             "model": OPENROUTER_MODEL,
             "messages": [{"role": "system", "content": language_hint}, {"role": "user", "content": message}],
-            "max_tokens": 1024 if re.search(r"\b(detail|tafseel|code|script|plan|explain|samjhao)\b", message, re.I) else 384,
-            "temperature": 0.7,
+            "max_tokens": 1536 if re.search(r"\b(detail|tafseel|code|script|plan|explain|samjhao)\b", message, re.I) else 768,
+            "temperature": 0.45,
         }).encode("utf-8"),
         headers={"Content-Type": "application/json", "Authorization": "Bearer " + key},
         method="POST",
     )
     try:
-        with urlopen(req, timeout=35) as response:
+        with urlopen(req, timeout=18) as response:
             data = json.loads(response.read().decode("utf-8"))
     except HTTPError as exc:
         explanations = {
@@ -284,9 +284,18 @@ def _openrouter_reply(message: str, language_hint: str) -> str:
     except (json.JSONDecodeError, UnicodeDecodeError):
         raise RuntimeError("OpenRouter returned an invalid response.") from None
     try:
-        content = data["choices"][0]["message"]["content"]
-        reply = content.strip() if isinstance(content, str) else ""
-    except (KeyError, IndexError, TypeError):
+        choice = data["choices"][0]
+        content = choice["message"]["content"]
+        if isinstance(content, str):
+            reply = content.strip()
+        elif isinstance(content, list):
+            reply = "".join(part.get("text", "") for part in content
+                            if isinstance(part, dict) and isinstance(part.get("text"), str)).strip()
+        else:
+            reply = ""
+        if choice.get("finish_reason") == "length":
+            raise RuntimeError("OpenRouter response was cut off before completion.")
+    except (KeyError, IndexError, TypeError, AttributeError):
         reply = ""
     if not reply:
         raise RuntimeError("OpenRouter returned no usable reply. Try again later.")
@@ -402,7 +411,7 @@ def health():
         "gemini_configured": gemini_configured,
         "groq_configured": groq_configured,
         "primary_provider": "openrouter" if openrouter_configured else ("gemini" if gemini_configured else ("groq" if groq_configured else None)),
-        "fallback_provider": "groq" if not openrouter_configured and gemini_configured and groq_configured else None,
+        "fallback_provider": ("gemini" if gemini_configured else ("groq" if groq_configured else None)) if openrouter_configured else ("groq" if gemini_configured and groq_configured else None),
         "gemini_model": GEMINI_MODEL,
         "groq_model": GROQ_MODEL if groq_configured else None,
     }
@@ -474,16 +483,24 @@ def assistant(payload: AssistantRequest):
             "Example: {\"reply\":\"Main Hoshi hoon. Tum kaise ho?\",\"speech_text\":\"میں ہوشی ہوں۔ تم کیسے ہو؟\"}."
         )
 
-    # An explicitly configured OpenRouter key selects OpenRouter first. Do not
-    # silently chain multiple exhausted providers or switch to paid models.
+    # Try the configured free OpenRouter route first, then fall back once
+    # to independently configured providers for invalid/incomplete replies or
+    # temporary errors. Never retry endlessly or switch to paid models.
+    openrouter_problem = None
     if os.getenv("OPENROUTER_API_KEY", "").strip():
         try:
             reply = _openrouter_reply(request_input, language_hint)
-            return make_assistant_response(reply, "openrouter", message, payload.locale)
-        except RuntimeError as error:
-            raise HTTPException(status_code=502, detail=str(error)) from None
+            response = make_assistant_response(reply, "openrouter", message, payload.locale)
+            if str(payload.locale or "").lower().startswith("ur") and not response.speech_text:
+                raise RuntimeError("OpenRouter omitted valid Urdu pronunciation text.")
+            return response
+        except (RuntimeError, HTTPException) as error:
+            openrouter_problem = str(error.detail) if isinstance(error, HTTPException) else str(error)
+            if not (gemini_key or groq_key):
+                raise HTTPException(status_code=502, detail=openrouter_problem) from None
 
-    # Gemini is primary. A temporary overload (503), rate limit (429), server
+    # Gemini is primary when OpenRouter is missing or failed. Temporary overload
+    # and incomplete/malformed Urdu formatting can use the Groq backup.
     # error, timeout, or malformed response triggers Groq when its key is set.
     if gemini_key:
         body = {
@@ -519,9 +536,18 @@ def assistant(payload: AssistantRequest):
             if not reply:
                 reply = str(data.get("output_text") or "").strip()
             if reply:
-                return make_assistant_response(reply, "gemini", message, payload.locale)
-            gemini_problem = "Gemini Interactions API returned no text (possibly blocked or empty output)."
-            should_fallback = True
+                try:
+                    response = make_assistant_response(reply, "gemini", message, payload.locale)
+                    if not (str(payload.locale or "").lower().startswith("ur") and not response.speech_text and groq_key):
+                        return response
+                    gemini_problem = "Gemini did not provide valid Urdu speech text."
+                    should_fallback = True
+                except HTTPException:
+                    gemini_problem = "Gemini returned incomplete Urdu response formatting."
+                    should_fallback = True
+            else:
+                gemini_problem = "Gemini Interactions API returned no text (possibly blocked or empty output)."
+                should_fallback = True
         except HTTPError as exc:
             try:
                 error_data = json.loads(exc.read().decode("utf-8"))
@@ -544,7 +570,7 @@ def assistant(payload: AssistantRequest):
             try:
                 reply = _groq_reply(request_input, language_hint)
                 return make_assistant_response(reply, "groq", message, payload.locale)
-            except RuntimeError as groq_error:
+            except (RuntimeError, HTTPException) as groq_error:
                 raise HTTPException(
                     status_code=502,
                     detail=gemini_problem + " Groq fallback also failed: " + str(groq_error),
@@ -561,8 +587,11 @@ def assistant(payload: AssistantRequest):
         try:
             reply = _groq_reply(request_input, language_hint)
             return make_assistant_response(reply, "groq", message, payload.locale)
-        except RuntimeError as groq_error:
+        except (RuntimeError, HTTPException) as groq_error:
             raise HTTPException(status_code=502, detail=str(groq_error)) from None
+
+    if openrouter_problem:
+        raise HTTPException(status_code=502, detail=openrouter_problem) from None
 
     raise HTTPException(
         status_code=503,

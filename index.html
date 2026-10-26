@@ -208,6 +208,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 <script src="./memory-privacy.js"></script>
 <script src="./hoshi-product-ads.js"></script>
 <script src="./hoshi-task-router.js"></script>
+<script src="./hoshi-speech-input.js"></script>
 <script>
 (()=> {
  const $=id=>document.getElementById(id), status=$('status'), reply=$('reply'), input=$('commandInput'), orb=$('orb');
@@ -320,12 +321,12 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  window.hoshiNativeListeningState=active=>{if(nativeMicActive&&active)setStatus('LISTENING · SPEAK NOW')};
  window.hoshiNativeSpeechResult=heard=>{
   if(!nativeMicActive)return;markVoiceHeard();endNativeMic();
-  const text=String(heard||'').trim();if(!text){setStatus('NO SPEECH HEARD · TAP MIC TO RETRY');return}
-  input.value=text;
-  const command=wakeEnabled?text.replace(/^hey[, ]*hoshi[,: ]*/i,'').trim():text;
-  if(wakeEnabled&&command===text){setStatus('SAY HEY HOSHI · TAP AGAIN');return}
-  if(!command){setStatus('TAP MIC AGAIN AND SAY COMMAND');return}
-  processCommand(command,'voice')
+  const result=window.HoshiSpeechInput.choose(heard,wakeEnabled);
+  if(!result.heard){setStatus('NO SPEECH HEARD · TAP MIC TO RETRY');return}
+  input.value=result.heard;
+  if(result.needsWake){setStatus('SAY HEY HOSHI · TAP AGAIN');return}
+  if(!result.command){setStatus('TAP MIC AGAIN AND SAY COMMAND');return}
+  processCommand(result.command,'voice')
  };
  window.hoshiNativeSpeechError=error=>{
   if(!nativeMicActive)return;endNativeMic();setStatus('MIC ERROR · '+String(error||'speech unavailable').slice(0,100)+' · TAP TO RETRY')
@@ -672,7 +673,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
   if(!Recognition){setStatus('MIC UNSUPPORTED · USE HOSHI ANDROID APP OR TYPE A COMMAND');return}
   const instance=new Recognition();recognition=instance;
   instance.lang=commandLanguage;instance.continuous=false;instance.interimResults=false;
-  instance.maxAlternatives=1;let submitted=false,sessionEnded=false;
+  instance.maxAlternatives=3;let submitted=false,sessionEnded=false;
   listening=true;$('wakeBtn').textContent='🎙 Listening…';setStatus('STARTING MICROPHONE…');
   const timer=setTimeout(()=>{if(!sessionEnded&&recognition===instance){finish();setStatus('NO SPEECH HEARD · TAP MIC TO RETRY')}},18000);
   function finish(){sessionEnded=true;listening=false;awaitingCommand=false;clearTimeout(timer);
@@ -685,15 +686,16 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
   instance.onresult=e=>{if(sessionEnded||submitted)return;
    for(let i=e.resultIndex;i<e.results.length;i++){
     if(!e.results[i].isFinal)continue;
-    const heard=String(e.results[i][0].transcript||'').trim();if(!heard)continue;
-    submitted=true;markVoiceHeard();finish();input.value=heard;
-    if(wakeEnabled){
-      const cleaned=heard.replace(/^hey[, ]*hoshi[,: ]*/i,'').trim();
-      if(cleaned===heard){setStatus('SAY HEY HOSHI · TAP MIC AGAIN');return}
-      if(!cleaned){setStatus('TAP MIC AGAIN TO GIVE COMMAND');return}
-      processCommand(cleaned,'voice');return;
+    const alternatives=[];
+    for(let j=0;j<Math.min(3,e.results[i].length||1);j++){
+      const candidate=e.results[i][j];if(candidate&&candidate.transcript)alternatives.push(candidate.transcript)
     }
-    processCommand(heard,'voice');return;
+    const result=window.HoshiSpeechInput.choose(alternatives,wakeEnabled);
+    if(!result.heard)continue;
+    submitted=true;markVoiceHeard();finish();input.value=result.heard;
+    if(result.needsWake){setStatus('SAY HEY HOSHI · TAP MIC AGAIN');return}
+    if(!result.command){setStatus('TAP MIC AGAIN AND SAY COMMAND');return}
+    processCommand(result.command,'voice');return;
    }
   };
   instance.onerror=e=>{if(sessionEnded)return;

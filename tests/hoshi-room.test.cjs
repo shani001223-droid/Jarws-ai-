@@ -20,6 +20,14 @@ test("Roman Urdu and English voice commands select scene without cloud trade act
   for(const command of ["take screenshot","open Binance","send message","show passwords","buy BTC","analyze chart"])
     assert.equal(life.parseActivityCommand(command),null,command);
 });
+test("emotional reaction commands map to approved expression cells",()=>{
+  for(const [phrase,emotion] of [
+    ["hanso","playful"],["laugh","playful"],["sharmao","shy"],
+    ["ro kar dikhao","crying"],["gussa dikhao","angry"],
+    ["sad face","sad"],["normal face","caring"]
+  ])assert.equal(life.parseEmotionCommand(phrase),emotion,phrase);
+  assert.equal(life.parseEmotionCommand("read my chats"),null);
+});
 test("approved expression sprite and no surveillance endpoints",()=>{
   const script=fs.readFileSync(path.join(__dirname,"..","hoshi-room.js"),"utf8");
   const css=fs.readFileSync(path.join(__dirname,"..","hoshi-room.css"),"utf8");

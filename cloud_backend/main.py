@@ -13,6 +13,12 @@ from urllib.request import Request, urlopen
 from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+try:  # Handles either cloud_backend package import or direct uvicorn main:app.
+    from .openjarvis_bridge import ask_openjarvis, endpoint as openjarvis_endpoint, wants_agent, OpenJarvisUnavailable
+    from .agent_tools import try_calculate
+except ImportError:
+    from openjarvis_bridge import ask_openjarvis, endpoint as openjarvis_endpoint, wants_agent, OpenJarvisUnavailable
+    from agent_tools import try_calculate
 
 app = FastAPI(title="HOSHI AI Cloud API", version="0.9.1")
 
@@ -269,7 +275,7 @@ def _openrouter_reply(message: str, language_hint: str) -> str:
         method="POST",
     )
     try:
-        with urlopen(req, timeout=18) as response:
+        with urlopen(req, timeout=12) as response:
             data = json.loads(response.read().decode("utf-8"))
     except HTTPError as exc:
         explanations = {
@@ -329,7 +335,7 @@ def _groq_reply(message: str, language_hint: str, *, quick: bool = False) -> str
         method="POST",
     )
     try:
-        with urlopen(req, timeout=9 if quick else 18) as response:
+        with urlopen(req, timeout=6 if quick else 12) as response:
             data = json.loads(response.read().decode("utf-8"))
     except HTTPError as exc:
         provider_message = ""
@@ -429,6 +435,13 @@ def assistant(payload: AssistantRequest):
     message = payload.message.strip()
     if not message:
         raise HTTPException(status_code=400, detail="Message cannot be empty.")
+    # OpenJarvis-inspired deterministic, no-network calculator route.
+    computed = try_calculate(message)
+    if computed is not None:
+        if str(payload.locale or "").lower().startswith("ur"):
+            return AssistantResponse(reply="Jawab: " + computed, mode="calculator",
+                                     emotion="happy", speech_text="جواب ہے " + computed + "۔")
+        return AssistantResponse(reply="Answer: " + computed, mode="calculator", emotion="happy")
     brief_spoken = bool(payload.fast and not re.search(
         r"\b(write|draft|likho|banao|bana do|create|code|script|detail|tafseel|explain|samjhao|plan|report|steps|poora|full)\b",
         message, re.I,
@@ -478,7 +491,10 @@ def assistant(payload: AssistantRequest):
         "Be honest: respectfully correct false assumptions and admit uncertainty instead of agreeing just to please. "
         "Do not pretend to have real human feelings, a body, or a real-world romantic relationship. "
         "Do not claim to control the user's device or perform actions unless an available tool actually did so. "
-        "Avoid storing or asking for secrets. Keep the answer clear and proportionate to the user's message."
+        "Avoid storing or asking for secrets. Keep the answer clear and proportionate to the user's message. "
+        "Think carefully on multistep questions, check internal consistency, compare alternatives and state assumptions. "
+        "Do not invent exact figures, market prices or recent events without verified data. "
+        "Answer the actual task first, clearly state uncertainties and avoid repetition."
     )
 
     if str(payload.locale or "").lower().startswith("ur"):
@@ -493,6 +509,20 @@ def assistant(payload: AssistantRequest):
             "Example: {\"reply\":\"Main Hoshi hoon. Tum kaise ho?\",\"speech_text\":\"میں ہوشی ہوں۔ تم کیسے ہو؟\"}."
         )
 
+    # OpenJarvis orchestrator and its configured tools/memory run on a real,
+    # separate OpenJarvis server. No model/server is provisioned implicitly.
+    # A bounded agent call is used for complex non-voice requests only.
+    openjarvis_problem = None
+    if wants_agent(message, fast=payload.fast):
+        try:
+            if openjarvis_endpoint() is not None:
+                remote = ask_openjarvis(request_input, language_hint, timeout=7)
+                result = make_assistant_response(remote, "openjarvis", message, payload.locale)
+                if not str(payload.locale or "").lower().startswith("ur") or result.speech_text:
+                    return result
+                openjarvis_problem = "OpenJarvis reply lacked Urdu-script speech."
+        except (OpenJarvisUnavailable, HTTPException) as exc:
+            openjarvis_problem = str(exc)
     # Voice mode: try the already-configured Groq model first, avoiding a
     # slow OpenRouter -> Gemini -> Groq chain on normal spoken questions.
     # Tool commands execute locally on Android and never reach this route.
@@ -564,7 +594,7 @@ def assistant(payload: AssistantRequest):
         gemini_problem = "Gemini Interactions API did not return a usable response."
         should_fallback = False
         try:
-            with urlopen(req, timeout=18) as response:
+            with urlopen(req, timeout=12) as response:
                 data = json.loads(response.read().decode("utf-8"))
             steps = data.get("steps") or []
             reply = "\n".join(
@@ -634,6 +664,8 @@ def assistant(payload: AssistantRequest):
 
     if openrouter_problem:
         raise HTTPException(status_code=502, detail=openrouter_problem) from None
+    if openjarvis_problem:
+        raise HTTPException(status_code=502, detail="OpenJarvis unavailable; no other AI provider is configured.") from None
     if quick_groq_problem:
         raise HTTPException(status_code=502, detail=quick_groq_problem) from None
 

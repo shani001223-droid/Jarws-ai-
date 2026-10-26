@@ -69,39 +69,8 @@ class MainActivity : Activity() {
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(Color.rgb(7, 17, 30))
-            setPadding(dp(12), dp(8), dp(12), dp(8))
+            setPadding(0, 0, 0, 0)
         }
-
-        val title = TextView(this).apply {
-            text = "H O S H I"
-            textSize = 22f
-            setTextColor(Color.rgb(93, 225, 255))
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(4), dp(5), dp(4), dp(5))
-        }
-        root.addView(title, LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-        ))
-
-        val featureButtons = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER
-        }
-        val screenPermissionButton = makeButton("Screen controls") {
-            promptScreenControls()
-        }
-        featureButtons.addView(screenPermissionButton, LinearLayout.LayoutParams(0, dp(42), 1f))
-        val reminderButton = makeButton("Set reminder") {
-            promptReminder()
-        }
-        featureButtons.addView(reminderButton, LinearLayout.LayoutParams(0, dp(42), 1f))
-        root.addView(featureButtons)
-        val listRemindersButton = makeButton("View / cancel reminders") {
-            showReminders()
-        }
-        root.addView(listRemindersButton, LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, dp(40)
-        ))
 
         val webView = WebView(this)
         dashboardWebView = webView
@@ -180,7 +149,7 @@ class MainActivity : Activity() {
         }
     }
 
-    private fun showReminders() {
+    fun showReminders() {
         val items = ReminderScheduler.list(this)
         if (items.isEmpty()) {
             Toast.makeText(this, "No scheduled reminders.", Toast.LENGTH_SHORT).show()

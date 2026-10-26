@@ -113,6 +113,26 @@ class FrontendContractTests(unittest.TestCase):
         self.assertIn("SpeechRecognizer.createSpeechRecognizer(this)", MAIN_ACTIVITY)
         self.assertIn("mediaPlaybackRequiresUserGesture = false", MAIN_ACTIVITY)
 
+    def test_phone_and_writing_actions_restored_without_cloud(self):
+        for label in ('id="hoshiDraft"', 'id="copyHoshiDraft"', 'id="shareHoshiDraft"',
+                      'data-hoshi-command="phone back"', 'data-hoshi-command="phone home"',
+                      'data-hoshi-command="open WhatsApp"'):
+            self.assertIn(label, HTML)
+        for command in ('handlePhoneOrWritingCommand(text)', 'bridge.performAction(action[1])',
+                        'bridge.openKnownApp(kind)', 'saveHoshiDraft(write[1])',
+                        'window.JarvisBridge.copyUserText', 'window.JarvisBridge.shareUserDraft'):
+            self.assertIn(command, HTML)
+        self.assertIn("fun openKnownApp(action: String): Boolean", BRIDGE)
+        self.assertIn("fun copyUserText(text: String): Boolean", BRIDGE)
+        self.assertIn("fun shareUserDraft(text: String): Boolean", BRIDGE)
+        self.assertIn("Intent.createChooser(share", MAIN_ACTIVITY)
+
+    def test_spoken_requests_use_fast_ai_mode_but_writing_actions_are_local(self):
+        self.assertIn("askCloud(text,source==='voice')", HTML)
+        self.assertIn("processCommand(command,'voice')", HTML)
+        self.assertIn("AI REPLIED IN ", HTML)
+        self.assertIn("fast})", HTML)
+
     def test_android_screenshot_is_explicit_and_api_gated(self):
         self.assertIn('id="screenshotQuickBtn"', HTML)
         self.assertIn('data-screen-action="screenshot"', HTML)
@@ -127,7 +147,7 @@ class FrontendContractTests(unittest.TestCase):
         self.assertIn("u.onstart=()=>{if(speechId===speechSequence)setSpeaking(true)}", HTML)
         self.assertIn("u.onerror=e=>", HTML)
         self.assertIn("AbortController", HTML)
-        self.assertIn("45000", HTML)
+        self.assertIn("32000", HTML)
         self.assertIn("7000", HTML)
         self.assertIn("setOnUtteranceProgressListener", MAIN_ACTIVITY)
         self.assertIn("window.hoshiSetSpeaking", MAIN_ACTIVITY)

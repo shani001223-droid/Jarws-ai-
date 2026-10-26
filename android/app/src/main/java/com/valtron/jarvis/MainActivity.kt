@@ -3,6 +3,10 @@ package com.valtron.jarvis
 import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.net.Uri
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -252,6 +256,72 @@ class MainActivity : Activity() {
         runOnUiThread {
             pendingNativeLanguage = null
             stopNativeListeningInternal()
+        }
+        return true
+    }
+
+    /**
+     * User-requested shortcuts only. Never silently send a message, post online
+     * or interact with a trading account.
+     */
+    fun openKnownApp(action: String): Boolean {
+        if (action !in setOf("youtube", "whatsapp", "telegram", "browser", "settings", "tradingview")) return false
+        runOnUiThread {
+            if (isFinishing) return@runOnUiThread
+            try {
+                val packageName = when (action) {
+                    "youtube" -> "com.google.android.youtube"
+                    "whatsapp" -> "com.whatsapp"
+                    "telegram" -> "org.telegram.messenger"
+                    else -> null
+                }
+                val app = packageName?.let { packageManager.getLaunchIntentForPackage(it) }
+                if (app != null) {
+                    startActivity(app)
+                } else {
+                    val fallback = when (action) {
+                        "settings" -> Intent(Settings.ACTION_SETTINGS)
+                        "browser" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/"))
+                        "tradingview" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://www.tradingview.com/"))
+                        "youtube" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/"))
+                        "whatsapp" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://www.whatsapp.com/"))
+                        else -> Intent(Intent.ACTION_VIEW, Uri.parse("https://web.telegram.org/"))
+                    }
+                    startActivity(fallback)
+                }
+            } catch (_: Exception) {
+                Toast.makeText(this, "App could not be opened.", Toast.LENGTH_SHORT).show()
+            }
+        }
+        return true
+    }
+
+    fun copyUserText(text: String): Boolean {
+        val safe = text.trim().take(2000)
+        if (safe.isEmpty()) return false
+        runOnUiThread {
+            if (isFinishing) return@runOnUiThread
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            clipboard.setPrimaryClip(ClipData.newPlainText("Hoshi draft", safe))
+            Toast.makeText(this, "Text copied. Paste it where you want.", Toast.LENGTH_SHORT).show()
+        }
+        return true
+    }
+
+    fun shareUserDraft(text: String): Boolean {
+        val safe = text.trim().take(2000)
+        if (safe.isEmpty()) return false
+        runOnUiThread {
+            if (isFinishing) return@runOnUiThread
+            try {
+                val share = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_TEXT, safe)
+                }
+                startActivity(Intent.createChooser(share, "Share Hoshi draft"))
+            } catch (_: Exception) {
+                Toast.makeText(this, "No app available for sharing.", Toast.LENGTH_SHORT).show()
+            }
         }
         return true
     }

@@ -35,6 +35,7 @@ class AssistantRequest(BaseModel):
     locale: Optional[str] = "en"
     context: list[str] = Field(default_factory=list, max_length=12)
     personality: str = Field(default="balanced", max_length=24)
+    fast: bool = False  # One-shot spoken commands prefer the already configured low-latency Groq route.
 
 
 class AssistantResponse(BaseModel):
@@ -407,6 +408,7 @@ def health():
         "gemini_api": "interactions" if gemini_configured else None,
         "ai_connected": openrouter_configured or gemini_configured or groq_configured,
         "reply_fallback_enabled": True,
+        "voice_fast_path": True,
         "openrouter_configured": openrouter_configured,
         "openrouter_model": OPENROUTER_MODEL if openrouter_configured else None,
         "gemini_configured": gemini_configured,
@@ -483,6 +485,23 @@ def assistant(payload: AssistantRequest):
             "Do not add content to speech_text that is absent from reply. Use natural short sentences and punctuation. "
             "Example: {\"reply\":\"Main Hoshi hoon. Tum kaise ho?\",\"speech_text\":\"میں ہوشی ہوں۔ تم کیسے ہو؟\"}."
         )
+
+    # Voice mode: try the already-configured Groq model first, avoiding a
+    # slow OpenRouter -> Gemini -> Groq chain on normal spoken questions.
+    # Tool commands execute locally on Android and never reach this route.
+    if payload.fast and groq_key:
+        quick_instruction = language_hint + (
+            " This is a spoken reply: use one or two very short sentences. "
+            "Return valid Urdu-script speech_text and natural Roman Urdu reply if locale is ur-PK."
+        )
+        try:
+            quick = make_assistant_response(
+                _groq_reply(request_input, quick_instruction), "groq", message, payload.locale
+            )
+            if not str(payload.locale or "").lower().startswith("ur") or quick.speech_text:
+                return quick
+        except (RuntimeError, HTTPException):
+            pass  # Existing OpenRouter/Gemini routes remain available.
 
     # Try the configured free OpenRouter route first, then fall back once
     # to independently configured providers for invalid/incomplete replies or

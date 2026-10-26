@@ -90,10 +90,21 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 .trade-muted{font-size:11px;color:#b0c5d5;line-height:1.7;overflow-wrap:anywhere}
 #tradeChart{display:block;max-height:150px;border-radius:9px;background:#071623}
 #tradeRefresh{width:100%;min-height:40px;margin:9px 0}
+.hoshi-tools{margin-top:12px}.hoshi-tool-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:9px 0}.hoshi-tool-grid button{min-height:37px;padding:7px 5px;font-size:12px}.hoshi-draft{margin-top:12px}.hoshi-draft label{display:block;margin-bottom:7px;font-size:12px;color:#aed8eb}.hoshi-draft textarea{display:block;width:100%;min-height:80px;max-height:190px;background:#09172a;border:1px solid #396481;border-radius:10px;color:#e7f9ff;padding:10px;font:14px system-ui;resize:vertical}
 </style>
 </head>
 <body>
-<main id="nightroom" class="nightroom" aria-label="Hoshi nightroom assistant"><header class="night-head"><div class="night-brand">Hoshi ✧ 星<small>Your AI Assistant ♡</small></div><div id="nightConnection"></div></header><div class="night-conversation" id="nightConversation"><div id="nightMood" class="night-mood" aria-live="polite">✧ Caring</div><button type="button" id="nightAudioRetry" hidden>▶ Suno Hoshi</button></div><div class="night-mic" id="nightMic"></div><nav class="night-tabs" aria-label="Main navigation"><button type="button" data-tab="chat" aria-selected="true"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M3 10L12 3l9 7v11h-6v-7H9v7H3z"/></svg></span>Chat</button><button type="button" data-tab="trading" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M5 3v18M12 3v18M19 3v18M3 7h4v7H3zM10 5h4v5h-4zM17 11h4v6h-4z"/></svg></span>Trading</button><button type="button" data-tab="influencer" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h4l2-3h6l2 3h4v14H3z M16 13a4 4 0 1 1-8 0a4 4 0 0 1 8 0"/></svg></span>AI Influencer</button><button type="button" data-tab="outfit" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M8 3l4 2l4-2l6 5l-4 4l-2-2v11H8V10l-2 2l-4-4z"/></svg></span>Outfit</button><button type="button" data-tab="settings" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8a4 4 0 0 0 0-8 M9 3h6l1 3l3 1l2 5l-2 5l-3 1l-1 3H9l-1-3l-3-1l-2-5l2-5l3-1z"/></svg></span>Settings</button></nav><section class="night-sheet" id="nightSheet" hidden aria-label="Assistant panel"><div class="sheet-head"><h2 id="sheetTitle">Chat</h2><button type="button" class="sheet-close" aria-label="Close panel">×</button></div><div data-panel="chat"></div><div data-panel="trading" hidden>
+<main id="nightroom" class="nightroom" aria-label="Hoshi nightroom assistant"><header class="night-head"><div class="night-brand">Hoshi ✧ 星<small>Your AI Assistant ♡</small></div><div id="nightConnection"></div></header><div class="night-conversation" id="nightConversation"><div id="nightMood" class="night-mood" aria-live="polite">✧ Caring</div><button type="button" id="nightAudioRetry" hidden>▶ Suno Hoshi</button></div><div class="night-mic" id="nightMic"></div><nav class="night-tabs" aria-label="Main navigation"><button type="button" data-tab="chat" aria-selected="true"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M3 10L12 3l9 7v11h-6v-7H9v7H3z"/></svg></span>Chat</button><button type="button" data-tab="trading" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M5 3v18M12 3v18M19 3v18M3 7h4v7H3zM10 5h4v5h-4zM17 11h4v6h-4z"/></svg></span>Trading</button><button type="button" data-tab="influencer" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h4l2-3h6l2 3h4v14H3z M16 13a4 4 0 1 1-8 0a4 4 0 0 1 8 0"/></svg></span>AI Influencer</button><button type="button" data-tab="outfit" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M8 3l4 2l4-2l6 5l-4 4l-2-2v11H8V10l-2 2l-4-4z"/></svg></span>Outfit</button><button type="button" data-tab="settings" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8a4 4 0 0 0 0-8 M9 3h6l1 3l3 1l2 5l-2 5l-3 1l-1 3H9l-1-3l-3-1l-2-5l2-5l3-1z"/></svg></span>Settings</button></nav><section class="night-sheet" id="nightSheet" hidden aria-label="Assistant panel"><div class="sheet-head"><h2 id="sheetTitle">Chat</h2><button type="button" class="sheet-close" aria-label="Close panel">×</button></div><div data-panel="chat"><section class="hoshi-tools"><p class="small">Actions · allowed phone controls need Android Accessibility permission.</p><div class="hoshi-tool-grid">
+<button type="button" data-hoshi-command="open YouTube">▶ YouTube</button>
+<button type="button" data-hoshi-command="open WhatsApp">◉ WhatsApp</button>
+<button type="button" data-hoshi-command="open Telegram">➤ Telegram</button>
+<button type="button" data-hoshi-command="open TradingView">◈ TradingView</button>
+<button type="button" data-hoshi-command="phone back">← Back</button>
+<button type="button" data-hoshi-command="phone home">⌂ Home</button>
+<button type="button" data-hoshi-command="swipe up">↑ Swipe</button>
+<button type="button" data-hoshi-command="take screenshot">▣ Screenshot</button>
+</div><button type="button" id="enablePhoneAccess" class="primary">Enable phone Accessibility permission</button>
+<div class="hoshi-draft"><label for="hoshiDraft">Writing pad · local to this device</label><textarea id="hoshiDraft" rows="3" maxlength="2000" placeholder="Hoshi, note likho…"></textarea><div class="hoshi-tool-grid"><button type="button" id="useHoshiReply">Use AI reply</button><button type="button" id="copyHoshiDraft">Copy text</button><button type="button" id="shareHoshiDraft">Share draft</button></div><p id="draftStatus" class="small" role="status">Draft is not automatically sent.</p></div></section></div><div data-panel="trading" hidden>
 <p class="small">Live keyless market data · public Binance Spot reference only. No real or demo orders are placed.</p>
 <div class="trading-selects"><label>Pair<select id="tradePair" aria-label="Trading pair"><option>BTCUSDT</option><option>ETHUSDT</option><option>SOLUSDT</option><option>BNBUSDT</option></select></label><label>Timeframe<select id="tradeInterval" aria-label="Chart timeframe"><option>5m</option><option>1m</option><option>15m</option><option>1h</option><option>4h</option><option>1d</option></select></label></div>
 <div class="trade-card"><div class="trade-label">Spot market price · USDT</div><div id="tradePrice" class="trade-price">—</div><div id="tradeChange" class="trade-muted">24h change: —</div><div id="tradeSource" class="trade-muted">Source: Binance Spot · read-only</div></div>
@@ -276,7 +287,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
   const command=wakeEnabled?text.replace(/^hey[, ]*hoshi[,: ]*/i,'').trim():text;
   if(wakeEnabled&&command===text){setStatus('SAY HEY HOSHI · TAP AGAIN');return}
   if(!command){setStatus('TAP MIC AGAIN AND SAY COMMAND');return}
-  processCommand(command)
+  processCommand(command,'voice')
  };
  window.hoshiNativeSpeechError=error=>{
   if(!nativeMicActive)return;endNativeMic();setStatus('MIC ERROR · '+String(error||'speech unavailable').slice(0,100)+' · TAP TO RETRY')
@@ -301,19 +312,19 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
    return false;
   }finally{if(timeout!==null)clearTimeout(timeout)}
  }
- async function askCloud(message){
+ async function askCloud(message,fast=false){
   const requestId=++cloudRequestSequence;
   if(activeCloudController){try{activeCloudController.abort()}catch(_){}}
-  setStatus('SENDING TO CLOUD…');setEmotion('thinking');orb.classList.add('active');
+  const modelStarted=Date.now();setStatus('AI THINKING…');setEmotion('thinking');orb.classList.add('active');
   const controller=typeof AbortController==='function'?new AbortController():null;
   activeCloudController=controller;
-  const timeout=controller?setTimeout(()=>controller.abort(),45000):null;
+  const timeout=controller?setTimeout(()=>controller.abort(),32000):null;
   try{
-   const options={method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,locale:commandLanguage,personality:getPersonality(),context:getCloudContextForRequest(message)})};
+   const options={method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,locale:commandLanguage,personality:getPersonality(),context:getCloudContextForRequest(message),fast})};
    if(controller)options.signal=controller.signal;
    const r=await fetch(API_BASE+'/api/assistant',options);if(requestId!==cloudRequestSequence)return;let data={};try{data=await r.json()}catch(_){}if(requestId!==cloudRequestSequence)return;
    if(!r.ok){let detail=data.detail||'';if(r.status===502)detail=detail||'Gemini ne request reject ki. Render environment mein API key aur Google AI Studio access check karna hoga.';else if(r.status===504)detail=detail||'Gemini response time par nahi aaya. Yeh AI server timeout hai, zaroori nahi ke aapka internet kharab ho.';else if(r.status===429)detail=detail||'Gemini ki free quota ya rate limit poori ho gayi hai.';else if(r.status===503)detail=detail||'Render par GEMINI_API_KEY configured nahi hai.';else detail=detail||('Cloud API error: HTTP '+r.status);throw new Error(detail)}
-   setStatus('CLOUD REPLIED · '+(data.mode||'API'));say(data.reply||'Cloud received the message but returned no reply.',data.emotion,false,data.speech_text);
+   setStatus('AI REPLIED IN '+((Date.now()-modelStarted)/1000).toFixed(1)+'s · '+(data.mode||'API'));say(data.reply||'Cloud received the message but returned no reply.',data.emotion,false,data.speech_text);
   }catch(e){
    if(requestId!==cloudRequestSequence)return;
    let message='Cloud request failed. Check the connection and try again.';
@@ -419,7 +430,90 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
    }else speak();
  }
 
- function processCommand(raw){const text=String(raw||'').trim(),c=window.JarvisCommandUtils?window.JarvisCommandUtils.normalize(text):text.toLowerCase().replace(/[!?.,،۔]/g,' ').replace(/\s+/g,' ').trim();if(!c)return;
+
+  const draftField=$('hoshiDraft'),draftStatus=$('draftStatus');
+  function phoneReply(text,spoken){reply.textContent=text;setStatus('PHONE ACTION · '+text);if(voiceReplies&&spoken)say(text,'caring',false,spoken)}
+  function saveHoshiDraft(text){
+   draftField.value=String(text||'').slice(0,2000);
+   draftStatus.textContent='Draft ready · review and copy/share manually.';
+   try{localStorage.setItem('hoshiUserDraftV1',draftField.value)}catch(_){}
+   showTab('chat');return draftField.value;
+  }
+  try{draftField.value=localStorage.getItem('hoshiUserDraftV1')||''}catch(_){}
+  draftField.addEventListener('input',()=>{try{localStorage.setItem('hoshiUserDraftV1',draftField.value)}catch(_){}});
+  function copyHoshiDraft(){
+   const text=draftField.value.trim();if(!text){draftStatus.textContent='Pehle text likho.';return false}
+   if(window.JarvisBridge&&typeof window.JarvisBridge.copyUserText==='function'){
+    const ok=window.JarvisBridge.copyUserText(text);
+    draftStatus.textContent=ok?'Copy requested. Paste it into another app.':'Could not copy the draft.';return !!ok
+   }
+   if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>{draftStatus.textContent='Copied. Paste where you want.'}).catch(()=>{draftStatus.textContent='Copy blocked by browser. Select the text manually.'});return true
+   }
+   draftStatus.textContent='Clipboard unavailable in this browser.';return false
+  }
+  function shareHoshiDraft(){
+   const text=draftField.value.trim();if(!text){draftStatus.textContent='Pehle text likho.';return false}
+   if(window.JarvisBridge&&typeof window.JarvisBridge.shareUserDraft==='function'){
+    const ok=window.JarvisBridge.shareUserDraft(text);draftStatus.textContent=ok?'Share chooser requested. You choose recipient and send.':'Share unavailable.';return !!ok
+   }
+   if(navigator.share){navigator.share({text}).catch(()=>{});draftStatus.textContent='Review the share chooser before sending.';return true}
+   draftStatus.textContent='Sharing needs the Hoshi Android app or supported browser.';return false
+  }
+  $('enablePhoneAccess').onclick=()=>{
+   if(window.JarvisBridge&&typeof window.JarvisBridge.requestSettings==='function'){
+    window.JarvisBridge.requestSettings();
+    draftStatus.textContent='Enable HOSHI basic screen controls in Android Accessibility settings.';
+   } else draftStatus.textContent='Accessibility setup needs the Hoshi Android app.';
+  };
+  $('useHoshiReply').onclick=()=>{const text=reply.textContent.trim();if(text)saveHoshiDraft(text);else draftStatus.textContent='Hoshi ka koi jawab abhi nahi.'};
+  $('copyHoshiDraft').onclick=copyHoshiDraft;
+  $('shareHoshiDraft').onclick=shareHoshiDraft;
+  document.querySelectorAll('[data-hoshi-command]').forEach(button=>button.onclick=()=>processCommand(button.dataset.hoshiCommand));
+  function handlePhoneOrWritingCommand(message){
+    const raw=String(message||'').trim(),s=raw.toLowerCase().replace(/[،۔?!.,]/g,'').trim();
+    const openMatch=s.match(/^(?:(?:open|launch|start)\s+|(?:kholo|khol do)\s+)(youtube|whatsapp|telegram|browser|google|settings|tradingview)(?:\s+(?:app|karo|kholo))?$/i) ||
+      s.match(/^(youtube|whatsapp|telegram|browser|google|settings|tradingview)\s+(?:kholo|khol do|open karo|open)$/i);
+    const bridge=window.JarvisBridge;
+    if(openMatch){
+      const target=openMatch[1].toLowerCase(),kind=target==='google'?'browser':target;
+      if(bridge&&typeof bridge.openKnownApp==='function'){
+        const ok=bridge.openKnownApp(kind);
+        phoneReply(ok?'Opening '+target+' app…':'App could not be opened.',ok?'ایپ کھولنے کی کوشش کر رہی ہوں۔':null);
+      }else{
+        const urls={youtube:'https://www.youtube.com/',whatsapp:'https://wa.me/',telegram:'https://web.telegram.org/',browser:'https://www.google.com/',settings:'',tradingview:'https://www.tradingview.com/'};
+        if(urls[kind]){window.open(urls[kind],'_blank','noopener');phoneReply('Opening '+target+' website…','ویب سائٹ کھولنے کی کوشش کر رہی ہوں۔')}
+        else phoneReply('This action needs the Hoshi Android app.',null);
+      }
+      return true;
+    }
+    const screenPairs=[
+      [/^(?:phone\s+)?(?:back|go back|peeche jao|piche jao|واپس جاؤ)$/,'back'],
+      [/^(?:phone\s+)?(?:home|go home|home screen|ghar jao)$/,'home'],
+      [/^(?:swipe up|scroll down|upar swipe karo)$/,'swipe_up'],
+      [/^(?:swipe down|scroll up|neeche swipe karo)$/,'swipe_down'],
+      [/^(?:take screenshot|screenshot lo|screenshot|screen shot lo)$/,'screenshot']
+    ];
+    const action=screenPairs.find(([pattern])=>pattern.test(s));
+    if(action){
+      if(!bridge||typeof bridge.performAction!=='function'){phoneReply('Screen control sirf Android app mein available hai.',null);return true}
+      if(!bridge.isEnabled()){phoneReply('Phone controls ke liye Accessibility permission enable karo.',null);showTab('settings');return true}
+      const queued=bridge.performAction(action[1]);
+      phoneReply(queued?'Phone action requested: '+action[1]+'.':'Phone action could not be queued.',null);
+      return true;
+    }
+    const write=raw.match(/^(?:note likho|likho|write note|write this|type this|draft karo|message likho)\s*[:：]?\s+([\s\S]{1,2000})$/i);
+    if(write){saveHoshiDraft(write[1]);phoneReply('Draft tayyar hai. Copy ya Share dabao.','میں نے ڈرافٹ تیار کر دیا ہے۔');return true}
+    if(/^(?:show note|mera note dikhao|note dikhao|show draft)$/.test(s)){
+      showTab('chat');phoneReply('Writing pad khol diya hai.','ڈرافٹ کھول دیا ہے۔');return true
+    }
+    if(/^(?:copy note|copy draft|text copy karo)$/.test(s)){copyHoshiDraft();phoneReply(draftStatus.textContent,null);return true}
+    if(/^(?:share draft|send draft|message share karo)$/.test(s)){shareHoshiDraft();phoneReply(draftStatus.textContent,null);return true}
+    if(/^(?:show phone controls|phone controls|screen controls|tools dikhao)$/.test(s)){showTab('chat');phoneReply('Phone controls aur writing tools Chat ke andar hain.',null);return true}
+    return false;
+  }
+ function processCommand(raw,source='text'){const text=String(raw||'').trim(),c=window.JarvisCommandUtils?window.JarvisCommandUtils.normalize(text):text.toLowerCase().replace(/[!?.,،۔]/g,' ').replace(/\s+/g,' ').trim();if(!c)return;
+ if(handlePhoneOrWritingCommand(text))return;
  rememberTurn('user',text);setStatus('PROCESSING…');orb.classList.add('active');
  const has=(patterns)=>patterns.some(p=>p.test(c));
  const reminder=window.JarvisBridge&&window.JarvisReminderParser?window.JarvisReminderParser(text):null;
@@ -437,7 +531,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  else if(has([/\b(open youtube|youtube kholo|youtube khol do|kholo youtube|youtube open)\b/,/یوٹیوب کھولو/,/یوٹیوب کھول دو/])){say(commandLanguage==='ur-PK'?'YouTube khol raha hoon.':'Opening YouTube.',null,false,commandLanguage==='ur-PK'?'یوٹیوب کھول رہی ہوں۔':null);window.open('https://m.youtube.com/','_blank','noopener')}
  else if(has([/\b(stop speaking|bolna band|chup ho jao)\b/,/بولنا بند/])){stopSpeaking();reply.textContent='Theek hai, voice reply rok di.'}
  else if(has([/^(help|madad|kya kar sakte ho|commands|what can you do)\b/,/مدد/,/کیا کر سکتے ہو/]))say('Main waqt aur tareekh bata sakta hoon, Google aur YouTube khol sakta hoon, aur Android app mein local reminders schedule kar sakta hoon. Basic Back, Home aur swipe controls ke liye aapki permission zaroori hai.',null,false,commandLanguage==='ur-PK'?'میں وقت اور تاریخ بتا سکتی ہوں۔ گوگل اور یوٹیوب کھول سکتی ہوں۔ فون میں یاد دہانی لگا سکتی ہوں۔ بنیادی فون کنٹرول کے لیے آپ کی اجازت ضروری ہے۔':null);
- else {reply.textContent='HOSHI soch rahi hai…';askCloud(text);return;}
+ else {reply.textContent='HOSHI soch rahi hai…';askCloud(text,source==='voice');return;}
  setStatus(listening?(wakeEnabled?'LISTENING FOR WAKE WORD':'LISTENING'):'READY');setTimeout(()=>orb.classList.remove('active'),900)
  }
  function startListening(){
@@ -474,9 +568,9 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
       const cleaned=heard.replace(/^hey[, ]*hoshi[,: ]*/i,'').trim();
       if(cleaned===heard){setStatus('SAY HEY HOSHI · TAP MIC AGAIN');return}
       if(!cleaned){setStatus('TAP MIC AGAIN TO GIVE COMMAND');return}
-      processCommand(cleaned);return;
+      processCommand(cleaned,'voice');return;
     }
-    processCommand(heard);return;
+    processCommand(heard,'voice');return;
    }
   };
   instance.onerror=e=>{if(sessionEnded)return;

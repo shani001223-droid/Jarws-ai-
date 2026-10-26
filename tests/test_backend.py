@@ -80,6 +80,31 @@ class AssistantApiTests(unittest.TestCase):
         self.assertIn("speech_text", body["messages"][0]["content"])
         self.assertEqual(mocked.call_args.kwargs["timeout"], 18)
 
+    def test_fast_voice_request_prefers_configured_groq_without_openrouter(self):
+        reply = json.dumps({"reply": "Ji, sun rahi hoon.", "speech_text": "جی، سن رہی ہوں۔"})
+        payload = {"choices": [{"message": {"content": reply}}]}
+        with patch.dict(os.environ, {"OPENROUTER_API_KEY": "openrouter-free",
+                                     "GROQ_API_KEY": "groq-free", "GEMINI_API_KEY": ""}):
+            with patch("cloud_backend.main.urlopen", return_value=FakeResponse(payload)) as mocked:
+                result = main.assistant(main.AssistantRequest(message="Tum sun rahi ho?",
+                                                                locale="ur-PK",fast=True))
+        self.assertEqual(result.mode, "groq")
+        self.assertEqual(result.speech_text, "جی، سن رہی ہوں۔")
+        self.assertEqual(mocked.call_count, 1)
+        self.assertEqual(mocked.call_args.args[0].full_url, "https://api.groq.com/openai/v1/chat/completions")
+
+    def test_fast_voice_falls_back_to_openrouter_on_groq_failure(self):
+        error = HTTPError("https://api.groq.com/openai/v1/chat/completions", 429, "limited", {}, None)
+        answer = json.dumps({"reply": "Main Hoshi hoon.", "speech_text": "میں ہوشی ہوں۔"})
+        with patch.dict(os.environ, {"OPENROUTER_API_KEY": "openrouter-free",
+                                     "GROQ_API_KEY": "groq-free", "GEMINI_API_KEY": ""}):
+            with patch("cloud_backend.main.urlopen",side_effect=[
+                error,FakeResponse({"choices":[{"message":{"content":answer}}]})
+            ]) as mocked:
+                result = main.assistant(main.AssistantRequest(message="Hello",locale="ur-PK",fast=True))
+        self.assertEqual(result.mode, "openrouter")
+        self.assertEqual(mocked.call_count, 2)
+
     def test_openrouter_rejects_paid_model_before_network(self):
         with patch.dict(os.environ, {"OPENROUTER_API_KEY": "test"}):
             with patch.object(main, "OPENROUTER_MODEL", "paid/model"):

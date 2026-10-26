@@ -75,7 +75,7 @@ class MainActivity : Activity() {
                         override fun onError(utteranceId: String?) = notifyHoshiVoiceError()
                         override fun onError(utteranceId: String?, errorCode: Int) = notifyHoshiVoiceError()
                     })
-                    textToSpeech?.setPitch(1.12f)
+                    textToSpeech?.setPitch(1.04f)
                     val queued = pendingSpeech
                     pendingSpeech = null
                     if (queued != null) speakNativeOnUiThread(queued)

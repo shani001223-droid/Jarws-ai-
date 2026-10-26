@@ -24,7 +24,7 @@ jobs:
           health=""
           for attempt in $(seq 1 30); do
             if health=$(curl -fsS --max-time 10 "$API_BASE/health"); then
-              if echo "$health" | jq -e ' .service == "hoshi-cloud-api" and .version == "0.9.1" and .gemini_api == "interactions" and .gemini_model == "gemini-3.8-flash" and .groq_model == "openai/gpt-oss-20b" and .ai_connected == true' >/dev/null; then
+              if echo "$health" | jq -e ' .service == "hoshi-cloud-api" and .version == "0.9.1" and .gemini_api == "interactions" and .gemini_model == "gemini-3.8-flash" and .groq_model == "openai/gpt-oss-20b" and .ai_connected == true and .reply_fallback_enabled == true' >/dev/null; then
                 echo "$health" | jq '{version, gemini_api, gemini_model, groq_model, groq_configured, ai_connected}'
                 break
               fi
@@ -101,4 +101,27 @@ jobs:
           done
           echo "Live assistant request failed after retries (HTTP $http_code)"
           echo "$body"
+          exit 1
+
+      - name: Check live Roman Urdu reply and Urdu speech text
+        env:
+          API_BASE: https://jarws-ai-2.onrender.com
+        run: |
+          set -euo pipefail
+          for attempt in 1 2; do
+            status=$(curl -sS --max-time 62 -o /tmp/hoshi-urdu-test.json -w '%{http_code}' \
+              -X POST "$API_BASE/api/assistant" -H 'Content-Type: application/json' \
+              --data '{"message":"Hoshi, tum kaisi ho? Roman Urdu mein chhota sa jawab do.","locale":"ur-PK"}' || true)
+            if [ "$status" = "200" ]; then
+              if python -c 'import json,re,sys; d=json.load(sys.stdin); assert isinstance(d.get("reply"),str) and len(d["reply"].strip())>3; assert not d["reply"].lstrip().startswith("{"); assert isinstance(d.get("speech_text"),str) and re.search(r"[\u0600-\u06ff]",d["speech_text"]); assert d.get("mode") in ("openrouter","gemini","groq")' < /tmp/hoshi-urdu-test.json; then
+                echo "PASS — live Roman Urdu and Urdu TTS response are structurally valid"
+                exit 0
+              fi
+              echo "WARN — reply formatting or Urdu speech text invalid on attempt $attempt"
+            else
+              echo "WARN — assistant returned HTTP $status on attempt $attempt"
+            fi
+            if [ "$attempt" -lt 2 ]; then sleep 6; fi
+          done
+          echo "FAIL — live Urdu conversational path did not pass validation"
           exit 1

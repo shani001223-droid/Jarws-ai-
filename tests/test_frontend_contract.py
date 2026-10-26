@@ -45,7 +45,7 @@ class FrontendContractTests(unittest.TestCase):
         self.assertIn("./assets/hoshi-expressions.webp", SERVICE_WORKER)
         self.assertIn("./memory-privacy.js", SERVICE_WORKER)
         self.assertIn('<script src="./memory-privacy.js"></script>', HTML)
-        self.assertIn('CACHE_NAME = "hoshi-shell-v22"', SERVICE_WORKER)
+        self.assertIn('CACHE_NAME = "hoshi-shell-v23"', SERVICE_WORKER)
         self.assertIn('"./hoshi-room.js"', SERVICE_WORKER)
         self.assertIn('"./hoshi-room.css"', SERVICE_WORKER)
         self.assertNotIn('new URL("./index.html", "./trading.css",', SERVICE_WORKER)

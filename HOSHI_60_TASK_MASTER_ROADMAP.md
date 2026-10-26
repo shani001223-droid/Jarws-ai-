@@ -35,7 +35,7 @@
 - [x] **21** Execute bounded permitted tap/type/scroll actions. Acceptance: implementation or evidence, passing tests, limitations recorded.
 - [x] **22** Verify screen state after actions. Acceptance: implementation or evidence, passing tests, limitations recorded.
 - [x] **23** Integrate supported Android apps via safe intents. Acceptance: implementation or evidence, passing tests, limitations recorded.
-- [ ] **24** Show action history, pause and emergency stop. Acceptance: implementation or evidence, passing tests, limitations recorded.
+- [x] **24** Show action history, pause and emergency stop. Acceptance: implementation or evidence, passing tests, limitations recorded.
 
 ## Phase 5 — Backend Job Engine
 - [x] **25** Create persistent job IDs and status records. Acceptance: implementation or evidence, passing tests, limitations recorded.
@@ -174,3 +174,8 @@
 - Local Hoshi DOM actions are bound to pending request IDs; stale/late callbacks cannot execute after Pause/Stop. Native Android bridge has a thread-safe generation/epoch guard to invalidate **queued, not-yet-dispatched** Back/Home/swipe/screenshot, Hoshi UI and allowlisted app-launch requests. Emergency Stop also interrupts the microphone, voice and pending AI reply. **Already-dispatched Android actions cannot be undone.** Older APKs without the new cancellation bridge warn that queued actions may finish.
 - Verification so far: Node safety state-machine tests and full Python/Node/Playwright checks passed on source commit `2e2e55dac8` (https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40390234744). Native Android APK build passed after Kotlin changes at `cede2d129d` (https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40389850103). Later full CI for the session-reload latch at `66a5fcad28` also passed (https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40390399144).
 - **Do not check Task 24 yet:** the newest browser regression for persistence after reload at commit `7271a430295d` is still in progress: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40390421543 . Recheck that exact run and fix failures before checking the task. Physical Realme Note 50 behavior, production deployment, and cancellation of already-executed system actions remain unverified.
+
+
+## Task 24 — final CI acceptance (27 Oct 2026)
+- Previously documented session-only action history, Pause/Resume, latched Emergency Stop and Android queued-action epoch cancellation are now **verified at source/browser/APK build level**. Final reload/persistence browser regression passed on commit `7271a430295d`: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40390421543 . Native debug APK build passed for the corresponding cancellation bridge on commit `cede2d129d`: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40389850103 . The intervening CI runs also passed.
+- **Limitations:** no physical Realme Note 50 device acceptance, production release or rollback. An Android action already dispatched cannot be undone; stop invalidates only queued/pending actions and new Hoshi requests. Do not claim OS-wide emergency stop.

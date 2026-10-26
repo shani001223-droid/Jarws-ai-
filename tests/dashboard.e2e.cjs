@@ -554,13 +554,15 @@ async function main() {
     // Explicit OCR must not forward screenshot text to the backend or execute HTML.
     await context.addInitScript(() => {
       window.__localOcrPickers = 0;
+      window.__cancelQueuedActions = 0;
       window.JarvisBridge = {
         isEnabled: () => true, requestSettings: () => {},
         performAction: () => true,
+        cancelQueuedActions: () => { window.__cancelQueuedActions++; return true; },
         chooseScreenshotForLocalOcr: () => { window.__localOcrPickers++; return true; },
         performLocalUiAction: (action,payload,id) => {
           setTimeout(() => window.hoshiLocalUiActionResult(id,
-            window.hoshiExecuteLocalUiAction(action,payload)), 0);
+            window.hoshiExecuteLocalUiAction(action,payload,id)), 0);
           return true; // Native queues first, verifies DOM state asynchronously.
         }
       };
@@ -616,6 +618,39 @@ async function main() {
     await page.evaluate(()=>window.hoshiLocalUiActionResult(999999,false));
     assert.match(await page.locator('#localUiStatus').textContent(),/permission first/i);
     assert.equal(apiMessages.length,messagesBeforeLocalActions);
+    // Task 24: pause blocks new actions and records metadata, not draft content.
+    await page.evaluate(()=>{window.JarvisBridge.isEnabled=()=>true});
+    await page.locator('#actionPauseBtn').click();
+    assert.match(await page.locator('#actionSafetyStatus').innerText(),/ACTIONS PAUSED/);
+    await page.locator('#localUiScrollDownBtn').click();
+    assert.match(await page.locator('#localUiStatus').innerText(),/paused or stopped/i);
+    await page.locator('#actionResumeBtn').click();
+    assert.match(await page.locator('#actionSafetyStatus').innerText(),/ACTIONS READY/);
+    await page.evaluate(()=>{
+      window.JarvisBridge.performLocalUiAction=(action,payload,id)=>{
+        setTimeout(()=>window.hoshiLocalUiActionResult(id,
+          window.hoshiExecuteLocalUiAction(action,payload,id)),180);
+        return true;
+      };
+    });
+    await page.locator('#localUiChatBtn').click();
+    await page.locator('#actionEmergencyStopBtn').click();
+    assert.match(await page.locator('#actionSafetyStatus').innerText(),/EMERGENCY STOP ACTIVE/);
+    await page.waitForTimeout(280);
+    assert.equal(await page.locator('[data-tab="settings"]').getAttribute('aria-selected'),'true',
+      'Late native callback must not perform a stopped action');
+    await page.locator('#localUiChatBtn').click();
+    assert.match(await page.locator('#localUiStatus').innerText(),/paused or stopped/i);
+    assert.ok(await page.evaluate(()=>window.__cancelQueuedActions)>=2,
+      'Pause and stop must invalidate native queued action epoch');
+    const historyText=await page.locator('#actionHistory').innerText();
+    assert.match(historyText,/emergency stop/);
+    assert.equal(historyText.includes('Hoshi meri trading research ka draft'),false,
+      'History must not contain unsent draft payloads');
+    assert.equal(apiMessages.length,messagesBeforeLocalActions,'Safety controls must not send AI requests');
+    await page.locator('#actionResumeBtn').click();
+    await page.locator('#actionHistoryClearBtn').click();
+    assert.equal(await page.locator('#actionHistory li').count(),0);
     assert.deepEqual(pageErrors,[]);
     console.log('PASS — nightroom layout, chat, voice settings, tabs and narrow phone widths');
   } finally {

@@ -91,6 +91,12 @@ class FrontendContractTests(unittest.TestCase):
         self.assertIn("if(requestId!==cloudRequestSequence)return;", HTML)
         self.assertIn("if(requestId===cloudRequestSequence)", HTML)
 
+    def test_soft_urdu_voice_defaults_avoid_exaggerated_pitch(self):
+        self.assertIn("const voiceStyles={soft:[1.04,0.94]", HTML)
+        self.assertIn("const basePitch=Number($('pitchSlider').value)||1.04", HTML)
+        self.assertIn("const baseRate=Number($('rateSlider').value)||0.94", HTML)
+        self.assertIn("textToSpeech?.setPitch(1.04f)", MAIN_ACTIVITY)
+
     def test_hoshi_voice_uses_native_engine_without_country_picker(self):
         self.assertNotIn('id="voiceSelect"', HTML)
         self.assertIn("One Hoshi delivery", HTML)

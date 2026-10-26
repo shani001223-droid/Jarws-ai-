@@ -258,6 +258,40 @@ async function main() {
     assert.equal(heardRequests,1,"One mic tap must produce exactly one cloud request");
     assert.equal(await voicePage.evaluate(()=>window.micStartCount),1,"Mic must never auto-restart");
     await voiceContext.close();
+    // Regression: a failed online Urdu synthesis must be retryable, not permanently
+    // blocked by the previous request's deduplication guard.
+    const audioContext = await browser.newContext({viewport:{width:390,height:844}});
+    await audioContext.addInitScript(()=>{
+      localStorage.setItem("hoshiVoiceReplies","true");
+      localStorage.setItem("hoshiLanguage","ur-PK");
+      Object.defineProperty(navigator,"serviceWorker",{value:undefined,configurable:true});
+    });
+    const audioPage = await audioContext.newPage();
+    let speechCalls=0;
+    await audioPage.route("https://jarws-ai-2.onrender.com/**",async route=>{
+      const endpoint=new URL(route.request().url()).pathname;
+      const headers={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"Content-Type","Access-Control-Allow-Methods":"GET,POST,OPTIONS","Content-Type":"application/json"};
+      if(route.request().method()==="OPTIONS"){await route.fulfill({status:204,headers});return}
+      if(endpoint==="/health"){await route.fulfill({status:200,headers,body:'{"ok":true,"ai_connected":true}'});return}
+      if(endpoint==="/api/speech"){speechCalls++;await route.fulfill({status:502,headers,body:'{"detail":"Unavailable"}'});return}
+      await route.fulfill({status:404,headers,body:'{}'});
+    });
+    await audioPage.goto(url,{waitUntil:"domcontentloaded"});
+    await audioPage.locator('[data-tab="settings"]').click();
+    await audioPage.locator('#previewVoiceBtn').click();
+    await audioPage.waitForFunction(()=>document.querySelector('#nightAudioRetry').hidden===false);
+    assert.equal(speechCalls,1,"First preview should call Urdu voice once");
+    await audioPage.locator('.sheet-close').click();
+    await audioPage.locator('#nightAudioRetry').click();
+    await audioPage.waitForFunction(()=>document.querySelector('#status').textContent.includes("URDU AUDIO UNAVAILABLE"));
+    assert.equal(speechCalls,2,"Failed audio must be retryable using the same speech request");
+    assert.equal(await audioPage.evaluate(()=>window.hoshiVoiceTimings.first_model_token_ms),null,
+      "Do not invent token timings for a non-streaming model");
+    await audioPage.locator('[data-tab="settings"]').click();
+    await audioPage.locator('#stopSpeakingBtn').click();
+    assert.equal(await audioPage.locator('#nightAudioRetry').isVisible(),false,
+      "Stop Speaking must hide any pending retry");
+    await audioContext.close();
     assert.deepEqual(pageErrors,[]);
     console.log('PASS — nightroom layout, chat, voice settings, tabs and narrow phone widths');
   } finally {

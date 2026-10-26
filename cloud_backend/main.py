@@ -168,12 +168,13 @@ def get_job_record(job_id: str, request: FastAPIRequest):
     store = _private_job_store(request)
     try:
         job = store.get(job_id)
+        queue = ScheduledJobQueue(store).status(job_id) if job is not None else None
     except Exception as exc:
         _safe_log_failure("jobs.lookup", exc)
         raise HTTPException(status_code=503, detail="Job record storage unavailable.") from None
     if job is None:
         raise HTTPException(status_code=404, detail="Job not found.")
-    return {"job": job, "executed": job["status"] == "succeeded",
+    return {"job": job, "queue": queue, "executed": job["status"] == "succeeded",
             "worker_available": False}
 
 

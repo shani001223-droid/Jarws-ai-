@@ -13,6 +13,7 @@ from dataclasses import dataclass
 import re
 import time
 from typing import Callable, Mapping
+from threading import Event
 
 try:
     from .job_records import JobRecordStore, JobStateError, KINDS, _ID_RE
@@ -276,3 +277,28 @@ class ScheduledJobQueue:
         self.finish(claim["job_id"], outcome, now_ms)
         return {"job_id": claim["job_id"], "state":
                 "succeeded" if outcome.succeeded else "failed"}
+
+    def poll(self, handlers: Mapping[str, Callable[[str], WorkerOutcome]],
+             stop_event: Event, interval_seconds: float = 1.0,
+             max_ticks: int = 100) -> int:
+        """Explicit bounded worker polling, never auto-started by FastAPI.
+
+        This caller-controlled loop does not spawn threads or promise durable
+        recovery. Trusted handlers must bound their own execution time; a stop
+        request cannot undo an already-running handler.
+        """
+        if not isinstance(stop_event, Event):
+            raise TypeError("A stop event is required")
+        if type(interval_seconds) not in (float, int) or not 0.1 <= interval_seconds <= 60:
+            raise ValueError("Invalid polling interval")
+        if type(max_ticks) is not int or not 1 <= max_ticks <= 10_000:
+            raise ValueError("Invalid worker tick budget")
+        processed = 0
+        for _ in range(max_ticks):
+            if stop_event.is_set():
+                break
+            if self.run_once(handlers) is not None:
+                processed += 1
+            if stop_event.wait(interval_seconds):
+                break
+        return processed

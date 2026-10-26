@@ -58,6 +58,8 @@ jobs:
         run: node --check hoshi-speech-input.js
       - name: Check client task router syntax
         run: node --check hoshi-task-router.js
+      - name: Check paper research client syntax
+        run: node --check hoshi-trading-research.js
       - name: Test opt-in local memory export and deletion
         run: node --test tests/hoshi-memory-store.test.cjs
       - name: Check local memory store JavaScript syntax

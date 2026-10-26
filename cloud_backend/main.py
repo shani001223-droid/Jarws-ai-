@@ -16,6 +16,11 @@ from fastapi import FastAPI, HTTPException, Response, Query, Request as FastAPIR
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from threading import BoundedSemaphore, Lock
+from concurrent.futures import ThreadPoolExecutor
+try:
+    from .trading_research import closed_candles, research, backtest, SimulationConfig
+except ImportError:
+    from trading_research import closed_candles, research, backtest, SimulationConfig
 try:
     from .ad_studio import create_ad_pack
     from .artifact_verifier import verify_ad_pack, ArtifactVerificationError
@@ -1065,6 +1070,66 @@ def public_candles(symbol: str = "BTCUSDT", interval: str = "5m"):
                 "note": "Indicator calculations use public spot candles, not a trading signal."}
     except (ValueError, KeyError, TypeError, IndexError, OverflowError) as exc:
         raise HTTPException(status_code=503, detail="Candle provider returned invalid data.") from exc
+
+
+_RESEARCH_SLOTS = BoundedSemaphore(2)
+
+
+def _research_pair(symbol):
+    pair = _public_pair(symbol)
+    if pair not in {"BTCUSDT", "ETHUSDT"}:
+        raise HTTPException(status_code=422, detail="Research supports BTCUSDT and ETHUSDT only.")
+    return pair
+
+
+def _research_history(pair, interval):
+    data, fetched = _public_data("research-v1:" + pair + ":" + interval,
+        "https://data-api.binance.vision/api/v3/klines?symbol=" + pair
+        + "&interval=" + interval + "&limit=500", 30)
+    try:
+        return closed_candles(data, interval, int(time.time()*1000)), fetched
+    except (ValueError, TypeError, IndexError, OverflowError) as exc:
+        raise HTTPException(status_code=503, detail="Research candles invalid, incomplete or stale. No proposal generated.") from exc
+
+
+@app.get("/api/trading/research")
+def trading_research(symbol: str = "BTCUSDT"):
+    pair = _research_pair(symbol)
+    if not _RESEARCH_SLOTS.acquire(blocking=False):
+        raise HTTPException(status_code=429, detail="Research busy. Retry shortly.")
+    try:
+        with ThreadPoolExecutor(max_workers=3) as pool:
+            results = dict(zip(("15m", "1h", "4h"), pool.map(
+                lambda interval: _research_history(pair, interval), ("15m", "1h", "4h"))))
+        return research({tf: value[0] for tf, value in results.items()}, pair,
+                        min(value[1] for value in results.values()))
+    finally:
+        _RESEARCH_SLOTS.release()
+
+
+class TradingBacktestRequest(BaseModel):
+    model_config = {"extra": "forbid"}
+    symbol: str = "BTCUSDT"
+    strategy: str = Field(default="trend_pullback", pattern="^(trend_pullback|breakout_retest)$")
+    equity: float = Field(default=1000, ge=10, le=100_000, allow_inf_nan=False)
+    risk_pct: float = Field(default=.5, ge=.1, le=1, allow_inf_nan=False)
+    daily_loss_limit: float = Field(default=10, ge=.1, le=1000, allow_inf_nan=False)
+    fee_bps: float = Field(default=10, ge=1, le=100, allow_inf_nan=False)
+    slippage_bps: float = Field(default=5, ge=1, le=100, allow_inf_nan=False)
+
+
+@app.post("/api/trading/backtest")
+def trading_backtest(payload: TradingBacktestRequest):
+    pair = _research_pair(payload.symbol)
+    if not _RESEARCH_SLOTS.acquire(blocking=False):
+        raise HTTPException(status_code=429, detail="Research busy. Retry shortly.")
+    try:
+        bars, fetched = _research_history(pair, "15m")
+        cfg = SimulationConfig(**payload.model_dump(exclude={"symbol", "strategy"}))
+        result = backtest(bars, payload.strategy, cfg)
+        return dict(result, symbol=pair, source="Binance Spot", fetched_at=fetched)
+    finally:
+        _RESEARCH_SLOTS.release()
 
 
 @app.get("/api/public/sentiment")

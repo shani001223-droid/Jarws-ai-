@@ -52,6 +52,7 @@ async function main() {
   let browser;
   const apiMessages = [];
   const pageErrors = [];
+  let researchDelay=0,researchFail=false;
   try {
     browser = await chromium.launch({ headless: true });
     const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
@@ -90,6 +91,19 @@ async function main() {
         return;
       }
       const endpoint = new URL(request.url()).pathname;
+      if(endpoint==='/api/trading/research'){
+        const symbol=new URL(request.url()).searchParams.get('symbol');
+        if(researchDelay)await new Promise(resolve=>setTimeout(resolve,researchDelay));
+        const frame={regime:'range',support:69000,resistance:71000,last_closed_at:1793000000000,indicators:{ema20:70000,ema50:70010,rsi14:50,atr14:200}};
+        try{await route.fulfill({status:researchFail?503:200,headers,body:JSON.stringify({symbol,source:'Binance Spot',fetched_at:1793000000,orders_enabled:false,mode:'research-only',decision:'wait',reason:'<img src=x onerror=alert(1)>',timeframes:{'15m':frame,'1h':frame,'4h':frame},proposals:[],note:'Spot only.'})});}catch(_){}
+        return;
+      }
+      if(endpoint==='/api/trading/backtest'){
+        const cfg=request.postDataJSON();
+        assert.equal(cfg.symbol,'BTCUSDT');assert.ok(cfg.risk_pct<=1);
+        await route.fulfill({status:200,headers,body:JSON.stringify({symbol:cfg.symbol,source:'Binance Spot',strategy:cfg.strategy,fetched_at:1793000000,orders_enabled:false,mode:'historical-paper-simulation',bars:499,initial_equity:1000,ending_equity:998,net_pnl:-2,trade_count:2,max_drawdown_pct:.5,fees_paid:1,win_rate_pct:50,expectancy:-1,profit_factor:.8,start_at:1792800000000,end_at:1793000000000,config:cfg,limitations:['Fixture only; not a profitability result.'],trades:[]})});
+        return;
+      }
       if (endpoint === "/health") {
         await route.fulfill({
           status: 200,
@@ -279,6 +293,39 @@ async function main() {
       assert.equal(await page.locator('[data-panel="'+tab+'"]').isVisible(),true);
       if(tab==='trading'){
         await page.waitForFunction(()=>document.querySelector('#tradePrice').textContent.includes('70,000.5'));
+        assert.equal(await page.locator('#tradeJournalConsent').isChecked(),false);
+        await page.locator('#tradeResearchRun').click();
+        await page.waitForFunction(()=>document.querySelector('#tradeResearchStatus').textContent.startsWith('Complete'));
+        assert.match(await page.locator('#tradeResearchOutput').innerText(),/WAIT/);
+        assert.equal(await page.locator('#tradeResearchOutput img').count(),0,'Upstream strings must be inert text');
+        const downloadPromise=page.waitForEvent('download');await page.locator('#tradeResearchExport').click();
+        const download=await downloadPromise;
+        assert.match(download.suggestedFilename(),/Hoshi_BTCUSDT_research.json/);
+        const exported=JSON.parse(fs.readFileSync(await download.path(),'utf8'));
+        assert.equal(exported.orders_enabled,false);
+        await page.locator('#tradeBacktestRun').click();
+        await page.waitForFunction(()=>document.querySelector('#tradeResearchStatus').textContent.startsWith('Complete'));
+        assert.match(await page.locator('#tradeResearchOutput').innerText(),/HISTORICAL SIMULATION/);
+        assert.equal(await page.evaluate(()=>localStorage.getItem('hoshiPaperJournalV1')),null);
+        await page.locator('#tradeJournalConsent').check();
+        await page.locator('#tradeResearchSettings summary').click();
+        await page.locator('#tradeStrategy').selectOption('breakout_retest');
+        await page.locator('#tradeBacktestRun').click();
+        await page.waitForFunction(()=>document.querySelector('#tradeResearchStatus').textContent.startsWith('Complete'));
+        assert.equal(JSON.parse(await page.evaluate(()=>localStorage.getItem('hoshiPaperJournalV1'))).length,1);
+        await page.locator('#tradeJournalClear').click();
+        assert.equal(await page.evaluate(()=>localStorage.getItem('hoshiPaperJournalV1')),null);
+        await page.locator('#tradeJournalConsent').uncheck();
+        researchFail=true;await page.locator('#tradeResearchRun').click();
+        await page.waitForFunction(()=>document.querySelector('#tradeResearchStatus').textContent.includes('(503)'));
+        assert.equal(await page.locator('#tradeResearchExport').isDisabled(),true);
+        assert.equal(await page.locator('#tradeResearchOutput').innerText(),'');researchFail=false;
+        researchDelay=500;await page.locator('#tradeResearchRun').click();
+        await page.locator('#tradePair').selectOption('ETHUSDT');
+        await page.waitForTimeout(600);
+        assert.equal(await page.locator('#tradeResearchOutput').innerText(),'','Late BTC result must not appear after selecting ETH');
+        researchDelay=0;await page.locator('#tradePair').selectOption('BTCUSDT');
+        await page.waitForFunction(()=>!document.querySelector('#tradeRefresh').disabled);
         assert.match(await page.locator('#tradeIndicators').innerText(), /RSI 14: 67.2/);
         assert.match(await page.locator('#tradeSentiment').innerText(), /Alternative.me/);
         assert.equal(await page.locator('#tradeChart [data-candle]').count(),80);

@@ -86,6 +86,7 @@
 - [ ] **60** QC, export and archive each episode and batch. Acceptance: implementation or evidence, passing tests, limitations recorded.
 
 ## Evidence and status
+- **Trading research extension (26 Oct 2026, requested priority override):** added the BTC/ETH spot research lab to this same development branch. Scope: closed-candle 15m/1h/4h structure and EMA/RSI/ATR context, two explicit long-only strategy experiments, a separate 15m historical simulator with fees/slippage/cash/daily-loss limits, JSON input/result export and opt-in device-local simulation-summary journal. No orders, futures execution, real trading, paid providers or production deploy. Rules and limitations: `HOSHI_TRADING_RESEARCH.md`. Local validation: 181 Python tests and 39 Node tests passed; browser/CI validation is pending at this source checkpoint. Live public-data smoke request timed out after 7s; no live market result is claimed. Tasks 37–42 remain unchecked pending their full acceptance, including live-source validation and remaining chart/export work.
 - Task 01 initial source/CI audit: [HOSHI_PHASE1_AUDIT.md](HOSHI_PHASE1_AUDIT.md)
 - All remaining milestones: planned unless a dated test-supported completion note is added below.
 - Use branch `hoshi/dnd-foundation-20261026` and draft PR #24 for changes; main remains protected until CI green.

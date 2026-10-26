@@ -50,6 +50,7 @@
 | Local privacy and consent | `hoshi-memory-store.js`, `memory-privacy.js` | Optional bounded user-controlled local memory |
 | Local commands / reminders | `assistant-commands.js`, `reminder-parser.js` | Offline deterministic commands |
 | Backend API | `cloud_backend/main.py` | Chat, speech, health, action endpoints, public market data |
+| Spot research lab | `cloud_backend/trading_research.py`, `hoshi-trading-research.js` | BTC/ETH closed-candle analysis and historical paper simulation; no orders |
 | Model decisions and free providers | `cloud_backend/provider_policy.py`, `free_llm_providers.py` | Only configured models with bounded fallback |
 | Real OpenJarvis adapter | `cloud_backend/openjarvis_bridge.py` | Requires an actual separate configured OpenJarvis model/server |
 | Planning and permissions | `cloud_backend/task_router.py`, `goal_spec.py`, `milestone_planner.py`, `permission_policy.py` | Classify/plan; **not** persistent autonomous workers |
@@ -114,5 +115,6 @@ These are **reference filenames**, not files automatically imported from Library
 - [Free provider configuration, no supplied keys](HOSHI_FREE_LLM_PROVIDERS.md)
 - [Flora ad generator](HOSHI_AGENT_PRODUCT_ADS.md)
 - [Production release and rollback](DEPLOYMENT_ROLLBACK.md)
+- [Spot research rules, formulas and simulation limits](HOSHI_TRADING_RESEARCH.md)
 
 **Any new feature belongs inside this one project and must be linked back here.**

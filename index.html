@@ -121,6 +121,21 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 <section id="tradeOverview" class="trade-overview trade-box"><div class="trade-pair-row"><label class="trade-pair-label"><span class="trade-coin">₿</span><select id="tradePair" aria-label="Trading pair"><option value="BTCUSDT">BTC / USDT</option><option value="ETHUSDT">ETH / USDT</option><option value="SOLUSDT">SOL / USDT</option><option value="BNBUSDT">BNB / USDT</option></select></label><strong id="tradePrice" class="trade-price">—</strong><span id="tradeChange" class="trade-change">24h change: —</span></div><div class="trade-summary"><span id="tradeSource">Binance Spot · waiting for data</span><span>24h volume <strong id="tradeVolume">—</strong></span><label>Timeframe <select id="tradeInterval" aria-label="Chart timeframe"><option>5m</option><option>1m</option><option>15m</option><option>1h</option><option>4h</option><option>1d</option></select></label></div></section>
 <div class="trade-hero-grid"><section class="trade-chart-box trade-box"><div class="trade-card-head"><h3>Market chart</h3><div class="trade-chart-tools"><button type="button" id="tradeCandles" aria-pressed="true">Candles</button><button type="button" id="tradeLine" aria-pressed="false">Line</button><button type="button" id="tradeRange" aria-pressed="false" title="Show the high and low of displayed candles">Range</button></div></div><div class="trade-chart-legend"><span class="trade-positive">EMA 9</span><span class="trade-violet">SMA 20</span><span>Binance Spot · OHLCV</span></div><svg id="tradeChart" viewBox="0 0 720 360" width="100%" role="img" aria-label="Public Binance Spot candlestick chart"><text x="20" y="170" fill="#9ab2c6" font-size="14">Loading market candles…</text></svg><div id="tradeChartNote" class="trade-muted">Historical spot candles · volume below · range is not a trade signal</div></section><aside class="trade-companion trade-box"><img src="./assets/outfits/kimono.webp" alt="Hoshi with silver-white hair, blue eyes and her blue floral kimono" width="1024" height="1536" loading="lazy"><div class="trade-companion-top">✧ Hoshi’s market room</div><div class="trade-companion-caption">“Pehle chart samjho,<br>phir apna faisla karo.” ♡<button type="button" id="tradeAsk">✧ Ask Hoshi</button></div></aside></div>
 <div class="trade-info-grid"><section id="tradeAnalysis" class="trade-box"><h3>◈ Market analysis</h3><div id="tradeIndicators" class="trade-muted">EMA 9 · SMA 20 · RSI 14: waiting for candles</div><p class="trade-muted">Indicators describe past prices. They do not predict returns.</p><button type="button" id="tradeFocusChart">View chart ↑</button></section><section class="trade-box"><h3>◉ Market sentiment</h3><div id="tradeGauge" class="trade-gauge" role="meter" aria-label="Crypto Fear and Greed Index" aria-valuemin="0" aria-valuemax="100"><span id="tradeGaugeValue">—</span></div><div id="tradeSentiment" class="trade-muted">Fear &amp; Greed: waiting for data</div><a class="trade-small-link" href="https://alternative.me/crypto/fear-and-greed-index/" target="_blank" rel="noopener noreferrer">Source: Alternative.me ↗</a></section><section id="tradeNews" class="trade-box"><h3>▤ Market news</h3><span class="trade-status-chip">Feed not connected</span><p class="trade-muted">No verified news headlines are loaded here.</p><a href="https://www.binance.com/en/square/news/all" target="_blank" rel="noopener noreferrer">Open Binance News ↗</a></section></div>
+<section id="tradeResearch" class="trade-box trade-research" aria-label="Paper research lab">
+<div class="trade-card-head"><h3>◈ Hoshi research lab</h3><span class="trade-status-chip">Spot long · paper only</span></div>
+<p>BTC / ETH · closed candles only. Historical tests are experiments, not forward demo trades.</p>
+<details id="tradeResearchSettings"><summary>Simulation settings</summary><div class="trade-research-settings">
+<label>Strategy<select id="tradeStrategy"><option value="trend_pullback">Trend pullback</option><option value="breakout_retest">Breakout + retest</option></select></label>
+<label>Virtual equity (USDT)<input id="paper_equity" type="number" min="10" max="100000" step="any" value="1000"></label>
+<label>Risk per trade (%)<input id="paper_risk_pct" type="number" min="0.1" max="1" step="0.1" value="0.5"></label>
+<label>Daily gross loss cap (USDT)<input id="paper_daily_loss_limit" type="number" min="0.1" max="1000" step="any" value="10"></label>
+<label>Fee per side (bps)<input id="paper_fee_bps" type="number" min="1" max="100" step="any" value="10"></label>
+<label>Slippage per side (bps)<input id="paper_slippage_bps" type="number" min="1" max="100" step="any" value="5"></label>
+</div><p class="trade-muted">10 bps = 0.1%. Defaults are simulation assumptions, not your account fees. No leverage.</p></details>
+<div class="trade-research-actions"><button type="button" id="tradeResearchRun">Research BTC / ETH</button><button type="button" id="tradeBacktestRun">Test strategy</button><button type="button" id="tradeResearchExport" disabled>Export JSON</button></div>
+<p id="tradeResearchStatus" role="status" aria-live="polite"></p><div id="tradeResearchOutput" aria-live="polite"></div>
+<label class="trade-consent"><input id="tradeJournalConsent" type="checkbox"> Save last 10 simulation summaries on this device</label><div id="tradeJournal"></div><button type="button" id="tradeJournalClear">Clear saved summaries</button>
+</section>
 <div class="trade-bottom-grid"><section id="tradeExecution" class="trade-box"><h3>▣ Orders &amp; positions</h3><span class="trade-status-chip">Account not connected</span><p class="trade-muted">No real or demo orders are placed. Positions, profit, leverage and balances are unavailable.</p><button type="button" disabled>Order placement unavailable</button></section><section id="tradeWatchlist" class="trade-box"><div class="trade-card-head"><h3>☆ Watchlist</h3><button type="button" id="tradeWatchToggle">+ Add pair</button></div><div id="tradeWatchRows"></div><p class="trade-muted">Saved on this device. Select a pair to fetch its current spot data.</p></section></div>
 <footer class="trade-footer"><p id="tradeStatus" role="status" aria-live="polite">Open this tab to fetch public market information.</p><span>Keyless public data · Refresh for latest values · provider/network availability applies</span></footer>
 </div></div></div><div data-panel="influencer" hidden><p>AI Influencer tools are not connected yet.</p></div><div data-panel="outfit" hidden><p class="small">Choose a look. It applies to the main screen and is saved on this device.</p><div id="outfitGrid" class="outfit-grid"></div><p id="outfitFeedback" class="small" role="status"></p></div><div data-panel="settings" hidden><button type="button" id="nativeRemindersBtn" hidden>View / cancel reminders</button></div></section></main>
@@ -209,6 +224,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 <script src="./hoshi-memory-store.js"></script>
 <script src="./hoshi-product-ads.js"></script>
 <script src="./hoshi-task-router.js"></script>
+<script src="./hoshi-trading-research.js"></script>
 <script src="./hoshi-speech-input.js"></script>
 <script>
 (()=> {
@@ -309,6 +325,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  $('tradeFocusChart').onclick=()=>$('tradeOverview').scrollIntoView({block:'start'});
  $('tradeAsk').onclick=()=>{const text=$('tradePair').value+' '+$('tradeInterval').value+' spot market. Price: '+$('tradePrice').textContent+'. '+$('tradeIndicators').textContent+'. In indicators ka matlab samjhao; yeh sirf public market information hai.';showTab('chat');input.value=text;input.focus()};
  renderTradeWatch();
+ const tradingLab=window.HoshiTradingResearch.mount({backend:API_BASE});
 
  let voiceListenStartedAt=0,voiceTimes={listen:null,ai:null,audio:null};
  const voiceClock=()=>performance.now();
@@ -635,6 +652,12 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  // Unsupported project/screen requests must never be presented as executed.
  // Keep normal chat and the existing real Flora ad generator unchanged.
  const routed=window.HoshiTaskRouter&&window.HoshiTaskRouter.classify(text);
+ if(routed&&routed.intent==='trading_research'){
+   const pair=/\b(?:eth|ethereum)\b/i.test(text)?'ETHUSDT':'BTCUSDT';
+   $('tradePair').value=pair;tradingLab.reset();showTab('trading');
+   $('tradeResearch').scrollIntoView({block:'start'});tradingLab.run('research');
+   setStatus('SPOT RESEARCH · NO ORDERS');return;
+ }
  if(routed&&!routed.ready&&routed.reason){
    rememberTurn('user',text);showTab('chat');
    reply.textContent=routed.reason;

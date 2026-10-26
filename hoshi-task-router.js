@@ -22,6 +22,7 @@
      reason:"Anime project samajh aa gaya, lekin rendered episodes banane wala backend worker abhi available nahi. Main isey complete nahi keh sakti."});
    if(GAME.test(s)&&CREATE.test(s))return Object.freeze({mode:"backend_project",intent:"build_game",ready:false,
      reason:"Game project samajh aa gaya, lekin playable game build karne wala worker abhi available nahi. Main fake download nahi dungi."});
+   if(/\b(?:btc|bitcoin|eth|ethereum)\b/i.test(s)&&/\b(?:research|analy[sz]\w*)\b/i.test(s)&&!/\b(?:mark(?!et)\w*|lagao|lagado|screen|futures|short|orders?)\b/i.test(s))return Object.freeze({mode:"backend_tool",intent:"trading_research",ready:true});
    if(TRADING.test(s)&&TECHNICAL.test(s))return Object.freeze({mode:"screen_agent",intent:"chart_analysis",ready:false,
      reason:"Chart analysis request samajh aa gayi. Live chart par auto-marking verified nahi; Trading panel mein available market data dekh sakte ho."});
    if(SCREEN.test(s)&&MOBILE_ACTION.test(s))return Object.freeze({mode:"screen_agent",intent:"device_action",ready:false,

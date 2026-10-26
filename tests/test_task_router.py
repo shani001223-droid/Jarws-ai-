@@ -6,6 +6,13 @@ from cloud_backend import main
 
 
 class TaskRouterTests(unittest.TestCase):
+    def test_readonly_research_can_run_but_screen_marking_stays_unavailable(self):
+        for prompt in ("BTC research karo", "ETH market analyse kro"):
+            route = route_task(prompt)
+            self.assertTrue(route.ready)
+            self.assertEqual(route.executor, "trading_research")
+            self.assertFalse(route.needs_device_permission)
+
     def test_existing_product_ad_tool_routes_to_real_executor(self):
         for phrase in ("mere products k ads bana kar do", "Flora shampoo poster create karo"):
             with self.subTest(phrase=phrase):

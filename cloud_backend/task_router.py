@@ -50,6 +50,11 @@ def route_task(message: str) -> TaskRoute:
     if _GAME.search(normalized) and _CREATE.search(normalized):
         return TaskRoute("backend_project", "build_game", False, None, False,
                          "Game project worker is not yet implemented.")
+    if (re.search(r"\b(?:btc|bitcoin|eth|ethereum)\b", normalized, re.I)
+            and re.search(r"\b(?:research|analy[sz]\w*)\b", normalized, re.I)
+            and not re.search(r"\b(?:mark(?!et)\w*|lagao|lagado|screen|futures|short|orders?)\b", normalized, re.I)):
+        return TaskRoute("backend_tool", "trading_research", True, "trading_research", False,
+                         "Read-only BTC/ETH spot research; no chart-screen control or orders.")
     if _TRADING.search(normalized) and _TA.search(normalized):
         return TaskRoute("screen_agent", "chart_analysis", False, None, True,
                          "Current market APIs exist, but automatic chart marking is not verified.")

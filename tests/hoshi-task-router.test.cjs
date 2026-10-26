@@ -9,6 +9,13 @@ vm.runInNewContext(fs.readFileSync("hoshi-task-router.js","utf8"),context);
 const classify=context.HoshiTaskRouter.classify;
 const clean=result=>JSON.parse(JSON.stringify(result));
 
+test("read-only BTC/ETH research opens actual research tool only",()=>{
+ for(const prompt of ['BTC research karo','ETH market analyse kro']){
+  assert.equal(classify(prompt).intent,'trading_research');assert.equal(classify(prompt).ready,true);
+ }
+ assert.notEqual(classify('BTC futures analyse kro').intent,'trading_research');
+});
+
 test("normal conversation and explanations never get silently executed",()=>{
  for(const prompt of ["Hoshi tum kaisi ho?", "How to create a game?", "BTC chart kaise analyse karte hain?", ""]){
    assert.equal(classify(prompt).mode,"chat",prompt);

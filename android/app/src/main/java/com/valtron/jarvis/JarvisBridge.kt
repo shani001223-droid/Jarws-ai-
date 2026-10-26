@@ -101,6 +101,9 @@ class JarvisBridge(private val activity: MainActivity) {
      * is delivered asynchronously by MainActivity without leaking draft text.
      */
     @JavascriptInterface
+    fun cancelQueuedActions(): Boolean = activity.cancelQueuedActions()
+
+    @JavascriptInterface
     fun performLocalUiAction(action: String, payload: String, requestId: Int): Boolean {
         if (requestId !in 1..1_000_000_000 || action !in localUiActions || !isEnabled() ||
             JarvisAccessibilityService.instance == null) return false
@@ -108,11 +111,14 @@ class JarvisBridge(private val activity: MainActivity) {
             if (payload.length !in 1..240 || payload.isBlank() ||
                 payload.any { it.code < 32 || it.code == 127 }) return false
         } else if (payload.isNotEmpty()) return false
+        val epoch = activity.currentActionEpoch()
         return mainHandler.post {
-            if (isEnabled() && JarvisAccessibilityService.instance != null) {
-                activity.dispatchLocalUiAction(action, payload, requestId)
-            } else {
-                activity.reportLocalUiActionResult(requestId, false)
+            if (activity.isActionEpochCurrent(epoch)) {
+                if (isEnabled() && JarvisAccessibilityService.instance != null) {
+                    activity.dispatchLocalUiAction(action, payload, requestId)
+                } else {
+                    activity.reportLocalUiActionResult(requestId, false)
+                }
             }
         }
     }
@@ -126,9 +132,10 @@ class JarvisBridge(private val activity: MainActivity) {
         if (JarvisAccessibilityService.instance == null) return false
         // Returning true means only that the request was queued on the UI
         // thread, NOT that Android completed the gesture or took a screenshot.
+        val epoch = activity.currentActionEpoch()
         return mainHandler.post {
             val liveService = JarvisAccessibilityService.instance
-            if (isEnabled() && liveService != null) {
+            if (activity.isActionEpochCurrent(epoch) && isEnabled() && liveService != null) {
                 liveService.performBasicAction(action)
             }
         }

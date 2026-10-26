@@ -13,6 +13,7 @@ import android.webkit.JavascriptInterface
 class JarvisBridge(private val activity: MainActivity) {
     private val mainHandler = Handler(Looper.getMainLooper())
     private val allowedActions = setOf("back", "home", "swipe_up", "swipe_down", "screenshot")
+    private val localUiActions = setOf("tap_chat", "tap_settings", "type_draft", "scroll_up", "scroll_down")
 
     @JavascriptInterface
     fun speakNative(text: String, language: String, pitch: Float, rate: Float): Boolean {
@@ -85,6 +86,26 @@ class JarvisBridge(private val activity: MainActivity) {
             }
         }
         return true
+    }
+
+    /**
+     * Explicit, bounded controls for Hoshi's OWN WebView only.
+     * No arbitrary Android taps, keyboard injection, app switching or submission.
+     * Success means queued, never that the DOM operation was confirmed.
+     */
+    @JavascriptInterface
+    fun performLocalUiAction(action: String, payload: String): Boolean {
+        if (action !in localUiActions || !isEnabled() ||
+            JarvisAccessibilityService.instance == null) return false
+        if (action == "type_draft") {
+            if (payload.length !in 1..240 || payload.isBlank() ||
+                payload.any { it.code < 32 || it.code == 127 }) return false
+        } else if (payload.isNotEmpty()) return false
+        return mainHandler.post {
+            if (isEnabled() && JarvisAccessibilityService.instance != null) {
+                activity.dispatchLocalUiAction(action, payload)
+            }
+        }
     }
 
     @JavascriptInterface

@@ -139,5 +139,26 @@ class FreeLLMProviderTests(unittest.TestCase):
                 network.assert_not_called()
 
 
+    def test_gemini_service_overload_falls_back_to_zai(self):
+        with self.env(GEMINI_API_KEY="fake-g", ZAI_API_KEY="fake-z"):
+            http_error = HTTPError("https://generativelanguage.googleapis.com",
+                                   503, "busy", {}, BytesIO(b'{"error":{"message":"overloaded"}}'))
+            with patch.object(main, "urlopen", side_effect=http_error):
+                with patch.object(main, "ask_free_provider", return_value="ZAI recovered.") as backup:
+                    answer = main.assistant(main.AssistantRequest(message="Explain a solar eclipse"))
+        self.assertEqual(answer.mode, "zai")
+        backup.assert_called_once()
+
+    def test_groq_error_falls_back_to_optional_provider_once(self):
+        with self.env(GROQ_API_KEY="fake-g", ZAI_API_KEY="fake-z"):
+            with patch.object(main, "_groq_reply", side_effect=RuntimeError("service busy")) as groq:
+                with patch.object(main, "ask_free_provider", return_value="Fallback ok.") as backup:
+                    answer = main.assistant(main.AssistantRequest(message="Tell me about weather"))
+        self.assertEqual(answer.mode, "zai")
+        groq.assert_called_once()
+        backup.assert_called_once()
+
+
+
 if __name__ == "__main__":
     unittest.main()

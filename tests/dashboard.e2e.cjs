@@ -488,7 +488,10 @@ async function main() {
       };
     });
     await page.reload();
-    await page.locator('[data-tab="chat"]').click();
+    // OCR controls live in the Settings sheet; Chat does not expose this private tool.
+    await page.locator('[data-tab="settings"]').click();
+    assert.equal(await page.locator('#screenControlSection').isVisible(), true,
+      'Native-only screen controls must be visible in Settings');
     await page.locator('#screenOcrBtn').click();
     assert.equal(await page.evaluate(() => window.__localOcrPickers), 1);
     const messagesBeforeOcr = apiMessages.length;

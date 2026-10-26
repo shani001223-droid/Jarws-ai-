@@ -180,8 +180,8 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 <audio id="hoshiAudio" controls hidden preload="none" aria-label="Hoshi Urdu voice playback" style="width:100%;max-width:100%"></audio>
 <p class="small">Urdu uses the online Hoshi voice so the phone does not substitute a different speaker. Spoken replies are sent to Microsoft. Turn voice replies off to disable it. If automatic playback is blocked, tap Play above.</p>
 <details class="voice-fine-tune"><summary>Fine tune delivery</summary>
-<div class="voice-setting"><label for="pitchSlider">Softness / pitch</label><output id="pitchValue">1.12×</output><input id="pitchSlider" type="range" min="0.8" max="1.4" step="0.01" value="1.12" aria-label="Voice pitch"></div>
-<div class="voice-setting"><label for="rateSlider">Speaking speed</label><output id="rateValue">0.88×</output><input id="rateSlider" type="range" min="0.75" max="1.15" step="0.01" value="0.88" aria-label="Speaking speed"></div>
+<div class="voice-setting"><label for="pitchSlider">Softness / pitch</label><output id="pitchValue">1.04×</output><input id="pitchSlider" type="range" min="0.8" max="1.4" step="0.01" value="1.04" aria-label="Voice pitch"></div>
+<div class="voice-setting"><label for="rateSlider">Speaking speed</label><output id="rateValue">0.94×</output><input id="rateSlider" type="range" min="0.75" max="1.15" step="0.01" value="0.94" aria-label="Speaking speed"></div>
 <button type="button" id="resetVoiceBtn">Restore soft voice</button></details>
 <p class="small">Delivery styles tune your device’s speech voice. They do not add a new anime voice. Pakistani Urdu (ur-PK) is preferred when installed. Urdu mode never substitutes Hindi or English voices. Voice quality and Urdu pronunciation depend on the installed speech engine.</p>
 </div></div>
@@ -386,7 +386,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  let fastPhoneVoice=true;
  try{fastPhoneVoice=localStorage.getItem('hoshiFastPhoneVoice')!=='false'}catch(_){}
  $('fastVoiceToggle').onclick=()=>{fastPhoneVoice=!fastPhoneVoice;try{localStorage.setItem('hoshiFastPhoneVoice',String(fastPhoneVoice))}catch(_){}refreshVoices()};
- const voiceStyles={soft:[1.12,0.88],warm:[1.04,0.85],playful:[1.18,0.96]};
+ const voiceStyles={soft:[1.04,0.94],warm:[1.01,0.90],playful:[1.09,1.02]};
  function refreshVoices(){const status=$('voiceEngineStatus');$('fastVoiceToggle').textContent='⚡ Fast phone voice: '+(fastPhoneVoice?'ON':'OFF');$('fastVoiceToggle').setAttribute('aria-pressed',String(fastPhoneVoice));if(window.JarvisBridge&&typeof window.JarvisBridge.supportsUrduSpeech==='function'&&window.JarvisBridge.supportsUrduSpeech()){status.textContent=fastPhoneVoice?'Fast device Urdu voice ready · no online audio fetch':'Natural online Urdu voice selected';return}const voice=chooseVoice();status.textContent=voice?'Urdu / selected-language speech ready':'Online Urdu fallback available · internet required'}
  function chooseVoice(){if(!('speechSynthesis'in window))return null;const voices=window.speechSynthesis.getVoices();const lang=(commandLanguage||'ur-PK').toLowerCase(),base=lang.split('-')[0];const female=/female|uzma|zira|samantha|aria|jenny|sara|siri|victoria|eva|sonia|karen/i;const locale=v=>String(v.lang||'').toLowerCase();const exact=voices.filter(v=>locale(v)===lang),same=voices.filter(v=>locale(v).split('-')[0]===base);return exact.find(v=>female.test(v.name))||exact[0]||same.find(v=>female.test(v.name))||same[0]||(base==='ur'?null:voices.find(v=>female.test(v.name))||voices[0])||null}
  function saveVoiceSettings(){const pitch=Number($('pitchSlider').value),rate=Number($('rateSlider').value);$('pitchValue').textContent=pitch.toFixed(2)+'×';$('rateValue').textContent=rate.toFixed(2)+'×';try{localStorage.setItem('jarvisVoicePitch',String(pitch));localStorage.setItem('jarvisVoiceRate',String(rate));localStorage.removeItem('jarvisVoiceKey');if(!localStorage.getItem('hoshiVoiceStyle'))localStorage.setItem('hoshiVoiceStyle','soft')}catch(e){}}
@@ -492,8 +492,8 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
    if(urduMode&&(!/[\u0600-\u06ff]/.test(spokenMessage)||/[\u0900-\u097f]/.test(spokenMessage))){setStatus('URDU SPEECH TEXT UNAVAILABLE · REPLY SHOWN IN CHAT');return}
 
    if(recognition&&listening){listening=false;try{recognition.abort()}catch(e){}recognition=null;}
-   const basePitch=Number($('pitchSlider').value)||1.12;
-   const baseRate=Number($('rateSlider').value)||0.92;
+   const basePitch=Number($('pitchSlider').value)||1.04;
+   const baseRate=Number($('rateSlider').value)||0.94;
    const voiceMood={happy:[0.05,0.03],excited:[0.08,0.06],playful:[0.06,0.05],affectionate:[0.04,-0.03],shy:[0.06,-0.05],sad:[-0.08,-0.08],concerned:[-0.05,-0.06],annoyed:[-0.04,0.02],thinking:[-0.02,-0.03],caring:[0,0]}[currentEmotion]||[0,0];
    const pitch=Math.max(0.8,Math.min(1.6,basePitch+voiceMood[0]));
    const rate=Math.max(0.75,Math.min(1.15,baseRate+voiceMood[1]));

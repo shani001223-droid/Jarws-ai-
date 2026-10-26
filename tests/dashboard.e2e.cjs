@@ -128,6 +128,20 @@ async function main() {
         }) });
         return;
       }
+      if (endpoint === "/api/agent/execute") {
+        const requestBody=request.postDataJSON();
+        assert.equal(requestBody.task,"create_product_ads");
+        assert.match(requestBody.message,/ads bana/i);
+        await route.fulfill({status:200,headers,body:JSON.stringify({
+          ok:true,completed:true,task:"create_product_ads",
+          filename:"Flora_Product_Ads.zip",
+          zip_base64:Buffer.from("PK\\x03\\x04MOCK").toString("base64"),
+          preview_base64:null,
+          products:[{product:"24K GOLD FACIAL KIT",price:"RS. 3,500",
+            caption:"Flora 24K Gold Facial Kit, six products at Rs. 3,500."}]
+        })});
+        return;
+      }
       if (endpoint !== "/api/assistant") {
         await route.fulfill({ status: 404, headers, body: JSON.stringify({ detail: "Unknown test route" }) });
         return;
@@ -178,6 +192,21 @@ async function main() {
     await page.waitForFunction(()=>document.querySelector('#reply').textContent.includes('I can help'));
     assert.equal(apiMessages.at(-1).locale,'ur-PK');
     assert.equal(apiMessages.at(-1).fast,true,'Simple text questions use fast one-shot Groq path');
+    // The voice/text ad intent executes an actual backend action, not a model response.
+    await page.evaluate(()=>{
+      window.__adSaved=[];
+      window.JarvisBridge={
+        saveAdZip:(payload,name)=>{window.__adSaved.push({size:payload.length,name});return true;}
+      };
+    });
+    const beforeAdApi=apiMessages.length;
+    await page.locator('#commandInput').fill('Mere products ke ads bana kar do');
+    await page.locator('#commandForm button').click();
+    await page.locator('#adStudioResult button').waitFor({state:'visible'});
+    assert.match(await page.locator('#adStudioResult').innerText(),/24K GOLD FACIAL KIT/);
+    await page.locator('#adStudioResult button').click();
+    assert.deepEqual(await page.evaluate(()=>window.__adSaved.map(x=>x.name)),['Flora_Product_Ads.zip']);
+    assert.equal(apiMessages.length,beforeAdApi,'Ads must call task API, not waste a chat-model request');
     // No cloud model should be called for concrete Android actions or writing drafts.
     await page.evaluate(() => {
       window.__phoneActions = [];

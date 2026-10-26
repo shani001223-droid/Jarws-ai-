@@ -105,6 +105,39 @@ class AssistantApiTests(unittest.TestCase):
         self.assertEqual(result.mode, "openrouter")
         self.assertEqual(mocked.call_count, 2)
 
+    def test_fast_urdu_groq_uses_short_budget(self):
+        raw = json.dumps({"reply": "Ji, main yahan hoon.", "speech_text": "جی، میں یہاں ہوں۔"})
+        payload = {"choices": [{"message": {"content": raw}}]}
+        with patch.dict(os.environ, {"GROQ_API_KEY": "test", "OPENROUTER_API_KEY": "", "GEMINI_API_KEY": ""}):
+            with patch("cloud_backend.main.urlopen", return_value=FakeResponse(payload)) as requested:
+                result = main.assistant(main.AssistantRequest(message="Kaisi ho?", locale="ur-PK", fast=True))
+        self.assertEqual(result.mode, "groq")
+        body = json.loads(requested.call_args.args[0].data)
+        self.assertEqual(body["max_tokens"], 240)
+        self.assertEqual(body["temperature"], 0.4)
+        self.assertEqual(requested.call_args.kwargs["timeout"], 9)
+
+    def test_fast_groq_failure_is_not_retried_without_a_backup(self):
+        error = HTTPError("https://api.groq.com/openai/v1/chat/completions", 429, "limited", {}, None)
+        with patch.dict(os.environ, {"GROQ_API_KEY": "test", "OPENROUTER_API_KEY": "", "GEMINI_API_KEY": ""}):
+            with patch("cloud_backend.main.urlopen", side_effect=error) as mocked:
+                with self.assertRaises(main.HTTPException) as result:
+                    main.assistant(main.AssistantRequest(message="Salam", locale="ur-PK", fast=True))
+        self.assertEqual(result.exception.status_code, 502)
+        self.assertEqual(mocked.call_count, 1)
+
+    def test_fast_request_uses_shorter_context_than_full_writing(self):
+        sample = ["user: " + "x"*300, "assistant: " + "y"*300,
+                  "user: " + "z"*300, "assistant: " + "q"*300]
+        answer = json.dumps({"reply":"Main yahan hoon.", "speech_text":"میں یہاں ہوں۔"})
+        with patch.dict(os.environ, {"GROQ_API_KEY":"test", "OPENROUTER_API_KEY":"", "GEMINI_API_KEY":""}):
+            with patch("cloud_backend.main.urlopen",return_value=FakeResponse(
+                 {"choices":[{"message":{"content":answer}}]})) as mocked:
+                main.assistant(main.AssistantRequest(message="Salam",locale="ur-PK",fast=True,context=sample))
+        body = json.loads(mocked.call_args.args[0].data)
+        self.assertNotIn("x"*100,body["messages"][1]["content"])
+        self.assertIn("q"*100,body["messages"][1]["content"])
+
     def test_openrouter_rejects_paid_model_before_network(self):
         with patch.dict(os.environ, {"OPENROUTER_API_KEY": "test"}):
             with patch.object(main, "OPENROUTER_MODEL", "paid/model"):

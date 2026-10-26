@@ -32,6 +32,7 @@ class PrivateJobApiTests(unittest.TestCase):
                       for method in getattr(route, "methods", set())}
         self.assertIn(("/api/agent/jobs", "POST"), registered)
         self.assertIn(("/api/agent/jobs/{job_id}", "GET"), registered)
+        self.assertIn(("/api/agent/jobs/{job_id}/schedule", "POST"), registered)
         self.assertNotIn(("/api/agent/jobs/{job_id}", "PATCH"), registered)
         self.assertNotIn(("/api/agent/jobs/{job_id}", "DELETE"), registered)
 
@@ -54,6 +55,42 @@ class PrivateJobApiTests(unittest.TestCase):
         self.assertFalse(fetched["executed"])
         self.assertNotIn(self.token, str(response))
         self.assertNotIn("client-1", str(fetched))
+
+    def test_private_schedule_is_bounded_and_does_not_execute(self):
+        response = main.create_job_record(
+            main.JobRecordRequest(kind="build_game"), self.auth
+        )
+        job_id = response["job"]["id"]
+        scheduled = main.schedule_job_record(
+            job_id, main.JobScheduleRequest(delay_seconds=10), self.auth
+        )
+        self.assertEqual(scheduled["job"]["status"], "queued")
+        self.assertEqual(scheduled["queue"]["state"], "pending")
+        self.assertFalse(scheduled["executed"])
+        self.assertFalse(scheduled["worker_available"])
+        again = main.schedule_job_record(
+            job_id, main.JobScheduleRequest(delay_seconds=0), self.auth
+        )
+        self.assertEqual(again["queue"], scheduled["queue"])
+        self.assertEqual(main.get_job_record(job_id, self.auth)["job"]["status"], "queued")
+        self.assertNotIn(self.token, str(scheduled))
+        with self.assertRaises(main.HTTPException) as bad:
+            main.schedule_job_record("hjob_bad", main.JobScheduleRequest(), self.auth)
+        self.assertEqual(bad.exception.status_code, 409)
+
+    def test_private_schedule_requires_auth_and_config(self):
+        job_id = main.create_job_record(
+            main.JobRecordRequest(kind="render_anime"), self.auth
+        )["job"]["id"]
+        for bearer in ("", "Bearer wrong", "Basic " + self.token):
+            with self.assertRaises(main.HTTPException) as error:
+                main.schedule_job_record(job_id, main.JobScheduleRequest(), FakeRequest(bearer))
+            self.assertEqual(error.exception.status_code, 401)
+        self.assertEqual(main.get_job_record(job_id, self.auth)["job"]["status"], "planned")
+        with patch.dict(os.environ, {"HOSHI_JOB_API_TOKEN": ""}):
+            with self.assertRaises(main.HTTPException) as error:
+                main.schedule_job_record(job_id, main.JobScheduleRequest(), self.auth)
+            self.assertEqual(error.exception.status_code, 503)
 
     def test_auth_required_for_both_operations(self):
         for req in (FakeRequest(), FakeRequest("Bearer wrong"), FakeRequest("Basic " + self.token)):

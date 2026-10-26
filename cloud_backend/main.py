@@ -39,6 +39,7 @@ try:  # Handles either cloud_backend package import or direct uvicorn main:app.
     from .urdu_tts_text import normalize_urdu_speech
     from .persona_policy import personality_guardrails
     from .job_records import JobRecordStore, JobCapacityError
+    from .job_queue import ScheduledJobQueue, QueueCapacityError
 except ImportError:
     from openjarvis_bridge import ask_openjarvis, endpoint as openjarvis_endpoint, wants_agent, OpenJarvisUnavailable
     from agent_tools import try_calculate
@@ -51,6 +52,7 @@ except ImportError:
     from urdu_tts_text import normalize_urdu_speech
     from persona_policy import personality_guardrails
     from job_records import JobRecordStore, JobCapacityError
+    from job_queue import ScheduledJobQueue, QueueCapacityError
 
 app = FastAPI(title="HOSHI AI Cloud API", version="0.9.1")
 
@@ -173,6 +175,32 @@ def get_job_record(job_id: str, request: FastAPIRequest):
         raise HTTPException(status_code=404, detail="Job not found.")
     return {"job": job, "executed": job["status"] == "succeeded",
             "worker_available": False}
+
+
+class JobScheduleRequest(BaseModel):
+    """Private due-time metadata only; no autonomous executor is started."""
+    delay_seconds: int = Field(default=0, ge=0, le=86_400)
+
+
+@app.post("/api/agent/jobs/{job_id}/schedule", status_code=202)
+def schedule_job_record(job_id: str, payload: JobScheduleRequest,
+                        request: FastAPIRequest):
+    """Authenticated scheduling. No user payload, secret or task executor."""
+    store = _private_job_store(request)
+    try:
+        queue = ScheduledJobQueue(store)
+        scheduled = queue.enqueue(job_id, payload.delay_seconds)
+        job = store.get(job_id)
+    except (ValueError, JobStateError):
+        raise HTTPException(status_code=409, detail="Job cannot be scheduled.") from None
+    except QueueCapacityError:
+        raise HTTPException(status_code=429, detail="Private job queue is full.") from None
+    except Exception as exc:
+        _safe_log_failure("jobs.schedule", exc)
+        raise HTTPException(status_code=503, detail="Private job queue unavailable.") from None
+    return {"job": job, "queue": scheduled, "executed": False,
+            "worker_available": False,
+            "note": "Scheduled metadata only; no background executor is configured."}
 
 
 

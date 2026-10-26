@@ -200,7 +200,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 <button type="button" id="resetVoiceBtn">Restore soft voice</button></details>
 <p class="small">Delivery styles tune your device’s speech voice. They do not add a new anime voice. Pakistani Urdu (ur-PK) is preferred when installed. Urdu mode never substitutes Hindi or English voices. Voice quality and Urdu pronunciation depend on the installed speech engine.</p>
 </div></div>
-<div class="section" id="screenControlSection" style="display:none"><h2>BASIC PHONE CONTROLS</h2><p class="small">Optional Android Accessibility permission for Back/Home/Swipe and system screenshot. The basic control service does not inspect screen text or upload screenshots. The separate OCR reader works only on an image you explicitly choose. Screenshot requires Android 9 or newer.</p><div class="quick"><button type="button" id="screenPermissionBtn">Enable permission</button><button type="button" data-screen-action="screenshot">Take screenshot</button><button type="button" data-screen-action="back">Back</button><button type="button" data-screen-action="home">Home</button><button type="button" data-screen-action="swipe_up">Swipe up</button><button type="button" data-screen-action="swipe_down">Swipe down</button></div><h3>READ SAVED SCREENSHOT · PRIVATE</h3><p class="small">Choose a screenshot. Roman Urdu/English text is read on this phone using offline OCR; Urdu script is not supported. Nothing is uploaded, saved or sent to AI automatically. Avoid sensitive screenshots.</p><div class="quick"><button type="button" id="screenOcrBtn">Choose screenshot to read</button><button type="button" id="screenOcrClearBtn">Clear reading</button></div><p id="screenOcrStatus" class="small" role="status" aria-live="polite">No screenshot selected.</p><pre id="screenOcrOutput" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:240px;overflow:auto" aria-label="On-device screenshot text"></pre></div>
+<div class="section" id="screenControlSection" style="display:none"><h2>BASIC PHONE CONTROLS</h2><p class="small">Optional Android Accessibility permission for Back/Home/Swipe and system screenshot. The basic control service does not inspect screen text or upload screenshots. The separate OCR reader works only on an image you explicitly choose. Screenshot requires Android 9 or newer.</p><div class="quick"><button type="button" id="screenPermissionBtn">Enable permission</button><button type="button" data-screen-action="screenshot">Take screenshot</button><button type="button" data-screen-action="back">Back</button><button type="button" data-screen-action="home">Home</button><button type="button" data-screen-action="swipe_up">Swipe up</button><button type="button" data-screen-action="swipe_down">Swipe down</button></div><h3>READ SAVED SCREENSHOT · PRIVATE</h3><p class="small">Choose a screenshot. Roman Urdu/English text is read on this phone using offline OCR; Urdu script is not supported. Nothing is uploaded, saved or sent to AI automatically. Avoid sensitive screenshots.</p><div class="quick"><button type="button" id="screenOcrBtn">Choose screenshot to read</button><button type="button" id="screenOcrClearBtn">Clear reading</button></div><p id="screenOcrStatus" class="small" role="status" aria-live="polite">No screenshot selected.</p><pre id="screenOcrOutput" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:240px;overflow:auto" aria-label="On-device screenshot text"></pre><h3>HOSHI-ONLY TAP / TYPE / SCROLL</h3><p class="small">Optional Android accessibility permission required. Actions stay inside this Hoshi screen: switch tabs, edit an unsent chat draft or scroll the Hoshi sheet. No other apps, auto-send, passwords or purchases. Queued does not mean verified.</p><div class="quick"><button type="button" id="localUiChatBtn">Tap Chat tab</button><button type="button" id="localUiSettingsBtn">Tap Settings tab</button><button type="button" id="localUiScrollUpBtn">Scroll up</button><button type="button" id="localUiScrollDownBtn">Scroll down</button></div><label class="small" for="localUiDraft">Draft for Hoshi chat (never auto-send)</label><input id="localUiDraft" type="text" maxlength="240" autocomplete="off" placeholder="Roman Urdu draft"><button type="button" id="localUiTypeBtn">Type draft in Chat</button><p id="localUiStatus" role="status" class="small">No local action requested.</p></div>
 <div class="section" id="settings"><div class="statusrow"><h2>WAKE WORD</h2><button class="toggle" id="wakeToggle">Hey HOSHI: OFF</button></div><p class="small">One tap listens for one command, then the microphone stays off during Hoshi's response. Hey Hoshi is optional within the same utterance; background listening is disabled.</p></div>
 <div class="section" id="personalityPanel"><h2>PERSONALITY MODE</h2><label for="personalitySelect" class="small">How should Hoshi sound?</label><select id="personalitySelect" aria-label="Hoshi personality mode"><option value="balanced">Balanced · caring and playful</option><option value="playful">Playful · more teasing and jokes</option><option value="affectionate">Affectionate · softer and warmer</option><option value="calm">Calm · gentle and thoughtful</option></select><p class="small">This changes reply style, not Hoshi’s identity or boundaries.</p></div>
 <div class="section" id="commandShortcuts"><h2>TRY A COMMAND</h2><p class="small">“Hey HOSHI” · “What time is it?” · “Open Google” · “Open YouTube” · “Help” · “Stop speaking”</p><div class="quick"><button data-cmd="what time is it">Time</button><button data-cmd="today's date">Date</button><button data-cmd="open Google">Google</button><button data-cmd="open YouTube">YouTube</button><button data-cmd="help">Help</button></div></div>
@@ -226,6 +226,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 <script src="./hoshi-task-router.js"></script>
 <script src="./hoshi-trading-research.js"></script>
 <script src="./hoshi-speech-input.js"></script>
+<script src="./hoshi-local-ui-actions.js"></script>
 <script>
 (()=> {
  const $=id=>document.getElementById(id), status=$('status'), reply=$('reply'), input=$('commandInput'), orb=$('orb');
@@ -852,6 +853,28 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
      $('screenOcrStatus').textContent='Reading cleared.';
    };
    $('screenPermissionBtn').onclick=()=>window.JarvisBridge.requestSettings();
+   // Native calls this ONLY for Hoshi's own bounded UI controls; never submits a command.
+   window.hoshiExecuteLocalUiAction=(action,payload)=>{
+     const engine=window.HoshiLocalUiActions;
+     return !!(engine&&engine.run(action,payload,document));
+   };
+   const requestLocalUiAction=(action,payload='')=>{
+     const bridge=window.JarvisBridge;
+     if(typeof bridge.performLocalUiAction!=='function'){
+       $('localUiStatus').textContent='Update Hoshi Android APK for local actions.';return;
+     }
+     if(!bridge.isEnabled()){
+       $('localUiStatus').textContent='Enable Android accessibility permission first.';return;
+     }
+     const queued=bridge.performLocalUiAction(action,payload);
+     $('localUiStatus').textContent=queued?'Action queued in Hoshi only; outcome not yet verified.':'Local action denied or screen control unavailable.';
+   };
+   $('localUiChatBtn').onclick=()=>requestLocalUiAction('tap_chat');
+   $('localUiSettingsBtn').onclick=()=>requestLocalUiAction('tap_settings');
+   $('localUiScrollUpBtn').onclick=()=>requestLocalUiAction('scroll_up');
+   $('localUiScrollDownBtn').onclick=()=>requestLocalUiAction('scroll_down');
+   $('localUiTypeBtn').onclick=()=>requestLocalUiAction('type_draft',$('localUiDraft').value);
+
    document.querySelectorAll('[data-screen-action]').forEach(button=>button.addEventListener('click',()=>{
      if(!window.JarvisBridge.isEnabled()){setStatus('ENABLE SCREEN CONTROLS IN ANDROID SETTINGS');return}
      const queued=window.JarvisBridge.performAction(button.dataset.screenAction);

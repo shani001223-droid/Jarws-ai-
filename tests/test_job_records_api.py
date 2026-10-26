@@ -72,7 +72,9 @@ class PrivateJobApiTests(unittest.TestCase):
             job_id, main.JobScheduleRequest(delay_seconds=0), self.auth
         )
         self.assertEqual(again["queue"], scheduled["queue"])
-        self.assertEqual(main.get_job_record(job_id, self.auth)["job"]["status"], "queued")
+        lookup = main.get_job_record(job_id, self.auth)
+        self.assertEqual(lookup["job"]["status"], "queued")
+        self.assertEqual(lookup["queue"], scheduled["queue"])
         self.assertNotIn(self.token, str(scheduled))
         with self.assertRaises(main.HTTPException) as bad:
             main.schedule_job_record("hjob_bad", main.JobScheduleRequest(), self.auth)

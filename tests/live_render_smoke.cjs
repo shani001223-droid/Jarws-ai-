@@ -37,6 +37,8 @@ async function main() {
     const context = await browser.newContext({
       viewport: { width: 1440, height: 1000 },
       reducedMotion: "reduce",
+      // Verify current network assets; SW install/controllerchange is a separate lifecycle.
+      serviceWorkers: "block",
     });
     await context.addInitScript(() => {
       try { localStorage.setItem("hoshiVoiceReplies", "false"); } catch (_) {}
@@ -80,7 +82,9 @@ async function main() {
     await page.locator('#nightSheet').evaluate(n=>n.scrollTop=0);
     // Let public fetches and image decoding settle before capturing this fixed viewport.
     await page.waitForFunction(()=>!document.querySelector('#tradeRefresh').disabled,{},{timeout:25000});
-    await page.locator('.trade-companion img').evaluate(async img=>{await img.decode()});
+    await page.locator('.trade-companion img').evaluate(img=>{img.loading='eager'});
+    await page.waitForFunction(()=>{const img=document.querySelector('.trade-companion img');return img.complete&&img.naturalWidth>0},{},{timeout:20000});
+    assert.equal(await page.locator('#tradeDashboard').isVisible(),true);
     console.log('Live trading source status:',await page.locator('#tradeStatus').innerText());
     assert.deepEqual(badResponses, [], "The live dashboard should not return broken same-origin assets");
     assert.deepEqual(pageErrors, [], "The live dashboard should not throw uncaught browser errors");

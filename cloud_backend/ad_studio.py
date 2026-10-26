@@ -101,7 +101,7 @@ def draw_creative(product: dict, width=1080, height=1350) -> bytes:
     dr.text((width-margin, 120), "EST. 2026", font=_font(24), fill=sub, anchor="ra")
 
     # Abstract gold rings are graphic decoration, NOT a depiction of the kit.
-    cy = 550 if height==1350 else 730
+    cy = 480 if height==1350 else 730
     cx = width//2
     for radius in (235, 205, 166):
         dr.ellipse((cx-radius, cy-radius, cx+radius, cy+radius), outline=gold, width=3)
@@ -114,7 +114,7 @@ def draw_creative(product: dict, width=1080, height=1350) -> bytes:
     dr.text((cx, cy-31), "FLORA", font=_font(52, True), fill=accent, anchor="mm")
     dr.text((cx, cy+31), "P R E M I U M", font=_font(19), fill=sub, anchor="mm")
 
-    name_top = 826 if height==1350 else 1050
+    name_top = 753 if height==1350 else 1050
     dr.text((cx,name_top),product["name"],
             font=_title_fit(dr,product["name"],width-2*margin,91),
             fill=accent,anchor="mm")
@@ -128,7 +128,7 @@ def draw_creative(product: dict, width=1080, height=1350) -> bytes:
     features_y = name_top+321
     for i,feature in enumerate(product["details"]):
         dr.text((cx,features_y + i*46),feature,font=_font(26),fill=sub,anchor="mm")
-    button_y = height-207
+    button_y = height-196
     dr.rounded_rectangle((margin+90,button_y,width-margin-90,button_y+83),
                          radius=33, fill=gold)
     button_text = "MESSAGE TO ORDER"

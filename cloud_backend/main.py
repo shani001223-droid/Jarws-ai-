@@ -24,11 +24,13 @@ try:  # Handles either cloud_backend package import or direct uvicorn main:app.
     from .agent_tools import try_calculate
     from .permission_policy import check_agent_action
     from .task_router import route_task
+    from .goal_spec import goal_to_deliverables
 except ImportError:
     from openjarvis_bridge import ask_openjarvis, endpoint as openjarvis_endpoint, wants_agent, OpenJarvisUnavailable
     from agent_tools import try_calculate
     from permission_policy import check_agent_action
     from task_router import route_task
+    from goal_spec import goal_to_deliverables
 
 app = FastAPI(title="HOSHI AI Cloud API", version="0.9.1")
 
@@ -76,6 +78,16 @@ class AgentRouteRequest(BaseModel):
 def agent_route(payload: AgentRouteRequest):
     """Classify the next workflow without falsely claiming it was executed."""
     return route_task(payload.message).as_payload()
+
+
+class GoalSpecRequest(BaseModel):
+    message: str = Field(min_length=1, max_length=4000)
+
+
+@app.post("/api/agent/spec")
+def agent_spec(payload: GoalSpecRequest):
+    """Return concrete acceptance deliverables; do not start a background job."""
+    return goal_to_deliverables(payload.message)
 
 
 class AgentTaskRequest(BaseModel):

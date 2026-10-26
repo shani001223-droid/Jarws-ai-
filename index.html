@@ -392,6 +392,15 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  function saveVoiceSettings(){const pitch=Number($('pitchSlider').value),rate=Number($('rateSlider').value);$('pitchValue').textContent=pitch.toFixed(2)+'×';$('rateValue').textContent=rate.toFixed(2)+'×';try{localStorage.setItem('jarvisVoicePitch',String(pitch));localStorage.setItem('jarvisVoiceRate',String(rate));localStorage.removeItem('jarvisVoiceKey');if(!localStorage.getItem('hoshiVoiceStyle'))localStorage.setItem('hoshiVoiceStyle','soft')}catch(e){}}
  function applyVoiceStyle(style,persist=true){const key=voiceStyles[style]?style:'soft';const [pitch,rate]=voiceStyles[key];$('pitchSlider').value=pitch;$('rateSlider').value=rate;document.querySelectorAll('[data-voice-style]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.voiceStyle===key)));if(persist){try{localStorage.setItem('hoshiVoiceStyle',key)}catch(e){}}saveVoiceSettings()}
  function stopSpeaking(){speechSequence++;currentSpeech=null;$('nightAudioRetry').hidden=true;if(speechAudioController){speechAudioController.abort();speechAudioController=null}const audio=$('hoshiAudio');audio.pause();audio.removeAttribute('src');audio.hidden=true;if(speechAudioUrl){URL.revokeObjectURL(speechAudioUrl);speechAudioUrl=null}if(window.JarvisBridge&&typeof window.JarvisBridge.stopNativeSpeech==='function')window.JarvisBridge.stopNativeSpeech();if('speechSynthesis'in window)window.speechSynthesis.cancel();setSpeaking(false)}
+ function interruptHoshi(){
+   // Explicit user interruption cancels TTS AND a pending model request.
+   // Otherwise the late cloud reply may start speaking again.
+   cloudRequestSequence++;
+   if(activeCloudController){try{activeCloudController.abort()}catch(_){}}
+   activeCloudController=null;
+   stopSpeaking();
+   orb.classList.remove('active');
+ }
  // Prefer first audible phrase over waiting for a long full MP3.
  // Future clauses are synthesized while the first clip plays.
  function splitUrduSpeech(text){
@@ -662,7 +671,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  }
  function startListening(){
   if(listening){stopListening();return}
-  stopSpeaking();lastVoiceError="";startVoiceTimer();
+  interruptHoshi();lastVoiceError="";startVoiceTimer();
   if(window.JarvisBridge&&typeof window.JarvisBridge.startNativeListening==='function'){
     nativeMicActive=true;listening=true;$('wakeBtn').textContent='🎙 Listening…';
     setStatus('STARTING ANDROID MICROPHONE…');
@@ -758,7 +767,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  renderHistory();renderRecentActivity();updateClock();setInterval(updateClock,15000);
  $('pitchSlider').addEventListener('input',saveVoiceSettings);$('rateSlider').addEventListener('input',saveVoiceSettings);
  document.querySelectorAll('[data-voice-style]').forEach(b=>b.addEventListener('click',()=>{stopSpeaking();applyVoiceStyle(b.dataset.voiceStyle)}));
- $('stopSpeakingBtn').onclick=()=>{stopSpeaking();setStatus('VOICE STOPPED')};
+ $('stopSpeakingBtn').onclick=()=>{interruptHoshi();setStatus('VOICE AND PENDING REPLY STOPPED')};
  $('previewVoiceBtn').onclick=()=>say(commandLanguage==='ur-PK'?'Suno… main Hoshi hoon. Aaram se batao, aaj tumhara din kaisa guzra?':'Hey… I am Hoshi. Take your time. Tell me about your day.','affectionate',true,commandLanguage==='ur-PK'?'سنو، میں ہوشی ہوں۔ آرام سے بتاؤ، آج تمہارا دن کیسا گزرا؟':null);
  $('resetVoiceBtn').onclick=()=>{stopSpeaking();applyVoiceStyle('soft');setStatus('SOFT VOICE RESTORED')};
  if('speechSynthesis'in window){refreshVoices();window.speechSynthesis.addEventListener('voiceschanged',refreshVoices)}

@@ -13,6 +13,12 @@ from urllib.request import Request, urlopen
 from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from threading import BoundedSemaphore, Lock
+from collections import deque
+try:
+    from .ad_studio import create_ad_pack
+except ImportError:
+    from ad_studio import create_ad_pack
 try:  # Handles either cloud_backend package import or direct uvicorn main:app.
     from .openjarvis_bridge import ask_openjarvis, endpoint as openjarvis_endpoint, wants_agent, OpenJarvisUnavailable
     from .agent_tools import try_calculate
@@ -49,6 +55,54 @@ class AssistantResponse(BaseModel):
     mode: str = "gemini"
     emotion: str = "caring"
     speech_text: Optional[str] = None
+
+
+class AgentTaskRequest(BaseModel):
+    task: str = Field(default="create_product_ads", max_length=48)
+    message: str = Field(min_length=1, max_length=600)
+
+# Keep zero-auth image generation safe for small free-tier services.
+_AD_SLOTS = BoundedSemaphore(2)
+_AD_LOCK = Lock()
+_AD_RECENT = {}
+_AD_WINDOW_SECONDS = 60
+_AD_LIMIT_PER_MIN = 3
+
+@app.get("/api/agent/capabilities")
+def agent_capabilities():
+    return {
+        "ok": True,
+        "tools": [{"id": "create_product_ads", "output": "PNG feed + PNG story + captions + video storyboard (ZIP)", "backend": True}],
+        "notes": "Only verified Flora products in current catalog; video storyboard is not a rendered video.",
+    }
+
+@app.post("/api/agent/execute")
+def agent_execute(payload: AgentTaskRequest, request: __import__("fastapi").Request):
+    """Execute an explicitly allowlisted backend task; never shell commands."""
+    if payload.task != "create_product_ads":
+        raise HTTPException(status_code=400, detail="Unknown agent task. Allowed: create_product_ads.")
+    # IP is only used as a short-lived throttle, never persisted or returned.
+    identifier = (request.client.host if request.client else "unknown")[:90]
+    now = time.monotonic()
+    with _AD_LOCK:
+        # Bounded memory: entries from previous windows are discarded.
+        for key in list(_AD_RECENT):
+            if not _AD_RECENT[key] or _AD_RECENT[key][-1] < now - _AD_WINDOW_SECONDS:
+                del _AD_RECENT[key]
+        seen = _AD_RECENT.setdefault(identifier, deque())
+        while seen and seen[0] < now - _AD_WINDOW_SECONDS:
+            seen.popleft()
+        if len(seen) >= _AD_LIMIT_PER_MIN:
+            raise HTTPException(status_code=429, detail="Ad studio free-tier limit: three requests per minute. Try again later.")
+        seen.append(now)
+    if not _AD_SLOTS.acquire(blocking=False):
+        raise HTTPException(status_code=429, detail="Ad generator busy; retry shortly.")
+    try:
+        return create_ad_pack(payload.message)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from None
+    finally:
+        _AD_SLOTS.release()
 
 
 class SpeechRequest(BaseModel):

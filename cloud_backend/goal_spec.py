@@ -5,7 +5,10 @@ raw prompts, starts jobs, purchases services, or fabricates generated files.
 """
 import re
 
-from .task_router import route_task
+try:
+    from .task_router import route_task
+except ImportError:  # uvicorn main:app launched from cloud_backend/ directly
+    from task_router import route_task
 
 
 _DELIVERABLES = {

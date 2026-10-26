@@ -2,7 +2,7 @@
 import asyncio
 import hashlib
 import time
-from collections import OrderedDict
+from collections import OrderedDict, deque
 import json
 import os
 import re
@@ -10,11 +10,10 @@ from typing import Optional
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-from fastapi import FastAPI, HTTPException, Response
+from fastapi import FastAPI, HTTPException, Response, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from threading import BoundedSemaphore, Lock
-from collections import deque
 try:
     from .ad_studio import create_ad_pack
 except ImportError:
@@ -77,7 +76,7 @@ def agent_capabilities():
     }
 
 @app.post("/api/agent/execute")
-def agent_execute(payload: AgentTaskRequest, request: __import__("fastapi").Request):
+def agent_execute(payload: AgentTaskRequest, request: Request):
     """Execute an explicitly allowlisted backend task; never shell commands."""
     if payload.task != "create_product_ads":
         raise HTTPException(status_code=400, detail="Unknown agent task. Allowed: create_product_ads.")
@@ -738,8 +737,6 @@ def assistant(payload: AssistantRequest):
 
 # --- Free public data: read-only, allowlisted providers, no API keys. ---
 # All public API paths are fixed here; callers cannot supply a destination URL.
-from threading import Lock
-from fastapi import Query
 
 PUBLIC_API_SOURCES = {
     "binance_spot": {"name": "Binance Spot Public Market Data", "documentation": "https://github.com/binance/binance-spot-api-docs/blob/master/faqs/market_data_only.md", "authentication": "none"},

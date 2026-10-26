@@ -3,6 +3,10 @@ package com.valtron.jarvis
 import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.net.Uri
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -252,6 +256,74 @@ class MainActivity : Activity() {
         runOnUiThread {
             pendingNativeLanguage = null
             stopNativeListeningInternal()
+        }
+        return true
+    }
+
+    /**
+     * User-requested shortcuts only. Never silently send a message, post online
+     * or interact with a trading account.
+     */
+    fun openKnownApp(action: String): Boolean {
+        if (action !in setOf("youtube", "whatsapp", "telegram", "browser", "settings", "tradingview")) return false
+        runOnUiThread {
+            if (isFinishing) return@runOnUiThread
+            try {
+                val intent = when (action) {
+                    "settings" -> Intent(Settings.ACTION_SETTINGS)
+                    "browser" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/"))
+                    "tradingview" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://www.tradingview.com/"))
+                    "youtube" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/"))
+                    "whatsapp" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/"))
+                    else -> Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/"))
+                }
+                if (action == "youtube") {
+                    intent.setPackage("com.google.android.youtube")
+                }
+                if (action == "whatsapp") {
+                    intent.setPackage("com.whatsapp")
+                }
+                if (action == "telegram") {
+                    intent.setPackage("org.telegram.messenger")
+                }
+                try { startActivity(intent) }
+                catch (_: Exception) {
+                    intent.setPackage(null)
+                    startActivity(intent)
+                }
+            } catch (_: Exception) {
+                Toast.makeText(this, "App could not be opened.", Toast.LENGTH_SHORT).show()
+            }
+        }
+        return true
+    }
+
+    fun copyUserText(text: String): Boolean {
+        val safe = text.trim().take(2000)
+        if (safe.isEmpty()) return false
+        runOnUiThread {
+            if (isFinishing) return@runOnUiThread
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            clipboard.setPrimaryClip(ClipData.newPlainText("Hoshi draft", safe))
+            Toast.makeText(this, "Text copied. Paste it where you want.", Toast.LENGTH_SHORT).show()
+        }
+        return true
+    }
+
+    fun shareUserDraft(text: String): Boolean {
+        val safe = text.trim().take(2000)
+        if (safe.isEmpty()) return false
+        runOnUiThread {
+            if (isFinishing) return@runOnUiThread
+            try {
+                val share = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_TEXT, safe)
+                }
+                startActivity(Intent.createChooser(share, "Share Hoshi draft"))
+            } catch (_: Exception) {
+                Toast.makeText(this, "No app available for sharing.", Toast.LENGTH_SHORT).show()
+            }
         }
         return true
     }

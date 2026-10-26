@@ -17,7 +17,8 @@ class SafeAppIntentContracts(unittest.TestCase):
         self.assertIn('action !in setOf("youtube", "whatsapp", "telegram", "browser", "settings", "tradingview")', ACTIVITY)
         self.assertIn('requestId !in 0..1_000_000_000', ACTIVITY)
         self.assertIn('page.scheme != "https" || page.host != "jarws-ai-1.onrender.com"', ACTIVITY)
-        self.assertIn("safeIntentHandler.post { dispatchKnownAppLaunch(action, requestId) }", ACTIVITY)
+        self.assertIn("safeIntentHandler.post {", ACTIVITY)
+        self.assertIn("if (isActionEpochCurrent(epoch)) dispatchKnownAppLaunch(action, requestId)", ACTIVITY)
         self.assertIn("dashboardWebView !== view || view.url != originalUrl", ACTIVITY)
 
     def test_no_arbitrary_url_or_send_or_accessibility_for_launch(self):

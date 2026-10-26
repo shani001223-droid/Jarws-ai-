@@ -27,6 +27,15 @@ class JarvisBridge(private val activity: MainActivity) {
     fun stopNativeListening(): Boolean = activity.stopNativeListening()
 
     @JavascriptInterface
+    fun openKnownApp(action: String): Boolean = activity.openKnownApp(action)
+
+    @JavascriptInterface
+    fun copyUserText(text: String): Boolean = activity.copyUserText(text)
+
+    @JavascriptInterface
+    fun shareUserDraft(text: String): Boolean = activity.shareUserDraft(text)
+
+    @JavascriptInterface
     fun showReminders() { activity.runOnUiThread { if (!activity.isFinishing) activity.showReminders() } }
 
     @JavascriptInterface

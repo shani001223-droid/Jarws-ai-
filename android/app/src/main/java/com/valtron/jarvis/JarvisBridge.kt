@@ -20,6 +20,9 @@ class JarvisBridge(private val activity: MainActivity) {
     }
 
     @JavascriptInterface
+    fun showReminders() { activity.runOnUiThread { if (!activity.isFinishing) activity.showReminders() } }
+
+    @JavascriptInterface
     fun supportsUrduSpeech(): Boolean = activity.supportsUrduSpeech()
 
     @JavascriptInterface

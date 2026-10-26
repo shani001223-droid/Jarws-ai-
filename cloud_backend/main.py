@@ -1,6 +1,7 @@
 """HOSHI cloud API with server-side Gemini and Groq fallback."""
 import asyncio
 import hashlib
+import hmac
 import time
 from collections import OrderedDict, deque
 import json
@@ -32,6 +33,7 @@ try:  # Handles either cloud_backend package import or direct uvicorn main:app.
     from .free_llm_providers import available_free_providers, ask_free_provider, OptionalProviderError
     from .urdu_tts_text import normalize_urdu_speech
     from .persona_policy import personality_guardrails
+    from .job_records import JobRecordStore, JobCapacityError
 except ImportError:
     from openjarvis_bridge import ask_openjarvis, endpoint as openjarvis_endpoint, wants_agent, OpenJarvisUnavailable
     from agent_tools import try_calculate
@@ -43,6 +45,7 @@ except ImportError:
     from free_llm_providers import available_free_providers, ask_free_provider, OptionalProviderError
     from urdu_tts_text import normalize_urdu_speech
     from persona_policy import personality_guardrails
+    from job_records import JobRecordStore, JobCapacityError
 
 app = FastAPI(title="HOSHI AI Cloud API", version="0.9.1")
 
@@ -106,6 +109,66 @@ def agent_spec(payload: GoalSpecRequest):
 def agent_milestones(payload: GoalSpecRequest):
     """Return a dependency-ordered verification plan, without running a worker."""
     return plan_milestones(payload.message)
+
+
+class JobRecordRequest(BaseModel):
+    """Metadata-only: a job record is not a queued or executed task."""
+    kind: str = Field(min_length=1, max_length=48)
+    request_key: Optional[str] = Field(default=None, min_length=1, max_length=80)
+
+
+def _private_job_store(request: FastAPIRequest) -> JobRecordStore:
+    """Fail closed unless the operator has configured BOTH auth and storage.
+
+    The token belongs in server-side environment variables only, never in
+    the APK/browser. SQLite on ephemeral hosting does not survive redeploy.
+    """
+    token = os.getenv("HOSHI_JOB_API_TOKEN", "")
+    location = os.getenv("HOSHI_JOB_DB_PATH", "").strip()
+    if len(token) < 32 or not location:
+        raise HTTPException(status_code=503, detail="Private job records are not configured.")
+    provided = request.headers.get("authorization", "")
+    if not hmac.compare_digest(provided, "Bearer " + token):
+        raise HTTPException(status_code=401, detail="Private job authentication required.",
+                            headers={"WWW-Authenticate": "Bearer"})
+    try:
+        return JobRecordStore(location)
+    except (OSError, ValueError) as exc:
+        _safe_log_failure("jobs.storage", exc)
+        raise HTTPException(status_code=503, detail="Private job storage unavailable.") from None
+
+
+@app.post("/api/agent/jobs", status_code=201)
+def create_job_record(payload: JobRecordRequest, request: FastAPIRequest):
+    """Create a planned metadata record only. No background worker is started."""
+    store = _private_job_store(request)
+    try:
+        job = store.create(payload.kind, payload.request_key)
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Invalid job metadata.") from None
+    except JobCapacityError:
+        raise HTTPException(status_code=429, detail="Job record capacity reached.") from None
+    except Exception as exc:
+        _safe_log_failure("jobs.create", exc)
+        raise HTTPException(status_code=503, detail="Job record storage unavailable.") from None
+    return {"job": job, "executed": False, "worker_available": False,
+            "note": "Metadata saved only; no task was queued or executed."}
+
+
+@app.get("/api/agent/jobs/{job_id}")
+def get_job_record(job_id: str, request: FastAPIRequest):
+    """Authenticated lookup; random IDs alone never grant read access."""
+    store = _private_job_store(request)
+    try:
+        job = store.get(job_id)
+    except Exception as exc:
+        _safe_log_failure("jobs.lookup", exc)
+        raise HTTPException(status_code=503, detail="Job record storage unavailable.") from None
+    if job is None:
+        raise HTTPException(status_code=404, detail="Job not found.")
+    return {"job": job, "executed": job["status"] == "succeeded",
+            "worker_available": False}
+
 
 
 class AgentTaskRequest(BaseModel):

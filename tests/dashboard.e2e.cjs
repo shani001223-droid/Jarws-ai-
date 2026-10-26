@@ -418,6 +418,40 @@ async function main() {
     assert.equal(heardRequests,2,'Wake mode rejects speech without an explicit wake word');
     assert.equal(await voicePage.evaluate(()=>document.querySelector('#status').textContent.includes('SAY HEY HOSHI')),true);
     await voiceContext.close();
+
+    // Task 17: consent is OFF by default; no previous chat is silently stored.
+    await page.locator('[data-tab="settings"]').click();
+    assert.match(await page.locator('#memoryToggle').innerText(), /OFF/);
+    assert.equal(await page.evaluate(()=>localStorage.getItem('hoshiConversationMemoryV1')),null);
+    await page.locator('#memoryToggle').click();
+    assert.match(await page.locator('#memoryToggle').innerText(), /ON/);
+    await page.locator('[data-tab="chat"]').click();
+    await page.locator('#commandInput').fill('Explain a calm evening');
+    await page.locator('#commandForm button').click();
+    await page.waitForFunction(()=>document.querySelector('#reply').textContent.includes('I can help'));
+    const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('hoshiConversationMemoryV1')));
+    assert.ok(saved.some(item=>item.role==='user'&&item.content==='Explain a calm evening'));
+    await page.evaluate(()=>localStorage.setItem('hoshiConversationMemoryV1',JSON.stringify([
+      {role:'user',content:'Explain a calm evening',at:1},
+      {role:'user',content:'my password is ABC',at:2}
+    ])));
+    const downloadPromise=page.waitForEvent('download');
+    await page.locator('#exportMemoryBtn').click();
+    const download=await downloadPromise;
+    assert.equal(download.suggestedFilename(),'hoshi-local-memory.json');
+    const exported=await download.createReadStream();
+    const chunks=[];for await(const chunk of exported)chunks.push(chunk);
+    const exportedData=JSON.parse(Buffer.concat(chunks).toString('utf8'));
+    assert.deepEqual(exportedData.turns.map(item=>item.content),['Explain a calm evening']);
+    await page.locator('#memoryToggle').click();
+    assert.match(await page.locator('#memoryToggle').innerText(), /OFF/);
+    assert.equal(await page.evaluate(()=>localStorage.getItem('hoshiConversationMemoryV1')),null);
+    await page.locator('[data-tab="chat"]').click();
+    await page.locator('#commandInput').fill('Explain the moon');
+    await page.locator('#commandForm button').click();
+    await page.waitForFunction(()=>document.querySelector('#reply').textContent.includes('I can help'));
+    assert.deepEqual(apiMessages.at(-1).context,[],'No prior chat sent after consent revoked');
+    assert.equal(await page.evaluate(()=>localStorage.getItem('hoshiConversationMemoryV1')),null);
     assert.deepEqual(pageErrors,[]);
     console.log('PASS — nightroom layout, chat, voice settings, tabs and narrow phone widths');
   } finally {

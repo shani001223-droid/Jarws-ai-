@@ -361,19 +361,45 @@ class MainActivity : Activity() {
      * This method must run on the Android UI thread (JarvisBridge posts it).
      * WebView page-origin is rechecked at execution time to avoid navigation races.
      */
-    fun dispatchLocalUiAction(action: String, payload: String) {
+    fun dispatchLocalUiAction(action: String, payload: String, requestId: Int) {
         if (isFinishing || isDestroyed) return
         val view = dashboardWebView ?: return
-        val page = Uri.parse(view.url ?: return)
+        val originalUrl = view.url ?: return
+        val page = Uri.parse(originalUrl)
         if (page.scheme != "https" || page.host != "jarws-ai-1.onrender.com") return
-        if (action !in setOf("tap_chat", "tap_settings", "type_draft", "scroll_up", "scroll_down")) return
+        if (requestId !in 1..1_000_000_000 ||
+            action !in setOf("tap_chat", "tap_settings", "type_draft", "scroll_up", "scroll_down")) return
         if (action == "type_draft") {
             if (payload.length !in 1..240 || payload.isBlank() ||
                 payload.any { it.code < 32 || it.code == 127 }) return
         } else if (payload.isNotEmpty()) return
         val script = "window.hoshiExecuteLocalUiAction && window.hoshiExecuteLocalUiAction(" +
             JSONObject.quote(action) + "," + JSONObject.quote(payload) + ")"
-        view.evaluateJavascript(script, null)
+        try {
+            view.evaluateJavascript(script) { raw ->
+                // The JavaScript result is a Boolean, not a screenshot or draft.
+                // Reject a stale callback after navigation or permission loss.
+                val verified = raw == "true" && dashboardWebView === view &&
+                    view.url == originalUrl && !isFinishing && !isDestroyed &&
+                    JarvisAccessibilityService.instance != null && JarvisBridge(this).isEnabled()
+                reportLocalUiActionResult(requestId, verified)
+            }
+        } catch (_: Exception) {
+            reportLocalUiActionResult(requestId, false)
+        }
+    }
+
+    /** A status-only callback to the trusted dashboard; never echoes user text. */
+    fun reportLocalUiActionResult(requestId: Int, verified: Boolean) {
+        if (requestId !in 1..1_000_000_000 || isFinishing || isDestroyed) return
+        val view = dashboardWebView ?: return
+        val page = Uri.parse(view.url ?: return)
+        if (page.scheme != "https" || page.host != "jarws-ai-1.onrender.com") return
+        val success = if (verified) "true" else "false"
+        view.evaluateJavascript(
+            "window.hoshiLocalUiActionResult && window.hoshiLocalUiActionResult($requestId,$success)",
+            null
+        )
     }
 
     /** User-selected screenshot only: no background capture or remote upload. */

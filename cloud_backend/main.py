@@ -6,6 +6,7 @@ from collections import OrderedDict, deque
 import json
 import os
 import re
+import logging
 from typing import Optional
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -26,6 +27,13 @@ except ImportError:
     from agent_tools import try_calculate
 
 app = FastAPI(title="HOSHI AI Cloud API", version="0.9.1")
+
+_LOGGER = logging.getLogger("hoshi.backend")
+
+
+def _safe_log_failure(component: str, error: Exception) -> None:
+    """Log a stable error category only. No user text, provider bodies or keys."""
+    _LOGGER.warning("hoshi_failure component=%s kind=%s", component, type(error).__name__)
 
 origins = [item.strip() for item in os.getenv("ALLOWED_ORIGINS", "*").split(",") if item.strip()]
 app.add_middleware(
@@ -99,7 +107,11 @@ def agent_execute(payload: AgentTaskRequest, request: FastAPIRequest):
     try:
         return create_ad_pack(payload.message)
     except ValueError as exc:
+        _safe_log_failure("ads.validation", exc)
         raise HTTPException(status_code=422, detail=str(exc)) from None
+    except Exception as exc:
+        _safe_log_failure("ads.render", exc)
+        raise HTTPException(status_code=502, detail="Ad Studio could not render files. Please retry later.") from None
     finally:
         _AD_SLOTS.release()
 
@@ -143,7 +155,8 @@ async def speech(payload: SpeechRequest):
         audio = await asyncio.wait_for(generate(), timeout=25)
     except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="Online Urdu voice timed out. Tap Hear Hoshi to retry.") from None
-    except Exception:
+    except Exception as exc:
+        _safe_log_failure("speech.tts", exc)
         raise HTTPException(status_code=502, detail="Online Urdu voice is unavailable. Try again or install an Urdu device voice.") from None
     speech_cache[cache_key] = (time.monotonic() + 120, audio)
     speech_cache.move_to_end(cache_key)
@@ -621,6 +634,7 @@ def assistant(payload: AssistantRequest):
                 return quick
             quick_groq_problem = "Groq did not return usable Urdu speech text."
         except (RuntimeError, HTTPException) as error:
+            _safe_log_failure("assistant.groq_fast", error)
             quick_groq_problem = str(error)
         # Other providers remain available, but never call the failed Groq route twice.
 
@@ -636,6 +650,7 @@ def assistant(payload: AssistantRequest):
                 raise RuntimeError("OpenRouter omitted valid Urdu pronunciation text.")
             return response
         except (RuntimeError, HTTPException) as error:
+            _safe_log_failure("assistant.openrouter", error)
             openrouter_problem = str(error.detail) if isinstance(error, HTTPException) else str(error)
             if not (gemini_key or groq_key):
                 raise HTTPException(status_code=502, detail=openrouter_problem) from None

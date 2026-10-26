@@ -629,14 +629,14 @@ async function main() {
     await page.evaluate(()=>{
       window.JarvisBridge.performLocalUiAction=(action,payload,id)=>{
         setTimeout(()=>window.hoshiLocalUiActionResult(id,
-          window.hoshiExecuteLocalUiAction(action,payload,id)),180);
+          window.hoshiExecuteLocalUiAction(action,payload,id)),650);
         return true;
       };
     });
     await page.locator('#localUiChatBtn').click();
     await page.locator('#actionEmergencyStopBtn').click();
     assert.match(await page.locator('#actionSafetyStatus').innerText(),/EMERGENCY STOP ACTIVE/);
-    await page.waitForTimeout(280);
+    await page.waitForTimeout(800);
     assert.equal(await page.locator('[data-tab="settings"]').getAttribute('aria-selected'),'true',
       'Late native callback must not perform a stopped action');
     await page.locator('#localUiChatBtn').click();

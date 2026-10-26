@@ -655,6 +655,10 @@ async function main() {
     });
     assert.match(await page.locator('#status').innerText(),/EMERGENCY STOP ACTIVE/);
     assert.equal(apiMessages.length,messagesBeforeLocalActions,'Halted assistant must not dispatch a new AI request');
+    await page.reload();
+    await page.locator('[data-tab="settings"]').click();
+    assert.match(await page.locator('#actionSafetyStatus').innerText(),/EMERGENCY STOP ACTIVE/,
+      'Emergency-stop latch must survive a page reload');
     await page.locator('#actionResumeBtn').click();
     await page.locator('#actionHistoryClearBtn').click();
     assert.equal(await page.locator('#actionHistory li').count(),0);

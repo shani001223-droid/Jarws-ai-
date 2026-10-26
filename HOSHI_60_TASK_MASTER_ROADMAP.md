@@ -9,8 +9,8 @@
 - [x] **01** Audit current code and capabilities. Acceptance: implementation or evidence, passing tests, limitations recorded.
 - [x] **02** Remove only demonstrably obsolete or duplicate code. Acceptance: implementation or evidence, passing tests, limitations recorded.
 - [x] **03** Harden error handling, logging and diagnostics. Acceptance: implementation or evidence, passing tests, limitations recorded.
-- [ ] **04** Introduce permission and action risk gates. Acceptance: implementation or evidence, passing tests, limitations recorded.
-- [ ] **05** Run regression tests after every implementation step. Acceptance: implementation or evidence, passing tests, limitations recorded.
+- [x] **04** Introduce permission and action risk gates. Acceptance: implementation or evidence, passing tests, limitations recorded.
+- [x] **05** Run regression tests after every implementation step. Acceptance: implementation or evidence, passing tests, limitations recorded.
 - [ ] **06** Verify deployment, rollback and APK builds. Acceptance: implementation or evidence, passing tests, limitations recorded.
 
 ## Phase 2 — Intelligent Brain
@@ -92,3 +92,5 @@
 ## Verified phase 1 progress (26 Oct 2026)
 - Task 02: duplicate imports cleaned; `urllib.request.Request` vs FastAPI request alias collision found by CI and fixed. Green full checks: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40299493480
 - Task 03: malformed AI provider responses no longer leak uncaught shape exceptions; defensive error handling and sanitized diagnostics for ad renderer and Urdu TTS; regression tests in `tests/test_provider_payload_resilience.py` and `tests/test_safe_errors.py`. Green full checks: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40299987975
+- Task 04: server-side explicit risk/permission policy rejects screen/account actions and disabled real trading/shell; test `tests/test_permission_policy.py`. Green full checks: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40300338206 (does NOT mean Android screen actions are implemented).
+- Task 05: regression gate exercised across Python unit tests, JavaScript syntax/parser tests and Playwright browser E2E, including negative/security cases. Same passing full run https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40300338206. Continue running tests for every future task.

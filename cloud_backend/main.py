@@ -17,8 +17,10 @@ from pydantic import BaseModel, Field
 from threading import BoundedSemaphore, Lock
 try:
     from .ad_studio import create_ad_pack
+    from .artifact_verifier import verify_ad_pack, ArtifactVerificationError
 except ImportError:
     from ad_studio import create_ad_pack
+    from artifact_verifier import verify_ad_pack, ArtifactVerificationError
 try:  # Handles either cloud_backend package import or direct uvicorn main:app.
     from .openjarvis_bridge import ask_openjarvis, endpoint as openjarvis_endpoint, wants_agent, OpenJarvisUnavailable
     from .agent_tools import try_calculate
@@ -144,7 +146,25 @@ def agent_execute(payload: AgentTaskRequest, request: FastAPIRequest):
     if not _AD_SLOTS.acquire(blocking=False):
         raise HTTPException(status_code=429, detail="Ad generator busy; retry shortly.")
     try:
-        return create_ad_pack(payload.message)
+        # Retry ONLY a pure, local, side-effect-free artifact generator after
+        # detecting corrupt/incomplete output. Two attempts maximum; do not
+        # blindly retry external posting, paid models, or device operations.
+        for attempt in range(1, 3):
+            result = create_ad_pack(payload.message)
+            try:
+                verified = verify_ad_pack(result, payload.message)
+            except ArtifactVerificationError as exc:
+                _safe_log_failure("ads.verify", exc)
+                if attempt == 2:
+                    raise HTTPException(
+                        status_code=502,
+                        detail="Ad Studio could not verify generated files after bounded repair.",
+                    ) from None
+                continue
+            result["verification"] = {**verified, "attempts": attempt}
+            return result
+    except HTTPException:
+        raise
     except ValueError as exc:
         _safe_log_failure("ads.validation", exc)
         raise HTTPException(status_code=422, detail=str(exc)) from None

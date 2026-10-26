@@ -568,3 +568,184 @@ def assistant(payload: AssistantRequest):
         status_code=503,
         detail="No AI key is configured in the running service. Add OPENROUTER_API_KEY, GEMINI_API_KEY or GROQ_API_KEY to the Render Environment Group, attach it to this service, and redeploy.",
     )
+
+
+# --- Free public data: read-only, allowlisted providers, no API keys. ---
+# All public API paths are fixed here; callers cannot supply a destination URL.
+from threading import Lock
+from fastapi import Query
+
+PUBLIC_API_SOURCES = {
+    "binance_spot": {"name": "Binance Spot Public Market Data", "documentation": "https://github.com/binance/binance-spot-api-docs/blob/master/faqs/market_data_only.md", "authentication": "none"},
+    "fear_greed": {"name": "Alternative.me Fear & Greed", "documentation": "https://alternative.me/crypto/fear-and-greed-index/", "authentication": "none", "attribution": "Alternative.me"},
+    "defillama": {"name": "DefiLlama Free API", "documentation": "https://api-docs.defillama.com/", "authentication": "none"},
+    "mempool": {"name": "mempool.space Bitcoin API", "documentation": "https://mempool.space/docs/api/rest", "authentication": "none"},
+    "open_meteo": {"name": "Open-Meteo Forecast API", "documentation": "https://open-meteo.com/en/docs", "authentication": "none", "usage": "free for non-commercial use; attribution required"},
+}
+_PUBLIC_CACHE = OrderedDict()
+_PUBLIC_LOCK = Lock()
+_ALLOWED_PAIRS = {"BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT"}
+_ALLOWED_INTERVALS = {"1m", "5m", "15m", "1h", "4h", "1d"}
+
+
+def _read_public_json(url: str) -> object:
+    """Bound external I/O. Never accept arbitrary user supplied URLs."""
+    request = Request(url, headers={"User-Agent": "HOSHI-public-data/1.0", "Accept": "application/json"})
+    with urlopen(request, timeout=7) as response:
+        raw = response.read(900001)
+    if len(raw) > 900000:
+        raise ValueError("External response is too large")
+    return json.loads(raw.decode("utf-8"))
+
+
+def _public_data(cache_key: str, url: str, ttl: int) -> tuple[object, int]:
+    now = time.time()
+    with _PUBLIC_LOCK:
+        value = _PUBLIC_CACHE.get(cache_key)
+        if value and value[0] > now:
+            _PUBLIC_CACHE.move_to_end(cache_key)
+            return value[1], value[2]
+    try:
+        payload = _read_public_json(url)
+    except (HTTPError, URLError, TimeoutError, OSError, ValueError, UnicodeError) as exc:
+        # Never reveal internal upstream details or request contents to public clients.
+        raise HTTPException(status_code=503, detail="Public data provider is unavailable. Try again later.") from exc
+    stamp = int(time.time())
+    with _PUBLIC_LOCK:
+        _PUBLIC_CACHE[cache_key] = (time.time() + ttl, payload, stamp)
+        _PUBLIC_CACHE.move_to_end(cache_key)
+        while len(_PUBLIC_CACHE) > 64:
+            _PUBLIC_CACHE.popitem(last=False)
+    return payload, stamp
+
+
+def _public_pair(symbol: str) -> str:
+    pair = str(symbol).upper().strip()
+    if pair not in _ALLOWED_PAIRS:
+        raise HTTPException(status_code=422, detail="Unsupported public market pair.")
+    return pair
+
+
+@app.get("/api/public/sources")
+def public_sources():
+    return {"key_required": False, "mode": "read-only", "sources": PUBLIC_API_SOURCES,
+            "note": "Keyless public endpoints have limits and may be blocked by some networks. No order execution."}
+
+
+@app.get("/api/public/market")
+def public_market(symbol: str = "BTCUSDT"):
+    pair = _public_pair(symbol)
+    data, fetched = _public_data("spot24:" + pair,
+        "https://data-api.binance.vision/api/v3/ticker/24hr?symbol=" + pair, 25)
+    try:
+        return {"symbol": pair, "market": "spot", "source": "Binance Spot", "fetched_at": fetched,
+                "price": float(data["lastPrice"]), "change_24h_pct": float(data["priceChangePercent"]),
+                "volume_quote_24h": float(data["quoteVolume"]), "currency": "USDT",
+                "note": "Public spot market reference only; not a futures execution quote."}
+    except (ValueError, KeyError, TypeError) as exc:
+        raise HTTPException(status_code=503, detail="Market provider returned invalid data.") from exc
+
+
+@app.get("/api/public/candles")
+def public_candles(symbol: str = "BTCUSDT", interval: str = "5m"):
+    pair = _public_pair(symbol)
+    if interval not in _ALLOWED_INTERVALS:
+        raise HTTPException(status_code=422, detail="Unsupported candle interval.")
+    data, fetched = _public_data("candles:" + pair + ":" + interval,
+        "https://data-api.binance.vision/api/v3/klines?symbol=" + pair
+        + "&interval=" + interval + "&limit=80", 45)
+    try:
+        if not isinstance(data, list) or not 15 <= len(data) <= 80:
+            raise ValueError("Insufficient or invalid candles")
+        candles = [{"time": int(row[0]), "open": float(row[1]), "high": float(row[2]),
+                    "low": float(row[3]), "close": float(row[4]), "volume": float(row[5])}
+                   for row in data]
+        if any(not (r["low"] <= r["open"] <= r["high"] and r["low"] <= r["close"] <= r["high"]) for r in candles):
+            raise ValueError("Bad OHLC")
+        closes = [r["close"] for r in candles]
+        sma20 = sum(closes[-20:]) / 20 if len(closes) >= 20 else None
+        ema9 = closes[0]
+        for close in closes[1:]:
+            ema9 += (close - ema9) * (2 / 10)
+        # Wilder RSI(14): initial mean over first 14 differences, then smoothing.
+        diffs = [closes[i] - closes[i-1] for i in range(1, len(closes))]
+        gains = [max(0, x) for x in diffs]
+        losses = [max(0, -x) for x in diffs]
+        avg_gain = sum(gains[:14]) / 14
+        avg_loss = sum(losses[:14]) / 14
+        for gain, loss in zip(gains[14:], losses[14:]):
+            avg_gain = (avg_gain * 13 + gain) / 14
+            avg_loss = (avg_loss * 13 + loss) / 14
+        rsi14 = 100 if avg_loss == 0 else 100 - (100 / (1 + avg_gain / avg_loss))
+        return {"symbol": pair, "interval": interval, "market": "spot", "source": "Binance Spot",
+                "fetched_at": fetched, "candles": candles,
+                "indicators": {"sma20": round(sma20, 8) if sma20 is not None else None,
+                               "ema9": round(ema9, 8), "rsi14": round(rsi14, 2)},
+                "note": "Indicator calculations use public spot candles, not a trading signal."}
+    except (ValueError, KeyError, TypeError, IndexError, OverflowError) as exc:
+        raise HTTPException(status_code=503, detail="Candle provider returned invalid data.") from exc
+
+
+@app.get("/api/public/sentiment")
+def public_sentiment():
+    data, fetched = _public_data("feargreed",
+        "https://api.alternative.me/fng/?limit=1", 600)
+    try:
+        item = data["data"][0]
+        level = int(item["value"])
+        if not 0 <= level <= 100:
+            raise ValueError("Index out of range")
+        return {"source": "Alternative.me", "attribution": "Crypto Fear & Greed Index by Alternative.me",
+                "fetched_at": fetched, "published_at": int(item["timestamp"]),
+                "value": level, "classification": str(item["value_classification"])[:40],
+                "note": "Market sentiment is context, not a buy/sell signal."}
+    except (KeyError, TypeError, ValueError, IndexError) as exc:
+        raise HTTPException(status_code=503, detail="Sentiment data is unavailable.") from exc
+
+
+@app.get("/api/public/defi")
+def public_defi():
+    data, fetched = _public_data("defi_chains",
+        "https://api.llama.fi/v2/chains", 900)
+    try:
+        chains = [{"name": str(c["name"])[:60], "tvl_usd": round(float(c["tvl"]), 2)}
+                  for c in data if isinstance(c, dict) and c.get("tvl") is not None and c.get("name")]
+        chains.sort(key=lambda c: c["tvl_usd"], reverse=True)
+        return {"source": "DefiLlama", "fetched_at": fetched, "chains": chains[:10],
+                "note": "TVL is not a prediction of token returns."}
+    except (KeyError, TypeError, ValueError) as exc:
+        raise HTTPException(status_code=503, detail="DeFi data is unavailable.") from exc
+
+
+@app.get("/api/public/bitcoin-fees")
+def public_bitcoin_fees():
+    data, fetched = _public_data("btc_fees",
+        "https://mempool.space/api/v1/fees/recommended", 90)
+    try:
+        return {"source": "mempool.space", "fetched_at": fetched, "units": "sat/vB",
+                "fastest": int(data["fastestFee"]), "half_hour": int(data["halfHourFee"]),
+                "hour": int(data["hourFee"]),
+                "note": "On-chain Bitcoin transaction estimates; not Binance trading fees."}
+    except (KeyError, ValueError, TypeError) as exc:
+        raise HTTPException(status_code=503, detail="Bitcoin fee data is unavailable.") from exc
+
+
+@app.get("/api/public/weather")
+def public_weather(latitude: float = Query(default=24.86, ge=-90, le=90),
+                   longitude: float = Query(default=67.01, ge=-180, le=180)):
+    # Rounded coordinates cap cache cardinality and avoid exposing precise location.
+    lat, lon = round(latitude, 1), round(longitude, 1)
+    suffix = "latitude=" + str(lat) + "&longitude=" + str(lon)
+    url = ("https://api.open-meteo.com/v1/forecast?" + suffix
+           + "&current=temperature_2m,relative_humidity_2m,weather_code&timezone=auto")
+    data, fetched = _public_data("weather:" + suffix, url, 600)
+    try:
+        now = data["current"]
+        return {"source": "Open-Meteo", "attribution": "Weather data: Open-Meteo (CC BY 4.0)",
+                "fetched_at": fetched, "latitude": lat, "longitude": lon,
+                "temperature_c": float(now["temperature_2m"]),
+                "relative_humidity_pct": int(now["relative_humidity_2m"]),
+                "weather_code": int(now["weather_code"]), "observed_at": str(now["time"]),
+                "note": "Free non-commercial API; do not call continuously."}
+    except (KeyError, ValueError, TypeError) as exc:
+        raise HTTPException(status_code=503, detail="Weather data is unavailable.") from exc

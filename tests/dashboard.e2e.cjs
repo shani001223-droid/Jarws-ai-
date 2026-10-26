@@ -102,6 +102,31 @@ async function main() {
         });
         return;
       }
+      if (endpoint === "/api/public/market") {
+        await route.fulfill({ status: 200, headers, body: JSON.stringify({
+          symbol: "BTCUSDT", market: "spot", source: "Binance Spot", fetched_at: 1793000000,
+          price: 70000.5, change_24h_pct: 1.25, volume_quote_24h: 2500000
+        }) });
+        return;
+      }
+      if (endpoint === "/api/public/candles") {
+        const candles = Array.from({ length: 80 }, (_, i) => ({
+          time: 1793000000 + i*300000, open: 70000+i, high: 70005+i,
+          low: 69995+i, close: 70001+i, volume: 10
+        }));
+        await route.fulfill({ status: 200, headers, body: JSON.stringify({
+          symbol: "BTCUSDT", interval: "5m", market: "spot", source: "Binance Spot",
+          fetched_at: 1793000000, candles,
+          indicators: { ema9: 70075, sma20: 70070.5, rsi14: 67.2 }
+        }) });
+        return;
+      }
+      if (endpoint === "/api/public/sentiment") {
+        await route.fulfill({ status: 200, headers, body: JSON.stringify({
+          source: "Alternative.me", fetched_at: 1793000000, value: 54, classification: "Neutral"
+        }) });
+        return;
+      }
       if (endpoint !== "/api/assistant") {
         await route.fulfill({ status: 404, headers, body: JSON.stringify({ detail: "Unknown test route" }) });
         return;
@@ -156,6 +181,11 @@ async function main() {
     for(const tab of ['trading','influencer','outfit']){
       await page.locator('[data-tab="'+tab+'"]').click();
       assert.equal(await page.locator('[data-panel="'+tab+'"]').isVisible(),true);
+      if(tab==='trading'){
+        await page.waitForFunction(()=>document.querySelector('#tradePrice').textContent.includes('70,000.5'));
+        assert.match(await page.locator('#tradeIndicators').innerText(), /RSI 14: 67.2/);
+        assert.match(await page.locator('#tradeSentiment').innerText(), /Alternative.me/);
+      }
       await page.locator('.sheet-close').click();
     }
     await page.locator('[data-tab="outfit"]').click();

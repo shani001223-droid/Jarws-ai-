@@ -207,6 +207,24 @@ async function main() {
     await page.locator('#adStudioResult button').click();
     assert.deepEqual(await page.evaluate(()=>window.__adSaved.map(x=>x.name)),['Flora_Product_Ads.zip']);
     assert.equal(apiMessages.length,beforeAdApi,'Ads must call task API, not waste a chat-model request');
+    // Unsupported multi-hour projects and chart screen actions are recognized,
+    // but must never be faked or silently sent to the chat model as execution.
+    const beforeUnsupported=apiMessages.length;
+    for(const [command,expected] of [
+      ['Mere liye ek puri game banaao','build_game'],
+      ['Hindi Urdu anime 300 episodes 30 min each banaao','render_anime'],
+      ['BTC chart analyse kro support resistance mark kro','chart_analysis']
+    ]){
+      await page.locator('#commandInput').fill(command);
+      await page.locator('#commandForm button').click();
+      assert.match(await page.locator('#status').innerText(),new RegExp('AGENT NOT READY.*'+expected,'i'));
+      assert.match(await page.locator('#reply').innerText(),/nahi|available|verified/i);
+      assert.equal(apiMessages.length,beforeUnsupported,'Unsupported agent must not be treated as completed AI task');
+    }
+    await page.locator('#commandInput').fill('How to create a game?');
+    await page.locator('#commandForm button').click();
+    await page.waitForFunction(()=>document.querySelector('#reply').textContent.includes('I can help'));
+    assert.equal(apiMessages.length,beforeUnsupported+1,'Explanations should still use ordinary chat');
     // No cloud model should be called for concrete Android actions or writing drafts.
     await page.evaluate(() => {
       window.__phoneActions = [];

@@ -51,7 +51,7 @@ def available_free_providers() -> tuple[str, ...]:
     return tuple(usable)
 
 
-def ask_free_provider(name: str, message: str, instruction: str) -> str:
+def ask_free_provider(name: str, message: str, instruction: str, *, timeout: float = 8.0) -> str:
     """One bounded no-redirect HTTPS request with a pinned catalog model."""
     if name not in available_free_providers():
         raise OptionalProviderError("Optional provider is not enabled.")
@@ -84,7 +84,7 @@ def ask_free_provider(name: str, message: str, instruction: str) -> str:
             def redirect_request(self, *_args, **_kwargs):
                 return None
 
-        with build_opener(NoRedirect()).open(req, timeout=8) as response:
+        with build_opener(NoRedirect()).open(req, timeout=max(1.0, min(float(timeout), 8.0))) as response:
             raw = response.read(128001)
     except HTTPError as exc:
         raise OptionalProviderError(name + " returned HTTP " + str(exc.code) + ".") from None

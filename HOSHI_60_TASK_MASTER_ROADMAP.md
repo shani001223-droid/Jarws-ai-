@@ -17,7 +17,7 @@
 - [x] **07** Classify chat, device and backend tasks. Acceptance: implementation or evidence, passing tests, limitations recorded.
 - [x] **08** Convert user goals into clear deliverables. Acceptance: implementation or evidence, passing tests, limitations recorded.
 - [x] **09** Break large goals into verified milestones. Acceptance: implementation or evidence, passing tests, limitations recorded.
-- [ ] **10** Route to available free models intelligently. Acceptance: implementation or evidence, passing tests, limitations recorded.
+- [x] **10** Route to available free models intelligently. Acceptance: implementation or evidence, passing tests, limitations recorded.
 - [ ] **11** Activate and test a real OpenJarvis endpoint. Acceptance: implementation or evidence, passing tests, limitations recorded.
 - [ ] **12** Detect mistakes and retry with bounded repair. Acceptance: implementation or evidence, passing tests, limitations recorded.
 
@@ -102,3 +102,5 @@
 - Task 08 **verified specification layer**: `cloud_backend/goal_spec.py` and `POST /api/agent/spec` convert recognized user goals into explicit artifact formats and acceptance requirements, including 300 x 30-minute anime scope (9,000 minutes), playable game deliverables, Flora ad ZIP contents, and paper-only chart analysis. Every deliverable remains `planned` until genuinely produced; no job is started. Python unit tests, JS tests and Playwright E2E passed: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40306839489. This does not implement game/anime rendering.
 
 - Task 09 **verified planning-only**: `cloud_backend/milestone_planner.py` and `POST /api/agent/milestones` produce dependency-ordered deliverable checkpoints, finite anime batches, status/evidence gates and clear non-execution flags. Tested by `tests/test_milestone_planner.py` in passing full run https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40307087025. This does not render anime or start backend jobs.
+
+- Task 10 **verified**: `cloud_backend/provider_policy.py` is integrated into actual `/api/assistant` provider selection. Configured-only ordering prioritizes Groq for spoken requests, real OpenJarvis for eligible complex requests, then OpenRouter/Gemini/Groq fallback without duplicate provider entries. Includes five regression tests `tests/test_provider_policy.py` and full passing CI https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40310457245. **This does not assert any unconfigured provider or OpenJarvis server is reachable.**

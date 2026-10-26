@@ -30,6 +30,9 @@ class JarvisBridge(private val activity: MainActivity) {
     fun openKnownApp(action: String): Boolean = activity.openKnownApp(action)
 
     @JavascriptInterface
+    fun saveAdZip(base64Zip: String, filename: String): Boolean = activity.saveAdZip(base64Zip, filename)
+
+    @JavascriptInterface
     fun copyUserText(text: String): Boolean = activity.copyUserText(text)
 
     @JavascriptInterface

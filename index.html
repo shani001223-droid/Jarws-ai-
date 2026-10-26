@@ -163,11 +163,11 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 </div><aside class="utility-column" aria-label="HOSHI status and shortcuts">
 <div class="section utility-clock"><div class="clock-caption"><div class="small">YOUR LOCAL TIME</div><div class="pill">DEVICE</div></div><div class="clock-time"><span id="clockHour">--:--</span> <span class="clock-meridiem" id="clockMeridiem">--</span></div><div class="clock-date" id="clockDate">Loading local date…</div></div>
 <div class="section"><h2>QUICK ACTIONS</h2><div class="quick-grid"><button type="button" data-cmd="what time is it"><span>◷</span>Time now</button><button type="button" data-cmd="today's date"><span>▦</span>Today's date</button><button type="button" id="screenshotQuickBtn"><span>▣</span>Take screenshot</button><button type="button" data-cmd="open YouTube"><span>▶</span>Open YouTube</button></div></div>
-<div class="section"><h2>SYSTEM STATUS</h2><div class="system-metrics"><div class="system-metric"><span>Cloud AI</span><strong id="utilityConnection">Checking…</strong></div><div class="system-metric"><span>Expression</span><strong id="utilityEmotion">CARING</strong></div><div class="system-metric"><span>Local memory</span><strong id="utilityMemory">ON</strong></div><div class="system-metric"><span>Voice reply</span><strong id="utilityVoice">ON</strong></div></div></div>
+<div class="section"><h2>SYSTEM STATUS</h2><div class="system-metrics"><div class="system-metric"><span>Cloud AI</span><strong id="utilityConnection">Checking…</strong></div><div class="system-metric"><span>Expression</span><strong id="utilityEmotion">CARING</strong></div><div class="system-metric"><span>Local memory</span><strong id="utilityMemory">OFF</strong></div><div class="system-metric"><span>Voice reply</span><strong id="utilityVoice">ON</strong></div></div></div>
 <div class="section"><h2>RECENT CONVERSATION</h2><p class="small">Latest saved turns on this device.</p><div class="recent-activity" id="recentActivity"><div class="activity-line">Start a conversation to see recent activity.</div></div><div class="quick"><button type="button" id="viewHistoryBtn">View all history</button></div></div>
 </aside></div>
 <div class="bottom-workspace">
-<div class="section" id="memoryPanel"><div class="statusrow"><h2>HOSHI MEMORY & CHAT HISTORY</h2><button class="toggle" type="button" id="memoryToggle">Local memory: ON</button></div><p class="small">Recent chat is saved locally. A small recent context is sent with AI requests for continuity. Messages that look like credentials, recovery phrases, OTPs, email addresses, phone numbers, or long numeric identifiers are filtered from local history. These checks are heuristic. Edit or delete individual entries, turn memory off, or clear history any time.</p><div id="chatHistory" class="chat-history" aria-live="polite">Your recent conversation will appear here.</div><div class="quick"><button type="button" id="clearMemoryBtn">Clear history</button></div></div>
+<div class="section" id="memoryPanel"><div class="statusrow"><h2>HOSHI MEMORY & CHAT HISTORY</h2><button class="toggle" type="button" id="memoryToggle">Local memory: OFF</button></div><p class="small">Memory is OFF until you opt in. When enabled, up to 12 recent turns stay in this browser and up to 8 filtered turns are sent with AI requests for context. Secret detection is heuristic, not guaranteed. Export your local JSON or clear it any time. Turning memory OFF deletes saved history. Browser data clearing also deletes it; no cloud sync is provided.</p><div id="chatHistory" class="chat-history" aria-live="polite">Your recent conversation will appear here.</div><div class="quick"><button type="button" id="exportMemoryBtn">Export JSON</button><button type="button" id="clearMemoryBtn">Clear history</button></div></div>
 <div class="section" id="voicePanel"><div class="voice-heading"><span class="voice-star" aria-hidden="true">✦</span><div><h2>HOSHI VOICE</h2><p class="small">A softer way to talk.</p></div><span class="pill">ON DEVICE</span></div><div class="voice-grid">
 <p class="voice-intro">Gentle, warm and a little playful. Choose Hoshi’s delivery.</p>
 <div class="voice-styles" role="group" aria-label="Hoshi voice delivery">
@@ -206,6 +206,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 <script src="./assistant-commands.js"></script>
 <script src="./reminder-parser.js"></script>
 <script src="./memory-privacy.js"></script>
+<script src="./hoshi-memory-store.js"></script>
 <script src="./hoshi-product-ads.js"></script>
 <script src="./hoshi-task-router.js"></script>
 <script src="./hoshi-speech-input.js"></script>
@@ -458,16 +459,17 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
   void playPart(0).catch(()=>{if(request.id===speechSequence){setSpeaking(false);setStatus('URDU AUDIO UNAVAILABLE');stopLoading()}});
  }
  function getPersonality(){try{return localStorage.getItem('hoshiPersonality')||'balanced'}catch(e){return 'balanced'}}
- const MEMORY_KEY='hoshiConversationMemoryV1';
- let memoryEnabled=true;
- try{memoryEnabled=localStorage.getItem('hoshiMemoryEnabled')!=='false'}catch(e){}
+ const memoryStore=window.HoshiMemoryStore;
+ const MEMORY_KEY=memoryStore.MEMORY_KEY;
+ let memoryEnabled=memoryStore.consent(localStorage);
  function looksSensitive(text){return !window.HoshiPrivacy||typeof window.HoshiPrivacy.looksSensitive!=="function"||window.HoshiPrivacy.looksSensitive(text)}
- function getConversationContext(){if(!memoryEnabled)return [];try{const value=JSON.parse(localStorage.getItem(MEMORY_KEY)||'[]');const clean=Array.isArray(value)?value.filter(item=>item&&typeof item.content==='string'&&typeof item.role==='string'&&!looksSensitive(item.content)).slice(-12):[];if(Array.isArray(value)&&clean.length!==value.length)localStorage.setItem(MEMORY_KEY,JSON.stringify(clean));return clean}catch(e){return []}}
+ function getConversationContext(){return memoryEnabled?memoryStore.read(localStorage,looksSensitive):[]}
+ if(memoryEnabled)memoryStore.save(localStorage,getConversationContext(),looksSensitive);
  function renderRecentActivity(){const box=$('recentActivity');if(!box)return;box.replaceChildren();if(!memoryEnabled){const empty=document.createElement('div');empty.className='activity-line';empty.textContent='Local memory is off.';box.appendChild(empty);return}const history=getConversationContext().slice(-3).reverse();if(!history.length){const empty=document.createElement('div');empty.className='activity-line';empty.textContent='Start a conversation to see recent activity.';box.appendChild(empty);return}history.forEach(item=>{const row=document.createElement('div');row.className='activity-line '+(item.role==='user'?'user':'assistant');const content=String(item.content).replace(/\s+/g,' ');row.textContent=(item.role==='user'?'YOU · ':'HOSHI · ')+content.slice(0,92)+(content.length>92?'…':'');box.appendChild(row)})}
  function updateClock(){const now=new Date();const timeParts=new Intl.DateTimeFormat(undefined,{hour:'2-digit',minute:'2-digit',hour12:true}).formatToParts(now);const hour=timeParts.filter(part=>part.type==='hour'||part.type==='minute').map(part=>part.value).join(':');const meridiem=timeParts.find(part=>part.type==='dayPeriod');const h=$('clockHour'),m=$('clockMeridiem'),d=$('clockDate');if(h)h.textContent=hour;if(m)m.textContent=meridiem?meridiem.value.toUpperCase():'';if(d)d.textContent=new Intl.DateTimeFormat(undefined,{weekday:'long',month:'short',day:'numeric'}).format(now)}
  function getCloudContextForRequest(currentMessage){const history=getConversationContext();const last=history[history.length-1];if(last&&last.role==='user'&&last.content===String(currentMessage||'').slice(0,500))history.pop();return history.slice(-8).map(item=>item.role+': '+item.content)}
  function makeHistoryButton(label,ariaLabel,onClick){const button=document.createElement('button');button.type='button';button.className='history-action';button.textContent=label;button.setAttribute('aria-label',ariaLabel);button.addEventListener('click',onClick);return button}
- function persistHistory(history){localStorage.setItem(MEMORY_KEY,JSON.stringify(history.slice(-12)))}
+ function persistHistory(history){if(!memoryStore.save(localStorage,history,looksSensitive))throw new Error("Local memory unavailable")}
  function renderHistory(){const box=$('chatHistory');if(!box)return;const history=getConversationContext();box.replaceChildren();if(!memoryEnabled){editingMemoryIndex=null;box.textContent='Local memory is off.';return}if(!history.length){editingMemoryIndex=null;box.textContent='No saved conversation yet.';return}const start=Math.max(0,history.length-8);history.slice(-8).forEach((item,offset)=>{const index=start+offset;const row=document.createElement('div');row.className='history-item '+(item.role==='user'?'user':'assistant');if(editingMemoryIndex===index){const editor=document.createElement('textarea');editor.className='history-editor';editor.maxLength=500;editor.setAttribute('aria-label','Edit saved '+(item.role==='user'?'user':'HOSHI')+' message');editor.value=item.content;row.appendChild(editor);const actions=document.createElement('div');actions.className='history-actions';actions.appendChild(makeHistoryButton('Save','Save edited memory entry',()=>{const revised=editor.value.trim();if(!revised){setStatus('MEMORY ENTRY NOT SAVED · TEXT IS EMPTY');return}if(looksSensitive(revised)){setStatus('MEMORY ENTRY NOT SAVED · REMOVE SECRET OR SENSITIVE DETAILS');return}const latest=getConversationContext();if(!latest[index]){editingMemoryIndex=null;renderHistory();return}latest[index].content=revised.slice(0,500);try{persistHistory(latest);editingMemoryIndex=null;renderHistory();setStatus('MEMORY ENTRY UPDATED')}catch(e){setStatus('MEMORY UPDATE FAILED · STORAGE UNAVAILABLE')}}));actions.appendChild(makeHistoryButton('Cancel','Cancel editing memory entry',()=>{editingMemoryIndex=null;renderHistory()}));row.appendChild(actions)}else{const content=document.createElement('div');content.className='history-content';content.textContent=(item.role==='user'?'You: ':'HOSHI: ')+item.content;row.appendChild(content);const actions=document.createElement('div');actions.className='history-actions';actions.appendChild(makeHistoryButton('Edit','Edit saved '+(item.role==='user'?'user':'HOSHI')+' message',()=>{editingMemoryIndex=index;renderHistory()}));actions.appendChild(makeHistoryButton('Delete','Delete saved '+(item.role==='user'?'user':'HOSHI')+' message',()=>{const latest=getConversationContext();if(!latest[index])return;latest.splice(index,1);try{persistHistory(latest);editingMemoryIndex=null;renderHistory();setStatus('MEMORY ENTRY DELETED')}catch(e){setStatus('MEMORY DELETE FAILED · STORAGE UNAVAILABLE')}}));row.appendChild(actions)}box.appendChild(row)})}
  function rememberTurn(role,content){if(!memoryEnabled||!String(content||'').trim()||looksSensitive(content))return;try{const history=getConversationContext();history.push({role,content:String(content).slice(0,500),at:Date.now()});persistHistory(history);editingMemoryIndex=null;renderHistory();renderRecentActivity()}catch(e){const box=$('chatHistory');if(box)box.textContent='Local memory is unavailable in this browser.'}}
  function guessEmotion(text){const value=String(text||"").toLowerCase();if(/udaas|sad|dukhi|rona|upset|sorry/i.test(value))return "sad";if(/pareshan|tension|worried|concern|darr/i.test(value))return "concerned";if(/gussa|naraz|angry|annoyed/i.test(value))return "annoyed";if(/sharma|shy|blush/i.test(value))return "shy";if(/excited|zabardast|amazing|wah/i.test(value))return "excited";if(/mazak|mazaq|masti|haha|hehe|joke/i.test(value))return "playful";if(/pyar|pyaar|love you|miss you|jaan|hug/i.test(value))return "affectionate";if(/khush|happy|great|shukriya|thank you|😊|😄/i.test(value))return "happy";if(/kyun|kaise|why|how|explain|think/i.test(value))return "thinking";return "caring"}
@@ -727,8 +729,32 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  $('languageToggle').textContent=commandLanguage==='ur-PK'?'🗣 Language: Urdu':'🗣 Language: English';
  $('speakToggle').textContent=voiceReplies?'🔊 Voice replies: ON':'🔇 Voice replies: OFF';
  $('wakeToggle').textContent='Hey HOSHI: '+(wakeEnabled?'ON':'OFF');
- $('memoryToggle').onclick=()=>{memoryEnabled=!memoryEnabled;try{localStorage.setItem('hoshiMemoryEnabled',String(memoryEnabled))}catch(e){}$('memoryToggle').textContent='Local memory: '+(memoryEnabled?'ON':'OFF');$('utilityMemory').textContent=memoryEnabled?'ON':'OFF';if(!memoryEnabled){try{localStorage.removeItem(MEMORY_KEY)}catch(e){}}renderHistory();renderRecentActivity()};
- $('clearMemoryBtn').onclick=()=>{try{localStorage.removeItem(MEMORY_KEY)}catch(e){}renderHistory();renderRecentActivity();setStatus('HOSHI MEMORY CLEARED')};
+ $('memoryToggle').onclick=()=>{
+   const next=!memoryEnabled;
+   if(!memoryStore.setConsent(localStorage,next)){setStatus('MEMORY SETTING FAILED · DEVICE STORAGE UNAVAILABLE');return}
+   memoryEnabled=next;
+   if(memoryEnabled)memoryStore.save(localStorage,getConversationContext(),looksSensitive);
+   $('memoryToggle').textContent='Local memory: '+(memoryEnabled?'ON':'OFF');
+   $('utilityMemory').textContent=memoryEnabled?'ON':'OFF';
+   renderHistory();renderRecentActivity();
+   setStatus(memoryEnabled?'LOCAL MEMORY ENABLED · DEVICE ONLY':'LOCAL MEMORY OFF · SAVED HISTORY DELETED')
+ };
+ $('clearMemoryBtn').onclick=()=>{
+   if(!memoryStore.clear(localStorage)){setStatus('MEMORY DELETE FAILED · DEVICE STORAGE UNAVAILABLE');return}
+   editingMemoryIndex=null;renderHistory();renderRecentActivity();setStatus('HOSHI MEMORY CLEARED')
+ };
+ $('exportMemoryBtn').onclick=()=>{
+   const json=memoryStore.exportJson(localStorage,looksSensitive);
+   if(json===null){setStatus('ENABLE LOCAL MEMORY BEFORE EXPORT');return}
+   try{
+     const url=URL.createObjectURL(new Blob([json],{type:'application/json;charset=utf-8'}));
+     const link=document.createElement('a');
+     link.href=url;link.download='hoshi-local-memory.json';link.hidden=true;
+     document.body.appendChild(link);link.click();link.remove();
+     setTimeout(()=>URL.revokeObjectURL(url),1000);
+     setStatus('LOCAL MEMORY JSON EXPORTED · KEEP FILE PRIVATE');
+   }catch(_){setStatus('MEMORY EXPORT FAILED · CHECK DOWNLOAD PERMISSIONS')}
+ };
  renderHistory();renderRecentActivity();updateClock();setInterval(updateClock,15000);
  $('pitchSlider').addEventListener('input',saveVoiceSettings);$('rateSlider').addEventListener('input',saveVoiceSettings);
  document.querySelectorAll('[data-voice-style]').forEach(b=>b.addEventListener('click',()=>{stopSpeaking();applyVoiceStyle(b.dataset.voiceStyle)}));

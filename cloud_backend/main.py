@@ -38,7 +38,7 @@ try:  # Handles either cloud_backend package import or direct uvicorn main:app.
     from .free_llm_providers import available_free_providers, ask_free_provider, OptionalProviderError
     from .urdu_tts_text import normalize_urdu_speech
     from .persona_policy import personality_guardrails
-    from .job_records import JobRecordStore, JobCapacityError
+    from .job_records import JobRecordStore, JobCapacityError, JobStateError
     from .job_queue import ScheduledJobQueue, QueueCapacityError
 except ImportError:
     from openjarvis_bridge import ask_openjarvis, endpoint as openjarvis_endpoint, wants_agent, OpenJarvisUnavailable
@@ -51,7 +51,7 @@ except ImportError:
     from free_llm_providers import available_free_providers, ask_free_provider, OptionalProviderError
     from urdu_tts_text import normalize_urdu_speech
     from persona_policy import personality_guardrails
-    from job_records import JobRecordStore, JobCapacityError
+    from job_records import JobRecordStore, JobCapacityError, JobStateError
     from job_queue import ScheduledJobQueue, QueueCapacityError
 
 app = FastAPI(title="HOSHI AI Cloud API", version="0.9.1")

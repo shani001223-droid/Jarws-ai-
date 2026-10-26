@@ -15,8 +15,8 @@ async function waitForPublicEndpoints() {
       if (health.ok && data.service === "hoshi-cloud-api" && data.version === "0.9.1") {
         const response = await fetch(DASHBOARD_URL, { signal: AbortSignal.timeout(15000) });
         const html = await response.text();
-        if (response.ok && /HOSHI — AI Companion/.test(html) && html.includes('id="nightroom"') && html.includes('assets/outfits/') && html.includes('id="tradeDashboard"')) return;
-        lastError = "Dashboard returned HTTP " + response.status + " or has not published the trading dashboard revision yet";
+        if (response.ok && /HOSHI — AI Companion/.test(html) && html.includes('id="nightroom"') && html.includes('assets/outfits/') && html.includes('id="tradeDashboard"') && html.includes('id="clientDiagnostics"')) return;
+        lastError = "Dashboard returned HTTP " + response.status + " or has not published the client diagnostics revision yet";
       } else {
         lastError = "Backend health check did not match expected HOSHI API: HTTP " + health.status;
       }
@@ -59,6 +59,15 @@ async function main() {
     assert.equal(await page.locator('.sidebar').isVisible(),false);
     await page.locator('[data-tab="settings"]').click();
     assert.equal(await page.locator('#voicePanel').isVisible(),true);
+    await page.waitForFunction(()=>Boolean(window.HoshiDiagnostics&&window.HoshiDiagnostics.snapshot().last_api_response),{},{timeout:20000});
+    await page.locator('#clientDiagnostics summary').click();
+    const safeReport=JSON.parse(await page.locator('#clientDiagnosticReport').innerText());
+    assert.equal(safeReport.scope,'this_page_only');
+    assert.match(safeReport.last_api_response.request_id,/^[0-9a-f-]{36}$/);
+    await page.locator('#clearDiagnosticReport').click();
+    assert.deepEqual(await page.evaluate(()=>window.HoshiDiagnostics.snapshot().events),[]);
+    await page.locator('#clientDiagnostics summary').click();
+
     await page.locator('.sheet-close').click();
     await page.locator('[data-tab="outfit"]').click();
     await page.locator('button[data-outfit="winter"]').click();
@@ -101,4 +110,5 @@ main().catch(error => {
   console.error(error);
   process.exitCode = 1;
 });
+
 

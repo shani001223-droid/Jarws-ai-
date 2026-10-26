@@ -45,7 +45,7 @@ class FrontendContractTests(unittest.TestCase):
         self.assertIn("./assets/hoshi-expressions.webp", SERVICE_WORKER)
         self.assertIn("./memory-privacy.js", SERVICE_WORKER)
         self.assertIn('<script src="./memory-privacy.js"></script>', HTML)
-        self.assertIn('CACHE_NAME = "hoshi-shell-v24"', SERVICE_WORKER)
+        self.assertIn('CACHE_NAME = "hoshi-shell-v25"', SERVICE_WORKER)
         self.assertIn("./assets/hoshi-hero-background.svg", SERVICE_WORKER)
 
     def test_hoshi_app_icon_is_wired_for_favicon_pwa_and_offline_shell(self):
@@ -194,4 +194,5 @@ class FrontendContractTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
 

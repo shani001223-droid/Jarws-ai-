@@ -123,7 +123,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 <div class="trade-info-grid"><section id="tradeAnalysis" class="trade-box"><h3>◈ Market analysis</h3><div id="tradeIndicators" class="trade-muted">EMA 9 · SMA 20 · RSI 14: waiting for candles</div><p class="trade-muted">Indicators describe past prices. They do not predict returns.</p><button type="button" id="tradeFocusChart">View chart ↑</button></section><section class="trade-box"><h3>◉ Market sentiment</h3><div id="tradeGauge" class="trade-gauge" role="meter" aria-label="Crypto Fear and Greed Index" aria-valuemin="0" aria-valuemax="100"><span id="tradeGaugeValue">—</span></div><div id="tradeSentiment" class="trade-muted">Fear &amp; Greed: waiting for data</div><a class="trade-small-link" href="https://alternative.me/crypto/fear-and-greed-index/" target="_blank" rel="noopener noreferrer">Source: Alternative.me ↗</a></section><section id="tradeNews" class="trade-box"><h3>▤ Market news</h3><span class="trade-status-chip">Feed not connected</span><p class="trade-muted">No verified news headlines are loaded here.</p><a href="https://www.binance.com/en/square/news/all" target="_blank" rel="noopener noreferrer">Open Binance News ↗</a></section></div>
 <div class="trade-bottom-grid"><section id="tradeExecution" class="trade-box"><h3>▣ Orders &amp; positions</h3><span class="trade-status-chip">Account not connected</span><p class="trade-muted">No real or demo orders are placed. Positions, profit, leverage and balances are unavailable.</p><button type="button" disabled>Order placement unavailable</button></section><section id="tradeWatchlist" class="trade-box"><div class="trade-card-head"><h3>☆ Watchlist</h3><button type="button" id="tradeWatchToggle">+ Add pair</button></div><div id="tradeWatchRows"></div><p class="trade-muted">Saved on this device. Select a pair to fetch its current spot data.</p></section></div>
 <footer class="trade-footer"><p id="tradeStatus" role="status" aria-live="polite">Open this tab to fetch public market information.</p><span>Keyless public data · Refresh for latest values · provider/network availability applies</span></footer>
-</div></div></div><div data-panel="influencer" hidden><p>AI Influencer tools are not connected yet.</p></div><div data-panel="outfit" hidden><p class="small">Choose a look. It applies to the main screen and is saved on this device.</p><div id="outfitGrid" class="outfit-grid"></div><p id="outfitFeedback" class="small" role="status"></p></div><div data-panel="settings" hidden><button type="button" id="nativeRemindersBtn" hidden>View / cancel reminders</button></div></section></main>
+</div></div></div><div data-panel="influencer" hidden><p>AI Influencer tools are not connected yet.</p></div><div data-panel="outfit" hidden><p class="small">Choose a look. It applies to the main screen and is saved on this device.</p><div id="outfitGrid" class="outfit-grid"></div><p id="outfitFeedback" class="small" role="status"></p></div><div data-panel="settings" hidden><details id="clientDiagnostics" class="section"><summary>Safe error report</summary><p class="small">Sirf request IDs aur error counts. Chat, keys aur error messages record nahi hote. Report isi page ki memory mein hai; automatically upload nahi hoti.</p><pre id="clientDiagnosticReport" style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:10px;max-height:220px;overflow:auto"></pre><div class="hoshi-tool-grid"><button type="button" id="copyDiagnosticReport">Copy safe report</button><button type="button" id="clearDiagnosticReport">Clear report</button></div><p id="clientDiagnosticStatus" class="small" role="status"></p></details><button type="button" id="nativeRemindersBtn" hidden>View / cancel reminders</button></div></section></main>
 <div class="dashboard-shell">
 <aside class="sidebar" aria-label="HOSHI navigation">
 <div class="brand-mark">H<span>OSHI</span></div>
@@ -203,6 +203,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 </div><footer>Basic commands, time/date, Google and YouTube are available. Urdu/Roman Urdu and English commands supported where browser speech recognition permits.<br>AI keys may be configured while provider quota or permissions still prevent replies. Live AI access is checked when you send a message. Advanced phone control requires native Android permissions.</footer>
 </main>
 </div>
+<script src="./hoshi-diagnostics.js"></script>
 <script src="./assistant-commands.js"></script>
 <script src="./reminder-parser.js"></script>
 <script src="./memory-privacy.js"></script>
@@ -219,6 +220,11 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  $('nightAudioRetry').onclick=()=>{$('hoshiAudio').play().then(()=>{$('nightAudioRetry').hidden=true}).catch(()=>setStatus('AUDIO BLOCKED · CHECK MEDIA SETTINGS'))};
  chatPanel.append($('commandForm'),$('adStudioResult'),$('memoryPanel'));
  settingsPanel.append(document.querySelector('.controls'),document.querySelector('.bottom-workspace'));
+ function updateDiagnosticReport(){const d=window.HoshiDiagnostics;$('clientDiagnosticReport').textContent=d?JSON.stringify(d.snapshot(),null,2):'Diagnostics unavailable; reload to retry.'}
+ $('clientDiagnostics').addEventListener('toggle',()=>{if($('clientDiagnostics').open)updateDiagnosticReport()});
+ $('clearDiagnosticReport').onclick=()=>{if(window.HoshiDiagnostics)window.HoshiDiagnostics.clear();updateDiagnosticReport();$('clientDiagnosticStatus').textContent='Report clear ho gayi.'};
+ $('copyDiagnosticReport').onclick=async()=>{updateDiagnosticReport();const text=window.HoshiDiagnostics?JSON.stringify(window.HoshiDiagnostics.snapshot()):$('clientDiagnosticReport').textContent;try{const b=window.JarvisBridge;if(b&&typeof b.copyUserText==='function'&&b.copyUserText(text)){$('clientDiagnosticStatus').textContent='Safe report copy ho gayi.';return}if(!navigator.clipboard||typeof navigator.clipboard.writeText!=='function')throw new Error('Clipboard unavailable');await navigator.clipboard.writeText(text);$('clientDiagnosticStatus').textContent='Safe report copy ho gayi.'}catch(_){$('clientDiagnosticStatus').textContent='Copy available nahi. Upar wali report manually select kar sakte ho.'}};
+
  if(window.JarvisBridge&&typeof window.JarvisBridge.showReminders==='function'){$('nativeRemindersBtn').hidden=false;$('nativeRemindersBtn').onclick=()=>window.JarvisBridge.showReminders()}
  $('stopBtn').hidden=true;$('testBtn').hidden=true;
  let activeTab='chat';
@@ -234,6 +240,8 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  for(const def of outfitDefinitions){const button=document.createElement('button');button.type='button';button.className='outfit-card';button.dataset.outfit=def.id;button.setAttribute('aria-pressed','false');button.setAttribute('aria-label','Wear '+def.name);const preview=document.createElement('img');preview.loading='lazy';preview.decoding='async';preview.src=def.asset;preview.alt='';preview.width=128;preview.height=192;button.append(preview);const label=document.createElement('span');label.textContent=def.name;button.append(label);button.onclick=()=>applyOutfit(def.id);$('outfitGrid').append(button)}
  let savedOutfit='original';try{savedOutfit=localStorage.getItem('hoshiOutfitV1')||'original'}catch(_){}applyOutfit(savedOutfit,false);
  const API_BASE='https://jarws-ai-2.onrender.com';
+ const tracedFetch=(...args)=>fetch(...args).then(response=>{if(window.HoshiDiagnostics)window.HoshiDiagnostics.noteResponse(response);return response},error=>{if(window.HoshiDiagnostics)window.HoshiDiagnostics.record(error&&error.name==='AbortError'?'request_cancelled':'request_failed');throw error});
+
  let cloudOnline=false, cloudRequestSequence=0, activeCloudController=null;
  let recognition=null, listening=false, wakeEnabled=false, awaitingCommand=false, voiceReplies=true, restartTimer=null, lastVoiceError="", commandLanguage="ur-PK", editingMemoryIndex=null;
  try{const savedLanguage=localStorage.getItem("hoshiLanguage");if(savedLanguage==="ur-PK"||savedLanguage==="en-US")commandLanguage=savedLanguage;voiceReplies=localStorage.getItem("hoshiVoiceReplies")!=="false";wakeEnabled=localStorage.getItem("hoshiWakeWord")==="true"}catch(e){}
@@ -241,7 +249,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  let tradeRequestId=0;
  async function tradeFetch(path){
   const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),18000);
-  try{const res=await fetch(API_BASE+path,{signal:controller.signal,cache:'no-store'});
+  try{const res=await tracedFetch(API_BASE+path,{signal:controller.signal,cache:'no-store'});
    if(!res.ok)throw new Error('Provider or network unavailable ('+res.status+')');
    return await res.json();
   }finally{clearTimeout(timeout)}
@@ -337,7 +345,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
   const timeout=controller?setTimeout(()=>controller.abort(),7000):null;
   try{
    const options={method:'GET',cache:'no-store'};if(controller)options.signal=controller.signal;
-   const r=await fetch(API_BASE+'/health',options);if(!r.ok)throw new Error('HTTP '+r.status);
+   const r=await tracedFetch(API_BASE+'/health',options);if(!r.ok)throw new Error('HTTP '+r.status);
    const data=await r.json();cloudOnline=!!data.ok;const aiReady=!!data.ai_connected;
    badge.textContent=aiReady?'AI KEYS CONFIGURED':(cloudOnline?'API ONLINE · AI NOT CONFIGURED':'CLOUD ERROR');
    badge.style.color=aiReady?'#5de1ff':(cloudOnline?'#ffd27d':'#ff9b9b');
@@ -359,7 +367,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
   try{
    const options={method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,locale:commandLanguage,personality:getPersonality(),context:getCloudContextForRequest(message),fast})};
    if(controller)options.signal=controller.signal;
-   const r=await fetch(API_BASE+'/api/assistant',options);if(requestId!==cloudRequestSequence)return;let data={};try{data=await r.json()}catch(_){}if(requestId!==cloudRequestSequence)return;
+   const r=await tracedFetch(API_BASE+'/api/assistant',options);if(requestId!==cloudRequestSequence)return;let data={};try{data=await r.json()}catch(_){}if(requestId!==cloudRequestSequence)return;
    if(!r.ok){let detail=data.detail||'';if(r.status===502)detail=detail||'Gemini ne request reject ki. Render environment mein API key aur Google AI Studio access check karna hoga.';else if(r.status===504)detail=detail||'Gemini response time par nahi aaya. Yeh AI server timeout hai, zaroori nahi ke aapka internet kharab ho.';else if(r.status===429)detail=detail||'Gemini ki free quota ya rate limit poori ho gayi hai.';else if(r.status===503)detail=detail||'Render par GEMINI_API_KEY configured nahi hai.';else detail=detail||('Cloud API error: HTTP '+r.status);throw new Error(detail)}
    voiceTimes.ai=Math.max(0,voiceClock()-modelStarted);displayVoiceTimes();
     setStatus('AI REPLIED IN '+(voiceTimes.ai/1000).toFixed(1)+'s · '+(data.mode||'API'));say(data.reply||'Cloud received the message but returned no reply.',data.emotion,false,data.speech_text);
@@ -420,7 +428,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
   else if(['sad','shy','concerned','affectionate','caring'].includes(request.emotion))style='warm';
   const segments=splitUrduSpeech(request.text);
   if(!segments.length){clearTimeout(timeout);return}
-  const files=segments.map(part=>fetch(API_BASE+'/api/speech',{
+  const files=segments.map(part=>tracedFetch(API_BASE+'/api/speech',{
    method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:part,style}),signal:controller.signal
   }).then(async response=>{
    if(!response.ok)throw new Error('Urdu voice provider unavailable');
@@ -758,4 +766,5 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 </script>
 </body>
 </html>
+
 

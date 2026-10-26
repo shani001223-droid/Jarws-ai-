@@ -28,6 +28,7 @@
         body:JSON.stringify({task:"create_product_ads",message:String(message||"")}),
         signal:controller.signal,
       });
+      if(root.HoshiDiagnostics)root.HoshiDiagnostics.noteResponse(result);
       const data=await result.json();
       if(turn!==activeId)return;
       if(!result.ok||!data.ok||!data.completed||!data.zip_base64){
@@ -85,3 +86,4 @@
   }
   root.HoshiAdStudio=Object.freeze({isIntent,execute});
 })(typeof window!=="undefined"?window:globalThis);
+

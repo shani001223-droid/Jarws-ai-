@@ -133,6 +133,16 @@ class FrontendContractTests(unittest.TestCase):
         self.assertIn("AI REPLIED IN ", HTML)
         self.assertIn("fast})", HTML)
 
+    def test_latency_is_measured_by_stage_and_not_faked(self):
+        self.assertIn('id="voiceTiming"', HTML)
+        self.assertIn("performance.now()", HTML)
+        self.assertIn("markVoiceHeard()", HTML)
+        self.assertIn("voiceTimes.ai=", HTML)
+        self.assertIn("voiceTimes.audio=", HTML)
+        self.assertIn("HOSHI SPEAKING · URDU", HTML)
+        self.assertIn("Mic '+val(voiceTimes.listen)", HTML)
+        self.assertIn("startVoiceTimer()", HTML)
+
     def test_android_screenshot_is_explicit_and_api_gated(self):
         self.assertIn('id="screenshotQuickBtn"', HTML)
         self.assertIn('data-screen-action="screenshot"', HTML)

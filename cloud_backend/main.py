@@ -406,6 +406,7 @@ def health():
         "version": app.version,
         "gemini_api": "interactions" if gemini_configured else None,
         "ai_connected": openrouter_configured or gemini_configured or groq_configured,
+        "reply_fallback_enabled": True,
         "openrouter_configured": openrouter_configured,
         "openrouter_model": OPENROUTER_MODEL if openrouter_configured else None,
         "gemini_configured": gemini_configured,

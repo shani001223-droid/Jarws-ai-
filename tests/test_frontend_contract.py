@@ -143,6 +143,23 @@ class FrontendContractTests(unittest.TestCase):
         self.assertIn("Mic '+val(voiceTimes.listen)", HTML)
         self.assertIn("startVoiceTimer()", HTML)
 
+    def test_fast_device_urdu_speech_has_true_native_and_online_fallback(self):
+        self.assertIn('id="fastVoiceToggle"', HTML)
+        self.assertIn("supportsUrduSpeech()", HTML)
+        self.assertIn("speakNative(spokenMessage,commandLanguage,pitch,rate)", HTML)
+        self.assertIn("if(urduMode){", HTML)
+        self.assertIn("playOnlineUrdu(currentSpeech);return", HTML)
+        self.assertIn("window.hoshiNativeSpeechStarted", HTML)
+        self.assertIn("window.hoshiNativeSpeechStarted && window.hoshiNativeSpeechStarted()", MAIN_ACTIVITY)
+
+    def test_online_urdu_starts_first_clip_before_remaining_clips(self):
+        self.assertIn("function splitUrduSpeech(text)", HTML)
+        self.assertIn("const files=segments.map(part=>fetch(", HTML)
+        self.assertIn("void playPart(0)", HTML)
+        self.assertIn("if(index+1<segments.length)", HTML)
+        self.assertIn("voiceTimes.audio===null", HTML)
+        self.assertIn("controller.abort()", HTML)
+
     def test_android_screenshot_is_explicit_and_api_gated(self):
         self.assertIn('id="screenshotQuickBtn"', HTML)
         self.assertIn('data-screen-action="screenshot"', HTML)

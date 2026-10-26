@@ -389,6 +389,34 @@ async function main() {
     await voicePage.waitForFunction(()=>document.querySelector("#reply").textContent.includes("Hoshi heard you"));
     assert.equal(heardRequests,1,"One mic tap must produce exactly one cloud request");
     assert.equal(await voicePage.evaluate(()=>window.micStartCount),1,"Mic must never auto-restart");
+
+    // Test real UI integration: the Urdu-script alternative should win only
+    // when the user explicitly enabled the Hey Hoshi wake-word filter.
+    await voicePage.evaluate(()=>document.querySelector('#wakeToggle').click());
+    await voicePage.locator('#wakeBtn').click();
+    const responseWithWake=voicePage.waitForResponse(r=>r.url().includes('/api/assistant'));
+    await voicePage.evaluate(()=>{
+      const recognition=window.lastMicInstance;
+      recognition.onresult({resultIndex:0,results:[{
+        isFinal:true,length:2,
+        0:{transcript:'some random words'},
+        1:{transcript:'ہے ہوشی, Why do stars shine'}
+      }]});
+      recognition.onend?.();
+    });
+    await responseWithWake;
+    assert.equal(heardRequests,2,'Urdu wake word alternative should make one request');
+    assert.equal(await voicePage.evaluate(()=>window.micStartCount),2);
+
+    // Without the wake word, recognized speech must NOT trigger a provider call.
+    await voicePage.locator('#wakeBtn').click();
+    await voicePage.evaluate(()=>{
+      window.lastMicInstance.onresult({resultIndex:0,results:[{
+        isFinal:true,length:1,0:{transcript:'why is water wet'}
+      }]});
+    });
+    assert.equal(heardRequests,2,'Wake mode rejects speech without an explicit wake word');
+    assert.equal(await voicePage.evaluate(()=>document.querySelector('#status').textContent.includes('SAY HEY HOSHI')),true);
     await voiceContext.close();
     assert.deepEqual(pageErrors,[]);
     console.log('PASS — nightroom layout, chat, voice settings, tabs and narrow phone widths');

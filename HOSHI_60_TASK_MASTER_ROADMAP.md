@@ -19,7 +19,7 @@
 - [x] **09** Break large goals into verified milestones. Acceptance: implementation or evidence, passing tests, limitations recorded.
 - [x] **10** Route to available free models intelligently. Acceptance: implementation or evidence, passing tests, limitations recorded.
 - [ ] **11** Activate and test a real OpenJarvis endpoint. Acceptance: implementation or evidence, passing tests, limitations recorded.
-- [ ] **12** Detect mistakes and retry with bounded repair. Acceptance: implementation or evidence, passing tests, limitations recorded.
+- [x] **12** Detect mistakes and retry with bounded repair. Acceptance: implementation or evidence, passing tests, limitations recorded.
 
 ## Phase 3 — Voice & Memory
 - [ ] **13** Improve Roman Urdu and Pakistani Urdu STT. Acceptance: implementation or evidence, passing tests, limitations recorded.
@@ -104,3 +104,5 @@
 - Task 09 **verified planning-only**: `cloud_backend/milestone_planner.py` and `POST /api/agent/milestones` produce dependency-ordered deliverable checkpoints, finite anime batches, status/evidence gates and clear non-execution flags. Tested by `tests/test_milestone_planner.py` in passing full run https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40307087025. This does not render anime or start backend jobs.
 
 - Task 10 **verified**: `cloud_backend/provider_policy.py` is integrated into actual `/api/assistant` provider selection. Configured-only ordering prioritizes Groq for spoken requests, real OpenJarvis for eligible complex requests, then OpenRouter/Gemini/Groq fallback without duplicate provider entries. Includes five regression tests `tests/test_provider_policy.py` and full passing CI https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40310457245. **This does not assert any unconfigured provider or OpenJarvis server is reachable.**
+
+- Task 12 **verified on the currently executable local backend tool only**: `artifact_verifier.py` validates generated Flora ZIP files, PNG dimensions, trusted catalog metadata, captions, video storyboard and matching preview. `/api/agent/execute` attempts **at most one** regeneration if verification fails; two failures return HTTP 502 without claiming completion. Security and error-boundary tests in `tests/test_artifact_verifier.py` passed alongside full CI: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40312499196. This is **not** a generic game/anime agent or universal self-healing capability; their workers are still unavailable.

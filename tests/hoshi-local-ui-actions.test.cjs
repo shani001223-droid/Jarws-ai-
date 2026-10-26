@@ -9,7 +9,7 @@ function fakeDom(){
   const doc={
     querySelector(selector){
       const match=selector.match(/^\[data-tab="(chat|settings)"\]$/);
-      return match?{click(){state.tab=match[1];}}:null;
+      return match?{click(){state.tab=match[1];},getAttribute(name){return name==="aria-selected"?String(state.tab===match[1]):null;}}:null;
     },
     getElementById(id){return id==="commandInput"?input:id==="nightSheet"?sheet:null;}
   };
@@ -50,8 +50,18 @@ test("scroll clamps to the visible Hoshi sheet",()=>{
   assert.equal(f.sheet.scrollTop,780);
   assert.equal(actions.run("scroll_down","",f.doc),true);
   assert.equal(f.sheet.scrollTop,800);
+  assert.equal(actions.run("scroll_down","",f.doc),false,"Boundary must not report movement");
   assert.equal(actions.run("scroll_up","",f.doc),true);
   assert.equal(f.sheet.scrollTop,560);
   f.sheet.hidden=true;
   assert.equal(actions.run("scroll_up","",f.doc),false);
+});
+test("rejects false-success when a tab ignores a click or a draft cannot be set",()=>{
+  const f=fakeDom();
+  f.doc.querySelector=()=>({click(){},getAttribute(){return "false";}});
+  assert.equal(actions.run("tap_chat","",f.doc),false);
+  assert.equal(actions.run("type_draft","Hello",f.doc),false);
+  const g=fakeDom();
+  g.sheet.scrollTop=0;
+  assert.equal(actions.run("scroll_up","",g.doc),false);
 });

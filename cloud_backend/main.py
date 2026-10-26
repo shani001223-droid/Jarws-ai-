@@ -25,12 +25,14 @@ try:  # Handles either cloud_backend package import or direct uvicorn main:app.
     from .permission_policy import check_agent_action
     from .task_router import route_task
     from .goal_spec import goal_to_deliverables
+    from .milestone_planner import plan_milestones
 except ImportError:
     from openjarvis_bridge import ask_openjarvis, endpoint as openjarvis_endpoint, wants_agent, OpenJarvisUnavailable
     from agent_tools import try_calculate
     from permission_policy import check_agent_action
     from task_router import route_task
     from goal_spec import goal_to_deliverables
+    from milestone_planner import plan_milestones
 
 app = FastAPI(title="HOSHI AI Cloud API", version="0.9.1")
 
@@ -88,6 +90,12 @@ class GoalSpecRequest(BaseModel):
 def agent_spec(payload: GoalSpecRequest):
     """Return concrete acceptance deliverables; do not start a background job."""
     return goal_to_deliverables(payload.message)
+
+
+@app.post("/api/agent/milestones")
+def agent_milestones(payload: GoalSpecRequest):
+    """Return a dependency-ordered verification plan, without running a worker."""
+    return plan_milestones(payload.message)
 
 
 class AgentTaskRequest(BaseModel):

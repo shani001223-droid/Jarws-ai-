@@ -38,7 +38,7 @@
 - [ ] **24** Show action history, pause and emergency stop. Acceptance: implementation or evidence, passing tests, limitations recorded.
 
 ## Phase 5 — Backend Job Engine
-- [ ] **25** Create persistent job IDs and status records. Acceptance: implementation or evidence, passing tests, limitations recorded.
+- [x] **25** Create persistent job IDs and status records. Acceptance: implementation or evidence, passing tests, limitations recorded.
 - [ ] **26** Implement bounded worker queue and scheduling. Acceptance: implementation or evidence, passing tests, limitations recorded.
 - [ ] **27** Delegate to planner/coder/designer/tester steps. Acceptance: implementation or evidence, passing tests, limitations recorded.
 - [ ] **28** Store authenticated artifacts and checkpoints. Acceptance: implementation or evidence, passing tests, limitations recorded.
@@ -141,3 +141,9 @@
 - Fixed a real concurrency issue: native WebView bridge now reserves the Android picker with `AtomicBoolean.compareAndSet` before posting to the UI thread, rejecting duplicate requests rather than falsely returning success. Added static privacy/bounds/race contracts in `tests/test_screenshot_ocr_contract.py`.
 - **Evidence:** full backend Python + Node + Playwright browser checks **passed** on commit `791bd4d48294`: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40341663461 ; Android debug APK build **passed** on native-change commit `5054aecf371c`: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40341619547 . Earlier APK for the bundled OCR model also passed: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40336773719 . No production merge or deployment.
 - **Not verified:** physical Realme Note 50 picker/OCR accuracy, Urdu-script OCR, reading another app's live screen, user-approved tap/type, or action outcome verification. Tasks 21–22 and Task 06 remain unchecked; do not equate static/browser tests with on-device acceptance.
+
+## Task 25 — authenticated metadata-only job records verified (26 Oct 2026)
+- Added `cloud_backend/job_records.py` with SQLite WAL-backed random opaque job IDs, bounded capacity, request-key hashing/idempotency, atomic status transitions, version counters and safe status detail codes. Reopening the same SQLite path retains records; concurrency, invalid inputs, stale transitions and missing artifact-evidence markers are tested. No raw prompts, model keys or user screenshots are stored.
+- Added `POST /api/agent/jobs` (planned record only) and authenticated `GET /api/agent/jobs/{job_id}`. Both **fail closed** unless server-only `HOSHI_JOB_API_TOKEN` (at least 32 characters) and absolute writable `HOSHI_JOB_DB_PATH` are configured. Unauthorized callers receive 401, unconfigured services 503; no browser/APK token, public status mutations, worker, queue or automatic task execution.
+- Verification: full Python/Node/Playwright CI **passed** for source/test commit `b6cfd802475d`: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40352472669 . Docker backend smoke **passed** for the matching backend implementation at `9c83e91c7c0f`: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40352334899 . Android source unchanged; existing debug APK success is historical, not this feature's device QA.
+- **Scope limitation:** SQLite persists only while the configured underlying filesystem persists. Default Render ephemeral disk is **not** redeploy-durable. No production volume or private token has been configured, no recovery/worker queue exists, and no background game/anime tasks were run. Task 26 (queue), Task 28 (artifact storage), Task 29 (recovery) and Task 06 (deployment) remain unchecked. No production merge/deployment.

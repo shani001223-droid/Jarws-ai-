@@ -494,9 +494,17 @@ def assistant(payload: AssistantRequest):
     # Tool commands execute locally on Android and never reach this route.
     quick_groq_problem = None
     if payload.fast and groq_key:
-        quick_instruction = language_hint + (
-            " This is a spoken reply: use one or two very short sentences. "
-            "Return valid Urdu-script speech_text and natural Roman Urdu reply if locale is ur-PK."
+        quick_instruction = (
+            "You are HOSHI, a warm, truthful, playful, respectful AI assistant. "
+            "Answer the user's actual question in ONE natural short sentence (around 12-22 words). "
+            "Do not invent actions or facts. Avoid repetitive greetings, manipulation, or claims of real feelings. "
+            + style_hint + " "
+            + ("For Pakistani Urdu, return ONLY JSON with string fields reply and speech_text. "
+               "reply: natural Roman Urdu if the user spoke Roman Urdu, otherwise Urdu script. "
+               "speech_text: the SAME reply in correct Pakistani Urdu script (not Hindi or Roman letters). "
+               "Example: {\"reply\":\"Ji, main yahan hoon.\",\"speech_text\":\"جی، میں یہاں ہوں۔\"}."
+               if str(payload.locale or "").lower().startswith("ur")
+               else "Match the user's language. Give just the answer, no JSON.")
         )
         try:
             quick = make_assistant_response(

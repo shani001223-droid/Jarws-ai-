@@ -328,7 +328,7 @@ def _groq_reply(message: str, language_hint: str) -> str:
         method="POST",
     )
     try:
-        with urlopen(req, timeout=35) as response:
+        with urlopen(req, timeout=18) as response:
             data = json.loads(response.read().decode("utf-8"))
     except HTTPError as exc:
         provider_message = ""
@@ -523,7 +523,7 @@ def assistant(payload: AssistantRequest):
         gemini_problem = "Gemini Interactions API did not return a usable response."
         should_fallback = False
         try:
-            with urlopen(req, timeout=35) as response:
+            with urlopen(req, timeout=18) as response:
                 data = json.loads(response.read().decode("utf-8"))
             steps = data.get("steps") or []
             reply = "\n".join(

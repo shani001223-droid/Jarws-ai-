@@ -41,5 +41,59 @@
     // At a scroll boundary there was no change; never claim success.
     return Math.abs(sheet.scrollTop-before)>0;
   }
-  return Object.freeze({valid,run});
+
+  // Task 24: session-only, metadata-only safety ledger. Never retain a draft,
+  // screenshot, app payload, account detail, or conversation in action history.
+  const historyActions=new Set([...actions,
+    "screen_back","screen_home","screen_swipe_up","screen_swipe_down","screen_screenshot",
+    "app_youtube","app_whatsapp","app_telegram","app_browser","app_settings","app_tradingview",
+    "control"]);
+  const historyOutcomes=new Set(["requested","verified","not_verified","denied",
+    "timeout","cancelled","blocked","queued","accepted","paused","resumed","emergency_stop"]);
+  function createSafety(maxEntries=20){
+    const limit=Number.isInteger(maxEntries)?Math.max(1,Math.min(maxEntries,30)):20;
+    let state="running",pending=null;
+    const entries=[];
+    function record(action,outcome){
+      if(!historyActions.has(action)||!historyOutcomes.has(outcome))return false;
+      entries.unshift(Object.freeze({action,outcome,at:Date.now()}));
+      if(entries.length>limit)entries.length=limit;
+      return true;
+    }
+    function cancel(id,reason="cancelled"){
+      if(!pending||pending.id!==id||!["cancelled","timeout","denied"].includes(reason))return false;
+      const action=pending.action;pending=null;record(action,reason);return true;
+    }
+    function begin(action,id){
+      if(state!=="running"||pending||!actions.has(action)||
+         !Number.isInteger(id)||id<1||id>1000000000)return false;
+      pending={action,id};record(action,"requested");return true;
+    }
+    function finish(id,verified){
+      if(!pending||pending.id!==id||typeof verified!=="boolean")return false;
+      const action=pending.action;pending=null;
+      record(action,verified?"verified":"not_verified");return true;
+    }
+    function cancelPending(){if(pending)cancel(pending.id,"cancelled");}
+    function pause(){
+      if(state==="halted")return false;
+      if(state==="paused")return true;
+      cancelPending();state="paused";record("control","paused");return true;
+    }
+    function resume(){
+      if(state==="running")return false;
+      state="running";record("control","resumed");return true;
+    }
+    function emergencyStop(){
+      cancelPending();state="halted";record("control","emergency_stop");return true;
+    }
+    function snapshot(){return {state,pending:pending?{action:pending.action,id:pending.id}:null,history:entries.slice()};}
+    return Object.freeze({
+      begin,finish,cancel,pause,resume,emergencyStop,record,snapshot,
+      blocked:()=>state!=="running",
+      isCurrent:(id,action)=>state==="running"&&!!pending&&pending.id===id&&pending.action===action,
+      clearHistory:()=>{entries.length=0;}
+    });
+  }
+  return Object.freeze({valid,run,createSafety});
 });

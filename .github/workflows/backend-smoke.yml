@@ -35,6 +35,38 @@ jobs:
             fi
             sleep 5
           done
+      - name: Verify public API deployment and upstream status
+        env:
+          API_BASE: https://jarws-ai-2.onrender.com
+        run: |
+          set -euo pipefail
+          ready=0
+          for attempt in $(seq 1 18); do
+            registry=$(curl -fsS --max-time 12 "$API_BASE/api/public/sources" || true)
+            if echo "$registry" | jq -e '.key_required == false and .sources.binance_spot and .sources.fear_greed and .sources.defillama' >/dev/null 2>&1; then
+              echo "PASS — deployed public API registry is present"
+              ready=1
+              break
+            fi
+            sleep 8
+          done
+          if [ "$ready" -ne 1 ]; then
+            echo "FAIL — public API routes are not available on the live backend"
+            exit 1
+          fi
+          for endpoint in 'market?symbol=BTCUSDT' 'candles?symbol=BTCUSDT&interval=5m' 'sentiment'; do
+            code=$(curl -sS --max-time 15 -o /tmp/hoshi-public.json -w '%{http_code}' "$API_BASE/api/public/$endpoint" || true)
+            echo "Public $endpoint: HTTP $code"
+            if [ "$code" = "200" ]; then
+              jq -e '.source and .fetched_at' /tmp/hoshi-public.json >/dev/null
+            elif [ "$code" = "503" ]; then
+              echo "WARN — provider unavailable from Render; UI must not invent data"
+            else
+              echo "FAIL — unexpected public API status for $endpoint"
+              cat /tmp/hoshi-public.json || true
+              exit 1
+            fi
+          done
       - name: Send one live AI request
         env:
           API_BASE: https://jarws-ai-2.onrender.com

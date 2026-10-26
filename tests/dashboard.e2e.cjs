@@ -531,7 +531,8 @@ async function main() {
       window.JarvisBridge = {
         isEnabled: () => true, requestSettings: () => {},
         performAction: () => true,
-        chooseScreenshotForLocalOcr: () => { window.__localOcrPickers++; return true; }
+        chooseScreenshotForLocalOcr: () => { window.__localOcrPickers++; return true; },
+        performLocalUiAction: (action,payload) => window.hoshiExecuteLocalUiAction(action,payload)
       };
     });
     await page.reload();
@@ -560,6 +561,24 @@ async function main() {
     await page.locator('#screenOcrBtn').click();
     await page.evaluate(() => window.hoshiLocalOcrError('No screenshot selected'));
     assert.match(await page.locator('#screenOcrStatus').innerText(), /No screenshot selected/);
+    // Task 21: explicit native-bridge simulation only changes the local Hoshi UI.
+    const messagesBeforeLocalActions=apiMessages.length;
+    await page.locator('#localUiDraft').fill('Hoshi meri trading research ka draft');
+    await page.locator('#localUiTypeBtn').click();
+    assert.equal(await page.locator('#commandInput').inputValue(),
+      'Hoshi meri trading research ka draft');
+    assert.equal(await page.locator('[data-tab="chat"]').getAttribute('aria-selected'),'true');
+    assert.equal(apiMessages.length,messagesBeforeLocalActions,'Draft typing must not submit AI requests');
+    await page.locator('[data-tab="settings"]').click();
+    await page.locator('#localUiScrollDownBtn').click();
+    assert.match(await page.locator('#localUiStatus').textContent(),/queued/i);
+    await page.locator('#localUiChatBtn').click();
+    assert.equal(await page.locator('[data-tab="chat"]').getAttribute('aria-selected'),'true');
+    await page.locator('[data-tab="settings"]').click();
+    await page.evaluate(()=>{window.JarvisBridge.isEnabled=()=>false});
+    await page.locator('#localUiScrollUpBtn').click();
+    assert.match(await page.locator('#localUiStatus').textContent(),/permission first/i);
+    assert.equal(apiMessages.length,messagesBeforeLocalActions);
     assert.deepEqual(pageErrors,[]);
     console.log('PASS — nightroom layout, chat, voice settings, tabs and narrow phone widths');
   } finally {

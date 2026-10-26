@@ -417,6 +417,30 @@ async function main() {
     });
     assert.equal(heardRequests,2,'Wake mode rejects speech without an explicit wake word');
     assert.equal(await voicePage.evaluate(()=>document.querySelector('#status').textContent.includes('SAY HEY HOSHI')),true);
+    // Stop Speaking must also cancel an in-flight cloud reply, so a stale
+    // result cannot start new speech after the user explicitly interrupts.
+    await voicePage.route('https://jarws-ai-2.onrender.com/api/assistant',async route=>{
+      const data=route.request().postDataJSON();
+      if(!String(data?.message||'').includes('delayed interruption test')){
+        await route.fallback();return;
+      }
+      await new Promise(resolve=>setTimeout(resolve,450));
+      try{
+        await route.fulfill({
+          status:200,headers:{'Access-Control-Allow-Origin':'*','Content-Type':'application/json'},
+          body:JSON.stringify({reply:'UNSAFE LATE REPLY',speech_text:'دیر سے جواب',mode:'mock',emotion:'happy'})
+        });
+      }catch(_){/* Fetch cancellation may close the route before delivery. */}
+    });
+    await voicePage.evaluate(()=>{
+      document.querySelector('#commandInput').value='Explain delayed interruption test';
+      document.querySelector('#commandForm').requestSubmit();
+    });
+    await voicePage.waitForFunction(()=>document.querySelector('#status').textContent.includes('AI THINKING'));
+    await voicePage.evaluate(()=>document.querySelector('#stopSpeakingBtn').click());
+    await voicePage.waitForTimeout(650);
+    assert.equal(await voicePage.evaluate(()=>document.querySelector('#reply').textContent.includes('UNSAFE LATE REPLY')),false);
+    assert.equal(await voicePage.evaluate(()=>document.querySelector('#status').textContent.includes('PENDING REPLY STOPPED')),true);
     await voiceContext.close();
 
     // Task 17: consent is OFF by default; no previous chat is silently stored.

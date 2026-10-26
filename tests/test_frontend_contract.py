@@ -132,7 +132,8 @@ class FrontendContractTests(unittest.TestCase):
     def test_spoken_requests_use_fast_ai_mode_but_writing_actions_are_local(self):
         self.assertIn("askCloud(text,fastRequest)", HTML)
         self.assertIn("const fastRequest=source==='voice'", HTML)
-        self.assertIn("processCommand(command,'voice')", HTML)
+        self.assertIn("processCommand(result.command,'voice')", HTML)
+        self.assertIn('<script src="./hoshi-speech-input.js"></script>', HTML)
         self.assertIn("AI REPLIED IN ", HTML)
         self.assertIn("fast})", HTML)
 

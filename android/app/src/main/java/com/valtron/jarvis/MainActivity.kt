@@ -42,6 +42,7 @@ import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
 class MainActivity : Activity() {
     private data class NativeSpeech(val text: String, val language: String, val pitch: Float, val rate: Float)
@@ -67,6 +68,16 @@ class MainActivity : Activity() {
     // Reserve the picker synchronously to prevent duplicate picker launches.
     private val localOcrBusy = AtomicBoolean(false)
     private val safeIntentHandler = Handler(Looper.getMainLooper())
+    // Shared with the WebView bridge: an emergency stop invalidates UI-thread
+    // actions queued before it, without storing payloads or permissions.
+    private val nativeActionEpoch = AtomicInteger(0)
+
+    fun currentActionEpoch(): Int = nativeActionEpoch.get()
+    fun isActionEpochCurrent(epoch: Int): Boolean = nativeActionEpoch.get() == epoch
+    fun cancelQueuedActions(): Boolean {
+        nativeActionEpoch.incrementAndGet()
+        return true // Cannot undo an Android action already dispatched.
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -290,7 +301,10 @@ class MainActivity : Activity() {
     fun openKnownApp(action: String, requestId: Int = 0): Boolean {
         if (action !in setOf("youtube", "whatsapp", "telegram", "browser", "settings", "tradingview") ||
             requestId !in 0..1_000_000_000 || isFinishing || isDestroyed) return false
-        return safeIntentHandler.post { dispatchKnownAppLaunch(action, requestId) }
+        val epoch = currentActionEpoch()
+        return safeIntentHandler.post {
+            if (isActionEpochCurrent(epoch)) dispatchKnownAppLaunch(action, requestId)
+        }
     }
 
     private fun dispatchKnownAppLaunch(action: String, requestId: Int) {
@@ -417,7 +431,7 @@ class MainActivity : Activity() {
                 payload.any { it.code < 32 || it.code == 127 }) return
         } else if (payload.isNotEmpty()) return
         val script = "window.hoshiExecuteLocalUiAction && window.hoshiExecuteLocalUiAction(" +
-            JSONObject.quote(action) + "," + JSONObject.quote(payload) + ")"
+            JSONObject.quote(action) + "," + JSONObject.quote(payload) + "," + requestId + ")"
         try {
             view.evaluateJavascript(script) { raw ->
                 // The JavaScript result is a Boolean, not a screenshot or draft.

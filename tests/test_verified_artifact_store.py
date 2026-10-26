@@ -1,5 +1,6 @@
 """Task 28: immutable private artifacts, integrity, checkpoints and auth gates."""
 import hashlib
+import concurrent.futures
 import os
 import tempfile
 import unittest
@@ -123,6 +124,16 @@ class VerifiedArtifactStoreTests(unittest.TestCase):
         path.symlink_to(self.db)
         with self.assertRaises(ArtifactStorageError):
             self.artifacts.read_verified(job)
+
+    def test_concurrent_same_job_writes_are_idempotent_and_atomic(self):
+        job = self.running_job()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as pool:
+            results = list(pool.map(
+                lambda _: self.artifacts.save_verified(job, self.shampoo), range(10)))
+        self.assertTrue(all(row == results[0] for row in results))
+        self.assertEqual(len(list((self.root / job).iterdir())), 1)
+        self.assertEqual(len(self.artifacts.checkpoints(job)), 5)
+        self.assertEqual(self.jobs.get(job)["status"], "running")
 
     def test_invalid_id_and_insecure_storage_are_rejected(self):
         with self.assertRaises(ArtifactStorageError):

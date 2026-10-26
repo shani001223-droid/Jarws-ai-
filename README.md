@@ -1,3 +1,30 @@
+## Free public API integrations (read-only, zero new API keys)
+
+Hoshi's **Trading** tab now requests public Binance **Spot** ticker and recent candles via the Hoshi backend, displaying the price, 24-hour change, a simple close-price trend, EMA 9, SMA 20, RSI 14, and Crypto Fear & Greed. These are **not Futures quotes or trade signals**. Trade placement, exchange-account access and automated trading are **not** implemented by this change.
+
+The backend also offers opt-in, on-demand keyless information endpoints. All use provider-side rate limits, server-side caching, short timeouts, fixed trusted hosts, bounded responses and allowlisted query parameters. It does **not** scrape exposed keys or authenticate to any account.
+
+| Hoshi endpoint | Keyless source | Cache |
+| --- | --- | --- |
+| \`/api/public/sources\` | Registry and source documentation, no network call | n/a |
+| \`/api/public/market?symbol=BTCUSDT\` | Binance Spot 24h ticker | 25 seconds |
+| \`/api/public/candles?symbol=BTCUSDT&interval=5m\` | Binance Spot 80 candles; indicators calculated locally | 45 seconds |
+| \`/api/public/sentiment\` | Alternative.me Fear & Greed (show attribution) | 10 minutes |
+| \`/api/public/defi\` | DefiLlama top chains by TVL | 15 minutes |
+| \`/api/public/bitcoin-fees\` | mempool.space fee estimates | 90 seconds |
+| \`/api/public/weather\` | Open-Meteo current weather (rounded coordinates) | 10 minutes |
+
+Documentation and terms:
+- [Binance public market data only](https://github.com/binance/binance-spot-api-docs/blob/master/faqs/market_data_only.md)
+- [Alternative.me crypto Fear & Greed](https://alternative.me/crypto/fear-and-greed-index/) (attribution required next to displayed data)
+- [DefiLlama free API](https://api-docs.defillama.com/)
+- [mempool.space API](https://mempool.space/docs/api/rest)
+- [Open-Meteo](https://open-meteo.com/en/docs) (free non-commercial use, CC BY 4.0 attribution)
+
+This adds **five independent keyless external providers**, not five secret AI keys. Binance exposes multiple public endpoints. Existing Gemini/Groq/OpenRouter secrets remain unchanged and continue to belong exclusively in private Render environment variables.
+
+Public APIs can be blocked by region, provider outages, free hosting timeouts or rate limits. The UI deliberately reports failure instead of inventing prices. No real-device / external-network acceptance claim is made until separately verified.
+
 ## Interactive wardrobe and mood reactions
 
 Outfit tab provides 15 selectable main-screen looks (original plus 14 everyday/fashion variants). Each choice renders an individual panel from the supplied artwork atlas, applies it to the main scene, and persists locally across reloads. It is not a static screenshot-only menu. Intimate/swimsuit/bunny and school variants are not included. These are 2D illustrated looks, not a layered clothing simulator; pose and scene follow each source panel. Runtime crop avoids title/footer labels; grid source resolution limits sharpness.

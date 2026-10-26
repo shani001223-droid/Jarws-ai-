@@ -84,6 +84,8 @@ async function main() {
         "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type",
         "Content-Type": "application/json",
+        "Access-Control-Expose-Headers": "X-Request-ID",
+        "X-Request-ID": "a73a7fe6-5dbe-41a3-98f8-434ce5abb008",
       };
       if (request.method() === "OPTIONS") {
         await route.fulfill({ status: 204, headers });
@@ -239,6 +241,18 @@ async function main() {
     await page.locator('[data-tab="settings"]').click();
     assert.equal(await page.locator('#voicePanel').isVisible(), true);
     assert.equal(await page.locator('#stopSpeakingBtn').isVisible(), true);
+    await page.locator('#clientDiagnostics summary').click();
+    await page.evaluate(()=>window.HoshiDiagnostics.record('uncaught_error',{filename:'https://example.test/index.html?key=PRIVATE-QUERY',lineno:18,message:'PRIVATE-CHAT',error:{stack:'PRIVATE-STACK'}}));
+    await page.locator('#copyDiagnosticReport').click();
+    const copiedDiagnostic=await page.evaluate(()=>window.__phoneActions.at(-1));
+    assert.equal(copiedDiagnostic[0],'copy');
+    assert.match(copiedDiagnostic[1],/a73a7fe6-5dbe-41a3-98f8-434ce5abb008/);
+    assert.doesNotMatch(copiedDiagnostic[1],/PRIVATE|example.test|Tell me what you can help/);
+    await page.locator('#clearDiagnosticReport').click();
+    assert.deepEqual(await page.evaluate(()=>window.HoshiDiagnostics.snapshot().events),[]);
+    assert.equal(await page.evaluate(()=>window.HoshiDiagnostics.snapshot().last_api_response),null);
+    await page.locator('#clientDiagnostics summary').click();
+
     // Fast Urdu on an Android phone with installed ur-PK TTS should skip HTTP speech generation.
     await page.evaluate(()=>{
       window.__nativeSpoken=[];
@@ -384,4 +398,5 @@ main().catch(error => {
   console.error(error);
   process.exitCode = 1;
 });
+
 

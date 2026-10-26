@@ -160,6 +160,17 @@ class ObservabilityTests(unittest.TestCase):
         self.assertIsNone(data['queue_depth'])
         self.assertNotIn(secret, response.text)
 
+    def test_raw_uvicorn_access_records_are_replaced_by_safe_structured_records(self):
+        import logging
+        app, _ = self.make_app()
+        raw = logging.getLogger('uvicorn.access')
+        record = logging.LogRecord('uvicorn.access', logging.INFO, __file__, 1,
+                                   '%s %s', ('private-ip', '/?api_key=private-secret'), None)
+        self.assertFalse(raw.filter(record))
+        with self.assertLogs('hoshi.requests', level='INFO') as events, TestClient(app) as client:
+            self.assertEqual(client.get('/sync').status_code, 200)
+        self.assertEqual(json.loads(events.records[0].message)['route'], '/sync')
+
     def test_health_payload_and_business_behavior_are_preserved(self):
         from cloud_backend.main import app
         with TestClient(app) as client:

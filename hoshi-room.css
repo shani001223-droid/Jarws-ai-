@@ -32,6 +32,14 @@
 .room-life .life-expression[data-emotion=shy],.room-life .life-expression[data-emotion=affectionate]{box-shadow:0 7px 27px #f7a6da91}
 .room-life .life-expression[data-emotion=sad],.room-life .life-expression[data-emotion=crying]{filter:saturate(.68)}
 .room-life .life-expression[data-emotion=angry]{filter:contrast(1.09)}
+.room-life .life-expression[data-emotion=playful],.room-life .life-expression[data-emotion=happy]{animation:life-giggle 1.1s ease-in-out infinite}
+.room-life .life-expression[data-emotion=excited]{animation:life-excited .75s ease-in-out infinite}
+.room-life .life-expression[data-emotion=shy]:before{content:"";position:absolute;z-index:2;inset:0;opacity:.72;background:radial-gradient(ellipse 16% 9% at 27% 61%,#f88ca4a0,transparent 90%),radial-gradient(ellipse 16% 9% at 74% 61%,#f88ca4a0,transparent 90%);pointer-events:none}
+.room-life .life-expression[data-emotion=crying]:after{content:"";position:absolute;z-index:3;left:24%;top:56%;width:9%;height:19%;border-radius:55% 55% 70% 70%;transform:rotate(10deg);background:linear-gradient(#94dcffb3,#c6f5ff);box-shadow:62px 2px 0 -1px #9bdcffbd;animation:life-tears 1.5s ease-in-out infinite;pointer-events:none}
+.room-life .life-expression[data-emotion=angry]:after{content:"";position:absolute;z-index:3;left:28%;right:28%;top:37%;height:4%;border-top:3px solid #63354c90;transform:skewY(-6deg);pointer-events:none}
+@keyframes life-giggle{0%,100%{transform:translateY(0) rotate(0)}25%{transform:translateY(-5px) rotate(-2deg)}50%{transform:translateY(0) rotate(2deg)}75%{transform:translateY(-3px) rotate(-1deg)}}
+@keyframes life-excited{50%{transform:translateY(-7px) scale(1.04)}}
+@keyframes life-tears{0%,100%{opacity:.5;transform:translateY(-1px)}50%{opacity:1;transform:translateY(5px)}}
 .room-life[data-activity=gaming] .life-pc{opacity:1;transform:perspective(220px) rotateY(2deg) scale(1.07);filter:brightness(1.4)}
 .room-life[data-activity=gaming] .life-pc-game{opacity:1}
 .room-life[data-activity=reels] .life-phone{opacity:1;transform:rotate(-12deg) scale(1.2);animation:life-phone 2.5s ease-in-out infinite alternate}

@@ -27,7 +27,7 @@
 - [x] **15** Measure and reduce end-to-end latency. Acceptance: implementation or evidence, passing tests, limitations recorded.
 - [x] **16** Support speech interruption and cancellation. Acceptance: implementation or evidence, passing tests, limitations recorded.
 - [x] **17** Add consent-based durable memory with export/delete. Acceptance: implementation or evidence, passing tests, limitations recorded.
-- [ ] **18** Improve warm, consistent, non-manipulative personality. Acceptance: implementation or evidence, passing tests, limitations recorded.
+- [x] **18** Improve warm, consistent, non-manipulative personality. Acceptance: implementation or evidence, passing tests, limitations recorded.
 
 ## Phase 4 — Android Live Agent
 - [ ] **19** Request explicit user-approved screen access. Acceptance: implementation or evidence, passing tests, limitations recorded.
@@ -124,3 +124,5 @@
 - Integrated into `cloud_backend/main.py` after existing user-mood classification, with the same policy supplied to OpenRouter, Gemini, OpenJarvis, optional free-provider fallbacks and quick Groq voice. No extra AI network calls or user data persistence are introduced.
 - Added `tests/test_persona_policy.py` for consent boundaries, multiple moods, short Groq Urdu JSON prompts and full Gemini prompts. The boundary-regex examples were manually sanity-checked offline; this **does not replace** the repository Python suite, Playwright or APK build.
 - **Status: NOT YET VERIFIED / unchecked.** At the time of this note, GitHub Actions had not started a new workflow for commit `04512dcfedf1a674a9c820408ebad10896ae53e4`; the last green CI/APK runs belong to the earlier `d34007015b` commit. Do not mark Task 18 complete until the latest source commit passes full CI and Android build; real-provider conversational quality remains a separate device/subjective acceptance item. Never claim prompt guidance guarantees provider compliance.
+
+- Task 18 **verified at prompt/contract level on 26 October 2026**: shared `cloud_backend/persona_policy.py` adds conservative Roman Urdu/English affection boundary handling and consistent warm but non-manipulative personality guardrails to quick Groq and full OpenRouter/Gemini/OpenJarvis/fallback prompts. `tests/test_persona_policy.py` verifies injection of guidance, tone, consent and accuracy requirements, with **full current-branch Python/Node/Playwright CI passing**: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40325729103 . **This proves local API prompt structure, not real-world model obedience, emotion, or real-device dialogue quality.** The persona must never be described as having authentic human emotional dependency.

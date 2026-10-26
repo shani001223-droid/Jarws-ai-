@@ -133,7 +133,7 @@ def _private_job_store(request: FastAPIRequest) -> JobRecordStore:
                             headers={"WWW-Authenticate": "Bearer"})
     try:
         return JobRecordStore(location)
-    except (OSError, ValueError) as exc:
+    except Exception as exc:
         _safe_log_failure("jobs.storage", exc)
         raise HTTPException(status_code=503, detail="Private job storage unavailable.") from None
 

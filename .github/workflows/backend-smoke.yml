@@ -24,7 +24,7 @@ jobs:
           health=""
           for attempt in $(seq 1 30); do
             if health=$(curl -fsS --max-time 10 "$API_BASE/health"); then
-              if echo "$health" | jq -e ' .service == "hoshi-cloud-api" and .version == "0.9.1" and .gemini_api == "interactions" and .gemini_model == "gemini-3.8-flash" and .groq_model == "openai/gpt-oss-20b" and .ai_connected == true and .reply_fallback_enabled == true' >/dev/null; then
+              if echo "$health" | jq -e ' .service == "hoshi-cloud-api" and .version == "0.9.1" and .gemini_api == "interactions" and .gemini_model == "gemini-3.8-flash" and .groq_model == "openai/gpt-oss-20b" and .ai_connected == true and .reply_fallback_enabled == true and .voice_fast_path == true' >/dev/null; then
                 echo "$health" | jq '{version, gemini_api, gemini_model, groq_model, groq_configured, ai_connected}'
                 break
               fi
@@ -125,3 +125,21 @@ jobs:
           done
           echo "FAIL — live Urdu conversational path did not pass validation"
           exit 1
+
+      - name: Measure actual fast spoken-response time
+        env:
+          API_BASE: https://jarws-ai-2.onrender.com
+        run: |
+          set -euo pipefail
+          timing=$(curl -sS --max-time 38 -o /tmp/hoshi-voice-speed.json -w '%{http_code} %{time_total}' \
+            -X POST "$API_BASE/api/assistant" -H 'Content-Type: application/json' \
+            --data '{"message":"Hoshi, aaj kaisi ho? Jawab chhota rakho.","locale":"ur-PK","fast":true}' || echo "000 0")
+          echo "Fast spoken AI response: $timing (HTTP and seconds, network included, audio not included)"
+          code=$(echo "$timing" | awk '{print $1}')
+          if [ "$code" = "200" ]; then
+            jq -e '.reply and (.mode=="groq" or .mode=="openrouter" or .mode=="gemini")' /tmp/hoshi-voice-speed.json >/dev/null
+            jq '{mode, reply_length:(.reply|length), urdu_speech_text_present:(.speech_text != null)}' /tmp/hoshi-voice-speed.json
+            echo "PASS — fast path gives a usable reply"
+          else
+            echo "WARN — voice fast-provider call unavailable during this measurement; existing AI path remains"
+          fi

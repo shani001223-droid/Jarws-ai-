@@ -27,6 +27,14 @@ class PrivateJobApiTests(unittest.TestCase):
         self.addCleanup(self.env.stop)
         self.auth = FakeRequest("Bearer " + self.token)
 
+    def test_private_routes_are_registered_but_do_not_start_workers(self):
+        registered = {(route.path, method) for route in main.app.routes
+                      for method in getattr(route, "methods", set())}
+        self.assertIn(("/api/agent/jobs", "POST"), registered)
+        self.assertIn(("/api/agent/jobs/{job_id}", "GET"), registered)
+        self.assertNotIn(("/api/agent/jobs/{job_id}", "PATCH"), registered)
+        self.assertNotIn(("/api/agent/jobs/{job_id}", "DELETE"), registered)
+
     def test_fail_closed_without_explicit_backend_configuration(self):
         with patch.dict(os.environ, {"HOSHI_JOB_API_TOKEN": "", "HOSHI_JOB_DB_PATH": ""}):
             with self.assertRaises(main.HTTPException) as error:

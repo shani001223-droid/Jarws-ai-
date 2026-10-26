@@ -30,6 +30,7 @@ try:  # Handles either cloud_backend package import or direct uvicorn main:app.
     from .milestone_planner import plan_milestones
     from .provider_policy import choose_providers
     from .free_llm_providers import available_free_providers, ask_free_provider, OptionalProviderError
+    from .urdu_tts_text import normalize_urdu_speech
 except ImportError:
     from openjarvis_bridge import ask_openjarvis, endpoint as openjarvis_endpoint, wants_agent, OpenJarvisUnavailable
     from agent_tools import try_calculate
@@ -39,6 +40,7 @@ except ImportError:
     from milestone_planner import plan_milestones
     from provider_policy import choose_providers
     from free_llm_providers import available_free_providers, ask_free_provider, OptionalProviderError
+    from urdu_tts_text import normalize_urdu_speech
 
 app = FastAPI(title="HOSHI AI Cloud API", version="0.9.1")
 
@@ -184,7 +186,8 @@ class SpeechRequest(BaseModel):
 
 async def synthesize_urdu(text: str, style: str) -> bytes:
     import edge_tts
-    rate, pitch = {"soft": ("+0%", "+12Hz"), "warm": ("-3%", "+8Hz"), "playful": ("+3%", "+18Hz")}.get(style, ("+0%", "+12Hz"))
+    # Modest pitch changes avoid exaggerated/chipmunk-like delivery.
+    rate, pitch = {"soft": ("-2%", "+2Hz"), "warm": ("-3%", "+1Hz"), "playful": ("+2%", "+7Hz")}.get(style, ("-2%", "+2Hz"))
     audio = bytearray()
     async for chunk in edge_tts.Communicate(text, "ur-PK-UzmaNeural", rate=rate, pitch=pitch).stream():
         if chunk["type"] == "audio":
@@ -205,6 +208,7 @@ async def speech(payload: SpeechRequest):
     text = payload.text.strip()
     if not re.search(r"[\u0600-\u06ff]", text) or re.search(r"[\u0900-\u097f]", text):
         raise HTTPException(status_code=400, detail="Urdu-script text is required for Urdu speech.")
+    text = normalize_urdu_speech(text)
     cache_key = hashlib.sha256((payload.style + "\0" + text).encode()).digest()
     cached = speech_cache.get(cache_key)
     if cached and cached[0] > time.monotonic():

@@ -155,7 +155,7 @@ class FrontendContractTests(unittest.TestCase):
 
     def test_online_urdu_starts_first_clip_before_remaining_clips(self):
         self.assertIn("function splitUrduSpeech(text)", HTML)
-        self.assertIn("const files=segments.map(part=>fetch(", HTML)
+        self.assertRegex(HTML, r"const files=segments\.map\(part=>(?:fetch|tracedFetch)\(")
         self.assertIn("void playPart(0)", HTML)
         self.assertIn("if(index+1<segments.length)", HTML)
         self.assertIn("voiceTimes.audio===null", HTML)

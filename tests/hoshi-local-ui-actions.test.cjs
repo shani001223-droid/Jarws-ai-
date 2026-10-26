@@ -65,3 +65,63 @@ test("rejects false-success when a tab ignores a click or a draft cannot be set"
   g.sheet.scrollTop=0;
   assert.equal(actions.run("scroll_up","",g.doc),false);
 });
+
+
+test("Task 24 safety: bounded history never records draft or arbitrary labels",()=>{
+  const s=actions.createSafety(3);
+  assert.equal(s.begin("type_draft",1),true);
+  assert.equal(s.finish(1,true),true);
+  assert.equal(s.record("custom secret password","verified"),false);
+  assert.equal(s.record("app_whatsapp","accepted"),true);
+  assert.equal(s.record("screen_back","queued"),true);
+  const h=s.snapshot().history;
+  assert.equal(h.length,3);
+  assert.deepEqual(h.map(x=>x.action),["screen_back","app_whatsapp","type_draft"]);
+  assert.equal(JSON.stringify(h).includes("password"),false);
+  h.pop();
+  assert.equal(s.snapshot().history.length,3,"History is a copy");
+});
+test("Task 24 safety: pause cancels pending and blocks actions until explicit resume",()=>{
+  const s=actions.createSafety();
+  assert.equal(s.begin("tap_chat",12),true);
+  assert.equal(s.pause(),true);
+  assert.equal(s.blocked(),true);
+  assert.equal(s.isCurrent(12,"tap_chat"),false);
+  assert.equal(s.finish(12,true),false,"Late result cannot count as verified");
+  assert.equal(s.begin("scroll_up",13),false);
+  assert.equal(s.resume(),true);
+  assert.equal(s.begin("scroll_up",13),true);
+  assert.equal(s.finish(13,false),true);
+  assert.equal(s.snapshot().history[0].outcome,"not_verified");
+});
+test("Task 24 safety: emergency stop stays latched until explicit resume",()=>{
+  const s=actions.createSafety();
+  assert.equal(s.begin("type_draft",77),true);
+  assert.equal(s.emergencyStop(),true);
+  assert.equal(s.snapshot().state,"halted");
+  assert.equal(s.isCurrent(77,"type_draft"),false);
+  assert.equal(s.finish(77,true),false);
+  assert.equal(s.begin("tap_chat",78),false);
+  assert.equal(s.pause(),false);
+  assert.equal(s.resume(),true);
+  assert.equal(s.begin("tap_chat",78),true);
+  assert.equal(s.cancel(77,"timeout"),false);
+  assert.equal(s.cancel(78,"timeout"),true);
+  assert.equal(s.snapshot().history.some(x=>x.outcome==="emergency_stop"),true);
+  s.clearHistory();
+  assert.deepEqual(s.snapshot().history,[]);
+  assert.equal(s.snapshot().state,"running");
+});
+test("Task 24 safety: unknown actions, request IDs and outcomes fail closed",()=>{
+  const s=actions.createSafety();
+  for(const id of [-1,0,1.5,1000000001,"2"]){
+    assert.equal(s.begin("tap_chat",id),false);
+  }
+  assert.equal(s.begin("send_message",1),false);
+  assert.equal(s.record("control","payload"),false);
+  assert.equal(s.begin("tap_chat",1),true);
+  assert.equal(s.begin("tap_settings",2),false);
+  assert.equal(s.finish(2,true),false);
+  assert.equal(s.finish(1,"true"),false);
+  assert.equal(s.finish(1,true),true);
+});

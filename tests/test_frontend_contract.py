@@ -179,6 +179,14 @@ class FrontendContractTests(unittest.TestCase):
         self.assertIn("GLOBAL_ACTION_TAKE_SCREENSHOT", ACCESSIBILITY)
         self.assertIn("Build.VERSION.SDK_INT >= Build.VERSION_CODES.P", ACCESSIBILITY)
 
+    def test_user_can_interrupt_pending_ai_and_speech_before_late_response(self):
+        self.assertIn("function interruptHoshi()", HTML)
+        self.assertIn("cloudRequestSequence++;", HTML)
+        self.assertIn("if(activeCloudController){try{activeCloudController.abort()}", HTML)
+        self.assertIn("interruptHoshi();lastVoiceError", HTML)
+        self.assertIn("VOICE AND PENDING REPLY STOPPED", HTML)
+        self.assertIn("if(requestId!==cloudRequestSequence)return", HTML)
+
     def test_voice_speaking_state_and_network_timeouts_are_wired(self):
         self.assertIn("window.hoshiSetSpeaking=setSpeaking", HTML)
         self.assertIn("u.onstart=()=>{if(speechId===speechSequence)setSpeaking(true)}", HTML)

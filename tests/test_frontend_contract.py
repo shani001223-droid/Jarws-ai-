@@ -105,8 +105,13 @@ class FrontendContractTests(unittest.TestCase):
         self.assertIn('lastVoiceError=""', HTML)
         for error in ("not-allowed", "audio-capture", "language-not-supported", "network"):
             self.assertIn("'" + error + "'", HTML)
-        self.assertIn("VOICE RESTART FAILED · TAP TO RETRY", HTML)
-        self.assertIn("if(!lastVoiceError)setStatus('READY')", HTML)
+        self.assertIn("instance.continuous=false", HTML)
+        self.assertIn("if(sessionEnded||submitted)return", HTML)
+        self.assertNotIn("recognition.continuous=true", HTML)
+        self.assertIn("MIC STOPPED · TAP TO SPEAK AGAIN", HTML)
+        self.assertIn("startNativeListening(commandLanguage)", HTML)
+        self.assertIn("SpeechRecognizer.createSpeechRecognizer(this)", MAIN_ACTIVITY)
+        self.assertIn("mediaPlaybackRequiresUserGesture = false", MAIN_ACTIVITY)
 
     def test_android_screenshot_is_explicit_and_api_gated(self):
         self.assertIn('id="screenshotQuickBtn"', HTML)
@@ -122,7 +127,7 @@ class FrontendContractTests(unittest.TestCase):
         self.assertIn("u.onstart=()=>{if(speechId===speechSequence)setSpeaking(true)}", HTML)
         self.assertIn("u.onerror=e=>", HTML)
         self.assertIn("AbortController", HTML)
-        self.assertIn("65000", HTML)
+        self.assertIn("45000", HTML)
         self.assertIn("7000", HTML)
         self.assertIn("setOnUtteranceProgressListener", MAIN_ACTIVITY)
         self.assertIn("window.hoshiSetSpeaking", MAIN_ACTIVITY)

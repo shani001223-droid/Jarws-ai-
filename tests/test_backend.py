@@ -117,6 +117,18 @@ class AssistantApiTests(unittest.TestCase):
         self.assertEqual(body["temperature"], 0.4)
         self.assertEqual(requested.call_args.kwargs["timeout"], 9)
 
+    def test_spoken_writing_request_keeps_full_generation_budget(self):
+        raw = json.dumps({"reply":"Pehla paragraph aur doosra paragraph.", "speech_text":"پہلا پیراگراف اور دوسرا پیراگراف۔"})
+        with patch.dict(os.environ, {"GROQ_API_KEY":"test", "OPENROUTER_API_KEY":"", "GEMINI_API_KEY":""}):
+            with patch("cloud_backend.main.urlopen",return_value=FakeResponse({
+                "choices":[{"message":{"content":raw}}]
+            })) as mocked:
+                answer = main.assistant(main.AssistantRequest(message="Mere liye report likho",
+                                                               locale="ur-PK",fast=True))
+        self.assertEqual(answer.mode, "groq")
+        body = json.loads(mocked.call_args.args[0].data)
+        self.assertEqual(body["max_tokens"], 1024)
+
     def test_fast_groq_failure_is_not_retried_without_a_backup(self):
         error = HTTPError("https://api.groq.com/openai/v1/chat/completions", 429, "limited", {}, None)
         with patch.dict(os.environ, {"GROQ_API_KEY": "test", "OPENROUTER_API_KEY": "", "GEMINI_API_KEY": ""}):

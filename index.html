@@ -286,7 +286,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
   const command=wakeEnabled?text.replace(/^hey[, ]*hoshi[,: ]*/i,'').trim():text;
   if(wakeEnabled&&command===text){setStatus('SAY HEY HOSHI · TAP AGAIN');return}
   if(!command){setStatus('TAP MIC AGAIN AND SAY COMMAND');return}
-  processCommand(command)
+  processCommand(command,'voice')
  };
  window.hoshiNativeSpeechError=error=>{
   if(!nativeMicActive)return;endNativeMic();setStatus('MIC ERROR · '+String(error||'speech unavailable').slice(0,100)+' · TAP TO RETRY')
@@ -311,19 +311,19 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
    return false;
   }finally{if(timeout!==null)clearTimeout(timeout)}
  }
- async function askCloud(message){
+ async function askCloud(message,fast=false){
   const requestId=++cloudRequestSequence;
   if(activeCloudController){try{activeCloudController.abort()}catch(_){}}
-  setStatus('SENDING TO CLOUD…');setEmotion('thinking');orb.classList.add('active');
+  const modelStarted=Date.now();setStatus('AI THINKING…');setEmotion('thinking');orb.classList.add('active');
   const controller=typeof AbortController==='function'?new AbortController():null;
   activeCloudController=controller;
-  const timeout=controller?setTimeout(()=>controller.abort(),45000):null;
+  const timeout=controller?setTimeout(()=>controller.abort(),32000):null;
   try{
-   const options={method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,locale:commandLanguage,personality:getPersonality(),context:getCloudContextForRequest(message)})};
+   const options={method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,locale:commandLanguage,personality:getPersonality(),context:getCloudContextForRequest(message),fast})};
    if(controller)options.signal=controller.signal;
    const r=await fetch(API_BASE+'/api/assistant',options);if(requestId!==cloudRequestSequence)return;let data={};try{data=await r.json()}catch(_){}if(requestId!==cloudRequestSequence)return;
    if(!r.ok){let detail=data.detail||'';if(r.status===502)detail=detail||'Gemini ne request reject ki. Render environment mein API key aur Google AI Studio access check karna hoga.';else if(r.status===504)detail=detail||'Gemini response time par nahi aaya. Yeh AI server timeout hai, zaroori nahi ke aapka internet kharab ho.';else if(r.status===429)detail=detail||'Gemini ki free quota ya rate limit poori ho gayi hai.';else if(r.status===503)detail=detail||'Render par GEMINI_API_KEY configured nahi hai.';else detail=detail||('Cloud API error: HTTP '+r.status);throw new Error(detail)}
-   setStatus('CLOUD REPLIED · '+(data.mode||'API'));say(data.reply||'Cloud received the message but returned no reply.',data.emotion,false,data.speech_text);
+   setStatus('AI REPLIED IN '+((Date.now()-modelStarted)/1000).toFixed(1)+'s · '+(data.mode||'API'));say(data.reply||'Cloud received the message but returned no reply.',data.emotion,false,data.speech_text);
   }catch(e){
    if(requestId!==cloudRequestSequence)return;
    let message='Cloud request failed. Check the connection and try again.';
@@ -504,7 +504,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
     if(/^(?:show phone controls|phone controls|screen controls|tools dikhao)$/.test(s)){showTab('chat');phoneReply('Phone controls aur writing tools Chat ke andar hain.',null);return true}
     return false;
   }
- function processCommand(raw){const text=String(raw||'').trim(),c=window.JarvisCommandUtils?window.JarvisCommandUtils.normalize(text):text.toLowerCase().replace(/[!?.,،۔]/g,' ').replace(/\s+/g,' ').trim();if(!c)return;
+ function processCommand(raw,source='text'){const text=String(raw||'').trim(),c=window.JarvisCommandUtils?window.JarvisCommandUtils.normalize(text):text.toLowerCase().replace(/[!?.,،۔]/g,' ').replace(/\s+/g,' ').trim();if(!c)return;
  if(handlePhoneOrWritingCommand(text))return;
  rememberTurn('user',text);setStatus('PROCESSING…');orb.classList.add('active');
  const has=(patterns)=>patterns.some(p=>p.test(c));
@@ -523,7 +523,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  else if(has([/\b(open youtube|youtube kholo|youtube khol do|kholo youtube|youtube open)\b/,/یوٹیوب کھولو/,/یوٹیوب کھول دو/])){say(commandLanguage==='ur-PK'?'YouTube khol raha hoon.':'Opening YouTube.',null,false,commandLanguage==='ur-PK'?'یوٹیوب کھول رہی ہوں۔':null);window.open('https://m.youtube.com/','_blank','noopener')}
  else if(has([/\b(stop speaking|bolna band|chup ho jao)\b/,/بولنا بند/])){stopSpeaking();reply.textContent='Theek hai, voice reply rok di.'}
  else if(has([/^(help|madad|kya kar sakte ho|commands|what can you do)\b/,/مدد/,/کیا کر سکتے ہو/]))say('Main waqt aur tareekh bata sakta hoon, Google aur YouTube khol sakta hoon, aur Android app mein local reminders schedule kar sakta hoon. Basic Back, Home aur swipe controls ke liye aapki permission zaroori hai.',null,false,commandLanguage==='ur-PK'?'میں وقت اور تاریخ بتا سکتی ہوں۔ گوگل اور یوٹیوب کھول سکتی ہوں۔ فون میں یاد دہانی لگا سکتی ہوں۔ بنیادی فون کنٹرول کے لیے آپ کی اجازت ضروری ہے۔':null);
- else {reply.textContent='HOSHI soch rahi hai…';askCloud(text);return;}
+ else {reply.textContent='HOSHI soch rahi hai…';askCloud(text,source==='voice');return;}
  setStatus(listening?(wakeEnabled?'LISTENING FOR WAKE WORD':'LISTENING'):'READY');setTimeout(()=>orb.classList.remove('active'),900)
  }
  function startListening(){
@@ -560,9 +560,9 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
       const cleaned=heard.replace(/^hey[, ]*hoshi[,: ]*/i,'').trim();
       if(cleaned===heard){setStatus('SAY HEY HOSHI · TAP MIC AGAIN');return}
       if(!cleaned){setStatus('TAP MIC AGAIN TO GIVE COMMAND');return}
-      processCommand(cleaned);return;
+      processCommand(cleaned,'voice');return;
     }
-    processCommand(heard);return;
+    processCommand(heard,'voice');return;
    }
   };
   instance.onerror=e=>{if(sessionEnded)return;

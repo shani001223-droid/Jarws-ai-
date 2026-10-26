@@ -91,10 +91,11 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 #tradeChart{display:block;max-height:150px;border-radius:9px;background:#071623}
 #tradeRefresh{width:100%;min-height:40px;margin:9px 0}
 .hoshi-tools{margin-top:12px}.hoshi-tool-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:9px 0}.hoshi-tool-grid button{min-height:37px;padding:7px 5px;font-size:12px}.hoshi-draft{margin-top:12px}.hoshi-draft label{display:block;margin-bottom:7px;font-size:12px;color:#aed8eb}.hoshi-draft textarea{display:block;width:100%;min-height:80px;max-height:190px;background:#09172a;border:1px solid #396481;border-radius:10px;color:#e7f9ff;padding:10px;font:14px system-ui;resize:vertical}
+#voiceTiming{font-size:11px;letter-spacing:.02em;text-align:center;color:#acd3e6;margin-top:7px;opacity:.9}
 </style>
 </head>
 <body>
-<main id="nightroom" class="nightroom" aria-label="Hoshi nightroom assistant"><header class="night-head"><div class="night-brand">Hoshi ✧ 星<small>Your AI Assistant ♡</small></div><div id="nightConnection"></div></header><div class="night-conversation" id="nightConversation"><div id="nightMood" class="night-mood" aria-live="polite">✧ Caring</div><button type="button" id="nightAudioRetry" hidden>▶ Suno Hoshi</button></div><div class="night-mic" id="nightMic"></div><nav class="night-tabs" aria-label="Main navigation"><button type="button" data-tab="chat" aria-selected="true"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M3 10L12 3l9 7v11h-6v-7H9v7H3z"/></svg></span>Chat</button><button type="button" data-tab="trading" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M5 3v18M12 3v18M19 3v18M3 7h4v7H3zM10 5h4v5h-4zM17 11h4v6h-4z"/></svg></span>Trading</button><button type="button" data-tab="influencer" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h4l2-3h6l2 3h4v14H3z M16 13a4 4 0 1 1-8 0a4 4 0 0 1 8 0"/></svg></span>AI Influencer</button><button type="button" data-tab="outfit" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M8 3l4 2l4-2l6 5l-4 4l-2-2v11H8V10l-2 2l-4-4z"/></svg></span>Outfit</button><button type="button" data-tab="settings" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8a4 4 0 0 0 0-8 M9 3h6l1 3l3 1l2 5l-2 5l-3 1l-1 3H9l-1-3l-3-1l-2-5l2-5l3-1z"/></svg></span>Settings</button></nav><section class="night-sheet" id="nightSheet" hidden aria-label="Assistant panel"><div class="sheet-head"><h2 id="sheetTitle">Chat</h2><button type="button" class="sheet-close" aria-label="Close panel">×</button></div><div data-panel="chat"><section class="hoshi-tools"><p class="small">Actions · allowed phone controls need Android Accessibility permission.</p><div class="hoshi-tool-grid">
+<main id="nightroom" class="nightroom" aria-label="Hoshi nightroom assistant"><header class="night-head"><div class="night-brand">Hoshi ✧ 星<small>Your AI Assistant ♡</small></div><div id="nightConnection"></div></header><div class="night-conversation" id="nightConversation"><div id="nightMood" class="night-mood" aria-live="polite">✧ Caring</div><button type="button" id="nightAudioRetry" hidden>▶ Suno Hoshi</button><div id="voiceTiming" aria-live="polite">Voice timings appear after a command</div></div><div class="night-mic" id="nightMic"></div><nav class="night-tabs" aria-label="Main navigation"><button type="button" data-tab="chat" aria-selected="true"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M3 10L12 3l9 7v11h-6v-7H9v7H3z"/></svg></span>Chat</button><button type="button" data-tab="trading" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M5 3v18M12 3v18M19 3v18M3 7h4v7H3zM10 5h4v5h-4zM17 11h4v6h-4z"/></svg></span>Trading</button><button type="button" data-tab="influencer" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h4l2-3h6l2 3h4v14H3z M16 13a4 4 0 1 1-8 0a4 4 0 0 1 8 0"/></svg></span>AI Influencer</button><button type="button" data-tab="outfit" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M8 3l4 2l4-2l6 5l-4 4l-2-2v11H8V10l-2 2l-4-4z"/></svg></span>Outfit</button><button type="button" data-tab="settings" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8a4 4 0 0 0 0-8 M9 3h6l1 3l3 1l2 5l-2 5l-3 1l-1 3H9l-1-3l-3-1l-2-5l2-5l3-1z"/></svg></span>Settings</button></nav><section class="night-sheet" id="nightSheet" hidden aria-label="Assistant panel"><div class="sheet-head"><h2 id="sheetTitle">Chat</h2><button type="button" class="sheet-close" aria-label="Close panel">×</button></div><div data-panel="chat"><section class="hoshi-tools"><p class="small">Actions · allowed phone controls need Android Accessibility permission.</p><div class="hoshi-tool-grid">
 <button type="button" data-hoshi-command="open YouTube">▶ YouTube</button>
 <button type="button" data-hoshi-command="open WhatsApp">◉ WhatsApp</button>
 <button type="button" data-hoshi-command="open Telegram">➤ Telegram</button>
@@ -277,11 +278,18 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  $('tradePair').addEventListener('change',loadTradingData);
  $('tradeInterval').addEventListener('change',loadTradingData);
  $('tradeRefresh').addEventListener('click',loadTradingData);
+ let voiceListenStartedAt=0,voiceTimes={listen:null,ai:null,audio:null};
+ const voiceClock=()=>performance.now();
+ function displayVoiceTimes(){const val=n=>n===null?'—':(n/1000).toFixed(2)+'s';
+  $('voiceTiming').textContent='Mic '+val(voiceTimes.listen)+' · AI '+val(voiceTimes.ai)+' · Awaaz '+val(voiceTimes.audio);
+ }
+ function startVoiceTimer(){voiceListenStartedAt=voiceClock();voiceTimes={listen:null,ai:null,audio:null};displayVoiceTimes()}
+ function markVoiceHeard(){if(voiceListenStartedAt>0){voiceTimes.listen=Math.max(0,voiceClock()-voiceListenStartedAt);voiceListenStartedAt=0;displayVoiceTimes()}}
  let nativeMicActive=false,nativeMicTimeout=null;
  function endNativeMic(){nativeMicActive=false;listening=false;clearTimeout(nativeMicTimeout);nativeMicTimeout=null;$('wakeBtn').textContent='🎙 Start listening'}
  window.hoshiNativeListeningState=active=>{if(nativeMicActive&&active)setStatus('LISTENING · SPEAK NOW')};
  window.hoshiNativeSpeechResult=heard=>{
-  if(!nativeMicActive)return;endNativeMic();
+  if(!nativeMicActive)return;markVoiceHeard();endNativeMic();
   const text=String(heard||'').trim();if(!text){setStatus('NO SPEECH HEARD · TAP MIC TO RETRY');return}
   input.value=text;
   const command=wakeEnabled?text.replace(/^hey[, ]*hoshi[,: ]*/i,'').trim():text;
@@ -315,7 +323,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  async function askCloud(message,fast=false){
   const requestId=++cloudRequestSequence;
   if(activeCloudController){try{activeCloudController.abort()}catch(_){}}
-  const modelStarted=Date.now();setStatus('AI THINKING…');setEmotion('thinking');orb.classList.add('active');
+  const modelStarted=voiceClock();voiceTimes.ai=null;displayVoiceTimes();setStatus('AI THINKING…');setEmotion('thinking');orb.classList.add('active');
   const controller=typeof AbortController==='function'?new AbortController():null;
   activeCloudController=controller;
   const timeout=controller?setTimeout(()=>controller.abort(),32000):null;
@@ -324,10 +332,12 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
    if(controller)options.signal=controller.signal;
    const r=await fetch(API_BASE+'/api/assistant',options);if(requestId!==cloudRequestSequence)return;let data={};try{data=await r.json()}catch(_){}if(requestId!==cloudRequestSequence)return;
    if(!r.ok){let detail=data.detail||'';if(r.status===502)detail=detail||'Gemini ne request reject ki. Render environment mein API key aur Google AI Studio access check karna hoga.';else if(r.status===504)detail=detail||'Gemini response time par nahi aaya. Yeh AI server timeout hai, zaroori nahi ke aapka internet kharab ho.';else if(r.status===429)detail=detail||'Gemini ki free quota ya rate limit poori ho gayi hai.';else if(r.status===503)detail=detail||'Render par GEMINI_API_KEY configured nahi hai.';else detail=detail||('Cloud API error: HTTP '+r.status);throw new Error(detail)}
-   setStatus('AI REPLIED IN '+((Date.now()-modelStarted)/1000).toFixed(1)+'s · '+(data.mode||'API'));say(data.reply||'Cloud received the message but returned no reply.',data.emotion,false,data.speech_text);
+   voiceTimes.ai=Math.max(0,voiceClock()-modelStarted);displayVoiceTimes();
+    setStatus('AI REPLIED IN '+(voiceTimes.ai/1000).toFixed(1)+'s · '+(data.mode||'API'));say(data.reply||'Cloud received the message but returned no reply.',data.emotion,false,data.speech_text);
   }catch(e){
    if(requestId!==cloudRequestSequence)return;
    let message='Cloud request failed. Check the connection and try again.';
+   voiceTimes.ai=Math.max(0,voiceClock()-modelStarted);displayVoiceTimes();
    if(e&&e.name==='AbortError')message='HOSHI cloud request timed out. Try once more or check the backend status.';
    else if(typeof navigator!=='undefined'&&navigator.onLine===false)message='Internet connection appears offline. Your message remains on this device.';
    else if(e&&e.message)message=e.message;
@@ -350,6 +360,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  async function playOnlineUrdu(request){
   if(!request||request.id!==speechSequence||cloudSpeechAttempt===request.id)return;
   cloudSpeechAttempt=request.id;
+  const audioStarted=voiceClock();voiceTimes.audio=null;displayVoiceTimes();
   const controller=new AbortController();speechAudioController=controller;
   const timeout=setTimeout(()=>controller.abort(),30000);
   setStatus('PREPARING URDU AUDIO…');
@@ -361,7 +372,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
    const blob=await response.blob();if(request.id!==speechSequence)return;
    if(!blob.size)throw new Error('Empty audio');
    const audio=$('hoshiAudio');speechAudioUrl=URL.createObjectURL(blob);audio.src=speechAudioUrl;audio.hidden=false;
-   audio.onplaying=()=>{if(request.id===speechSequence){$('nightAudioRetry').hidden=true;setSpeaking(true);setStatus('HOSHI SPEAKING · URDU')}};
+   audio.onplaying=()=>{if(request.id===speechSequence){$('nightAudioRetry').hidden=true;setSpeaking(true);voiceTimes.audio=Math.max(0,voiceClock()-audioStarted);displayVoiceTimes();setStatus('HOSHI SPEAKING · URDU')}};
    audio.onpause=()=>{if(request.id===speechSequence)setSpeaking(false)};
    audio.onended=()=>{if(request.id===speechSequence){setSpeaking(false);setStatus('READY')}};
    audio.onerror=()=>{if(request.id===speechSequence){setSpeaking(false);setStatus('AUDIO PLAYBACK FAILED · CHECK INTERNET OR TRY AGAIN')}};
@@ -536,7 +547,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  }
  function startListening(){
   if(listening){stopListening();return}
-  stopSpeaking();lastVoiceError="";
+  stopSpeaking();lastVoiceError="";startVoiceTimer();
   if(window.JarvisBridge&&typeof window.JarvisBridge.startNativeListening==='function'){
     nativeMicActive=true;listening=true;$('wakeBtn').textContent='🎙 Listening…';
     setStatus('STARTING ANDROID MICROPHONE…');
@@ -563,7 +574,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
    for(let i=e.resultIndex;i<e.results.length;i++){
     if(!e.results[i].isFinal)continue;
     const heard=String(e.results[i][0].transcript||'').trim();if(!heard)continue;
-    submitted=true;finish();input.value=heard;
+    submitted=true;markVoiceHeard();finish();input.value=heard;
     if(wakeEnabled){
       const cleaned=heard.replace(/^hey[, ]*hoshi[,: ]*/i,'').trim();
       if(cleaned===heard){setStatus('SAY HEY HOSHI · TAP MIC AGAIN');return}

@@ -8,7 +8,6 @@
 <link rel="stylesheet" href="./trading.css">
 <link rel="manifest" href="./manifest.json">
 <link rel="icon" type="image/svg+xml" href="./assets/hoshi-app-icon.svg">
-<link rel="stylesheet" href="./hoshi-room.css">
 <title>HOSHI — AI Companion</title>
 <style>
 :root{color-scheme:dark;--bg:#07111e;--panel:#0d1b2b;--cyan:#5de1ff;--muted:#9ab2c6;--line:#1c4862;--violet:#9275ff;--pink:#ffb6d5}
@@ -117,7 +116,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 <div class="trade-info-grid"><section id="tradeAnalysis" class="trade-box"><h3>◈ Market analysis</h3><div id="tradeIndicators" class="trade-muted">EMA 9 · SMA 20 · RSI 14: waiting for candles</div><p class="trade-muted">Indicators describe past prices. They do not predict returns.</p><button type="button" id="tradeFocusChart">View chart ↑</button></section><section class="trade-box"><h3>◉ Market sentiment</h3><div id="tradeGauge" class="trade-gauge" role="meter" aria-label="Crypto Fear and Greed Index" aria-valuemin="0" aria-valuemax="100"><span id="tradeGaugeValue">—</span></div><div id="tradeSentiment" class="trade-muted">Fear &amp; Greed: waiting for data</div><a class="trade-small-link" href="https://alternative.me/crypto/fear-and-greed-index/" target="_blank" rel="noopener noreferrer">Source: Alternative.me ↗</a></section><section id="tradeNews" class="trade-box"><h3>▤ Market news</h3><span class="trade-status-chip">Feed not connected</span><p class="trade-muted">No verified news headlines are loaded here.</p><a href="https://www.binance.com/en/square/news/all" target="_blank" rel="noopener noreferrer">Open Binance News ↗</a></section></div>
 <div class="trade-bottom-grid"><section id="tradeExecution" class="trade-box"><h3>▣ Orders &amp; positions</h3><span class="trade-status-chip">Account not connected</span><p class="trade-muted">No real or demo orders are placed. Positions, profit, leverage and balances are unavailable.</p><button type="button" disabled>Order placement unavailable</button></section><section id="tradeWatchlist" class="trade-box"><div class="trade-card-head"><h3>☆ Watchlist</h3><button type="button" id="tradeWatchToggle">+ Add pair</button></div><div id="tradeWatchRows"></div><p class="trade-muted">Saved on this device. Select a pair to fetch its current spot data.</p></section></div>
 <footer class="trade-footer"><p id="tradeStatus" role="status" aria-live="polite">Open this tab to fetch public market information.</p><span>Keyless public data · Refresh for latest values · provider/network availability applies</span></footer>
-</div></div></div><div data-panel="influencer" hidden><p>AI Influencer tools are not connected yet.</p></div><div data-panel="outfit" hidden><p class="small">Choose a look. It applies to the main screen and is saved on this device.</p><div id="outfitGrid" class="outfit-grid"></div><p id="outfitFeedback" class="small" role="status"></p></div><div data-panel="settings" hidden><button type="button" id="nativeRemindersBtn" hidden>View / cancel reminders</button><div class="section"><h2>HOSHI ROOM LIFE</h2><p class="small">Room scenes use existing approved character artwork. Full-room facial rig still needs transparent character layers.</p><div class="voice-actions"><button type="button" id="roomMotionToggle">Room animations: ON</button><button type="button" id="roomTipsToggle">In-app tips: OFF</button></div><p class="small">Tips are off by default and only respond to Hoshi tabs. No background screen capture or other-app monitoring. Dance music starts only when you tap.</p></div></div></section></main>
+</div></div></div><div data-panel="influencer" hidden><p>AI Influencer tools are not connected yet.</p></div><div data-panel="outfit" hidden><p class="small">Choose a look. It applies to the main screen and is saved on this device.</p><div id="outfitGrid" class="outfit-grid"></div><p id="outfitFeedback" class="small" role="status"></p></div><div data-panel="settings" hidden><button type="button" id="nativeRemindersBtn" hidden>View / cancel reminders</button></div></section></main>
 <div class="dashboard-shell">
 <aside class="sidebar" aria-label="HOSHI navigation">
 <div class="brand-mark">H<span>OSHI</span></div>
@@ -200,18 +199,10 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 <script src="./assistant-commands.js"></script>
 <script src="./reminder-parser.js"></script>
 <script src="./memory-privacy.js"></script>
-<script src="./hoshi-room.js"></script>
 <script>
 (()=> {
  const $=id=>document.getElementById(id), status=$('status'), reply=$('reply'), input=$('commandInput'), orb=$('orb');
  const shell=$('nightroom');
- const life=window.HoshiRoomLife?window.HoshiRoomLife.create(document):null;
- if(life){
-  const redrawRoomSettings=()=>{const data=life.getState();$('roomMotionToggle').textContent='Room animations: '+(data.motion?'ON':'OFF');$('roomTipsToggle').textContent='In-app tips: '+(data.suggestions?'ON':'OFF')};
-  $('roomMotionToggle').onclick=()=>{life.setMotion(!life.getState().motion);redrawRoomSettings()};
-  $('roomTipsToggle').onclick=()=>{life.setSuggestions(!life.getState().suggestions);redrawRoomSettings()};
-  redrawRoomSettings();
- }
  reply.textContent='';
  $('nightConnection').append($('connection'));
  $('nightConversation').append(reply,status);
@@ -223,7 +214,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  if(window.JarvisBridge&&typeof window.JarvisBridge.showReminders==='function'){$('nativeRemindersBtn').hidden=false;$('nativeRemindersBtn').onclick=()=>window.JarvisBridge.showReminders()}
  $('stopBtn').hidden=true;$('testBtn').hidden=true;
  let activeTab='chat';
- function showTab(tab){activeTab=tab;$('nightSheet').scrollTop=0;shell.classList.toggle('trading-open',tab==='trading');$('nightSheet').classList.toggle('trading-sheet',tab==='trading');$('nightSheet').hidden=false;shell.querySelectorAll('[data-panel]').forEach(p=>p.hidden=p.dataset.panel!==tab);shell.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===tab)));$('sheetTitle').textContent={chat:'Chat',trading:'Trading',influencer:'AI Influencer',outfit:'Outfit',settings:'Settings'}[tab];if(tab==='chat')input.focus();if(tab==='trading')loadTradingData();if(life)life.onTab(tab)}
+ function showTab(tab){activeTab=tab;$('nightSheet').scrollTop=0;shell.classList.toggle('trading-open',tab==='trading');$('nightSheet').classList.toggle('trading-sheet',tab==='trading');$('nightSheet').hidden=false;shell.querySelectorAll('[data-panel]').forEach(p=>p.hidden=p.dataset.panel!==tab);shell.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===tab)));$('sheetTitle').textContent={chat:'Chat',trading:'Trading',influencer:'AI Influencer',outfit:'Outfit',settings:'Settings'}[tab];if(tab==='chat')input.focus();if(tab==='trading')loadTradingData()}
  shell.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
  shell.querySelector('.sheet-close').onclick=()=>{$('nightSheet').hidden=true;shell.classList.remove('trading-open');$('nightSheet').classList.remove('trading-sheet');input.blur()};
  document.addEventListener('keydown',e=>{if(e.key==='Escape'){$('nightSheet').hidden=true;shell.classList.remove('trading-open');$('nightSheet').classList.remove('trading-sheet')}});
@@ -353,7 +344,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  async function askCloud(message,fast=false){
   const requestId=++cloudRequestSequence;
   if(activeCloudController){try{activeCloudController.abort()}catch(_){}}
-  const modelStarted=voiceClock();voiceTimes.ai=null;displayVoiceTimes();setStatus('AI THINKING…');setEmotion('thinking');if(life)life.setConversation('thinking');orb.classList.add('active');
+  const modelStarted=voiceClock();voiceTimes.ai=null;displayVoiceTimes();setStatus('AI THINKING…');setEmotion('thinking');orb.classList.add('active');
   const controller=typeof AbortController==='function'?new AbortController():null;
   activeCloudController=controller;
   const timeout=controller?setTimeout(()=>controller.abort(),32000):null;
@@ -470,8 +461,8 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  function renderHistory(){const box=$('chatHistory');if(!box)return;const history=getConversationContext();box.replaceChildren();if(!memoryEnabled){editingMemoryIndex=null;box.textContent='Local memory is off.';return}if(!history.length){editingMemoryIndex=null;box.textContent='No saved conversation yet.';return}const start=Math.max(0,history.length-8);history.slice(-8).forEach((item,offset)=>{const index=start+offset;const row=document.createElement('div');row.className='history-item '+(item.role==='user'?'user':'assistant');if(editingMemoryIndex===index){const editor=document.createElement('textarea');editor.className='history-editor';editor.maxLength=500;editor.setAttribute('aria-label','Edit saved '+(item.role==='user'?'user':'HOSHI')+' message');editor.value=item.content;row.appendChild(editor);const actions=document.createElement('div');actions.className='history-actions';actions.appendChild(makeHistoryButton('Save','Save edited memory entry',()=>{const revised=editor.value.trim();if(!revised){setStatus('MEMORY ENTRY NOT SAVED · TEXT IS EMPTY');return}if(looksSensitive(revised)){setStatus('MEMORY ENTRY NOT SAVED · REMOVE SECRET OR SENSITIVE DETAILS');return}const latest=getConversationContext();if(!latest[index]){editingMemoryIndex=null;renderHistory();return}latest[index].content=revised.slice(0,500);try{persistHistory(latest);editingMemoryIndex=null;renderHistory();setStatus('MEMORY ENTRY UPDATED')}catch(e){setStatus('MEMORY UPDATE FAILED · STORAGE UNAVAILABLE')}}));actions.appendChild(makeHistoryButton('Cancel','Cancel editing memory entry',()=>{editingMemoryIndex=null;renderHistory()}));row.appendChild(actions)}else{const content=document.createElement('div');content.className='history-content';content.textContent=(item.role==='user'?'You: ':'HOSHI: ')+item.content;row.appendChild(content);const actions=document.createElement('div');actions.className='history-actions';actions.appendChild(makeHistoryButton('Edit','Edit saved '+(item.role==='user'?'user':'HOSHI')+' message',()=>{editingMemoryIndex=index;renderHistory()}));actions.appendChild(makeHistoryButton('Delete','Delete saved '+(item.role==='user'?'user':'HOSHI')+' message',()=>{const latest=getConversationContext();if(!latest[index])return;latest.splice(index,1);try{persistHistory(latest);editingMemoryIndex=null;renderHistory();setStatus('MEMORY ENTRY DELETED')}catch(e){setStatus('MEMORY DELETE FAILED · STORAGE UNAVAILABLE')}}));row.appendChild(actions)}box.appendChild(row)})}
  function rememberTurn(role,content){if(!memoryEnabled||!String(content||'').trim()||looksSensitive(content))return;try{const history=getConversationContext();history.push({role,content:String(content).slice(0,500),at:Date.now()});persistHistory(history);editingMemoryIndex=null;renderHistory();renderRecentActivity()}catch(e){const box=$('chatHistory');if(box)box.textContent='Local memory is unavailable in this browser.'}}
  function guessEmotion(text){const value=String(text||"").toLowerCase();if(/udaas|sad|dukhi|rona|upset|sorry/i.test(value))return "sad";if(/pareshan|tension|worried|concern|darr/i.test(value))return "concerned";if(/gussa|naraz|angry|annoyed/i.test(value))return "annoyed";if(/sharma|shy|blush/i.test(value))return "shy";if(/excited|zabardast|amazing|wah/i.test(value))return "excited";if(/mazak|mazaq|masti|haha|hehe|joke/i.test(value))return "playful";if(/pyar|pyaar|love you|miss you|jaan|hug/i.test(value))return "affectionate";if(/khush|happy|great|shukriya|thank you|😊|😄/i.test(value))return "happy";if(/kyun|kaise|why|how|explain|think/i.test(value))return "thinking";return "caring"}
- function setEmotion(emotion){const aliases={neutral:"caring",curious:"thinking",confused:"thinking",worried:"concerned",crying:"sad",angry:"annoyed",apologetic:"caring",sleepy:"thinking"};const allowed=["happy","sad","affectionate","excited","shy","concerned","annoyed","playful","thinking","caring"];const chosen=allowed.includes(emotion)?emotion:(aliases[emotion]||"caring");if(life)life.setEmotion(emotion||chosen);orb.dataset.emotion=chosen;shell.dataset.emotion=chosen;const moodNames={happy:'😊 Khush',sad:'🌧 Udaas',affectionate:'♡ Affectionate',excited:'✦ Excited',shy:'🌸 Shy',concerned:'☁ Concerned',annoyed:'〰 Naraz',playful:'✧ Playful',thinking:'⋯ Thinking',caring:'♡ Caring'};$('nightMood').textContent=moodNames[chosen]||'♡ Caring';orb.setAttribute("aria-label","HOSHI expression: "+chosen);const label=$("avatarLabel"),utility=$("utilityEmotion");if(label)label.textContent="HOSHI · "+chosen.toUpperCase();if(utility)utility.textContent=chosen.toUpperCase()}
-  function setSpeaking(active){orb.classList.toggle('speaking',!!active);shell.classList.toggle('speaking',!!active);if(life)life.setConversation(active?'speaking':'idle')}
+ function setEmotion(emotion){const aliases={neutral:"caring",curious:"thinking",confused:"thinking",worried:"concerned",crying:"sad",angry:"annoyed",apologetic:"caring",sleepy:"thinking"};const allowed=["happy","sad","affectionate","excited","shy","concerned","annoyed","playful","thinking","caring"];const chosen=allowed.includes(emotion)?emotion:(aliases[emotion]||"caring");orb.dataset.emotion=chosen;shell.dataset.emotion=chosen;const moodNames={happy:'😊 Khush',sad:'🌧 Udaas',affectionate:'♡ Affectionate',excited:'✦ Excited',shy:'🌸 Shy',concerned:'☁ Concerned',annoyed:'〰 Naraz',playful:'✧ Playful',thinking:'⋯ Thinking',caring:'♡ Caring'};$('nightMood').textContent=moodNames[chosen]||'♡ Caring';orb.setAttribute("aria-label","HOSHI expression: "+chosen);const label=$("avatarLabel"),utility=$("utilityEmotion");if(label)label.textContent="HOSHI · "+chosen.toUpperCase();if(utility)utility.textContent=chosen.toUpperCase()}
+  function setSpeaking(active){orb.classList.toggle('speaking',!!active);shell.classList.toggle('speaking',!!active)}
   window.hoshiSetSpeaking=setSpeaking;
   window.hoshiUrduUnavailable=()=>{setSpeaking(false);playOnlineUrdu(currentSpeech)};
   window.hoshiVoiceError=()=>{setSpeaking(false);if(commandLanguage==='ur-PK')playOnlineUrdu(currentSpeech);else setStatus('VOICE OUTPUT FAILED · CHECK DEVICE TEXT-TO-SPEECH')};
@@ -609,21 +600,6 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
     return false;
   }
  function processCommand(raw,source='text'){const text=String(raw||'').trim(),c=window.JarvisCommandUtils?window.JarvisCommandUtils.normalize(text):text.toLowerCase().replace(/[!?.,،۔]/g,' ').replace(/\s+/g,' ').trim();if(!c)return;
- const roomActivity=life?life.parseActivityCommand(text):null;
- if(roomActivity){rememberTurn('user',text);life.activate(roomActivity,false);setEmotion(roomActivity==='dance'?'happy':roomActivity==='gaming'?'excited':roomActivity==='sleep'?'caring':'playful');reply.textContent='Hoshi '+roomActivity+' scene on. Dance melody ke liye Room menu se Dance tap karo.';setStatus('ROOM ACTIVITY · '+roomActivity.toUpperCase());return}
- const roomReaction=life&&window.HoshiRoomLife.parseEmotionCommand(text);
- if(roomReaction){
-  rememberTurn('user',text);
-  const reactions={playful:['Hahaha! Dekho, main hans rahi hoon 😄','ہا ہا ہا! دیکھو، میں ہنس رہی ہوں۔'],
-   shy:['Arey... ab sharma gayi!','ارے، اب شرما گئی ہوں۔'],
-   sad:['Yeh mera udaas expression hai.','یہ میرا اداس ایکسپریشن ہے۔'],
-   crying:['Yeh animated crying reaction hai.','یہ رونے والا اینیمیٹڈ ایکسپریشن ہے۔'],
-   angry:['Achha! Ab thora naraz expression dikha rahi hoon.','اچھا، اب تھوڑا ناراض ایکسپریشن دکھا رہی ہوں۔'],
-   caring:['Theek, normal smile wapas.','ٹھیک ہے، معمول کی مسکراہٹ واپس۔']};
-  const response=reactions[roomReaction];
-  say(response[0],roomReaction,false,commandLanguage==='ur-PK'?response[1]:null);
-  setStatus('HOSHI EXPRESSION · '+roomReaction.toUpperCase());return;
- }
  if(handlePhoneOrWritingCommand(text))return;
  rememberTurn('user',text);setStatus('PROCESSING…');orb.classList.add('active');
  const has=(patterns)=>patterns.some(p=>p.test(c));
@@ -647,7 +623,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  }
  function startListening(){
   if(listening){stopListening();return}
-  stopSpeaking();lastVoiceError="";startVoiceTimer();if(life)life.setConversation('listening');
+  stopSpeaking();lastVoiceError="";startVoiceTimer();
   if(window.JarvisBridge&&typeof window.JarvisBridge.startNativeListening==='function'){
     nativeMicActive=true;listening=true;$('wakeBtn').textContent='🎙 Listening…';
     setStatus('STARTING ANDROID MICROPHONE…');
@@ -700,7 +676,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
   listening=false;awaitingCommand=false;clearTimeout(restartTimer);
   const old=recognition;recognition=null;
   if(old){old.onend=null;old.onerror=null;old.onresult=null;try{old.abort()}catch(_){}}
-  $('wakeBtn').textContent='🎙 Start listening';stopSpeaking();if(life)life.setConversation('idle');setStatus('LISTENING STOPPED');
+  $('wakeBtn').textContent='🎙 Start listening';stopSpeaking();setStatus('LISTENING STOPPED');
  }
  // Migrate old country selections to the single Hoshi delivery profile.
  let savedVoiceStyle='soft',savedPitch=null,savedRate=null;try{savedVoiceStyle=localStorage.getItem('hoshiVoiceStyle')||'soft';if(localStorage.getItem('hoshiVoiceStyle')){savedPitch=Number(localStorage.getItem('jarvisVoicePitch'));savedRate=Number(localStorage.getItem('jarvisVoiceRate'))}}catch(e){}

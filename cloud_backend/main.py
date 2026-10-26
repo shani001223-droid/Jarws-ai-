@@ -26,6 +26,7 @@ try:  # Handles either cloud_backend package import or direct uvicorn main:app.
     from .task_router import route_task
     from .goal_spec import goal_to_deliverables
     from .milestone_planner import plan_milestones
+    from .provider_policy import choose_providers
 except ImportError:
     from openjarvis_bridge import ask_openjarvis, endpoint as openjarvis_endpoint, wants_agent, OpenJarvisUnavailable
     from agent_tools import try_calculate
@@ -33,6 +34,7 @@ except ImportError:
     from task_router import route_task
     from goal_spec import goal_to_deliverables
     from milestone_planner import plan_milestones
+    from provider_policy import choose_providers
 
 app = FastAPI(title="HOSHI AI Cloud API", version="0.9.1")
 
@@ -632,8 +634,14 @@ def assistant(payload: AssistantRequest):
     # OpenJarvis orchestrator and its configured tools/memory run on a real,
     # separate OpenJarvis server. No model/server is provisioned implicitly.
     # A bounded agent call is used for complex non-voice requests only.
+    provider_plan = choose_providers(
+        message, fast=payload.fast,
+        openrouter=bool(os.getenv("OPENROUTER_API_KEY", "").strip()),
+        gemini=bool(gemini_key), groq=bool(groq_key),
+        openjarvis=bool(os.getenv("OPENJARVIS_URL", "").strip() and os.getenv("OPENJARVIS_MODEL", "").strip()),
+    )
     openjarvis_problem = None
-    if wants_agent(message, fast=payload.fast):
+    if provider_plan.agent_first:
         try:
             if openjarvis_endpoint() is not None:
                 remote = ask_openjarvis(request_input, language_hint, timeout=7)
@@ -647,7 +655,7 @@ def assistant(payload: AssistantRequest):
     # slow OpenRouter -> Gemini -> Groq chain on normal spoken questions.
     # Tool commands execute locally on Android and never reach this route.
     quick_groq_problem = None
-    if payload.fast and groq_key:
+    if provider_plan.fast_voice_first:
         quick_instruction = (
             "You are HOSHI, a warm, truthful, playful, respectful AI assistant. "
             "Answer the user's actual question in ONE natural short sentence (around 12-22 words). "
@@ -679,7 +687,7 @@ def assistant(payload: AssistantRequest):
     # to independently configured providers for invalid/incomplete replies or
     # temporary errors. Never retry endlessly or switch to paid models.
     openrouter_problem = None
-    if os.getenv("OPENROUTER_API_KEY", "").strip():
+    if "openrouter" in provider_plan.order:
         try:
             reply = _openrouter_reply(request_input, language_hint)
             response = make_assistant_response(reply, "openrouter", message, payload.locale)

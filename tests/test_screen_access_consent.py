@@ -25,7 +25,7 @@ class ScreenConsentContractTests(unittest.TestCase):
         self.assertIn("Settings.Secure.ACCESSIBILITY_ENABLED", bridge)
         self.assertIn('if (action !in allowedActions || !isEnabled()) return false', bridge)
         self.assertIn("JarvisAccessibilityService.instance == null", bridge)
-        self.assertIn("if (isEnabled() && liveService != null)", bridge)
+        self.assertIn("if (activity.isActionEpochCurrent(epoch) && isEnabled() && liveService != null)", bridge)
         self.assertIn("AlertDialog.Builder(this)", activity)
         self.assertIn("Enable basic screen controls?", activity)
         self.assertIn('.setNegativeButton("Cancel", null)', activity)

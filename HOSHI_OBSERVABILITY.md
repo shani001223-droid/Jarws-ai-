@@ -6,6 +6,7 @@ This adds runtime traceability to the existing API. It does not claim that all 6
 
 - Every HTTP response passing through the middleware gets a server-generated UUID in `X-Request-ID`; client-provided IDs are ignored. CORS exposes the header to the frontend.
 - `current_request_id()` exposes the same ID to async endpoints and FastAPI worker-thread handlers, without storing request contents.
+- The default `uvicorn.access` records are suppressed because they contain raw client IPs and URL/query strings; safe structured request events replace them for this API.
 - One structured `hoshi.requests` log event records request ID, HTTP method, registered route template, status, elapsed milliseconds and a fixed error category. The middleware does not read or log request/response bodies, raw URL paths, query strings, authorization headers, IP addresses, model text or exception messages.
 - Unhandled failures before a response starts get a generic 500 and the request ID. Existing handled HTTP error payloads remain controlled by their handlers. Late streaming errors retain the already-sent wire status and are counted separately as `stream_error`; the stream is not replaced with a second response.
 - Bounded process-local aggregate counters and recent-sample p50/p95 timings. At most 32 route buckets, including an overflow bucket; at most 256 durations per bucket. The percentile window is the latest 256 completed request lifecycles for that route, not a fixed time interval or a permanent history.

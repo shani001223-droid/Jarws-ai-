@@ -172,7 +172,17 @@ class RequestObservabilityMiddleware:
             }, separators=(",", ":")))
 
 
+class _StructuredAccessOnly(logging.Filter):
+    def filter(self, record):
+        # Uvicorn's default access format includes the raw URL/query and client IP.
+        # The safe structured request event above replaces it for this service.
+        return False
+
+
 def install_observability(app: FastAPI) -> RequestMetrics:
+    access_logger = logging.getLogger("uvicorn.access")
+    if not any(isinstance(f, _StructuredAccessOnly) for f in access_logger.filters):
+        access_logger.addFilter(_StructuredAccessOnly())
     metrics = RequestMetrics()
     app.state.request_metrics = metrics
     app.add_middleware(RequestObservabilityMiddleware, metrics=metrics)

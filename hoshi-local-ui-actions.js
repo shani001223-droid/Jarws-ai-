@@ -18,7 +18,8 @@
       const button=tab(action==="tap_chat"?"chat":"settings");
       if(!button)return false;
       button.click();
-      return true;
+      // Confirm the actual selected Hoshi tab, not merely a dispatched click.
+      return button.getAttribute("aria-selected")==="true";
     }
     if(action==="type_draft"){
       const button=tab("chat"),input=doc.getElementById("commandInput");
@@ -28,14 +29,17 @@
       if(typeof input.dispatchEvent==="function"&&typeof Event!=="undefined")
         input.dispatchEvent(new Event("input",{bubbles:true}));
       input.focus();
-      return true;
+      // Only compare locally; do not return, log or upload the draft text.
+      return button.getAttribute("aria-selected")==="true"&&input.value===payload;
     }
     const sheet=doc.getElementById("nightSheet");
     if(!sheet||sheet.hidden)return false;
     const maximum=Math.max(0,sheet.scrollHeight-sheet.clientHeight);
     const direction=action==="scroll_down"?1:-1;
-    sheet.scrollTop=Math.max(0,Math.min(maximum,sheet.scrollTop+direction*240));
-    return true;
+    const before=sheet.scrollTop;
+    sheet.scrollTop=Math.max(0,Math.min(maximum,before+direction*240));
+    // At a scroll boundary there was no change; never claim success.
+    return Math.abs(sheet.scrollTop-before)>0;
   }
   return Object.freeze({valid,run});
 });

@@ -200,7 +200,12 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 <button type="button" id="resetVoiceBtn">Restore soft voice</button></details>
 <p class="small">Delivery styles tune your device’s speech voice. They do not add a new anime voice. Pakistani Urdu (ur-PK) is preferred when installed. Urdu mode never substitutes Hindi or English voices. Voice quality and Urdu pronunciation depend on the installed speech engine.</p>
 </div></div>
-<div class="section" id="screenControlSection" style="display:none"><h2>BASIC PHONE CONTROLS</h2><p class="small">Optional Android Accessibility permission for Back/Home/Swipe and system screenshot. The basic control service does not inspect screen text or upload screenshots. The separate OCR reader works only on an image you explicitly choose. Screenshot requires Android 9 or newer.</p><div class="quick"><button type="button" id="screenPermissionBtn">Enable permission</button><button type="button" data-screen-action="screenshot">Take screenshot</button><button type="button" data-screen-action="back">Back</button><button type="button" data-screen-action="home">Home</button><button type="button" data-screen-action="swipe_up">Swipe up</button><button type="button" data-screen-action="swipe_down">Swipe down</button></div><h3>READ SAVED SCREENSHOT · PRIVATE</h3><p class="small">Choose a screenshot. Roman Urdu/English text is read on this phone using offline OCR; Urdu script is not supported. Nothing is uploaded, saved or sent to AI automatically. Avoid sensitive screenshots.</p><div class="quick"><button type="button" id="screenOcrBtn">Choose screenshot to read</button><button type="button" id="screenOcrClearBtn">Clear reading</button></div><p id="screenOcrStatus" class="small" role="status" aria-live="polite">No screenshot selected.</p><pre id="screenOcrOutput" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:240px;overflow:auto" aria-label="On-device screenshot text"></pre><h3>HOSHI-ONLY TAP / TYPE / SCROLL</h3><p class="small">Optional Android accessibility permission required. Actions stay inside this Hoshi screen: switch tabs, edit an unsent chat draft or scroll the Hoshi sheet. No other apps, auto-send, passwords or purchases. A verified result checks Hoshi tab, unsent draft or sheet movement only; it cannot verify another app or Android system action.</p><div class="quick"><button type="button" id="localUiChatBtn">Tap Chat tab</button><button type="button" id="localUiSettingsBtn">Tap Settings tab</button><button type="button" id="localUiScrollUpBtn">Scroll up</button><button type="button" id="localUiScrollDownBtn">Scroll down</button></div><label class="small" for="localUiDraft">Draft for Hoshi chat (never auto-send)</label><input id="localUiDraft" type="text" maxlength="240" autocomplete="off" placeholder="Roman Urdu draft"><button type="button" id="localUiTypeBtn">Type draft in Chat</button><p id="localUiStatus" role="status" class="small">No local action requested.</p></div>
+<div class="section" id="screenControlSection" style="display:none"><h2>BASIC PHONE CONTROLS</h2><p class="small">Optional Android Accessibility permission for Back/Home/Swipe and system screenshot. The basic control service does not inspect screen text or upload screenshots. The separate OCR reader works only on an image you explicitly choose. Screenshot requires Android 9 or newer.</p><div class="quick"><button type="button" id="screenPermissionBtn">Enable permission</button><button type="button" data-screen-action="screenshot">Take screenshot</button><button type="button" data-screen-action="back">Back</button><button type="button" data-screen-action="home">Home</button><button type="button" data-screen-action="swipe_up">Swipe up</button><button type="button" data-screen-action="swipe_down">Swipe down</button></div><h3>READ SAVED SCREENSHOT · PRIVATE</h3><p class="small">Choose a screenshot. Roman Urdu/English text is read on this phone using offline OCR; Urdu script is not supported. Nothing is uploaded, saved or sent to AI automatically. Avoid sensitive screenshots.</p><div class="quick"><button type="button" id="screenOcrBtn">Choose screenshot to read</button><button type="button" id="screenOcrClearBtn">Clear reading</button></div><p id="screenOcrStatus" class="small" role="status" aria-live="polite">No screenshot selected.</p><pre id="screenOcrOutput" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:240px;overflow:auto" aria-label="On-device screenshot text"></pre><h3>HOSHI-ONLY TAP / TYPE / SCROLL</h3><p class="small">Optional Android accessibility permission required. Actions stay inside this Hoshi screen: switch tabs, edit an unsent chat draft or scroll the Hoshi sheet. No other apps, auto-send, passwords or purchases. A verified result checks Hoshi tab, unsent draft or sheet movement only; it cannot verify another app or Android system action.</p><div class="quick"><button type="button" id="localUiChatBtn">Tap Chat tab</button><button type="button" id="localUiSettingsBtn">Tap Settings tab</button><button type="button" id="localUiScrollUpBtn">Scroll up</button><button type="button" id="localUiScrollDownBtn">Scroll down</button></div><label class="small" for="localUiDraft">Draft for Hoshi chat (never auto-send)</label><input id="localUiDraft" type="text" maxlength="240" autocomplete="off" placeholder="Roman Urdu draft"><button type="button" id="localUiTypeBtn">Type draft in Chat</button><p id="localUiStatus" role="status" class="small">No local action requested.</p>
+<h3>ACTION SAFETY · PRIVATE</h3>
+<p class="small">Pause blocks new Hoshi screen/app actions. Emergency Stop also interrupts voice and pending AI replies. Resume requires your tap. Already completed Android actions cannot be undone. History is session-only action names and outcomes; no drafts, screenshots or account data are saved.</p>
+<div class="quick"><button type="button" id="actionPauseBtn">Ⅱ Pause actions</button><button type="button" id="actionResumeBtn" disabled>▶ Resume actions</button><button type="button" id="actionEmergencyStopBtn">■ Emergency stop</button><button type="button" id="actionHistoryClearBtn">Clear action history</button></div>
+<p id="actionSafetyStatus" role="status" aria-live="polite" class="small">Action controls ready.</p>
+<ol id="actionHistory" aria-label="Recent local action outcomes" class="small" style="max-height:180px;overflow:auto;padding-left:22px"></ol></div>
 <div class="section" id="settings"><div class="statusrow"><h2>WAKE WORD</h2><button class="toggle" id="wakeToggle">Hey HOSHI: OFF</button></div><p class="small">One tap listens for one command, then the microphone stays off during Hoshi's response. Hey Hoshi is optional within the same utterance; background listening is disabled.</p></div>
 <div class="section" id="personalityPanel"><h2>PERSONALITY MODE</h2><label for="personalitySelect" class="small">How should Hoshi sound?</label><select id="personalitySelect" aria-label="Hoshi personality mode"><option value="balanced">Balanced · caring and playful</option><option value="playful">Playful · more teasing and jokes</option><option value="affectionate">Affectionate · softer and warmer</option><option value="calm">Calm · gentle and thoughtful</option></select><p class="small">This changes reply style, not Hoshi’s identity or boundaries.</p></div>
 <div class="section" id="commandShortcuts"><h2>TRY A COMMAND</h2><p class="small">“Hey HOSHI” · “What time is it?” · “Open Google” · “Open YouTube” · “Help” · “Stop speaking”</p><div class="quick"><button data-cmd="what time is it">Time</button><button data-cmd="today's date">Date</button><button data-cmd="open Google">Google</button><button data-cmd="open YouTube">YouTube</button><button data-cmd="help">Help</button></div></div>
@@ -558,6 +563,25 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 
 
   const draftField=$('hoshiDraft'),draftStatus=$('draftStatus');
+  // Session-only safety metadata. Never record a draft, screenshot or command.
+  const actionSafety=window.HoshiLocalUiActions.createSafety(20);
+  function renderActionSafety(){
+    const node=$('actionSafetyStatus');if(!node)return;
+    const snapshot=actionSafety.snapshot();
+    node.textContent=snapshot.state==='halted'?'EMERGENCY STOP ACTIVE · tap Resume to unlock.':
+      snapshot.state==='paused'?'ACTIONS PAUSED · tap Resume to continue.':
+      'ACTIONS READY · local phone controls require Android permission.';
+    $('actionPauseBtn').disabled=snapshot.state!=='running';
+    $('actionResumeBtn').disabled=snapshot.state==='running';
+    const list=$('actionHistory');list.replaceChildren();
+    for(const item of snapshot.history){
+      const row=document.createElement('li');
+      row.textContent=new Date(item.at).toLocaleTimeString()+' · '+item.action.replaceAll('_',' ')+' · '+item.outcome.replaceAll('_',' ');
+      list.appendChild(row);
+    }
+  }
+  function recordAction(action,outcome){actionSafety.record(action,outcome);renderActionSafety()}
+  function actionsBlocked(){return actionSafety.blocked()}
   function phoneReply(text,spoken){reply.textContent=text;setStatus('PHONE ACTION · '+text);if(voiceReplies&&spoken)say(text,'caring',false,spoken)}
   // Native intent result reports only whether Android accepted the handoff.
   // It does not prove the destination app rendered or performed any action.
@@ -566,6 +590,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
     if(!appLaunchPending||id!==appLaunchPending.id||
        action!==appLaunchPending.action||typeof accepted!=='boolean')return;
     appLaunchPending=null;clearTimeout(appLaunchTimer);appLaunchTimer=null;
+    recordAction('app_'+action,accepted?'accepted':'denied');
     phoneReply(accepted?'Android accepted '+action+' launch request.':'Could not open '+action+'.',null);
   };
   function saveHoshiDraft(text){
@@ -611,6 +636,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
       s.match(/^(youtube|whatsapp|telegram|browser|google|settings|tradingview)\s+(?:kholo|khol do|open karo|open)$/i);
     const bridge=window.JarvisBridge;
     if(openMatch){
+      if(actionsBlocked()){phoneReply('Actions paused. Open Settings and tap Resume first.',null);return true;}
       const target=openMatch[1].toLowerCase(),kind=target==='google'?'browser':target;
       if(bridge&&typeof bridge.openKnownAppVerified==='function'){
         if(appLaunchPending){phoneReply('Wait for the previous app request to finish.',null);return true;}
@@ -622,17 +648,20 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
           appLaunchTimer=setTimeout(()=>{
             if(appLaunchPending&&appLaunchPending.id===id){
               appLaunchPending=null;appLaunchTimer=null;
+              recordAction('app_'+kind,'timeout');
               phoneReply('No verified Android app launch result. Check your phone.',null);
             }
           },5000);
+          recordAction('app_'+kind,'queued');
           phoneReply('Requesting '+target+' app…',null);
-        }else phoneReply('App launch request rejected.',null);
+        }else{recordAction('app_'+kind,'denied');phoneReply('App launch request rejected.',null);}
       }else if(bridge&&typeof bridge.openKnownApp==='function'){
         const ok=bridge.openKnownApp(kind);
+        recordAction('app_'+kind,ok?'queued':'denied');
         phoneReply(ok?'App launch requested: '+target+'.':'App could not be opened.',null);
       }else{
         const urls={youtube:'https://www.youtube.com/',whatsapp:'https://wa.me/',telegram:'https://web.telegram.org/',browser:'https://www.google.com/',settings:'',tradingview:'https://www.tradingview.com/'};
-        if(urls[kind]){window.open(urls[kind],'_blank','noopener');phoneReply('Opening '+target+' website…','ویب سائٹ کھولنے کی کوشش کر رہی ہوں۔')}
+        if(urls[kind]){window.open(urls[kind],'_blank','noopener');recordAction('app_'+kind,'queued');phoneReply('Opening '+target+' website…','ویب سائٹ کھولنے کی کوشش کر رہی ہوں۔')}
         else phoneReply('This action needs the Hoshi Android app.',null);
       }
       return true;
@@ -646,9 +675,11 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
     ];
     const action=screenPairs.find(([pattern])=>pattern.test(s));
     if(action){
+      if(actionsBlocked()){phoneReply('Actions paused. Tap Resume in Settings.',null);return true;}
       if(!bridge||typeof bridge.performAction!=='function'){phoneReply('Screen control sirf Android app mein available hai.',null);return true}
       if(!bridge.isEnabled()){phoneReply('Phone controls ke liye Accessibility permission enable karo.',null);showTab('settings');return true}
       const queued=bridge.performAction(action[1]);
+      recordAction('screen_'+action[1],queued?'queued':'denied');
       phoneReply(queued?'Phone action requested: '+action[1]+'.':'Phone action could not be queued.',null);
       return true;
     }
@@ -826,7 +857,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  $('languageToggle').onclick=()=>{commandLanguage=commandLanguage==='ur-PK'?'en-US':'ur-PK';try{localStorage.setItem('hoshiLanguage',commandLanguage)}catch(e){}$('languageToggle').textContent=commandLanguage==='ur-PK'?'🗣 Language: Urdu':'🗣 Language: English';refreshVoices();if(listening)stopListening();say(commandLanguage==='ur-PK'?'Urdu mode on. Ab Urdu ya Roman Urdu mein command bolain.':'English mode on. Speak your command in English.',null,false,commandLanguage==='ur-PK'?'اردو زبان منتخب ہے۔ اب اردو میں بات کریں۔':null)};
  $('wakeToggle').onclick=()=>{wakeEnabled=!wakeEnabled;try{localStorage.setItem('hoshiWakeWord',String(wakeEnabled))}catch(e){}$('wakeToggle').textContent='Hey HOSHI: '+(wakeEnabled?'ON':'OFF');setStatus(listening?(wakeEnabled?'LISTENING FOR “HEY HOSHI”':'LISTENING'):'READY')};
  $('viewHistoryBtn').onclick=()=>{const panel=$('memoryPanel');if(panel)panel.scrollIntoView({behavior:'smooth',block:'start'})};
- $('screenshotQuickBtn').onclick=()=>{if(!window.JarvisBridge){setStatus('SCREENSHOT NEEDS THE HOSHI ANDROID APP');return}if(!window.JarvisBridge.isEnabled()){setStatus('ENABLE ANDROID ACCESSIBILITY FOR SCREENSHOT');window.JarvisBridge.requestSettings();return}const queued=window.JarvisBridge.performAction('screenshot');setStatus(queued?'SCREENSHOT ACTION REQUESTED · CHECK ANDROID SYSTEM UI':'SCREENSHOT ACTION UNAVAILABLE · ANDROID 9 OR NEWER REQUIRED')};
+ $('screenshotQuickBtn').onclick=()=>{if(actionsBlocked()){setStatus('ACTIONS PAUSED · RESUME IN SETTINGS');return}if(!window.JarvisBridge){setStatus('SCREENSHOT NEEDS THE HOSHI ANDROID APP');return}if(!window.JarvisBridge.isEnabled()){setStatus('ENABLE ANDROID ACCESSIBILITY FOR SCREENSHOT');window.JarvisBridge.requestSettings();return}const queued=window.JarvisBridge.performAction('screenshot');recordAction('screen_screenshot',queued?'queued':'denied');setStatus(queued?'SCREENSHOT ACTION REQUESTED · CHECK ANDROID SYSTEM UI':'SCREENSHOT ACTION UNAVAILABLE · ANDROID 9 OR NEWER REQUIRED')};
  $('commandForm').onsubmit=e=>{e.preventDefault();processCommand(input.value);input.value=''};
  document.querySelectorAll('[data-ui-action]').forEach(button=>button.addEventListener('click',()=>{
   const action=button.dataset.uiAction;
@@ -878,22 +909,26 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
    };
    $('screenPermissionBtn').onclick=()=>window.JarvisBridge.requestSettings();
    // Native executes only Hoshi's bounded UI controls; returns DOM evidence as Boolean.
-   window.hoshiExecuteLocalUiAction=(action,payload)=>{
+   window.hoshiExecuteLocalUiAction=(action,payload,id)=>{
+     if(!actionSafety.isCurrent(id,action))return false;
      const engine=window.HoshiLocalUiActions;
      return !!(engine&&engine.run(action,payload,document));
    };
    let localUiRequestId=0,localUiPending=0,localUiTimer=null;
    // No draft text or screenshot is returned by native. Ignore stale/forged IDs.
    window.hoshiLocalUiActionResult=(id,verified)=>{
-     if(!localUiPending||id!==localUiPending||typeof verified!=='boolean')return;
+     if(!localUiPending||id!==localUiPending||typeof verified!=='boolean'||
+        !actionSafety.finish(id,verified))return;
      localUiPending=0;
      clearTimeout(localUiTimer);localUiTimer=null;
      $('localUiStatus').textContent=verified?
        'Verified: Hoshi UI reached the requested state.':
        'Not verified: Hoshi UI did not reach the requested state.';
+     renderActionSafety();
    };
    const requestLocalUiAction=(action,payload='')=>{
      const bridge=window.JarvisBridge;
+     if(actionsBlocked()){$('localUiStatus').textContent='Actions paused or stopped. Tap Resume first.';recordAction(action,'blocked');return;}
      if(localUiPending){$('localUiStatus').textContent='Wait for the previous local action to finish.';return;}
      if(typeof bridge.performLocalUiAction!=='function'){
        $('localUiStatus').textContent='Update Hoshi Android APK for verified local actions.';return;
@@ -903,17 +938,21 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
      }
      localUiRequestId=localUiRequestId>=1000000000?1:localUiRequestId+1;
      const id=localUiRequestId;
+     if(!actionSafety.begin(action,id)){$('localUiStatus').textContent='Local action rejected.';return;}
      localUiPending=id;
+     renderActionSafety();
      $('localUiStatus').textContent='Checking Hoshi UI state…';
      localUiTimer=setTimeout(()=>{
        if(localUiPending!==id)return;
        localUiPending=0;localUiTimer=null;
+       actionSafety.cancel(id,'timeout');renderActionSafety();
        $('localUiStatus').textContent='No verified result from Android. Check screen and retry.';
      },4000);
      let queued=false;
      try{queued=bridge.performLocalUiAction(action,payload,id)}catch(_){queued=false;}
      if(!queued&&localUiPending===id){
        localUiPending=0;clearTimeout(localUiTimer);localUiTimer=null;
+       actionSafety.cancel(id,'denied');renderActionSafety();
        $('localUiStatus').textContent='Local action denied or screen control unavailable.';
      }
    };
@@ -922,10 +961,45 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
    $('localUiScrollUpBtn').onclick=()=>requestLocalUiAction('scroll_up');
    $('localUiScrollDownBtn').onclick=()=>requestLocalUiAction('scroll_down');
    $('localUiTypeBtn').onclick=()=>requestLocalUiAction('type_draft',$('localUiDraft').value);
+   // Stop is latched until a fresh user tap on Resume. No auto-retry.
+   const invalidateQueuedActions=()=>{
+     if(localUiPending){localUiPending=0;clearTimeout(localUiTimer);localUiTimer=null;}
+     if(appLaunchPending){appLaunchPending=null;clearTimeout(appLaunchTimer);appLaunchTimer=null;}
+     localOcrPending=false; // Late OCR callbacks must not display private text.
+     const bridge=window.JarvisBridge;
+     try{return !!(bridge&&typeof bridge.cancelQueuedActions==='function'&&bridge.cancelQueuedActions())}
+     catch(_){return false}
+   };
+   $('actionPauseBtn').onclick=()=>{
+     if(!actionSafety.pause())return;
+     const cancelled=invalidateQueuedActions();
+     $('localUiStatus').textContent=cancelled?'Actions paused; queued native actions invalidated.':
+       'Actions paused; older APK cannot revoke already queued native actions.';
+     renderActionSafety();
+   };
+   $('actionResumeBtn').onclick=()=>{
+     if(!actionSafety.resume())return;
+     $('localUiStatus').textContent='Actions resumed by user.';
+     renderActionSafety();
+   };
+   $('actionEmergencyStopBtn').onclick=()=>{
+     actionSafety.emergencyStop();
+     const cancelled=invalidateQueuedActions();
+     interruptHoshi();
+     if(listening||nativeMicActive)stopListening();
+     $('localUiStatus').textContent=cancelled?
+       'Emergency stop active. Voice/AI stopped; queued native actions invalidated.':
+       'Emergency stop active. Older APK may finish previously queued native actions.';
+     renderActionSafety();
+   };
+   $('actionHistoryClearBtn').onclick=()=>{actionSafety.clearHistory();renderActionSafety()};
+   renderActionSafety();
 
    document.querySelectorAll('[data-screen-action]').forEach(button=>button.addEventListener('click',()=>{
+     if(actionsBlocked()){setStatus('ACTIONS PAUSED · RESUME IN SETTINGS');return}
      if(!window.JarvisBridge.isEnabled()){setStatus('ENABLE SCREEN CONTROLS IN ANDROID SETTINGS');return}
      const queued=window.JarvisBridge.performAction(button.dataset.screenAction);
+     recordAction('screen_'+button.dataset.screenAction,queued?'queued':'denied');
      setStatus(button.dataset.screenAction==='screenshot'?(queued?'SCREENSHOT ACTION REQUESTED · CHECK ANDROID SYSTEM UI':'SCREENSHOT ACTION UNAVAILABLE'):(queued?'PHONE ACTION SENT':'SCREEN CONTROL SERVICE NOT CONNECTED'));
    }));
  }

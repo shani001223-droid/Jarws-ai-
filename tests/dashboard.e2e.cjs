@@ -162,6 +162,9 @@ async function main() {
     assert.equal(await page.title(), 'HOSHI — AI Companion');
     await page.locator('.nightroom').waitFor({state:'visible'});
     assert.equal(await page.locator('.night-tabs button').count(), 5);
+    assert.equal(await page.locator('.room-life').count(),0,'Removed unwanted Hoshi room-life stage');
+    assert.equal(await page.locator('.life-toggle').count(),0,'Removed room activity menu');
+    assert.equal(await page.locator('#roomMotionToggle').count(),0,'Removed room animation setting');
     assert.equal(await page.locator('.sidebar').isVisible(), false);
     assert.equal(await page.locator('#voicePanel').isVisible(), false);
     assert.equal(await page.locator('#nightSheet').isVisible(), false);
@@ -174,6 +177,7 @@ async function main() {
     await page.locator('#commandForm button').click();
     await page.waitForFunction(()=>document.querySelector('#reply').textContent.includes('I can help'));
     assert.equal(apiMessages.at(-1).locale,'ur-PK');
+    assert.equal(apiMessages.at(-1).fast,true,'Simple text questions use fast one-shot Groq path');
     // No cloud model should be called for concrete Android actions or writing drafts.
     await page.evaluate(() => {
       window.__phoneActions = [];

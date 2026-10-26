@@ -15,8 +15,8 @@ async function waitForPublicEndpoints() {
       if (health.ok && data.service === "hoshi-cloud-api" && data.version === "0.9.1") {
         const response = await fetch(DASHBOARD_URL, { signal: AbortSignal.timeout(15000) });
         const html = await response.text();
-        if (response.ok && /HOSHI — AI Companion/.test(html) && html.includes('id="nightroom"') && html.includes('assets/outfits/')) return;
-        lastError = "Dashboard returned HTTP " + response.status + " or has not published the high-resolution wardrobe revision yet";
+        if (response.ok && /HOSHI — AI Companion/.test(html) && html.includes('id="nightroom"') && html.includes('assets/outfits/') && html.includes('id="tradeDashboard"')) return;
+        lastError = "Dashboard returned HTTP " + response.status + " or has not published the trading dashboard revision yet";
       } else {
         lastError = "Backend health check did not match expected HOSHI API: HTTP " + health.status;
       }
@@ -69,10 +69,19 @@ async function main() {
       assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
     }
     await page.setViewportSize({width:390,height:844});
+    await page.locator('[data-tab="trading"]').click();
+    assert.equal(await page.locator('#tradeDashboard').isVisible(),true);
+    for(const width of [320,390,768,1440]){
+      await page.setViewportSize({width,height:900});
+      assert.equal(await page.locator('#tradePair').isVisible(),true);
+      assert.equal(await page.evaluate(()=>document.querySelector('#nightSheet').scrollWidth>document.querySelector('#nightSheet').clientWidth+1),false);
+    }
+    await page.setViewportSize({width:390,height:844});
+    await page.locator('#nightSheet').evaluate(n=>n.scrollTop=0);
     await page.screenshot({ path: "/tmp/hoshi-live-dashboard.png", fullPage: true });
     assert.deepEqual(badResponses, [], "The live dashboard should not return broken same-origin assets");
     assert.deepEqual(pageErrors, [], "The live dashboard should not throw uncaught browser errors");
-    console.log("PASS — live Render high-resolution wardrobe selection, 1024x1536 portrait, core controls, responsive widths, and browser console.");
+    console.log("PASS — live Render trading dashboard layout, wardrobe selection, core controls, responsive widths, and browser console.");
   } finally {
     await browser.close();
   }
@@ -82,3 +91,4 @@ main().catch(error => {
   console.error(error);
   process.exitCode = 1;
 });
+

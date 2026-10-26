@@ -9,6 +9,7 @@ const { chromium } = require("playwright");
 const ROOT = path.resolve(__dirname, "..");
 const mimeTypes = {
   ".html": "text/html; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
   ".webp": "image/webp",
@@ -214,6 +215,42 @@ async function main() {
         await page.waitForFunction(()=>document.querySelector('#tradePrice').textContent.includes('70,000.5'));
         assert.match(await page.locator('#tradeIndicators').innerText(), /RSI 14: 67.2/);
         assert.match(await page.locator('#tradeSentiment').innerText(), /Alternative.me/);
+        assert.equal(await page.locator('#tradeChart [data-candle]').count(),80);
+        assert.equal(await page.locator('#tradeGauge').getAttribute('aria-valuenow'),'54');
+        await page.locator('#tradeLine').click();
+        assert.equal(await page.locator('#tradeChart [data-candle]').count(),0);
+        assert.equal(await page.locator('#tradeChart [data-close-line]').count(),1);
+        await page.locator('#tradeRange').click();
+        assert.equal(await page.locator('#tradeChart [data-range-level]').count(),2);
+        await page.locator('#tradeCandles').click();
+        await page.locator('#tradePair').selectOption('SOLUSDT');
+        await page.waitForFunction(()=>!document.querySelector('#tradeRefresh').disabled);
+        assert.match(await page.locator('#tradeExternal').getAttribute('href'),/SOLUSDT/);
+        await page.locator('#tradeWatchToggle').click();
+        assert.ok(JSON.parse(await page.evaluate(()=>localStorage.getItem('hoshiTradeWatchV1'))).includes('SOLUSDT'));
+        await page.getByRole('button',{name:'Remove SOLUSDT from watchlist',exact:true}).click();
+        assert.ok(!JSON.parse(await page.evaluate(()=>localStorage.getItem('hoshiTradeWatchV1'))).includes('SOLUSDT'));
+        for(const width of [320,390,768,1440]){
+          await page.setViewportSize({width,height:900});
+          assert.equal(await page.evaluate(()=>document.querySelector('#nightSheet').scrollWidth>document.querySelector('#nightSheet').clientWidth+1),false,'Trading workspace must fit '+width+'px');
+          assert.equal(await page.locator('#tradePair').isVisible(),true);
+        }
+        await page.setViewportSize({width:390,height:844});
+        await page.locator('#nightSheet').evaluate(n=>n.scrollTop=0);
+        await page.screenshot({path:'/tmp/hoshi-trading-mobile.png',fullPage:true});
+        await page.locator('#tradeAsk').click();
+        assert.equal(await page.locator('[data-panel="chat"]').isVisible(),true);
+        assert.match(await page.locator('#commandInput').inputValue(),/SOLUSDT.*spot market/);
+        await page.locator('[data-tab="trading"]').click();
+        await page.waitForFunction(()=>!document.querySelector('#tradeRefresh').disabled);
+        await page.route('https://jarws-ai-2.onrender.com/api/public/**',route=>route.fulfill({status:503,contentType:'application/json',headers:{'Access-Control-Allow-Origin':'*'},body:'{}'}));
+        await page.locator('#tradeRefresh').click();
+        await page.waitForFunction(()=>document.querySelector('#tradeStatus').textContent.includes('unavailable'));
+        assert.equal(await page.locator('#tradePrice').innerText(),'—');
+        assert.equal(await page.locator('#tradeChart [data-candle]').count(),0);
+        assert.equal(await page.locator('#tradeGauge').getAttribute('aria-valuenow'),null);
+        await page.unroute('https://jarws-ai-2.onrender.com/api/public/**');
+
       }
       await page.locator('.sheet-close').click();
     }
@@ -299,3 +336,4 @@ main().catch(error => {
   console.error(error);
   process.exitCode = 1;
 });
+

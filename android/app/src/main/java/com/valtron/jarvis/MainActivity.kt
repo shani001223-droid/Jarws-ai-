@@ -23,6 +23,10 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import android.speech.RecognitionListener
+import android.speech.RecognizerIntent
+import android.speech.SpeechRecognizer
+import org.json.JSONObject
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import java.util.Locale
@@ -33,6 +37,7 @@ class MainActivity : Activity() {
     companion object {
         private const val REQUEST_MICROPHONE = 4102
         private const val REQUEST_NOTIFICATIONS = 4103
+        private const val REQUEST_NATIVE_MIC = 4104
         private const val DASHBOARD_URL = "https://jarws-ai-1.onrender.com/?native=1"
     }
 
@@ -42,6 +47,9 @@ class MainActivity : Activity() {
     private var pendingSpeech: NativeSpeech? = null
     private var pendingWebPermission: PermissionRequest? = null
     private var pendingReminder: Pair<String, Int>? = null
+    private var nativeRecognizer: SpeechRecognizer? = null
+    private var nativeMicActive = false
+    private var pendingNativeLanguage: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,6 +87,8 @@ class MainActivity : Activity() {
         webView.settings.apply {
             javaScriptEnabled = true
             domStorageEnabled = true
+            // Audio is started after an async TTS response; do not block it due to a lost click gesture.
+            mediaPlaybackRequiresUserGesture = false
             loadsImagesAutomatically = true
             mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
             allowFileAccess = false
@@ -147,6 +157,103 @@ class MainActivity : Activity() {
             setTextColor(Color.WHITE)
             setOnClickListener { action() }
         }
+    }
+
+    /** Start exactly one utterance. Never auto-restart when Android ends recognition. */
+    fun startNativeListening(language: String): Boolean {
+        val locale = if (language == "en-US") "en-US" else "ur-PK"
+        runOnUiThread {
+            if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                pendingNativeLanguage = locale
+                requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), REQUEST_NATIVE_MIC)
+            } else {
+                beginNativeListening(locale)
+            }
+        }
+        return true
+    }
+
+    private fun sendNativeSpeechEvent(function: String, value: String) {
+        val argument = JSONObject.quote(value)
+        dashboardWebView?.evaluateJavascript(
+            "window.$function && window.$function($argument)", null
+        )
+    }
+
+    private fun beginNativeListening(locale: String) {
+        stopNativeListeningInternal()
+        if (!SpeechRecognizer.isRecognitionAvailable(this)) {
+            sendNativeSpeechEvent("hoshiNativeSpeechError", "Android speech service unavailable")
+            return
+        }
+        try {
+            val recognizer = SpeechRecognizer.createSpeechRecognizer(this)
+            nativeRecognizer = recognizer
+            nativeMicActive = true
+            recognizer.setRecognitionListener(object : RecognitionListener {
+                override fun onReadyForSpeech(params: Bundle?) {
+                    if (nativeMicActive && nativeRecognizer === recognizer)
+                        dashboardWebView?.evaluateJavascript(
+                            "window.hoshiNativeListeningState && window.hoshiNativeListeningState(true)", null
+                        )
+                }
+                override fun onBeginningOfSpeech() {}
+                override fun onRmsChanged(rmsdB: Float) {}
+                override fun onBufferReceived(buffer: ByteArray?) {}
+                override fun onEndOfSpeech() {}
+                override fun onPartialResults(partialResults: Bundle?) {}
+                override fun onEvent(eventType: Int, params: Bundle?) {}
+                override fun onResults(results: Bundle?) {
+                    if (!nativeMicActive || nativeRecognizer !== recognizer) return
+                    val heard = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                        ?.firstOrNull().orEmpty().trim()
+                    stopNativeListeningInternal()
+                    if (heard.isNotBlank()) sendNativeSpeechEvent("hoshiNativeSpeechResult", heard)
+                    else sendNativeSpeechEvent("hoshiNativeSpeechError", "No speech recognized")
+                }
+                override fun onError(error: Int) {
+                    if (!nativeMicActive || nativeRecognizer !== recognizer) return
+                    stopNativeListeningInternal()
+                    val reason = when (error) {
+                        SpeechRecognizer.ERROR_NO_MATCH, SpeechRecognizer.ERROR_SPEECH_TIMEOUT ->
+                            "No speech recognized. Try again"
+                        SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "Microphone permission denied"
+                        SpeechRecognizer.ERROR_NETWORK, SpeechRecognizer.ERROR_NETWORK_TIMEOUT ->
+                            "Speech service network unavailable"
+                        SpeechRecognizer.ERROR_LANGUAGE_NOT_SUPPORTED,
+                        SpeechRecognizer.ERROR_LANGUAGE_UNAVAILABLE -> "Urdu speech pack unavailable"
+                        SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> "Speech recognizer busy"
+                        else -> "Android speech recognition error " + error
+                    }
+                    sendNativeSpeechEvent("hoshiNativeSpeechError", reason)
+                }
+            })
+            val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE, locale)
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, locale)
+                putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, false)
+                putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
+            }
+            recognizer.startListening(intent)
+        } catch (_: Exception) {
+            stopNativeListeningInternal()
+            sendNativeSpeechEvent("hoshiNativeSpeechError", "Cannot start Android speech service")
+        }
+    }
+
+    private fun stopNativeListeningInternal() {
+        nativeMicActive = false
+        try { nativeRecognizer?.cancel(); nativeRecognizer?.destroy() } catch (_: Exception) {}
+        nativeRecognizer = null
+    }
+
+    fun stopNativeListening(): Boolean {
+        runOnUiThread {
+            pendingNativeLanguage = null
+            stopNativeListeningInternal()
+        }
+        return true
     }
 
     fun showReminders() {
@@ -370,6 +477,7 @@ class MainActivity : Activity() {
     }
 
     override fun onDestroy() {
+        stopNativeListeningInternal()
         try { textToSpeech?.stop(); textToSpeech?.shutdown() } catch (_: Exception) {}
         textToSpeech = null
         ttsReady = false
@@ -391,6 +499,14 @@ class MainActivity : Activity() {
                 } else {
                     request.deny()
                 }
+            }
+        } else if (requestCode == REQUEST_NATIVE_MIC) {
+            val language = pendingNativeLanguage
+            pendingNativeLanguage = null
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED && language != null) {
+                beginNativeListening(language)
+            } else {
+                sendNativeSpeechEvent("hoshiNativeSpeechError", "Microphone permission denied")
             }
         } else if (requestCode == REQUEST_NOTIFICATIONS) {
             val reminder = pendingReminder

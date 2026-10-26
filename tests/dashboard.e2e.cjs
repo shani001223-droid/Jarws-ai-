@@ -158,6 +158,24 @@ async function main() {
       assert.equal(await page.locator('[data-panel="'+tab+'"]').isVisible(),true);
       await page.locator('.sheet-close').click();
     }
+    await page.locator('[data-tab="outfit"]').click();
+    assert.equal(await page.locator('button[data-outfit]').count(),15);
+    await page.locator('[data-outfit="winter"]').click();
+    await page.waitForFunction(()=>document.querySelector('#nightroom').dataset.outfit==='winter');
+    assert.equal(await page.locator('#nightSheet').isVisible(),false);
+    assert.equal(await page.evaluate(()=>localStorage.getItem('hoshiOutfitV1')),'winter');
+    const winterArt=await page.locator('#nightroom').evaluate(node=>node.style.backgroundImage);
+    assert.match(winterArt,/data:image\/webp/);
+    assert.match(await page.locator('#nightMood').innerText(),/Affectionate/);
+    await page.reload({waitUntil:'domcontentloaded'});
+    await page.waitForFunction(()=>document.querySelector('#nightroom').dataset.outfit==='winter');
+    await page.locator('[data-tab="outfit"]').click();
+    await page.locator('[data-outfit="techwear"]').click();
+    await page.waitForFunction(()=>document.querySelector('#nightroom').dataset.outfit==='techwear');
+    assert.notEqual(await page.locator('#nightroom').evaluate(node=>node.style.backgroundImage),winterArt,'Selecting another outfit must change actual main-screen art');
+    await page.locator('[data-tab="outfit"]').click();
+    await page.locator('[data-outfit="original"]').click();
+    await page.waitForFunction(()=>document.querySelector('#nightroom').dataset.outfit==='original');
     for(const width of [320,390,768]){
       await page.setViewportSize({width,height:844});
       assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);

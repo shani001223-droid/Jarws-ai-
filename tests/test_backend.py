@@ -78,7 +78,7 @@ class AssistantApiTests(unittest.TestCase):
         self.assertEqual(body["model"], "openrouter/free")
         self.assertIn("user: Salam", body["messages"][1]["content"])
         self.assertIn("speech_text", body["messages"][0]["content"])
-        self.assertEqual(mocked.call_args.kwargs["timeout"], 12)
+        self.assertEqual(mocked.call_args.kwargs["timeout"], 7)
 
     def test_fast_voice_request_prefers_configured_groq_without_openrouter(self):
         reply = json.dumps({"reply": "Ji, sun rahi hoon.", "speech_text": "جی، سن رہی ہوں۔"})
@@ -115,7 +115,7 @@ class AssistantApiTests(unittest.TestCase):
         body = json.loads(requested.call_args.args[0].data)
         self.assertEqual(body["max_tokens"], 240)
         self.assertEqual(body["temperature"], 0.4)
-        self.assertEqual(requested.call_args.kwargs["timeout"], 6)
+        self.assertEqual(requested.call_args.kwargs["timeout"], 5)
 
     def test_spoken_writing_request_keeps_full_generation_budget(self):
         raw = json.dumps({"reply":"Pehla paragraph aur doosra paragraph.", "speech_text":"پہلا پیراگراف اور دوسرا پیراگراف۔"})
@@ -231,7 +231,7 @@ class AssistantApiTests(unittest.TestCase):
                 main._openrouter_reply("salam", "system")
         body = json.loads(mocked.call_args.args[0].data)
         self.assertGreaterEqual(body["max_tokens"], 700)
-        self.assertEqual(mocked.call_args.kwargs["timeout"], 12)
+        self.assertEqual(mocked.call_args.kwargs["timeout"], 7)
 
     def test_urdu_response_separates_chat_and_pronunciation_text(self):
         raw = json.dumps({"reply": "Main Hoshi hoon.", "speech_text": "میں ہوشی ہوں۔"})

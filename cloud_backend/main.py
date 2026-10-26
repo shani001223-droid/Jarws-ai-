@@ -434,10 +434,20 @@ def _groq_reply(message: str, language_hint: str, *, quick: bool = False) -> str
     except (json.JSONDecodeError, UnicodeDecodeError):
         raise RuntimeError("Groq returned an invalid response.") from None
 
-    choices = data.get("choices") or []
+    # A provider may return HTTP 200 with a malformed JSON shape. Treat this
+    # as a safe fallback error, not an uncaught 500/AttributeError.
+    if not isinstance(data, dict) or not isinstance(data.get("choices"), list):
+        raise RuntimeError("Groq returned an invalid response.")
+    choices = data["choices"]
     reply = ""
     if choices:
-        reply = str((choices[0].get("message") or {}).get("content") or "").strip()
+        first = choices[0]
+        if not isinstance(first, dict) or not isinstance(first.get("message"), dict):
+            raise RuntimeError("Groq returned an invalid response.")
+        content = first["message"].get("content")
+        if content is not None and not isinstance(content, str):
+            raise RuntimeError("Groq returned an invalid response.")
+        reply = (content or "").strip()
     if not reply:
         raise RuntimeError("Groq did not return text.")
     return reply
@@ -693,7 +703,8 @@ def assistant(payload: AssistantRequest):
         except (URLError, TimeoutError):
             gemini_problem = "Gemini connection failed or timed out."
             should_fallback = True
-        except (json.JSONDecodeError, UnicodeDecodeError, IndexError, KeyError, TypeError):
+        except (json.JSONDecodeError, UnicodeDecodeError, IndexError, KeyError, TypeError, AttributeError, ValueError):
+            # Includes unexpected list/null/invalid block shapes in HTTP-200 JSON.
             gemini_problem = "Gemini returned an invalid response."
             should_fallback = True
 

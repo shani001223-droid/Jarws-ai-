@@ -32,6 +32,10 @@ class JarvisBridge(private val activity: MainActivity) {
     @JavascriptInterface
     fun saveAdZip(base64Zip: String, filename: String): Boolean = activity.saveAdZip(base64Zip, filename)
 
+    /** Opens Android's document picker; cannot silently inspect other apps. */
+    @JavascriptInterface
+    fun chooseScreenshotForLocalOcr(): Boolean = activity.chooseScreenshotForLocalOcr()
+
     @JavascriptInterface
     fun copyUserText(text: String): Boolean = activity.copyUserText(text)
 

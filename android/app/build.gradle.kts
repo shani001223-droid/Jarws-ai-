@@ -24,3 +24,8 @@ android {
         jvmTarget = "17"
     }
 }
+
+// Free bundled offline Latin OCR for Roman Urdu/English; no cloud API key.
+dependencies {
+    implementation("com.google.mlkit:text-recognition:16.0.1")
+}

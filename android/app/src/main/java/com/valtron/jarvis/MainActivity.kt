@@ -47,6 +47,7 @@ class MainActivity : Activity() {
         private const val REQUEST_MICROPHONE = 4102
         private const val REQUEST_NOTIFICATIONS = 4103
         private const val REQUEST_NATIVE_MIC = 4104
+        private const val REQUEST_LOCAL_SCREENSHOT_OCR = 4105
         private const val DASHBOARD_URL = "https://jarws-ai-1.onrender.com/?native=1"
     }
 
@@ -59,6 +60,7 @@ class MainActivity : Activity() {
     private var nativeRecognizer: SpeechRecognizer? = null
     private var nativeMicActive = false
     private var pendingNativeLanguage: String? = null
+    private var localOcrBusy = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -349,6 +351,59 @@ class MainActivity : Activity() {
             }
         }.start()
         return true
+    }
+
+    /** User-selected screenshot only: no background capture or remote upload. */
+    fun chooseScreenshotForLocalOcr(): Boolean {
+        runOnUiThread {
+            if (isFinishing || isDestroyed || localOcrBusy) return@runOnUiThread
+            localOcrBusy = true
+            try {
+                val picker = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                    addCategory(Intent.CATEGORY_OPENABLE)
+                    type = "image/*"
+                }
+                startActivityForResult(picker, REQUEST_LOCAL_SCREENSHOT_OCR)
+            } catch (_: Exception) {
+                localOcrBusy = false
+                sendLocalOcrError("Image picker unavailable")
+            }
+        }
+        return true // Picker queued; recognition result arrives asynchronously.
+    }
+
+    private fun sendLocalOcrError(reason: String) {
+        dashboardWebView?.evaluateJavascript(
+            "window.hoshiLocalOcrError && window.hoshiLocalOcrError(${JSONObject.quote(reason)})", null
+        )
+    }
+
+    private fun sendLocalOcrResult(json: String) {
+        dashboardWebView?.evaluateJavascript(
+            "window.hoshiLocalOcrResult && window.hoshiLocalOcrResult(${JSONObject.quote(json)})", null
+        )
+    }
+
+    @Deprecated("Uses Android document picker activity result.")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode != REQUEST_LOCAL_SCREENSHOT_OCR) return
+        val uri = if (resultCode == RESULT_OK) data?.data else null
+        if (uri == null) {
+            localOcrBusy = false
+            sendLocalOcrError("No screenshot selected")
+            return
+        }
+        LocalScreenshotOcr(this,
+            onResult = { json ->
+                localOcrBusy = false
+                if (!isFinishing && !isDestroyed) sendLocalOcrResult(json)
+            },
+            onError = { reason ->
+                localOcrBusy = false
+                if (!isFinishing && !isDestroyed) sendLocalOcrError(reason)
+            }
+        ).analyze(uri)
     }
 
     fun copyUserText(text: String): Boolean {

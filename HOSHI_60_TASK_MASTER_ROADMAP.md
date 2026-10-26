@@ -15,7 +15,7 @@
 
 ## Phase 2 — Intelligent Brain
 - [x] **07** Classify chat, device and backend tasks. Acceptance: implementation or evidence, passing tests, limitations recorded.
-- [ ] **08** Convert user goals into clear deliverables. Acceptance: implementation or evidence, passing tests, limitations recorded.
+- [x] **08** Convert user goals into clear deliverables. Acceptance: implementation or evidence, passing tests, limitations recorded.
 - [ ] **09** Break large goals into verified milestones. Acceptance: implementation or evidence, passing tests, limitations recorded.
 - [ ] **10** Route to available free models intelligently. Acceptance: implementation or evidence, passing tests, limitations recorded.
 - [ ] **11** Activate and test a real OpenJarvis endpoint. Acceptance: implementation or evidence, passing tests, limitations recorded.
@@ -98,3 +98,5 @@
 ## Additional implementation checkpoints
 - Task 06 **blocked/unfinished**: branch CI works, previous main APK was successful, but current branch APK build and live Render deployment/rollback are not newly verified; Render connector requires explicit workspace selection. Do not mark completed.
 - Task 07 **verified routing layer**: backend `task_router.py` and `/api/agent/route` plus browser `hoshi-task-router.js` classify chat, device, Flora ad execution and unavailable BTC/game/anime workflows. The UI never claims an unimplemented worker completed work. Browser dispatch, offline precache, JS unit tests and Playwright E2E passed: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40306542927. **This verifies classification only, not actual game/anime/screen executors.**
+
+- Task 08 **verified specification layer**: `cloud_backend/goal_spec.py` and `POST /api/agent/spec` convert recognized user goals into explicit artifact formats and acceptance requirements, including 300 x 30-minute anime scope (9,000 minutes), playable game deliverables, Flora ad ZIP contents, and paper-only chart analysis. Every deliverable remains `planned` until genuinely produced; no job is started. Python unit tests, JS tests and Playwright E2E passed: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40306839489. This does not implement game/anime rendering.

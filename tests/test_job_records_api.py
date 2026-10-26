@@ -65,6 +65,14 @@ class PrivateJobApiTests(unittest.TestCase):
             main.get_job_record("../etc/passwd", self.auth)
         self.assertEqual(missing.exception.status_code, 404)
 
+    def test_sqlite_open_error_is_sanitized(self):
+        # SQLite cannot use an existing directory as a database file.
+        with patch.dict(os.environ, {"HOSHI_JOB_DB_PATH": self.temp.name}):
+            with self.assertRaises(main.HTTPException) as error:
+                main.create_job_record(main.JobRecordRequest(kind="build_game"), self.auth)
+        self.assertEqual(error.exception.status_code, 503)
+        self.assertNotIn(self.temp.name, error.exception.detail)
+
     def test_unavailable_storage_is_not_reported_as_success(self):
         with patch.dict(os.environ, {"HOSHI_JOB_DB_PATH": str(Path(self.temp.name) / "missing" / "x.sqlite")}):
             with self.assertRaises(main.HTTPException) as error:

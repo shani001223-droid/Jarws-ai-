@@ -38,7 +38,7 @@ def route_task(message: str) -> TaskRoute:
     normalized = " ".join(str(message or "").strip().split())
     if not normalized:
         return TaskRoute("chat", "empty", False, None, False, "Message cannot be empty.")
-    if _EXPLAIN.search(normalized) and not _CREATE.search(normalized):
+    if _EXPLAIN.search(normalized):
         return TaskRoute("chat", "ask_explanation", True, "assistant", False,
                          "Question should be answered as conversation, not silently executed.")
     if _AD.search(normalized) and _CREATE.search(normalized) and _PRODUCT.search(normalized):

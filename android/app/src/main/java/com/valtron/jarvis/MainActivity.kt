@@ -39,6 +39,7 @@ import org.json.JSONArray
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import java.util.Locale
+import java.util.concurrent.atomic.AtomicBoolean
 
 class MainActivity : Activity() {
     private data class NativeSpeech(val text: String, val language: String, val pitch: Float, val rate: Float)
@@ -60,7 +61,9 @@ class MainActivity : Activity() {
     private var nativeRecognizer: SpeechRecognizer? = null
     private var nativeMicActive = false
     private var pendingNativeLanguage: String? = null
-    private var localOcrBusy = false
+    // WebView @JavascriptInterface calls can arrive off the UI thread.
+    // Reserve the picker synchronously to prevent duplicate picker launches.
+    private val localOcrBusy = AtomicBoolean(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -355,9 +358,12 @@ class MainActivity : Activity() {
 
     /** User-selected screenshot only: no background capture or remote upload. */
     fun chooseScreenshotForLocalOcr(): Boolean {
+        if (isFinishing || isDestroyed || !localOcrBusy.compareAndSet(false, true)) return false
         runOnUiThread {
-            if (isFinishing || isDestroyed || localOcrBusy) return@runOnUiThread
-            localOcrBusy = true
+            if (isFinishing || isDestroyed) {
+                localOcrBusy.set(false)
+                return@runOnUiThread
+            }
             try {
                 val picker = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                     addCategory(Intent.CATEGORY_OPENABLE)
@@ -365,11 +371,11 @@ class MainActivity : Activity() {
                 }
                 startActivityForResult(picker, REQUEST_LOCAL_SCREENSHOT_OCR)
             } catch (_: Exception) {
-                localOcrBusy = false
+                localOcrBusy.set(false)
                 sendLocalOcrError("Image picker unavailable")
             }
         }
-        return true // Picker queued; recognition result arrives asynchronously.
+        return true // Picker reserved; recognition result arrives asynchronously.
     }
 
     private fun sendLocalOcrError(reason: String) {
@@ -390,17 +396,17 @@ class MainActivity : Activity() {
         if (requestCode != REQUEST_LOCAL_SCREENSHOT_OCR) return
         val uri = if (resultCode == RESULT_OK) data?.data else null
         if (uri == null) {
-            localOcrBusy = false
+            localOcrBusy.set(false)
             sendLocalOcrError("No screenshot selected")
             return
         }
         LocalScreenshotOcr(this,
             onResult = { json ->
-                localOcrBusy = false
+                localOcrBusy.set(false)
                 if (!isFinishing && !isDestroyed) sendLocalOcrResult(json)
             },
             onError = { reason ->
-                localOcrBusy = false
+                localOcrBusy.set(false)
                 if (!isFinishing && !isDestroyed) sendLocalOcrError(reason)
             }
         ).analyze(uri)

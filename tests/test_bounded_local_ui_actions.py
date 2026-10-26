@@ -47,7 +47,7 @@ class LocalUiActionContracts(unittest.TestCase):
         self.assertIn("bridge.performLocalUiAction(action,payload,id)", WEB)
         self.assertIn("window.hoshiLocalUiActionResult=", WEB)
         self.assertIn("No verified result from Android.", WEB)
-        self.assertIn('button.getAttribute("aria-selected")=="true"', CLIENT)
+        self.assertIn('button.getAttribute("aria-selected")==="true"', CLIENT)
         self.assertIn("Math.abs(sheet.scrollTop-before)>0", CLIENT)
         self.assertIn("id=\"localUiDraft\"", WEB)
         self.assertIn("hoshi-local-ui-actions.js", SW)

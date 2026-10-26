@@ -381,28 +381,71 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  function saveVoiceSettings(){const pitch=Number($('pitchSlider').value),rate=Number($('rateSlider').value);$('pitchValue').textContent=pitch.toFixed(2)+'×';$('rateValue').textContent=rate.toFixed(2)+'×';try{localStorage.setItem('jarvisVoicePitch',String(pitch));localStorage.setItem('jarvisVoiceRate',String(rate));localStorage.removeItem('jarvisVoiceKey');if(!localStorage.getItem('hoshiVoiceStyle'))localStorage.setItem('hoshiVoiceStyle','soft')}catch(e){}}
  function applyVoiceStyle(style,persist=true){const key=voiceStyles[style]?style:'soft';const [pitch,rate]=voiceStyles[key];$('pitchSlider').value=pitch;$('rateSlider').value=rate;document.querySelectorAll('[data-voice-style]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.voiceStyle===key)));if(persist){try{localStorage.setItem('hoshiVoiceStyle',key)}catch(e){}}saveVoiceSettings()}
  function stopSpeaking(){speechSequence++;currentSpeech=null;$('nightAudioRetry').hidden=true;if(speechAudioController){speechAudioController.abort();speechAudioController=null}const audio=$('hoshiAudio');audio.pause();audio.removeAttribute('src');audio.hidden=true;if(speechAudioUrl){URL.revokeObjectURL(speechAudioUrl);speechAudioUrl=null}if(window.JarvisBridge&&typeof window.JarvisBridge.stopNativeSpeech==='function')window.JarvisBridge.stopNativeSpeech();if('speechSynthesis'in window)window.speechSynthesis.cancel();setSpeaking(false)}
+ // Prefer first audible phrase over waiting for a long full MP3.
+ // Future clauses are synthesized while the first clip plays.
+ function splitUrduSpeech(text){
+  let remaining=String(text||'').trim();
+  if(remaining.length<=140)return remaining?[remaining]:[];
+  const segments=[];
+  while(remaining.length>155&&segments.length<5){
+   const part=remaining.slice(0,150);let cut=-1;
+   for(const marker of ['۔','؟','!','?','،']){
+    const found=part.lastIndexOf(marker);if(found>=55)cut=Math.max(cut,found+1);
+   }
+   if(cut<55)cut=part.lastIndexOf(' ',135)+1;
+   if(cut<55)cut=150;
+   segments.push(remaining.slice(0,cut).trim());
+   remaining=remaining.slice(cut).trim();
+  }
+  if(remaining)segments.push(remaining);
+  return segments;
+ }
  async function playOnlineUrdu(request){
   if(!request||request.id!==speechSequence||cloudSpeechAttempt===request.id)return;
   cloudSpeechAttempt=request.id;
   const audioStarted=voiceClock();voiceTimes.audio=null;displayVoiceTimes();
   const controller=new AbortController();speechAudioController=controller;
-  const timeout=setTimeout(()=>controller.abort(),30000);
-  setStatus('PREPARING URDU AUDIO…');
-  try{
-   let style='soft';try{style=localStorage.getItem('hoshiVoiceStyle')||'soft'}catch(_){}
-   if(['happy','excited','playful'].includes(request.emotion))style='playful';else if(['sad','shy','concerned','affectionate','caring'].includes(request.emotion))style='warm';
-   const response=await fetch(API_BASE+'/api/speech',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:request.text,style}),signal:controller.signal});
-   if(!response.ok)throw new Error('Online speech unavailable');
-   const blob=await response.blob();if(request.id!==speechSequence)return;
-   if(!blob.size)throw new Error('Empty audio');
-   const audio=$('hoshiAudio');speechAudioUrl=URL.createObjectURL(blob);audio.src=speechAudioUrl;audio.hidden=false;
-   audio.onplaying=()=>{if(request.id===speechSequence){$('nightAudioRetry').hidden=true;setSpeaking(true);voiceTimes.audio=Math.max(0,voiceClock()-audioStarted);displayVoiceTimes();setStatus('HOSHI SPEAKING · URDU')}};
+  const timeout=setTimeout(()=>controller.abort(),22000);
+  setStatus('PREPARING FIRST URDU PHRASE…');
+  let style='soft';try{style=localStorage.getItem('hoshiVoiceStyle')||'soft'}catch(_){}
+  if(['happy','excited','playful'].includes(request.emotion))style='playful';
+  else if(['sad','shy','concerned','affectionate','caring'].includes(request.emotion))style='warm';
+  const segments=splitUrduSpeech(request.text);
+  if(!segments.length){clearTimeout(timeout);return}
+  const files=segments.map(part=>fetch(API_BASE+'/api/speech',{
+   method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:part,style}),signal:controller.signal
+  }).then(async response=>{
+   if(!response.ok)throw new Error('Urdu voice provider unavailable');
+   const blob=await response.blob();if(!blob.size)throw new Error('Empty Urdu audio');
+   return blob;
+  }).catch(()=>null));
+  const audio=$('hoshiAudio');
+  const stopLoading=()=>{clearTimeout(timeout);if(speechAudioController===controller)speechAudioController=null};
+  async function playPart(index){
+   if(request.id!==speechSequence){stopLoading();return}
+   const blob=await files[index];
+   if(request.id!==speechSequence){stopLoading();return}
+   if(!blob){setSpeaking(false);setStatus('URDU AUDIO UNAVAILABLE · REPLY IS SHOWN IN CHAT');stopLoading();return}
+   if(speechAudioUrl){URL.revokeObjectURL(speechAudioUrl);speechAudioUrl=null}
+   speechAudioUrl=URL.createObjectURL(blob);audio.src=speechAudioUrl;audio.hidden=false;
+   audio.onplaying=()=>{
+    if(request.id===speechSequence){
+     $('nightAudioRetry').hidden=true;setSpeaking(true);
+     if(voiceTimes.audio===null)voiceTimes.audio=Math.max(0,voiceClock()-audioStarted);
+     displayVoiceTimes();setStatus('HOSHI SPEAKING · URDU');
+    }
+   };
    audio.onpause=()=>{if(request.id===speechSequence)setSpeaking(false)};
-   audio.onended=()=>{if(request.id===speechSequence){setSpeaking(false);setStatus('READY')}};
-   audio.onerror=()=>{if(request.id===speechSequence){setSpeaking(false);setStatus('AUDIO PLAYBACK FAILED · CHECK INTERNET OR TRY AGAIN')}};
-   try{await audio.play()}catch(_){if(request.id===speechSequence){$('nightAudioRetry').hidden=false;setStatus('URDU AUDIO READY · TAP SUNO HOSHI')}}
-  }catch(error){if(request.id===speechSequence){setSpeaking(false);setStatus('URDU AUDIO UNAVAILABLE · TAP HEAR HOSHI TO RETRY')}}
-  finally{clearTimeout(timeout);if(speechAudioController===controller)speechAudioController=null}
+   audio.onended=()=>{
+    if(request.id!==speechSequence){stopLoading();return}
+    if(index+1<segments.length){setStatus('HOSHI CONTINUING…');void playPart(index+1)}
+    else{setSpeaking(false);setStatus('READY');stopLoading()}
+   };
+   audio.onerror=()=>{if(request.id===speechSequence){setSpeaking(false);setStatus('AUDIO PLAYBACK FAILED · CHECK CONNECTION');stopLoading()}};
+   try{await audio.play()}
+   catch(_){if(request.id===speechSequence){$('nightAudioRetry').hidden=false;setStatus('URDU AUDIO READY · TAP SUNO HOSHI')}}
+  }
+  void playPart(0).catch(()=>{if(request.id===speechSequence){setSpeaking(false);setStatus('URDU AUDIO UNAVAILABLE');stopLoading()}});
  }
  function getPersonality(){try{return localStorage.getItem('hoshiPersonality')||'balanced'}catch(e){return 'balanced'}}
  const MEMORY_KEY='hoshiConversationMemoryV1';

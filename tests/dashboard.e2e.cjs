@@ -206,6 +206,21 @@ async function main() {
     await page.locator('[data-tab="settings"]').click();
     assert.equal(await page.locator('#voicePanel').isVisible(), true);
     assert.equal(await page.locator('#stopSpeakingBtn').isVisible(), true);
+    // Fast Urdu on an Android phone with installed ur-PK TTS should skip HTTP speech generation.
+    await page.evaluate(()=>{
+      window.__nativeSpoken=[];
+      window.JarvisBridge.supportsUrduSpeech=()=>true;
+      window.JarvisBridge.speakNative=(text,lang,pitch,rate)=>{
+        window.__nativeSpoken.push({text,lang,pitch,rate});return true;
+      };
+      window.JarvisBridge.stopNativeSpeech=()=>true;
+    });
+    await page.locator('#previewVoiceBtn').click();
+    assert.equal(await page.evaluate(()=>window.__nativeSpoken.length),1);
+    assert.equal(await page.evaluate(()=>window.__nativeSpoken[0].lang),'ur-PK');
+    await page.evaluate(()=>window.hoshiNativeSpeechStarted());
+    assert.match(await page.locator('#voiceTiming').innerText(),/Awaaz [0-9.]+s/);
+    await page.locator('#stopSpeakingBtn').click();
     await page.locator('.sheet-close').click();
     assert.equal(await page.locator('#nightSheet').isVisible(), false);
     for(const tab of ['trading','influencer','outfit']){

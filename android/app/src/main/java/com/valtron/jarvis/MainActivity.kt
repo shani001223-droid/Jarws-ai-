@@ -468,7 +468,8 @@ class MainActivity : Activity() {
     private fun notifyHoshiSpeaking(speaking: Boolean) {
         runOnUiThread {
             dashboardWebView?.evaluateJavascript(
-                "window.hoshiSetSpeaking && window.hoshiSetSpeaking($speaking)", null
+                "window.hoshiSetSpeaking && window.hoshiSetSpeaking($speaking);" +
+                    (if (speaking) "window.hoshiNativeSpeechStarted && window.hoshiNativeSpeechStarted();" else ""), null
             )
         }
     }

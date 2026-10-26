@@ -10,7 +10,7 @@ from typing import Optional
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-from fastapi import FastAPI, HTTPException, Response, Request, Query
+from fastapi import FastAPI, HTTPException, Response, Query, Request as FastAPIRequest
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from threading import BoundedSemaphore, Lock
@@ -76,7 +76,7 @@ def agent_capabilities():
     }
 
 @app.post("/api/agent/execute")
-def agent_execute(payload: AgentTaskRequest, request: Request):
+def agent_execute(payload: AgentTaskRequest, request: FastAPIRequest):
     """Execute an explicitly allowlisted backend task; never shell commands."""
     if payload.task != "create_product_ads":
         raise HTTPException(status_code=400, detail="Unknown agent task. Allowed: create_product_ads.")

@@ -165,7 +165,9 @@ async function main() {
     assert.equal(await page.locator('#nightSheet').isVisible(),false);
     assert.equal(await page.evaluate(()=>localStorage.getItem('hoshiOutfitV1')),'winter');
     const winterArt=await page.locator('#nightroom').evaluate(node=>node.style.backgroundImage);
-    assert.match(winterArt,/data:image\/webp/);
+    assert.match(winterArt,/assets\/outfits\/winter\.webp/);
+    const winterSize=await page.locator('[data-outfit="winter"] img').evaluate(async img=>{await img.decode();return [img.naturalWidth,img.naturalHeight]});
+    assert.ok(winterSize[0]>=1024 && winterSize[1]>=1536,'Wardrobe must retain high-resolution source pixels');
     assert.match(await page.locator('#nightMood').innerText(),/Affectionate/);
     await page.reload({waitUntil:'domcontentloaded'});
     await page.waitForFunction(()=>document.querySelector('#nightroom').dataset.outfit==='winter');
@@ -173,6 +175,8 @@ async function main() {
     await page.locator('[data-outfit="techwear"]').click();
     await page.waitForFunction(()=>document.querySelector('#nightroom').dataset.outfit==='techwear');
     assert.notEqual(await page.locator('#nightroom').evaluate(node=>node.style.backgroundImage),winterArt,'Selecting another outfit must change actual main-screen art');
+    const fashionSize=await page.locator('[data-outfit="techwear"] img').evaluate(async img=>{await img.decode();return [img.naturalWidth,img.naturalHeight]});
+    assert.ok(fashionSize[0]>=1024 && fashionSize[1]>=1536,'Fashion crop must retain restored source resolution');
     await page.locator('[data-tab="outfit"]').click();
     await page.locator('[data-outfit="original"]').click();
     await page.waitForFunction(()=>document.querySelector('#nightroom').dataset.outfit==='original');

@@ -15,8 +15,8 @@ async function waitForPublicEndpoints() {
       if (health.ok && data.service === "hoshi-cloud-api" && data.version === "0.9.1") {
         const response = await fetch(DASHBOARD_URL, { signal: AbortSignal.timeout(15000) });
         const html = await response.text();
-        if (response.ok && /HOSHI — AI Companion/.test(html) && html.includes('id="nightroom"')) return;
-        lastError = "Dashboard returned HTTP " + response.status + " or has not published the nightroom revision yet";
+        if (response.ok && /HOSHI — AI Companion/.test(html) && html.includes('id="nightroom"') && html.includes('assets/outfits/')) return;
+        lastError = "Dashboard returned HTTP " + response.status + " or has not published the high-resolution wardrobe revision yet";
       } else {
         lastError = "Backend health check did not match expected HOSHI API: HTTP " + health.status;
       }
@@ -58,14 +58,21 @@ async function main() {
     await page.locator('[data-tab="settings"]').click();
     assert.equal(await page.locator('#voicePanel').isVisible(),true);
     await page.locator('.sheet-close').click();
+    await page.locator('[data-tab="outfit"]').click();
+    await page.locator('button[data-outfit="winter"]').click();
+    await page.waitForFunction(()=>document.querySelector('#nightroom').dataset.outfit==='winter');
+    assert.match(await page.locator('#nightroom').evaluate(n=>n.style.backgroundImage),/assets\/outfits\/winter\.webp/);
+    const portraitSize=await page.locator('button[data-outfit="winter"] img').evaluate(async img=>{await img.decode();return [img.naturalWidth,img.naturalHeight]});
+    assert.deepEqual(portraitSize,[1024,1536]);
     for(const width of [320,390,768]){
       await page.setViewportSize({width,height:844});
       assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
     }
+    await page.setViewportSize({width:390,height:844});
     await page.screenshot({ path: "/tmp/hoshi-live-dashboard.png", fullPage: true });
     assert.deepEqual(badResponses, [], "The live dashboard should not return broken same-origin assets");
     assert.deepEqual(pageErrors, [], "The live dashboard should not throw uncaught browser errors");
-    console.log("PASS — live Render dashboard title, core controls, hero shortcuts, expression sprite, crypto-panel removal, responsive widths, and browser console.");
+    console.log("PASS — live Render high-resolution wardrobe selection, 1024x1536 portrait, core controls, responsive widths, and browser console.");
   } finally {
     await browser.close();
   }

@@ -1,0 +1,84 @@
+name: HOSHI Docker backend smoke
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "cloud_backend/**"
+      - ".github/workflows/docker-backend-smoke.yml"
+  push:
+    branches: [hoshi/dnd-foundation-20261026]
+    paths:
+      - "cloud_backend/**"
+      - ".github/workflows/docker-backend-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  docker-backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify backend imports and Docker build context
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import ast
+          root = Path("cloud_backend")
+          dockerfile = (root / "Dockerfile").read_text()
+          assert "COPY *.py ./" in dockerfile, "Docker image must contain all sibling .py modules"
+          for file in root.glob("*.py"):
+              ast.parse(file.read_text(encoding="utf8"), filename=str(file))
+          assert (root / "ad_studio.py").is_file()
+          assert (root / "artifact_verifier.py").is_file()
+          assert (root / "persona_policy.py").is_file()
+          print("Docker context includes import dependencies")
+          PY
+      - name: Build actual Hoshi backend Docker image
+        run: docker build --pull -t hoshi-backend-smoke -f cloud_backend/Dockerfile cloud_backend
+      - name: Verify imported app, health and agent routes inside container
+        shell: bash
+        run: |
+          set -euo pipefail
+          container=$(docker run -d -e PORT=8000 -p 127.0.0.1:18765:8000 hoshi-backend-smoke)
+          trap 'docker logs --tail 60 "$container" || true; docker rm -f "$container" || true' EXIT
+          ready=0
+          for attempt in $(seq 1 45); do
+            if curl --fail --silent --show-error --max-time 2 http://127.0.0.1:18765/health > /tmp/hoshi-health.json 2>/dev/null; then
+              ready=1
+              break
+            fi
+            sleep 1
+          done
+          test "$ready" -eq 1 || { echo 'Container failed health probe'; exit 1; }
+          python3 - <<'PY'
+          import json
+          with open("/tmp/hoshi-health.json") as f:
+              payload=json.load(f)
+          assert payload.get("ok") is True, payload
+          print("Backend /health OK (test without AI secrets)")
+          PY
+          curl --fail --silent --show-error --max-time 8 \
+            -H "Content-Type: application/json" \
+            -d '{"message":"Flora ki shampoo ad banao"}' \
+            http://127.0.0.1:18765/api/agent/route > /tmp/hoshi-route.json
+          python3 - <<'PY'
+          import json
+          with open("/tmp/hoshi-route.json") as f:
+              payload=json.load(f)
+          assert isinstance(payload,dict) and bool(payload), "Agent route empty"
+          print("Backend /api/agent/route OK")
+          PY
+          curl --fail --silent --show-error --max-time 8 \
+            http://127.0.0.1:18765/api/agent/capabilities > /tmp/hoshi-capabilities.json
+          python3 - <<'PY'
+          import json
+          with open("/tmp/hoshi-capabilities.json") as f:
+              payload=json.load(f)
+          assert payload.get("ok") is True
+          assert any(t.get("id")=="create_product_ads" for t in payload["tools"])
+          print("Backend /api/agent/capabilities OK")
+          PY

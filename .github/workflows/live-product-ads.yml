@@ -1,0 +1,72 @@
+name: HOSHI live product ad workflow
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "cloud_backend/ad_studio.py"
+      - "cloud_backend/main.py"
+      - "hoshi-product-ads.js"
+      - ".github/workflows/live-product-ads.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live-ad-render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Wait for Render ad tool deployment
+        run: |
+          python - <<'PY'
+          import json, time, urllib.request
+          url="https://jarws-ai-2.onrender.com/api/agent/capabilities"
+          last=""
+          for attempt in range(25):
+              try:
+                  with urllib.request.urlopen(urllib.request.Request(url,headers={"User-Agent":"HoshiSmoke/1.0"}),timeout=12) as resp:
+                      data=json.load(resp)
+                  if data.get("ok") and any(t.get("id")=="create_product_ads" for t in data.get("tools",[])):
+                      print("PASS: live Render exposes real product ad generator")
+                      break
+                  last="New tool not yet deployed"
+              except Exception as error:
+                  last=type(error).__name__
+              print("Waiting for Render deployment, attempt",attempt+1,last)
+              time.sleep(10)
+          else:
+              raise RuntimeError("Live backend did not expose the new ad tool.")
+          PY
+      - name: Execute user product-ad request and validate actual PNG files
+        run: |
+          python - <<'PY'
+          import base64,io,json,struct,urllib.request,zipfile
+          url="https://jarws-ai-2.onrender.com/api/agent/execute"
+          body=json.dumps({"task":"create_product_ads","message":"Mere 24K Gold Facial Kit ka ad banao"}).encode()
+          request=urllib.request.Request(url,data=body,method="POST",
+              headers={"Content-Type":"application/json","User-Agent":"HoshiSmoke/1.0"})
+          with urllib.request.urlopen(request,timeout=40) as response:
+              data=json.load(response)
+          assert data["ok"] and data["completed"] and data["task"]=="create_product_ads"
+          assert len(data["products"])==1
+          encoded=data["zip_base64"]
+          assert 0<len(encoded)<8_000_000
+          payload=base64.b64decode(encoded,validate=True)
+          with zipfile.ZipFile(io.BytesIO(payload)) as bundle:
+              files=bundle.namelist()
+              assert set(files)=={
+                "gold_kit_feed_1080x1350.png",
+                "gold_kit_story_1080x1920.png",
+                "gold_kit_caption.txt",
+                "gold_kit_video_storyboard.txt",
+              }
+              for filename,w,h in (("gold_kit_feed_1080x1350.png",1080,1350),
+                                    ("gold_kit_story_1080x1920.png",1080,1920)):
+                  content=bundle.read(filename)
+                  assert content.startswith(b"\x89PNG\r\n\x1a\n")
+                  assert struct.unpack(">II",content[16:24])==(w,h)
+              assert b"3,500" in bundle.read("gold_kit_caption.txt")
+          print("PASS: Render generated real feed/story PNGs, correct pixel sizes and ZIP captions")
+          PY

@@ -45,6 +45,7 @@ class MainActivity : Activity() {
     private var dashboardWebView: WebView? = null
     private var ttsReady = false
     private var pendingSpeech: NativeSpeech? = null
+    @Volatile private var activeSpeechUtteranceId: String? = null
     private var pendingWebPermission: PermissionRequest? = null
     private var pendingReminder: Pair<String, Int>? = null
     private var nativeRecognizer: SpeechRecognizer? = null
@@ -61,10 +62,23 @@ class MainActivity : Activity() {
                 if (result == TextToSpeech.SUCCESS) {
                     ttsReady = true
                     textToSpeech?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-                        override fun onStart(utteranceId: String?) = notifyHoshiSpeaking(true)
-                        override fun onDone(utteranceId: String?) = notifyHoshiSpeaking(false)
-                        override fun onError(utteranceId: String?) = notifyHoshiVoiceError()
-                        override fun onError(utteranceId: String?, errorCode: Int) = notifyHoshiVoiceError()
+                        override fun onStart(utteranceId: String?) {
+                            if (utteranceId != null && utteranceId == activeSpeechUtteranceId)
+                                notifyHoshiSpeaking(true)
+                        }
+                        override fun onDone(utteranceId: String?) {
+                            if (utteranceId != null && utteranceId == activeSpeechUtteranceId) {
+                                activeSpeechUtteranceId = null
+                                notifyHoshiSpeaking(false)
+                            }
+                        }
+                        override fun onError(utteranceId: String?) {
+                            if (utteranceId != null && utteranceId == activeSpeechUtteranceId) {
+                                activeSpeechUtteranceId = null
+                                notifyHoshiVoiceError()
+                            }
+                        }
+                        override fun onError(utteranceId: String?, errorCode: Int) = onError(utteranceId)
                     })
                     textToSpeech?.setPitch(1.12f)
                     val queued = pendingSpeech
@@ -420,6 +434,7 @@ class MainActivity : Activity() {
     private fun speakNativeOnUiThread(request: NativeSpeech) {
         val engine = textToSpeech ?: run { pendingSpeech = request; return }
         if (!ttsReady) { pendingSpeech = request; return }
+        activeSpeechUtteranceId = null
         engine.stop()
         engine.setPitch(request.pitch)
         engine.setSpeechRate(request.rate)
@@ -464,15 +479,19 @@ class MainActivity : Activity() {
         } catch (_: Exception) {
             // Some Android speech engines do not expose selectable voices.
         }
+        val utteranceId = "hoshi-" + System.nanoTime()
+        activeSpeechUtteranceId = utteranceId
         val result = engine.speak(
-            request.text, TextToSpeech.QUEUE_FLUSH, Bundle(),
-            "jarvis-" + System.currentTimeMillis()
+            request.text, TextToSpeech.QUEUE_FLUSH, Bundle(), utteranceId
         )
-        if (result == TextToSpeech.ERROR) notifyHoshiVoiceError()
+        if (result == TextToSpeech.ERROR) {
+            activeSpeechUtteranceId = null
+            notifyHoshiVoiceError()
+        }
     }
 
     fun stopNativeSpeech(): Boolean {
-        runOnUiThread { textToSpeech?.stop(); pendingSpeech = null; notifyHoshiSpeaking(false) }
+        runOnUiThread { activeSpeechUtteranceId = null; textToSpeech?.stop(); pendingSpeech = null; notifyHoshiSpeaking(false) }
         return true
     }
 

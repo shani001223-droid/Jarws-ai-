@@ -22,9 +22,11 @@ except ImportError:
 try:  # Handles either cloud_backend package import or direct uvicorn main:app.
     from .openjarvis_bridge import ask_openjarvis, endpoint as openjarvis_endpoint, wants_agent, OpenJarvisUnavailable
     from .agent_tools import try_calculate
+    from .permission_policy import check_agent_action
 except ImportError:
     from openjarvis_bridge import ask_openjarvis, endpoint as openjarvis_endpoint, wants_agent, OpenJarvisUnavailable
     from agent_tools import try_calculate
+    from permission_policy import check_agent_action
 
 app = FastAPI(title="HOSHI AI Cloud API", version="0.9.1")
 
@@ -86,8 +88,11 @@ def agent_capabilities():
 @app.post("/api/agent/execute")
 def agent_execute(payload: AgentTaskRequest, request: FastAPIRequest):
     """Execute an explicitly allowlisted backend task; never shell commands."""
-    if payload.task != "create_product_ads":
+    decision = check_agent_action(payload.task)
+    if not decision.known:
         raise HTTPException(status_code=400, detail="Unknown agent task. Allowed: create_product_ads.")
+    if not decision.allowed:
+        raise HTTPException(status_code=403, detail=decision.reason)
     # IP is only used as a short-lived throttle, never persisted or returned.
     identifier = (request.client.host if request.client else "unknown")[:90]
     now = time.monotonic()

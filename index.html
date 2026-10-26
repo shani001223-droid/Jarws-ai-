@@ -565,6 +565,20 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
   const draftField=$('hoshiDraft'),draftStatus=$('draftStatus');
   // Session-only safety metadata. Never record a draft, screenshot or command.
   const actionSafety=window.HoshiLocalUiActions.createSafety(20);
+  // Persist only the stop/pause latch for this browser tab across a reload.
+  // Action history and any user text stay memory-only, never stored.
+  try{
+    const prior=sessionStorage.getItem('hoshiActionSafetyStateV1');
+    if(prior==='halted')actionSafety.emergencyStop();
+    else if(prior==='paused')actionSafety.pause();
+  }catch(_){}
+  function saveActionSafetyLatch(){
+    try{
+      const state=actionSafety.snapshot().state;
+      if(state==='running')sessionStorage.removeItem('hoshiActionSafetyStateV1');
+      else sessionStorage.setItem('hoshiActionSafetyStateV1',state);
+    }catch(_){}
+  }
   function renderActionSafety(){
     const node=$('actionSafetyStatus');if(!node)return;
     const snapshot=actionSafety.snapshot();
@@ -973,6 +987,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
    };
    $('actionPauseBtn').onclick=()=>{
      if(!actionSafety.pause())return;
+     saveActionSafetyLatch();
      const cancelled=invalidateQueuedActions();
      $('localUiStatus').textContent=cancelled?'Actions paused; queued native actions invalidated.':
        'Actions paused; older APK cannot revoke already queued native actions.';
@@ -980,11 +995,13 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
    };
    $('actionResumeBtn').onclick=()=>{
      if(!actionSafety.resume())return;
+     saveActionSafetyLatch();
      $('localUiStatus').textContent='Actions resumed by user.';
      renderActionSafety();
    };
    $('actionEmergencyStopBtn').onclick=()=>{
      actionSafety.emergencyStop();
+     saveActionSafetyLatch();
      const cancelled=invalidateQueuedActions();
      interruptHoshi();
      if(listening||nativeMicActive)stopListening();

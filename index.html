@@ -263,6 +263,21 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  $('tradePair').addEventListener('change',loadTradingData);
  $('tradeInterval').addEventListener('change',loadTradingData);
  $('tradeRefresh').addEventListener('click',loadTradingData);
+ let nativeMicActive=false,nativeMicTimeout=null;
+ function endNativeMic(){nativeMicActive=false;listening=false;clearTimeout(nativeMicTimeout);nativeMicTimeout=null;$('wakeBtn').textContent='🎙 Start listening'}
+ window.hoshiNativeListeningState=active=>{if(nativeMicActive&&active)setStatus('LISTENING · SPEAK NOW')};
+ window.hoshiNativeSpeechResult=heard=>{
+  if(!nativeMicActive)return;endNativeMic();
+  const text=String(heard||'').trim();if(!text){setStatus('NO SPEECH HEARD · TAP MIC TO RETRY');return}
+  input.value=text;
+  const command=wakeEnabled?text.replace(/^hey[, ]*hoshi[,: ]*/i,'').trim():text;
+  if(wakeEnabled&&command===text){setStatus('SAY HEY HOSHI · TAP AGAIN');return}
+  if(!command){setStatus('TAP MIC AGAIN AND SAY COMMAND');return}
+  processCommand(command)
+ };
+ window.hoshiNativeSpeechError=error=>{
+  if(!nativeMicActive)return;endNativeMic();setStatus('MIC ERROR · '+String(error||'speech unavailable').slice(0,100)+' · TAP TO RETRY')
+ };
  const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
   function setStatus(s){status.textContent=s}
  async function checkCloud(){
@@ -425,6 +440,15 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  function startListening(){
   if(listening){stopListening();return}
   stopSpeaking();lastVoiceError="";
+  if(window.JarvisBridge&&typeof window.JarvisBridge.startNativeListening==='function'){
+    nativeMicActive=true;listening=true;$('wakeBtn').textContent='🎙 Listening…';
+    setStatus('STARTING ANDROID MICROPHONE…');
+    try{if(!window.JarvisBridge.startNativeListening(commandLanguage)){
+      endNativeMic();setStatus('NATIVE MIC UNAVAILABLE · TYPE A COMMAND');return
+    }}catch(_){endNativeMic();setStatus('ANDROID MIC ERROR · TYPE A COMMAND');return}
+    nativeMicTimeout=setTimeout(()=>{if(nativeMicActive){window.JarvisBridge.stopNativeListening();endNativeMic();setStatus('NO SPEECH HEARD · TAP AGAIN')}},20000);
+    return;
+  }
   if(!Recognition){setStatus('MIC UNSUPPORTED · USE HOSHI ANDROID APP OR TYPE A COMMAND');return}
   const instance=new Recognition();recognition=instance;
   instance.lang=commandLanguage;instance.continuous=false;instance.interimResults=false;
@@ -464,6 +488,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
   try{instance.start()}catch(_){finish();setStatus('MIC START FAILED · CHECK PERMISSION')}
  }
  function stopListening(){
+  if(nativeMicActive){if(window.JarvisBridge&&window.JarvisBridge.stopNativeListening)window.JarvisBridge.stopNativeListening();endNativeMic()}
   listening=false;awaitingCommand=false;clearTimeout(restartTimer);
   const old=recognition;recognition=null;
   if(old){old.onend=null;old.onerror=null;old.onresult=null;try{old.abort()}catch(_){}}
@@ -518,7 +543,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  }
  if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>{let refreshing=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!refreshing){refreshing=true;location.reload()}});navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(reg=>reg.update()).catch(()=>{});});
  checkCloud();setInterval(checkCloud,60000);
- if(!Recognition){setStatus('TEXT MODE · VOICE SUPPORT DEPENDS ON BROWSER')}
+ if(!Recognition&&!(window.JarvisBridge&&window.JarvisBridge.startNativeListening)){setStatus('TEXT MODE · BROWSER MIC UNSUPPORTED')}
 })();
 </script>
 </body>

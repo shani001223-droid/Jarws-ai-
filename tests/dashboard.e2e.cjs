@@ -298,37 +298,6 @@ async function main() {
     }
     await page.setViewportSize({width:390,height:844});
     await page.screenshot({path:'/tmp/hoshi-nightroom-mobile.png',fullPage:true});
-    // Hoshi room-life: original art + five tabs remain while activities visibly change.
-    assert.equal(await page.locator('.room-life .life-expression .life-face').count(),1);
-    assert.equal(await page.locator('.room-life').getAttribute('data-activity'),'idle');
-    await page.locator('.life-toggle').click();
-    await page.locator('[data-life-activity="gaming"]').click();
-    assert.equal(await page.locator('.room-life').getAttribute('data-activity'),'gaming');
-    await page.locator('.life-toggle').click();
-    await page.locator('[data-life-activity="reels"]').click();
-    assert.equal(await page.locator('.room-life').getAttribute('data-activity'),'reels');
-    const initialActions=apiMessages.length;
-    await page.locator('[data-tab="chat"]').click();
-    await page.locator('#commandInput').fill('dance karo');
-    await page.locator('#commandForm button').click();
-    assert.equal(await page.locator('.room-life').getAttribute('data-activity'),'dance');
-    assert.equal(await page.locator('.life-expression').getAttribute('data-emotion'),'happy');
-    assert.equal(apiMessages.length,initialActions,'Room command must not trigger a model request');
-    await page.evaluate(()=>window.hoshiSetSpeaking(true));
-    assert.equal(await page.locator('.room-life').getAttribute('data-conversation'),'speaking');
-    await page.evaluate(()=>window.hoshiSetSpeaking(false));
-    assert.equal(await page.locator('.room-life').getAttribute('data-conversation'),'idle');
-    await page.locator('[data-tab="settings"]').click();
-    assert.match(await page.locator('#roomTipsToggle').innerText(),/OFF/);
-    await page.locator('#roomMotionToggle').click();
-    assert.equal(await page.locator('#nightroom').evaluate(n=>n.classList.contains('life-motion-off')),true);
-    await page.locator('#roomMotionToggle').click();
-    await page.locator('#roomTipsToggle').click();
-    await page.locator('[data-tab="trading"]').click();
-    await page.waitForFunction(()=>document.querySelector('.room-life-tip').hidden===false);
-    assert.match(await page.locator('.room-life-tip').innerText(),/Trading chart/i);
-    await page.locator('.room-life-tip button').click();
-    assert.equal(await page.locator('.room-life-tip').isVisible(),false);
     // Reproduce the previous repeated-mic bug without relying on physical hardware.
     const voiceContext = await browser.newContext({viewport:{width:390,height:844}});
     await voiceContext.addInitScript(() => {

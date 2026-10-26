@@ -48,3 +48,9 @@ Keep this audit as a source of truth. Only mark tasks done with implementation +
 - Tasks 02-03: provider JSON validation, sanitized logging and regression tests passed: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40299987975
 - Tasks 04-05: backend action permission matrix denies unapproved high-risk operations; Python/JS/browser checks passed: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40300338206
 - Task 06 remains pending production deployment/workspace and new APK verification; prior main APK checks are historical baseline only.
+
+## Task 17 privacy follow-up (26 Oct 2026)
+- New installations have local conversation memory OFF by default. Users must opt in before browser storage or contextual history transmission; opting out deletes saved history.
+- A bounded local-only store filters likely credentials, validates allowed roles, supports per-turn editing/deletion, JSON export and explicit history clear. Exports are generated in-browser without an upload endpoint. Heuristic secret detection is not a substitute for data minimization.
+- Browser and unit tests verify default-off, opt-in, filtered export, opt-out and context suppression: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40318081029
+- Storage is browser/device-local and can disappear on uninstall or cache/data clearing; cross-device durable storage, encrypted backups, user authentication and physical-device testing are **not** claimed. Task 06 Render deployment/rollback is still pending.

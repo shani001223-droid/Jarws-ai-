@@ -44,6 +44,10 @@ jobs:
         run: node --check hoshi-product-ads.js
       - name: Test Hoshi client task router
         run: node --test tests/hoshi-task-router.test.cjs
+      - name: Test Urdu and Roman Urdu speech parsing
+        run: node --test tests/hoshi-speech-input.test.cjs
+      - name: Check Urdu speech parser syntax
+        run: node --check hoshi-speech-input.js
       - name: Check client task router syntax
         run: node --check hoshi-task-router.js
       - name: Check memory privacy JavaScript syntax

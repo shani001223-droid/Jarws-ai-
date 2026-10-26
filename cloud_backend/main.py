@@ -31,6 +31,7 @@ try:  # Handles either cloud_backend package import or direct uvicorn main:app.
     from .provider_policy import choose_providers
     from .free_llm_providers import available_free_providers, ask_free_provider, OptionalProviderError
     from .urdu_tts_text import normalize_urdu_speech
+    from .persona_policy import personality_guardrails
 except ImportError:
     from openjarvis_bridge import ask_openjarvis, endpoint as openjarvis_endpoint, wants_agent, OpenJarvisUnavailable
     from agent_tools import try_calculate
@@ -41,6 +42,7 @@ except ImportError:
     from provider_policy import choose_providers
     from free_llm_providers import available_free_providers, ask_free_provider, OptionalProviderError
     from urdu_tts_text import normalize_urdu_speech
+    from persona_policy import personality_guardrails
 
 app = FastAPI(title="HOSHI AI Cloud API", version="0.9.1")
 
@@ -649,6 +651,9 @@ def assistant(payload: AssistantRequest):
         "Answer the actual task first, clearly state uncertainties and avoid repetition."
     )
 
+    # Keep full and fast providers aligned on emotional boundaries.
+    language_hint += " " + personality_guardrails(message, user_mood)
+
     if str(payload.locale or "").lower().startswith("ur"):
         language_hint += (
             " The selected conversation language is Pakistani Urdu. This overrides device/browser language. "
@@ -729,6 +734,8 @@ def assistant(payload: AssistantRequest):
         # Full writing/research instructions must not be truncated to a short voice soundbite.
         if not brief_spoken:
             quick_instruction = language_hint
+        else:
+            quick_instruction += " " + personality_guardrails(message, user_mood, concise=True)
         try:
             quick = make_assistant_response(
                 _groq_reply(request_input, quick_instruction, quick=brief_spoken), "groq", message, payload.locale

@@ -73,7 +73,9 @@ form{display:flex;gap:8px;margin-top:13px}input{min-width:0;flex:1;padding:13px;
 body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relative;width:100%;max-width:540px;height:100dvh;min-height:580px;margin:auto;overflow:hidden;background:#181527 url('./assets/hoshi-nightroom.webp') center 35%/cover no-repeat;color:#fff}
 .nightroom.speaking .night-mic #wakeBtn{box-shadow:0 0 22px #79e5ff,0 0 62px #249cffaa}.nightroom:before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,#090b1c70,transparent 25%,transparent 45%,#080c2470 75%,#060918ed)}
 .night-head{position:absolute;inset:max(22px,env(safe-area-inset-top)) 20px auto;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.night-brand{font:italic 44px Georgia,serif;letter-spacing:-.03em;text-shadow:0 0 18px #9baaff}.night-brand small{display:block;font:italic 13px Georgia,serif;letter-spacing:.05em;margin-top:4px}.night-head #connection{max-width:148px;white-space:normal;text-align:center;background:#090c22c9;border:1px solid #b49aff70;border-radius:40px;font-size:10px;padding:12px;backdrop-filter:blur(16px)}
-.night-conversation{position:absolute;bottom:calc(210px + env(safe-area-inset-bottom));left:22px;right:22px;text-align:center}.night-conversation #reply:empty{display:none}.night-conversation #reply{max-height:112px;overflow:auto;min-height:0;margin:0 0 12px;padding:12px 15px;border-radius:18px;background:#0c10256b;backdrop-filter:blur(12px);font-size:14px;line-height:1.6;text-shadow:0 1px 3px #000}.night-conversation #status{border:1px solid #a7b4ff88;border-radius:40px;padding:13px 12px;background:#11152cb5;backdrop-filter:blur(14px);font-size:10px;letter-spacing:.08em;min-height:43px;color:#edf0ff}
+.night-conversation{position:absolute;bottom:calc(210px + env(safe-area-inset-bottom));left:22px;right:22px;text-align:center}.night-conversation #reply:empty{display:none}.night-conversation #reply{max-height:112px;overflow:auto;min-height:0;margin:0 0 12px;padding:12px 15px;border-radius:18px;background:#0c10256b;backdrop-filter:blur(12px);font-size:14px;line-height:1.6;text-shadow:0 1px 3px #000}.night-conversation #nightAudioRetry{display:block;margin:9px auto 0;min-height:38px;padding:8px 18px;background:#175b8b;border:1px solid #72dcff;border-radius:22px;color:white}
+.night-conversation #nightAudioRetry[hidden]{display:none}
+.night-conversation #status{border:1px solid #a7b4ff88;border-radius:40px;padding:13px 12px;background:#11152cb5;backdrop-filter:blur(14px);font-size:10px;letter-spacing:.08em;min-height:43px;color:#edf0ff}
 .night-mic{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(102px + env(safe-area-inset-bottom))}.night-mic #wakeBtn{width:82px;height:82px;border:3px solid #9decff;border-radius:50%;background:radial-gradient(circle,#2471ec,#122b86);box-shadow:0 0 15px #219cff,0 0 42px #249cff88;font-size:0}.night-mic #wakeBtn:before{content:'🎙';font-size:37px}.night-mic #wakeBtn:active{transform:scale(.96)}
 .night-tabs{position:absolute;bottom:0;left:0;right:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));padding:12px 8px calc(13px + env(safe-area-inset-bottom));background:#090b1ad9;border:1px solid #a99aff66;border-bottom:0;border-radius:28px 28px 0 0;backdrop-filter:blur(20px)}.night-tabs button{padding:5px 1px;border:0;border-radius:12px;background:transparent;font-size:10px;min-width:0;color:#d2bee6;min-height:54px}.night-tabs button span{display:block;font-size:23px;line-height:1.1;margin-bottom:7px}.night-tabs button[aria-selected=true]{color:#72caff;text-shadow:0 0 12px #2689ff}.night-tabs button[aria-selected=true]:after{content:"";display:block;height:3px;margin:8px 10px -3px;background:#60bdff;border-radius:5px;box-shadow:0 0 9px #239eff}
 .night-sheet{position:absolute;z-index:5;left:10px;right:10px;bottom:calc(92px + env(safe-area-inset-bottom));max-height:70dvh;overflow:auto;border:1px solid #9ca9e47a;border-radius:24px;padding:17px;background:#0b1124f5;backdrop-filter:blur(20px);box-shadow:0 -10px 60px #0006}.night-sheet[hidden]{display:none}.sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}.sheet-head h2{font-size:17px;margin:0}.sheet-close{min-height:36px;width:36px;padding:4px;border-radius:50%}.night-sheet .section{width:100%;margin:12px 0}.night-sheet .bottom-workspace{display:block;margin:0}.night-sheet #voicePanel{padding:14px}.night-sheet #commandForm{margin:8px 0}.night-sheet #commandForm button{min-width:54px}.night-sheet .controls{display:grid;grid-template-columns:1fr 1fr;gap:8px}.night-sheet .controls button{font-size:12px}.night-sheet #stopBtn{display:none}.night-sheet #stopSpeakingBtn{display:inline-block}.night-sheet a{color:#94d9ff}.night-sheet p{font-size:13px;line-height:1.7}
@@ -91,7 +93,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 </style>
 </head>
 <body>
-<main id="nightroom" class="nightroom" aria-label="Hoshi nightroom assistant"><header class="night-head"><div class="night-brand">Hoshi ✧ 星<small>Your AI Assistant ♡</small></div><div id="nightConnection"></div></header><div class="night-conversation" id="nightConversation"><div id="nightMood" class="night-mood" aria-live="polite">✧ Caring</div></div><div class="night-mic" id="nightMic"></div><nav class="night-tabs" aria-label="Main navigation"><button type="button" data-tab="chat" aria-selected="true"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M3 10L12 3l9 7v11h-6v-7H9v7H3z"/></svg></span>Chat</button><button type="button" data-tab="trading" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M5 3v18M12 3v18M19 3v18M3 7h4v7H3zM10 5h4v5h-4zM17 11h4v6h-4z"/></svg></span>Trading</button><button type="button" data-tab="influencer" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h4l2-3h6l2 3h4v14H3z M16 13a4 4 0 1 1-8 0a4 4 0 0 1 8 0"/></svg></span>AI Influencer</button><button type="button" data-tab="outfit" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M8 3l4 2l4-2l6 5l-4 4l-2-2v11H8V10l-2 2l-4-4z"/></svg></span>Outfit</button><button type="button" data-tab="settings" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8a4 4 0 0 0 0-8 M9 3h6l1 3l3 1l2 5l-2 5l-3 1l-1 3H9l-1-3l-3-1l-2-5l2-5l3-1z"/></svg></span>Settings</button></nav><section class="night-sheet" id="nightSheet" hidden aria-label="Assistant panel"><div class="sheet-head"><h2 id="sheetTitle">Chat</h2><button type="button" class="sheet-close" aria-label="Close panel">×</button></div><div data-panel="chat"></div><div data-panel="trading" hidden>
+<main id="nightroom" class="nightroom" aria-label="Hoshi nightroom assistant"><header class="night-head"><div class="night-brand">Hoshi ✧ 星<small>Your AI Assistant ♡</small></div><div id="nightConnection"></div></header><div class="night-conversation" id="nightConversation"><div id="nightMood" class="night-mood" aria-live="polite">✧ Caring</div><button type="button" id="nightAudioRetry" hidden>▶ Suno Hoshi</button></div><div class="night-mic" id="nightMic"></div><nav class="night-tabs" aria-label="Main navigation"><button type="button" data-tab="chat" aria-selected="true"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M3 10L12 3l9 7v11h-6v-7H9v7H3z"/></svg></span>Chat</button><button type="button" data-tab="trading" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M5 3v18M12 3v18M19 3v18M3 7h4v7H3zM10 5h4v5h-4zM17 11h4v6h-4z"/></svg></span>Trading</button><button type="button" data-tab="influencer" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h4l2-3h6l2 3h4v14H3z M16 13a4 4 0 1 1-8 0a4 4 0 0 1 8 0"/></svg></span>AI Influencer</button><button type="button" data-tab="outfit" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M8 3l4 2l4-2l6 5l-4 4l-2-2v11H8V10l-2 2l-4-4z"/></svg></span>Outfit</button><button type="button" data-tab="settings" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8a4 4 0 0 0 0-8 M9 3h6l1 3l3 1l2 5l-2 5l-3 1l-1 3H9l-1-3l-3-1l-2-5l2-5l3-1z"/></svg></span>Settings</button></nav><section class="night-sheet" id="nightSheet" hidden aria-label="Assistant panel"><div class="sheet-head"><h2 id="sheetTitle">Chat</h2><button type="button" class="sheet-close" aria-label="Close panel">×</button></div><div data-panel="chat"></div><div data-panel="trading" hidden>
 <p class="small">Live keyless market data · public Binance Spot reference only. No real or demo orders are placed.</p>
 <div class="trading-selects"><label>Pair<select id="tradePair" aria-label="Trading pair"><option>BTCUSDT</option><option>ETHUSDT</option><option>SOLUSDT</option><option>BNBUSDT</option></select></label><label>Timeframe<select id="tradeInterval" aria-label="Chart timeframe"><option>5m</option><option>1m</option><option>15m</option><option>1h</option><option>4h</option><option>1d</option></select></label></div>
 <div class="trade-card"><div class="trade-label">Spot market price · USDT</div><div id="tradePrice" class="trade-price">—</div><div id="tradeChange" class="trade-muted">24h change: —</div><div id="tradeSource" class="trade-muted">Source: Binance Spot · read-only</div></div>
@@ -160,7 +162,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 <p class="small">Delivery styles tune your device’s speech voice. They do not add a new anime voice. Pakistani Urdu (ur-PK) is preferred when installed. Urdu mode never substitutes Hindi or English voices. Voice quality and Urdu pronunciation depend on the installed speech engine.</p>
 </div></div>
 <div class="section" id="screenControlSection" style="display:none"><h2>BASIC PHONE CONTROLS</h2><p class="small">Optional Android Accessibility permission. Only the actions you tap run; HOSHI does not inspect screen text or upload screenshots. Screenshot requires Android 9 or newer.</p><div class="quick"><button type="button" id="screenPermissionBtn">Enable permission</button><button type="button" data-screen-action="screenshot">Take screenshot</button><button type="button" data-screen-action="back">Back</button><button type="button" data-screen-action="home">Home</button><button type="button" data-screen-action="swipe_up">Swipe up</button><button type="button" data-screen-action="swipe_down">Swipe down</button></div></div>
-<div class="section" id="settings"><div class="statusrow"><h2>WAKE WORD</h2><button class="toggle" id="wakeToggle">Hey HOSHI: OFF</button></div><p class="small">Wake-word detection works only while this page is open, foregrounded and microphone access is granted. This web prototype cannot listen reliably while the phone is locked or the app is closed.</p></div>
+<div class="section" id="settings"><div class="statusrow"><h2>WAKE WORD</h2><button class="toggle" id="wakeToggle">Hey HOSHI: OFF</button></div><p class="small">One tap listens for one command, then the microphone stays off during Hoshi's response. Hey Hoshi is optional within the same utterance; background listening is disabled.</p></div>
 <div class="section" id="personalityPanel"><h2>PERSONALITY MODE</h2><label for="personalitySelect" class="small">How should Hoshi sound?</label><select id="personalitySelect" aria-label="Hoshi personality mode"><option value="balanced">Balanced · caring and playful</option><option value="playful">Playful · more teasing and jokes</option><option value="affectionate">Affectionate · softer and warmer</option><option value="calm">Calm · gentle and thoughtful</option></select><p class="small">This changes reply style, not Hoshi’s identity or boundaries.</p></div>
 <div class="section" id="commandShortcuts"><h2>TRY A COMMAND</h2><p class="small">“Hey HOSHI” · “What time is it?” · “Open Google” · “Open YouTube” · “Help” · “Stop speaking”</p><div class="quick"><button data-cmd="what time is it">Time</button><button data-cmd="today's date">Date</button><button data-cmd="open Google">Google</button><button data-cmd="open YouTube">YouTube</button><button data-cmd="help">Help</button></div></div>
 <div class="section" id="appLinks"><h2>APP SHORTCUTS · OPEN EXTERNAL SERVICES</h2><p class="small">These are website shortcuts, not account-connected integrations. Sign in to each service yourself if needed.</p><div class="app-shortcuts">
@@ -189,6 +191,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  $('nightConversation').append(reply,status);
  $('nightMic').append($('wakeBtn'));$('wakeBtn').setAttribute('aria-label','Start or stop microphone');
  const chatPanel=shell.querySelector('[data-panel="chat"]'),settingsPanel=shell.querySelector('[data-panel="settings"]');
+ $('nightAudioRetry').onclick=()=>{$('hoshiAudio').play().then(()=>{$('nightAudioRetry').hidden=true}).catch(()=>setStatus('AUDIO BLOCKED · CHECK MEDIA SETTINGS'))};
  chatPanel.append($('commandForm'),$('memoryPanel'));
  settingsPanel.append(document.querySelector('.controls'),document.querySelector('.bottom-workspace'));
  if(window.JarvisBridge&&typeof window.JarvisBridge.showReminders==='function'){$('nativeRemindersBtn').hidden=false;$('nativeRemindersBtn').onclick=()=>window.JarvisBridge.showReminders()}
@@ -263,6 +266,21 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  $('tradePair').addEventListener('change',loadTradingData);
  $('tradeInterval').addEventListener('change',loadTradingData);
  $('tradeRefresh').addEventListener('click',loadTradingData);
+ let nativeMicActive=false,nativeMicTimeout=null;
+ function endNativeMic(){nativeMicActive=false;listening=false;clearTimeout(nativeMicTimeout);nativeMicTimeout=null;$('wakeBtn').textContent='🎙 Start listening'}
+ window.hoshiNativeListeningState=active=>{if(nativeMicActive&&active)setStatus('LISTENING · SPEAK NOW')};
+ window.hoshiNativeSpeechResult=heard=>{
+  if(!nativeMicActive)return;endNativeMic();
+  const text=String(heard||'').trim();if(!text){setStatus('NO SPEECH HEARD · TAP MIC TO RETRY');return}
+  input.value=text;
+  const command=wakeEnabled?text.replace(/^hey[, ]*hoshi[,: ]*/i,'').trim():text;
+  if(wakeEnabled&&command===text){setStatus('SAY HEY HOSHI · TAP AGAIN');return}
+  if(!command){setStatus('TAP MIC AGAIN AND SAY COMMAND');return}
+  processCommand(command)
+ };
+ window.hoshiNativeSpeechError=error=>{
+  if(!nativeMicActive)return;endNativeMic();setStatus('MIC ERROR · '+String(error||'speech unavailable').slice(0,100)+' · TAP TO RETRY')
+ };
  const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
   function setStatus(s){status.textContent=s}
  async function checkCloud(){
@@ -289,11 +307,11 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
   setStatus('SENDING TO CLOUD…');setEmotion('thinking');orb.classList.add('active');
   const controller=typeof AbortController==='function'?new AbortController():null;
   activeCloudController=controller;
-  const timeout=controller?setTimeout(()=>controller.abort(),65000):null;
+  const timeout=controller?setTimeout(()=>controller.abort(),45000):null;
   try{
    const options={method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,locale:commandLanguage,personality:getPersonality(),context:getCloudContextForRequest(message)})};
    if(controller)options.signal=controller.signal;
-   const r=await fetch(API_BASE+'/api/assistant',options);let data={};try{data=await r.json()}catch(_){}
+   const r=await fetch(API_BASE+'/api/assistant',options);if(requestId!==cloudRequestSequence)return;let data={};try{data=await r.json()}catch(_){}if(requestId!==cloudRequestSequence)return;
    if(!r.ok){let detail=data.detail||'';if(r.status===502)detail=detail||'Gemini ne request reject ki. Render environment mein API key aur Google AI Studio access check karna hoga.';else if(r.status===504)detail=detail||'Gemini response time par nahi aaya. Yeh AI server timeout hai, zaroori nahi ke aapka internet kharab ho.';else if(r.status===429)detail=detail||'Gemini ki free quota ya rate limit poori ho gayi hai.';else if(r.status===503)detail=detail||'Render par GEMINI_API_KEY configured nahi hai.';else detail=detail||('Cloud API error: HTTP '+r.status);throw new Error(detail)}
    setStatus('CLOUD REPLIED · '+(data.mode||'API'));say(data.reply||'Cloud received the message but returned no reply.',data.emotion,false,data.speech_text);
   }catch(e){
@@ -317,7 +335,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  function chooseVoice(){if(!('speechSynthesis'in window))return null;const voices=window.speechSynthesis.getVoices();const lang=(commandLanguage||'ur-PK').toLowerCase(),base=lang.split('-')[0];const female=/female|uzma|zira|samantha|aria|jenny|sara|siri|victoria|eva|sonia|karen/i;const locale=v=>String(v.lang||'').toLowerCase();const exact=voices.filter(v=>locale(v)===lang),same=voices.filter(v=>locale(v).split('-')[0]===base);return exact.find(v=>female.test(v.name))||exact[0]||same.find(v=>female.test(v.name))||same[0]||(base==='ur'?null:voices.find(v=>female.test(v.name))||voices[0])||null}
  function saveVoiceSettings(){const pitch=Number($('pitchSlider').value),rate=Number($('rateSlider').value);$('pitchValue').textContent=pitch.toFixed(2)+'×';$('rateValue').textContent=rate.toFixed(2)+'×';try{localStorage.setItem('jarvisVoicePitch',String(pitch));localStorage.setItem('jarvisVoiceRate',String(rate));localStorage.removeItem('jarvisVoiceKey');if(!localStorage.getItem('hoshiVoiceStyle'))localStorage.setItem('hoshiVoiceStyle','soft')}catch(e){}}
  function applyVoiceStyle(style,persist=true){const key=voiceStyles[style]?style:'soft';const [pitch,rate]=voiceStyles[key];$('pitchSlider').value=pitch;$('rateSlider').value=rate;document.querySelectorAll('[data-voice-style]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.voiceStyle===key)));if(persist){try{localStorage.setItem('hoshiVoiceStyle',key)}catch(e){}}saveVoiceSettings()}
- function stopSpeaking(){speechSequence++;currentSpeech=null;if(speechAudioController){speechAudioController.abort();speechAudioController=null}const audio=$('hoshiAudio');audio.pause();audio.removeAttribute('src');audio.hidden=true;if(speechAudioUrl){URL.revokeObjectURL(speechAudioUrl);speechAudioUrl=null}if(window.JarvisBridge&&typeof window.JarvisBridge.stopNativeSpeech==='function')window.JarvisBridge.stopNativeSpeech();if('speechSynthesis'in window)window.speechSynthesis.cancel();setSpeaking(false)}
+ function stopSpeaking(){speechSequence++;currentSpeech=null;$('nightAudioRetry').hidden=true;if(speechAudioController){speechAudioController.abort();speechAudioController=null}const audio=$('hoshiAudio');audio.pause();audio.removeAttribute('src');audio.hidden=true;if(speechAudioUrl){URL.revokeObjectURL(speechAudioUrl);speechAudioUrl=null}if(window.JarvisBridge&&typeof window.JarvisBridge.stopNativeSpeech==='function')window.JarvisBridge.stopNativeSpeech();if('speechSynthesis'in window)window.speechSynthesis.cancel();setSpeaking(false)}
  async function playOnlineUrdu(request){
   if(!request||request.id!==speechSequence||cloudSpeechAttempt===request.id)return;
   cloudSpeechAttempt=request.id;
@@ -332,11 +350,11 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
    const blob=await response.blob();if(request.id!==speechSequence)return;
    if(!blob.size)throw new Error('Empty audio');
    const audio=$('hoshiAudio');speechAudioUrl=URL.createObjectURL(blob);audio.src=speechAudioUrl;audio.hidden=false;
-   audio.onplaying=()=>{if(request.id===speechSequence){setSpeaking(true);setStatus('HOSHI SPEAKING · URDU')}};
+   audio.onplaying=()=>{if(request.id===speechSequence){$('nightAudioRetry').hidden=true;setSpeaking(true);setStatus('HOSHI SPEAKING · URDU')}};
    audio.onpause=()=>{if(request.id===speechSequence)setSpeaking(false)};
    audio.onended=()=>{if(request.id===speechSequence){setSpeaking(false);setStatus('READY')}};
-   audio.onerror=()=>{if(request.id===speechSequence){setSpeaking(false);setStatus('AUDIO PLAYBACK FAILED · TAP HEAR HOSHI TO RETRY')}};
-   try{await audio.play()}catch(_){if(request.id===speechSequence){setStatus('URDU AUDIO READY · TAP PLAY IN VOICE PANEL');showTab('settings')}}
+   audio.onerror=()=>{if(request.id===speechSequence){setSpeaking(false);setStatus('AUDIO PLAYBACK FAILED · CHECK INTERNET OR TRY AGAIN')}};
+   try{await audio.play()}catch(_){if(request.id===speechSequence){$('nightAudioRetry').hidden=false;setStatus('URDU AUDIO READY · TAP SUNO HOSHI')}}
   }catch(error){if(request.id===speechSequence){setSpeaking(false);setStatus('URDU AUDIO UNAVAILABLE · TAP HEAR HOSHI TO RETRY')}}
   finally{clearTimeout(timeout);if(speechAudioController===controller)speechAudioController=null}
  }
@@ -370,7 +388,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
    const spokenMessage=String(speechText||message).replace(/[*_`#]/g,'').trim();
    if(urduMode&&(!/[\u0600-\u06ff]/.test(spokenMessage)||/[\u0900-\u097f]/.test(spokenMessage))){setStatus('URDU SPEECH TEXT UNAVAILABLE · REPLY SHOWN IN CHAT');return}
 
-   if(recognition&&listening){try{recognition.stop()}catch(e){}}
+   if(recognition&&listening){listening=false;try{recognition.abort()}catch(e){}recognition=null;}
    const basePitch=Number($('pitchSlider').value)||1.12;
    const baseRate=Number($('rateSlider').value)||0.92;
    const voiceMood={happy:[0.05,0.03],excited:[0.08,0.06],playful:[0.06,0.05],affectionate:[0.04,-0.03],shy:[0.06,-0.05],sad:[-0.08,-0.08],concerned:[-0.05,-0.06],annoyed:[-0.04,0.02],thinking:[-0.02,-0.03],caring:[0,0]}[currentEmotion]||[0,0];
@@ -391,7 +409,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
    const voice=chooseVoice();if(voice)u.voice=voice;
    u.lang=voice?voice.lang:commandLanguage;u.rate=rate;u.pitch=pitch;u.volume=1;
     u.onstart=()=>{if(speechId===speechSequence)setSpeaking(true)};
-    u.onend=()=>{if(speechId!==speechSequence)return;setSpeaking(false);if(listening&&recognition){clearTimeout(restartTimer);restartTimer=setTimeout(()=>{try{recognition.start()}catch(e){}},350)}};
+    u.onend=()=>{if(speechId!==speechSequence)return;setSpeaking(false);};
     u.onerror=e=>{if(speechId!==speechSequence)return;setSpeaking(false);if(e&&e.error!=='canceled'&&e.error!=='interrupted'){if(urduMode)playOnlineUrdu(currentSpeech);else setStatus('VOICE OUTPUT FAILED · CHECK DEVICE TEXT-TO-SPEECH')}};
    let spoken=false;
    const speak=()=>{if(spoken||speechId!==speechSequence)return;spoken=true;const current=chooseVoice();if(urduMode&&!current){$('voiceEngineStatus').textContent='Online Urdu voice · preparing audio';playOnlineUrdu(currentSpeech);return}if(current){u.voice=current;u.lang=current.lang}synth.speak(u)};
@@ -422,42 +440,63 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  else {reply.textContent='HOSHI soch rahi hai…';askCloud(text);return;}
  setStatus(listening?(wakeEnabled?'LISTENING FOR WAKE WORD':'LISTENING'):'READY');setTimeout(()=>orb.classList.remove('active'),900)
  }
- function startListening(){lastVoiceError="";if(!Recognition){say('Speech recognition is not supported in this browser. Try Chrome, or use the text command box.');setStatus('VOICE RECOGNITION UNAVAILABLE');return}
- if(recognition&&listening)return;
- recognition=new Recognition();recognition.lang=commandLanguage;recognition.continuous=true;recognition.interimResults=false;
- recognition.onstart=()=>{listening=true;$('wakeBtn').textContent='🎙 Listening…';setStatus(wakeEnabled?'LISTENING FOR “HEY HOSHI”':'LISTENING');};
- recognition.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++){if(!e.results[i].isFinal)continue;const heard=e.results[i][0].transcript.trim();const lower=heard.toLowerCase();input.value=heard;
- if(!wakeEnabled){processCommand(heard);continue}
- if(awaitingCommand){awaitingCommand=false;processCommand(heard);continue}
- if(lower.includes('hey hoshi')||lower.includes('hey, hoshi')||lower.includes('a hoshi')){const after=heard.replace(/hey[, ]*hoshi/i,'').trim();if(after){processCommand(after)}else{awaitingCommand=true;setStatus('HOSHI AWAKE · SAY YOUR COMMAND');reply.textContent='I’m listening. What can I do for you?';if(voiceReplies)say(commandLanguage==='ur-PK'?'Ji, main sun rahi hoon.':'Yes, I am listening.','caring',true,commandLanguage==='ur-PK'?'جی، میں سن رہی ہوں۔':null)}}
- }}
- recognition.onerror=e=>{
-  const error=String(e&&e.error||'unknown');
-  if(error==='no-speech'||error==='aborted')return;
-  const messages={
-   'not-allowed':'MICROPHONE PERMISSION REQUIRED',
-   'service-not-allowed':'MICROPHONE PERMISSION REQUIRED',
-   'audio-capture':'NO MICROPHONE FOUND · CHECK DEVICE',
-   'language-not-supported':'VOICE LANGUAGE NOT SUPPORTED · CHANGE LANGUAGE',
-   'network':'VOICE NETWORK ERROR · CHECK CONNECTION THEN RETRY'
+ function startListening(){
+  if(listening){stopListening();return}
+  stopSpeaking();lastVoiceError="";
+  if(window.JarvisBridge&&typeof window.JarvisBridge.startNativeListening==='function'){
+    nativeMicActive=true;listening=true;$('wakeBtn').textContent='🎙 Listening…';
+    setStatus('STARTING ANDROID MICROPHONE…');
+    try{if(!window.JarvisBridge.startNativeListening(commandLanguage)){
+      endNativeMic();setStatus('NATIVE MIC UNAVAILABLE · TYPE A COMMAND');return
+    }}catch(_){endNativeMic();setStatus('ANDROID MIC ERROR · TYPE A COMMAND');return}
+    nativeMicTimeout=setTimeout(()=>{if(nativeMicActive){window.JarvisBridge.stopNativeListening();endNativeMic();setStatus('NO SPEECH HEARD · TAP AGAIN')}},20000);
+    return;
+  }
+  if(!Recognition){setStatus('MIC UNSUPPORTED · USE HOSHI ANDROID APP OR TYPE A COMMAND');return}
+  const instance=new Recognition();recognition=instance;
+  instance.lang=commandLanguage;instance.continuous=false;instance.interimResults=false;
+  instance.maxAlternatives=1;let submitted=false,sessionEnded=false;
+  listening=true;$('wakeBtn').textContent='🎙 Listening…';setStatus('STARTING MICROPHONE…');
+  const timer=setTimeout(()=>{if(!sessionEnded&&recognition===instance){finish();setStatus('NO SPEECH HEARD · TAP MIC TO RETRY')}},18000);
+  function finish(){sessionEnded=true;listening=false;awaitingCommand=false;clearTimeout(timer);
+   if(recognition===instance)recognition=null;
+   instance.onresult=null;instance.onerror=null;instance.onend=null;
+   try{instance.abort()}catch(_){}
+   $('wakeBtn').textContent='🎙 Start listening';
+  }
+  instance.onstart=()=>{if(!sessionEnded)setStatus('LISTENING · SAY ONE COMMAND')};
+  instance.onresult=e=>{if(sessionEnded||submitted)return;
+   for(let i=e.resultIndex;i<e.results.length;i++){
+    if(!e.results[i].isFinal)continue;
+    const heard=String(e.results[i][0].transcript||'').trim();if(!heard)continue;
+    submitted=true;finish();input.value=heard;
+    if(wakeEnabled){
+      const cleaned=heard.replace(/^hey[, ]*hoshi[,: ]*/i,'').trim();
+      if(cleaned===heard){setStatus('SAY HEY HOSHI · TAP MIC AGAIN');return}
+      if(!cleaned){setStatus('TAP MIC AGAIN TO GIVE COMMAND');return}
+      processCommand(cleaned);return;
+    }
+    processCommand(heard);return;
+   }
   };
-  lastVoiceError=messages[error]||('VOICE ERROR · '+error.toUpperCase());
-  listening=false;awaitingCommand=false;clearTimeout(restartTimer);
-  $('wakeBtn').textContent='🎙 Start listening';setStatus(lastVoiceError);
-  try{recognition.stop()}catch(_){}
- };
- recognition.onend=()=>{
-  if(listening){
-   clearTimeout(restartTimer);
-   restartTimer=setTimeout(()=>{
-    try{recognition.start()}
-    catch(e){listening=false;lastVoiceError='VOICE RESTART FAILED · TAP TO RETRY';$('wakeBtn').textContent='🎙 Start listening';setStatus(lastVoiceError)}
-   },500);
-  }else{$('wakeBtn').textContent='🎙 Start listening';if(!lastVoiceError)setStatus('READY')}
- };
- try{recognition.start()}catch(e){listening=false;lastVoiceError='COULD NOT START MICROPHONE · CHECK PERMISSIONS';$('wakeBtn').textContent='🎙 Start listening';setStatus(lastVoiceError)}
+  instance.onerror=e=>{if(sessionEnded)return;
+   const error=String(e&&e.error||'unknown');
+   const messages={'not-allowed':'MIC PERMISSION REQUIRED','audio-capture':'MIC NOT AVAILABLE',
+    'no-speech':'NO SPEECH HEARD','network':'SPEECH RECOGNITION NETWORK ERROR',
+    'language-not-supported':'URDU SPEECH SERVICE NOT AVAILABLE'};
+   lastVoiceError=messages[error]||'MIC ERROR · '+error.toUpperCase();
+   finish();setStatus(lastVoiceError+' · TAP TO RETRY');
+  };
+  instance.onend=()=>{if(sessionEnded)return;finish();setStatus('MIC STOPPED · TAP TO SPEAK AGAIN')};
+  try{instance.start()}catch(_){finish();setStatus('MIC START FAILED · CHECK PERMISSION')}
  }
- function stopListening(){stopSpeaking();listening=false;awaitingCommand=false;clearTimeout(restartTimer);if(recognition){try{recognition.onend=null;recognition.stop()}catch(e){}recognition=null}if('speechSynthesis'in window)window.speechSynthesis.cancel();$('wakeBtn').textContent='🎙 Start listening';setStatus('LISTENING STOPPED')}
+ function stopListening(){
+  if(nativeMicActive){if(window.JarvisBridge&&window.JarvisBridge.stopNativeListening)window.JarvisBridge.stopNativeListening();endNativeMic()}
+  listening=false;awaitingCommand=false;clearTimeout(restartTimer);
+  const old=recognition;recognition=null;
+  if(old){old.onend=null;old.onerror=null;old.onresult=null;try{old.abort()}catch(_){}}
+  $('wakeBtn').textContent='🎙 Start listening';stopSpeaking();setStatus('LISTENING STOPPED');
+ }
  // Migrate old country selections to the single Hoshi delivery profile.
  let savedVoiceStyle='soft',savedPitch=null,savedRate=null;try{savedVoiceStyle=localStorage.getItem('hoshiVoiceStyle')||'soft';if(localStorage.getItem('hoshiVoiceStyle')){savedPitch=Number(localStorage.getItem('jarvisVoicePitch'));savedRate=Number(localStorage.getItem('jarvisVoiceRate'))}}catch(e){}
  applyVoiceStyle(savedVoiceStyle,false);
@@ -482,7 +521,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  $('wakeBtn').onclick=()=>{stopSpeaking();if(listening)stopListening();else startListening()};$('stopBtn').onclick=stopListening;
  $('testBtn').onclick=()=>askCloud('Test connection. Tell me whether the JARVIS cloud API received this message.');
  $('speakToggle').onclick=()=>{voiceReplies=!voiceReplies;try{localStorage.setItem('hoshiVoiceReplies',String(voiceReplies))}catch(e){}$('speakToggle').textContent=voiceReplies?'🔊 Voice replies: ON':'🔇 Voice replies: OFF';$('utilityVoice').textContent=voiceReplies?'ON':'OFF';if(!voiceReplies)stopSpeaking()};
- $('languageToggle').onclick=()=>{commandLanguage=commandLanguage==='ur-PK'?'en-US':'ur-PK';try{localStorage.setItem('hoshiLanguage',commandLanguage)}catch(e){}$('languageToggle').textContent=commandLanguage==='ur-PK'?'🗣 Language: Urdu':'🗣 Language: English';refreshVoices();if(listening){stopListening();startListening()}say(commandLanguage==='ur-PK'?'Urdu mode on. Ab Urdu ya Roman Urdu mein command bolain.':'English mode on. Speak your command in English.',null,false,commandLanguage==='ur-PK'?'اردو زبان منتخب ہے۔ اب اردو میں بات کریں۔':null)};
+ $('languageToggle').onclick=()=>{commandLanguage=commandLanguage==='ur-PK'?'en-US':'ur-PK';try{localStorage.setItem('hoshiLanguage',commandLanguage)}catch(e){}$('languageToggle').textContent=commandLanguage==='ur-PK'?'🗣 Language: Urdu':'🗣 Language: English';refreshVoices();if(listening)stopListening();say(commandLanguage==='ur-PK'?'Urdu mode on. Ab Urdu ya Roman Urdu mein command bolain.':'English mode on. Speak your command in English.',null,false,commandLanguage==='ur-PK'?'اردو زبان منتخب ہے۔ اب اردو میں بات کریں۔':null)};
  $('wakeToggle').onclick=()=>{wakeEnabled=!wakeEnabled;try{localStorage.setItem('hoshiWakeWord',String(wakeEnabled))}catch(e){}$('wakeToggle').textContent='Hey HOSHI: '+(wakeEnabled?'ON':'OFF');setStatus(listening?(wakeEnabled?'LISTENING FOR “HEY HOSHI”':'LISTENING'):'READY')};
  $('viewHistoryBtn').onclick=()=>{const panel=$('memoryPanel');if(panel)panel.scrollIntoView({behavior:'smooth',block:'start'})};
  $('screenshotQuickBtn').onclick=()=>{if(!window.JarvisBridge){setStatus('SCREENSHOT NEEDS THE HOSHI ANDROID APP');return}if(!window.JarvisBridge.isEnabled()){setStatus('ENABLE ANDROID ACCESSIBILITY FOR SCREENSHOT');window.JarvisBridge.requestSettings();return}const queued=window.JarvisBridge.performAction('screenshot');setStatus(queued?'SCREENSHOT ACTION REQUESTED · CHECK ANDROID SYSTEM UI':'SCREENSHOT ACTION UNAVAILABLE · ANDROID 9 OR NEWER REQUIRED')};
@@ -507,7 +546,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  }
  if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>{let refreshing=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!refreshing){refreshing=true;location.reload()}});navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(reg=>reg.update()).catch(()=>{});});
  checkCloud();setInterval(checkCloud,60000);
- if(!Recognition){setStatus('TEXT MODE · VOICE SUPPORT DEPENDS ON BROWSER')}
+ if(!Recognition&&!(window.JarvisBridge&&window.JarvisBridge.startNativeListening)){setStatus('TEXT MODE · BROWSER MIC UNSUPPORTED')}
 })();
 </script>
 </body>

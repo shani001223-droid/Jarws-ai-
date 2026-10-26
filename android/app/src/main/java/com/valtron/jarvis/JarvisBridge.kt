@@ -19,6 +19,13 @@ class JarvisBridge(private val activity: MainActivity) {
         return activity.speakNative(text, language, pitch, rate)
     }
 
+    /** Android's own one-shot recognizer avoids WebView start/stop beep loops. */
+    @JavascriptInterface
+    fun startNativeListening(language: String): Boolean = activity.startNativeListening(language)
+
+    @JavascriptInterface
+    fun stopNativeListening(): Boolean = activity.stopNativeListening()
+
     @JavascriptInterface
     fun showReminders() { activity.runOnUiThread { if (!activity.isFinishing) activity.showReminders() } }
 

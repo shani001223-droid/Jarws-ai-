@@ -217,6 +217,47 @@ async function main() {
     }
     await page.setViewportSize({width:390,height:844});
     await page.screenshot({path:'/tmp/hoshi-nightroom-mobile.png',fullPage:true});
+    // Reproduce the previous repeated-mic bug without relying on physical hardware.
+    const voiceContext = await browser.newContext({viewport:{width:390,height:844}});
+    await voiceContext.addInitScript(() => {
+      localStorage.setItem("hoshiVoiceReplies","false");
+      window.micStartCount = 0;
+      window.MockRecognition = class {
+        constructor(){window.lastMicInstance=this}
+        start(){window.micStartCount++;this.onstart?.()}
+        abort(){this.aborted=true}
+      };
+      window.SpeechRecognition = window.MockRecognition;
+      window.webkitSpeechRecognition = window.MockRecognition;
+      Object.defineProperty(navigator,"serviceWorker",{value:undefined,configurable:true});
+    });
+    const voicePage = await voiceContext.newPage();
+    let heardRequests=0;
+    await voicePage.route("https://jarws-ai-2.onrender.com/**", async route => {
+      const path=new URL(route.request().url()).pathname;
+      const headers={"Access-Control-Allow-Origin":"*","Content-Type":"application/json"};
+      if(path==="/health"){await route.fulfill({status:200,headers,body:'{"ok":true,"ai_connected":true}'});return}
+      if(path==="/api/assistant"){heardRequests++;await route.fulfill({status:200,headers,body:JSON.stringify({reply:"Hoshi heard you",speech_text:"ہوشی نے سنا",mode:"mock",emotion:"caring"})});return}
+      await route.fulfill({status:404,headers,body:'{}'});
+    });
+    await voicePage.goto(url,{waitUntil:"domcontentloaded"});
+    await voicePage.locator("#wakeBtn").click();
+    await voicePage.evaluate(()=>{
+      const mic=window.document.querySelector("#wakeBtn");
+      assertMicState(mic);
+      function assertMicState(node){if(!node.textContent.includes("Listening"))throw new Error("mic did not start")}
+    });
+    assert.equal(await voicePage.evaluate(()=>window.micStartCount),1);
+    await voicePage.evaluate(()=>{
+      const recognition=window.lastMicInstance;
+      recognition.onresult({resultIndex:0,results:[{isFinal:true,0:{transcript:"Why is the sky blue"}}]});
+      recognition.onresult?.({resultIndex:0,results:[{isFinal:true,0:{transcript:"Why is the sky blue"}}]});
+      recognition.onend?.();
+    });
+    await voicePage.waitForFunction(()=>document.querySelector("#reply").textContent.includes("Hoshi heard you"));
+    assert.equal(heardRequests,1,"One mic tap must produce exactly one cloud request");
+    assert.equal(await voicePage.evaluate(()=>window.micStartCount),1,"Mic must never auto-restart");
+    await voiceContext.close();
     assert.deepEqual(pageErrors,[]);
     console.log('PASS — nightroom layout, chat, voice settings, tabs and narrow phone widths');
   } finally {

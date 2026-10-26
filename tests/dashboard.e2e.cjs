@@ -282,7 +282,10 @@ async function main() {
     await audioPage.waitForFunction(()=>document.querySelector('#nightAudioRetry').hidden===false);
     assert.equal(speechCalls,1,"First preview should call Urdu voice once");
     await audioPage.locator('.sheet-close').click();
-    await audioPage.locator('#nightAudioRetry').click();
+    await Promise.all([
+      audioPage.waitForResponse(res=>new URL(res.url()).pathname==="/api/speech" && res.request().method()==="POST"),
+      audioPage.locator('#nightAudioRetry').click()
+    ]);
     await audioPage.waitForFunction(()=>document.querySelector('#status').textContent.includes("URDU AUDIO UNAVAILABLE"));
     assert.equal(speechCalls,2,"Failed audio must be retryable using the same speech request");
     assert.equal(await audioPage.evaluate(()=>window.hoshiVoiceTimings.first_model_token_ms),null,

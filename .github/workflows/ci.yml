@@ -2,7 +2,15 @@ name: HOSHI basic checks
 
 on:
   push:
-    branches: [main]
+    branches: [main, hoshi/dnd-foundation-20261026]
+    paths:
+      - "cloud_backend/**"
+      - "android/**"
+      - "tests/**"
+      - "index.html"
+      - "sw.js"
+      - "hoshi-*.js"
+      - ".github/workflows/ci.yml"
   pull_request:
     branches: [main]
   workflow_dispatch:

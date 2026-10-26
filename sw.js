@@ -1,5 +1,5 @@
-const CACHE_NAME = "hoshi-shell-v21";
-const APP_SHELL = ["./", "./index.html", "./trading.css", "./manifest.json", "./reminder-parser.js", "./assistant-commands.js", "./memory-privacy.js", "./assets/hoshi-expressions.webp", "./assets/hoshi-hero-background.svg", "./assets/hoshi-app-icon.svg", "./assets/hoshi-nightroom.webp"];
+const CACHE_NAME = "hoshi-shell-v22";
+const APP_SHELL = ["./", "./index.html", "./trading.css", "./hoshi-room.css", "./hoshi-room.js", "./manifest.json", "./reminder-parser.js", "./assistant-commands.js", "./memory-privacy.js", "./assets/hoshi-expressions.webp", "./assets/hoshi-hero-background.svg", "./assets/hoshi-app-icon.svg", "./assets/hoshi-nightroom.webp"];
 
 self.addEventListener("install", event => {
   event.waitUntil(
@@ -40,7 +40,7 @@ self.addEventListener("fetch", event => {
             const copy = response.clone();
             caches.open(CACHE_NAME).then(cache => {
               cache.put(request, copy);
-              cache.put(new URL("./index.html", "./trading.css", self.registration.scope).href, response.clone());
+              cache.put(new URL("./index.html", self.registration.scope).href, response.clone());
             });
           }
           return response;
@@ -48,7 +48,7 @@ self.addEventListener("fetch", event => {
         .catch(async () => {
           const cache = await caches.open(CACHE_NAME);
           return (await cache.match(request)) ||
-            (await cache.match(new URL("./index.html", "./trading.css", self.registration.scope).href)) ||
+            (await cache.match(new URL("./index.html", self.registration.scope).href)) ||
             Response.error();
         })
     );

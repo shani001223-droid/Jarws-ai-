@@ -173,6 +173,35 @@ async function main() {
     await page.locator('#commandForm button').click();
     await page.waitForFunction(()=>document.querySelector('#reply').textContent.includes('I can help'));
     assert.equal(apiMessages.at(-1).locale,'ur-PK');
+    // No cloud model should be called for concrete Android actions or writing drafts.
+    await page.evaluate(() => {
+      window.__phoneActions = [];
+      window.JarvisBridge = {
+        isEnabled: () => true,
+        performAction: name => { window.__phoneActions.push(["screen",name]); return true; },
+        openKnownApp: name => { window.__phoneActions.push(["open",name]); return true; },
+        copyUserText: value => {window.__phoneActions.push(["copy",value]);return true;},
+        shareUserDraft: value => {window.__phoneActions.push(["share",value]);return true;},
+        requestSettings: () => window.__phoneActions.push(["permission"])
+      };
+    });
+    const beforeLocalCommands=apiMessages.length;
+    await page.locator('#commandInput').fill('open WhatsApp');
+    await page.locator('#commandForm button').click();
+    await page.locator('#commandInput').fill('phone back');
+    await page.locator('#commandForm button').click();
+    await page.locator('#commandInput').fill('note likho Kal subah meeting hai');
+    await page.locator('#commandForm button').click();
+    assert.equal(await page.locator('#hoshiDraft').inputValue(),'Kal subah meeting hai');
+    await page.locator('#copyHoshiDraft').click();
+    await page.locator('#shareHoshiDraft').click();
+    await page.locator('#enablePhoneAccess').click();
+    assert.equal(apiMessages.length,beforeLocalCommands,'No API requests for local actions');
+    assert.deepEqual(await page.evaluate(()=>window.__phoneActions),[
+      ['open','whatsapp'],['screen','back'],
+      ['copy','Kal subah meeting hai'],['share','Kal subah meeting hai'],['permission']
+    ]);
+    assert.match(await page.locator('#draftStatus').innerText(), /Accessibility/);
     await page.locator('[data-tab="settings"]').click();
     assert.equal(await page.locator('#voicePanel').isVisible(), true);
     assert.equal(await page.locator('#stopSpeakingBtn').isVisible(), true);

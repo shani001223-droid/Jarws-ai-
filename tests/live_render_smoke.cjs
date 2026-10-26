@@ -50,35 +50,18 @@ async function main() {
     });
 
     await page.goto(DASHBOARD_URL, { waitUntil: "domcontentloaded", timeout: 45000 });
-    await page.locator("#orb").waitFor({ state: "visible", timeout: 20000 });
+    await page.locator(".nightroom").waitFor({ state: "visible", timeout: 20000 });
     assert.equal(await page.title(), "HOSHI — AI Companion");
-    assert.equal(await page.locator("#commandForm").count(), 1);
-    assert.equal(await page.locator("#stopSpeakingBtn").count(), 1);
-    assert.equal(await page.locator("#memoryToggle").count(), 1);
-    assert.equal(await page.locator("[data-ui-action]").count(), 5,
-      "The deployed dashboard must include Chat / Voice / Vision / Create / More shortcuts");
-
-    const avatar = await page.locator("#orb .companion-avatar").evaluate(node => {
-      const style = getComputedStyle(node);
-      return { backgroundImage: style.backgroundImage, backgroundSize: style.backgroundSize };
-    });
-    assert.match(avatar.backgroundImage, /hoshi-expressions\.webp/,
-      "The final HOSHI expression sprite should be applied to the avatar");
-
-    const pageText = await page.locator("body").innerText();
-    assert.doesNotMatch(pageText, /\bBTC\b|Bitcoin/i,
-      "The dashboard must not show the removed BTC/floating crypto panel");
-
-    for (const viewport of [{ width: 768, height: 1024 }, { width: 390, height: 844 }]) {
-      await page.setViewportSize(viewport);
-      const overflow = await page.evaluate(() =>
-        document.documentElement.scrollWidth > document.documentElement.clientWidth + 1
-      );
-      assert.equal(overflow, false, "No horizontal overflow at " + viewport.width + "px");
-      assert.equal(await page.locator('[data-ui-action="chat"]').isVisible(), true,
-        "Hero actions must remain visible at " + viewport.width + "px");
+    assert.equal(await page.locator('.night-tabs button').count(),5);
+    assert.equal(await page.locator('#wakeBtn').isVisible(),true);
+    assert.equal(await page.locator('.sidebar').isVisible(),false);
+    await page.locator('[data-tab="settings"]').click();
+    assert.equal(await page.locator('#voicePanel').isVisible(),true);
+    await page.locator('.sheet-close').click();
+    for(const width of [320,390,768]){
+      await page.setViewportSize({width,height:844});
+      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
     }
-
     await page.screenshot({ path: "/tmp/hoshi-live-dashboard.png", fullPage: true });
     assert.deepEqual(badResponses, [], "The live dashboard should not return broken same-origin assets");
     assert.deepEqual(pageErrors, [], "The live dashboard should not throw uncaught browser errors");

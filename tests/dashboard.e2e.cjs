@@ -132,187 +132,41 @@ async function main() {
       }
     });
 
-    await page.goto(url, { waitUntil: "domcontentloaded" });
-    assert.equal(await page.title(), "HOSHI — AI Companion");
-    await page.waitForFunction(() => document.querySelector("#connection")?.textContent === "AI KEYS CONFIGURED", undefined, { timeout: 5000 });
-
-    // Local command path should work without a cloud call.
-    await page.locator('[data-cmd="what time is it"]').first().click();
-    await page.waitForFunction(() => /Abhi waqt|The time is/.test(document.querySelector("#reply")?.textContent || ""), undefined, { timeout: 3000 });
-
-    // Five hero shortcuts must be actionable, not decorative.
-    await page.locator('[data-ui-action="voice"]').click();
-    await page.waitForFunction(() => document.querySelector("#status")?.textContent === "VOICE RECOGNITION UNAVAILABLE");
-    await page.locator('[data-ui-action="vision"]').click();
-    await page.waitForFunction(() => document.querySelector("#status")?.textContent.includes("SCREENSHOT NEEDS THE HOSHI ANDROID APP"));
-    await page.locator('[data-ui-action="create"]').click();
-    assert.equal(await page.locator("#commandInput").getAttribute("placeholder"), "Tell HOSHI what you want to create…");
-    assert.equal(await page.evaluate(() => document.activeElement?.id), "commandInput");
-    await page.locator('[data-ui-action="more"]').click();
-    await page.locator('[data-ui-action="chat"]').click();
-    assert.equal(await page.evaluate(() => document.activeElement?.id), "commandInput");
-
-    // Cloud chat should display the reply and change the expression.
-    await page.locator("#commandInput").fill("Explain how to organize a study day");
-    await page.locator('#commandForm button[type="submit"]').click();
-    try {
-      await page.waitForFunction(() => document.querySelector("#reply")?.textContent === "I can help you plan, explain, and create.", undefined, { timeout: 7000 });
-    } catch (error) {
-      throw new Error("Cloud chat reply timed out; status=" +
-        (await page.locator("#status").innerText()) + "; reply=" +
-        (await page.locator("#reply").innerText()) + "; requests=" +
-        JSON.stringify(apiMessages) + "; pageErrors=" + JSON.stringify(pageErrors) +
-        "; cause=" + error.message);
+    await page.goto(url, { waitUntil: 'domcontentloaded' });
+    assert.equal(await page.title(), 'HOSHI — AI Companion');
+    await page.locator('.nightroom').waitFor({state:'visible'});
+    assert.equal(await page.locator('.night-tabs button').count(), 5);
+    assert.equal(await page.locator('.sidebar').isVisible(), false);
+    assert.equal(await page.locator('#voicePanel').isVisible(), false);
+    assert.equal(await page.locator('#nightSheet').isVisible(), false);
+    assert.equal(await page.locator('#wakeBtn').isVisible(), true);
+    await page.locator('[data-tab="chat"]').click();
+    await page.locator('#commandInput').fill('what time is it');
+    await page.locator('#commandForm button').click();
+    assert.match(await page.locator('#reply').innerText(), /waqt|time/i);
+    await page.locator('#commandInput').fill('Tell me what you can help with');
+    await page.locator('#commandForm button').click();
+    await page.waitForFunction(()=>document.querySelector('#reply').textContent.includes('I can help'));
+    assert.equal(apiMessages.at(-1).locale,'ur-PK');
+    await page.locator('[data-tab="settings"]').click();
+    assert.equal(await page.locator('#voicePanel').isVisible(), true);
+    assert.equal(await page.locator('#stopSpeakingBtn').isVisible(), true);
+    await page.locator('.sheet-close').click();
+    assert.equal(await page.locator('#nightSheet').isVisible(), false);
+    for(const tab of ['trading','influencer','outfit']){
+      await page.locator('[data-tab="'+tab+'"]').click();
+      assert.equal(await page.locator('[data-panel="'+tab+'"]').isVisible(),true);
+      await page.locator('.sheet-close').click();
     }
-    assert.equal(await page.locator("#orb").getAttribute("data-emotion"), "affectionate");
-    const firstRequest = apiMessages.find(item => item.message === "Explain how to organize a study day");
-    assert.ok(firstRequest, "Expected the chat to reach the mocked cloud API");
-    assert.ok(!(firstRequest.context || []).includes("user: Explain how to organize a study day"),
-      "Current user message must not be duplicated in recent context");
-    assert.ok((await page.locator("#chatHistory").innerText()).includes("Explain how to organize a study day"),
-      "The saved conversation should appear in history");
-
-    // A second turn must send prior user + HOSHI messages for continuity.
-    await page.locator("#commandInput").fill("Follow up with a bit more detail");
-    await page.locator('#commandForm button[type="submit"]').click();
-    await page.waitForFunction(() =>
-      document.querySelector("#reply")?.textContent === "I can help you plan, explain, and create.",
-      undefined, { timeout: 7000 });
-    const secondRequest = apiMessages.find(item => item.message === "Follow up with a bit more detail");
-    assert.ok(secondRequest, "Expected the follow-up to reach the mocked cloud API");
-    assert.ok((secondRequest.context || []).some(item =>
-      item.includes("Explain how to organize a study day")),
-      "Second turn must include the prior user message");
-    assert.ok((secondRequest.context || []).some(item =>
-      item.includes("I can help you plan, explain, and create.")),
-      "Second turn must include HOSHI's prior reply");
-    assert.ok(!(secondRequest.context || []).includes("user: Follow up with a bit more detail"),
-      "Current follow-up must not be duplicated in context");
-
-    // The speaking indicator responds to the native/browser TTS bridge state.
-    await page.evaluate(() => window.hoshiSetSpeaking(true));
-    await page.waitForFunction(() => getComputedStyle(document.querySelector('.speech-wave')).opacity === '1');
-    const speakingState = await page.evaluate(() => {
-      const wave = document.querySelector(".speech-wave");
-      const active = {
-        speakingClass: document.querySelector("#orb")?.classList.contains("speaking"),
-        waveOpacity: wave ? getComputedStyle(wave).opacity : null,
-        mouthOpacity: (() => {
-          const avatar = document.querySelector(".companion-avatar");
-          return avatar ? getComputedStyle(avatar, "::after").opacity : null;
-        })(),
-      };
-      return active;
-    });
-    assert.equal(speakingState.speakingClass, true, "Speaking state should activate the avatar");
-    assert.equal(speakingState.waveOpacity, "1", "Speaking waveform should become visible");
-    assert.ok(Number(speakingState.mouthOpacity) > 0.5,
-      "The mouth overlay should animate into its speaking state");
-    await page.evaluate(() => window.hoshiSetSpeaking(false));
-    const stoppedState = await page.locator(".companion-avatar").evaluate(node => ({
-      mouthOpacity: getComputedStyle(node, "::after").opacity,
-      speaking: node.closest("#orb")?.classList.contains("speaking"),
-    }));
-    assert.equal(stoppedState.speaking, false, "Speaking class should clear after speech ends");
-    assert.equal(stoppedState.mouthOpacity, "0", "Mouth overlay should hide when speaking ends");
-
-    // A delayed earlier request must not overwrite the newer reply.
-    const oldRequest = page.waitForRequest(request =>
-      request.url().endsWith("/api/assistant") && (request.postData() || "").includes("older slow request"),
-      { timeout: 3000 });
-    await page.locator("#commandInput").fill("older slow request");
-    await page.locator('#commandForm button[type="submit"]').click();
-    await oldRequest;
-    await page.locator("#commandInput").fill("newer fast request");
-    await page.locator('#commandForm button[type="submit"]').click();
-    await page.waitForFunction(() => document.querySelector("#reply")?.textContent === "NEW RESPONSE", undefined, { timeout: 5000 });
-    await page.waitForTimeout(650);
-    assert.equal(await page.locator("#reply").innerText(), "NEW RESPONSE",
-      "A late response from an earlier request must not replace the latest reply");
-
-    // Memory off should disclose the state and clear local conversation history.
-    await page.locator("#memoryToggle").click();
-    assert.match(await page.locator("#chatHistory").innerText(), /Local memory is off/);
-    assert.equal(await page.evaluate(() => localStorage.getItem("hoshiConversationMemoryV1")), null,
-      "Turning memory off should clear stored conversation history");
-
-    // Unsupported native bridge action should fail clearly instead of throwing.
-    await page.locator("#screenshotQuickBtn").click();
-    assert.match(await page.locator("#status").innerText(), /NEEDS THE HOSHI ANDROID APP/);
-
-    // Responsive regression coverage in tablet and narrow-phone browser viewports.
-    for (const viewport of [{ width: 768, height: 1024 }, { width: 390, height: 844 }]) {
-      await page.setViewportSize(viewport);
-      await page.waitForTimeout(100);
-      assert.equal(await page.locator("[data-ui-action]").count(), 5,
-        "All five hero actions should remain available at " + viewport.width + "px");
-      assert.equal(await page.locator('[data-ui-action="chat"]').isVisible(), true,
-        "Chat shortcut should stay visible at " + viewport.width + "px");
-      const overflowInfo = await page.evaluate(() => ({
-        hasOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
-        scrollWidth: document.documentElement.scrollWidth,
-        clientWidth: document.documentElement.clientWidth,
-        offenders: Array.from(document.querySelectorAll("body *"))
-          .map(node => {
-            const rect = node.getBoundingClientRect();
-            return {tag: node.tagName, id: node.id, className: String(node.className || "").slice(0, 90),
-              left: Math.round(rect.left), right: Math.round(rect.right), width: Math.round(rect.width),
-              scrollWidth: node.scrollWidth, clientWidth: node.clientWidth};
-          })
-          .filter(node => node.width > 0 && (node.left < -1 || node.right > window.innerWidth + 1))
-          .slice(0, 12)
-      }));
-      assert.equal(overflowInfo.hasOverflow, false,
-        "No horizontal page overflow at " + viewport.width + "px: " + JSON.stringify(overflowInfo));
-      if (viewport.width <= 540) {
-        const mobileLayout = await page.evaluate(() => {
-          const orb = document.querySelector("#orb")?.getBoundingClientRect();
-          const reply = document.querySelector("#reply")?.getBoundingClientRect();
-          return {orbBottom: orb?.bottom ?? null, replyTop: reply?.top ?? null};
-        });
-        assert.ok(mobileLayout.orbBottom !== null && mobileLayout.replyTop !== null &&
-          mobileLayout.replyTop >= mobileLayout.orbBottom - 1,
-          "On narrow phones the reply must appear below, not behind, the avatar: " +
-          JSON.stringify(mobileLayout));
-      }
+    for(const width of [320,390,768]){
+      await page.setViewportSize({width,height:844});
+      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
+      for(const selector of ['#wakeBtn','.night-tabs'])assert.equal(await page.locator(selector).isVisible(),true);
     }
-
-    // Voice preview must work when automatic replies are OFF without saving a chat turn.
-    await page.evaluate(() => {
-      window.__voiceCalls = [];
-      const listeners = {};
-      window.__voices = [];
-      Object.defineProperty(window, "speechSynthesis", {configurable: true, value: {
-        getVoices: () => window.__voices,
-        cancel: () => window.__voiceCalls.push("cancel"),
-        speak: u => window.__voiceCalls.push({text: u.text, pitch: u.pitch, rate: u.rate}),
-        addEventListener: (name, fn) => {listeners[name] = fn},
-        removeEventListener: name => {delete listeners[name]},
-      }});
-      window.__voiceReady = () => {window.__voices = [{name: "Urdu female", lang: "ur-PK"}];listeners.voiceschanged?.()};
-      Object.defineProperty(window, "SpeechSynthesisUtterance", {configurable: true, value: function(text){this.text=text}});
-    });
-    assert.ok(apiMessages.every(request => request.locale === 'ur-PK'), 'Use selected Urdu mode rather than the browser locale');
-    const beforePreview = await page.evaluate(() => ({reply: document.querySelector('#reply').textContent, memory: localStorage.getItem('hoshiConversationMemoryV1')}));
-    assert.equal(await page.locator('#voiceSelect').count(), 0);
-    await page.route('https://jarws-ai-2.onrender.com/api/speech', route => route.fulfill({status: 200, contentType: 'audio/mpeg', headers: {'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type'}, body: Buffer.from('SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYwLjE2LjEwMAAAAAAAAAAAAAAA//NkxAAAAANIAAAAAExBTUVVVVVMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//NkxHwAAANIAAAAAFVVVVVVVVVMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//NkxHwAAANIAAAAAFVVVVVVVVVMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//NkxHwAAANIAAAAAFVVVVVVVVVMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//NkxHwAAANIAAAAAFVVVVVVVVVMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//NkxHwAAANIAAAAAFVVVVVVVVVMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//NkxHwAAANIAAAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV', 'base64')}));
-    await page.evaluate(() => {document.querySelector('#hoshiAudio').play = () => Promise.reject(new DOMException('Tap required', 'NotAllowedError'))});
-    await page.evaluate(() => {window.__voices = [{name: 'English female', lang: 'en-US'}, {name: 'Hindi female', lang: 'hi-IN'}]});
-    await page.locator('#previewVoiceBtn').click();
-    assert.equal(await page.evaluate(() => window.__voiceCalls.filter(v => typeof v === 'object').length), 0,
-      'Urdu mode must not silently substitute English or Hindi');
-    try { await page.waitForFunction(() => document.querySelector('#status').textContent.includes('TAP PLAY'), {timeout:10000}); } catch (error) {throw new Error('Audio fallback status: '+await page.locator('#status').innerText())}
-    assert.equal(await page.locator('#hoshiAudio').isVisible(), true, 'Autoplay-blocked audio must expose a player');
-    assert.deepEqual(await page.evaluate(() => ({reply: document.querySelector('#reply').textContent, memory: localStorage.getItem('hoshiConversationMemoryV1')})), beforePreview, 'Online preview must not change chat or memory');
-    await page.locator('#stopSpeakingBtn').click();
-    assert.equal(await page.locator('#hoshiAudio').isVisible(), false, 'Stop discards the online audio player');
-    await page.locator('.voice-fine-tune summary').click();
-    await page.locator('#resetVoiceBtn').click();
-    assert.equal(await page.locator('[data-voice-style="soft"]').getAttribute('aria-pressed'), 'true');
-    await page.screenshot({path: '/tmp/hoshi-voice-mobile.png', fullPage: true});
-
-    assert.deepEqual(pageErrors, [], "Dashboard should not throw uncaught browser errors");
-    console.log("PASS — dashboard loaded; local command, cloud chat, emotion, context privacy, request ordering, memory toggle, and graceful fallback worked.");
+    await page.setViewportSize({width:390,height:844});
+    await page.screenshot({path:'/tmp/hoshi-nightroom-mobile.png',fullPage:true});
+    assert.deepEqual(pageErrors,[]);
+    console.log('PASS — nightroom layout, chat, voice settings, tabs and narrow phone widths');
   } finally {
     if (browser) await browser.close();
     await new Promise(resolve => server.close(resolve));

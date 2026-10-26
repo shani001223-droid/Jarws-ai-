@@ -78,7 +78,7 @@ class AssistantApiTests(unittest.TestCase):
         self.assertEqual(body["model"], "openrouter/free")
         self.assertIn("user: Salam", body["messages"][1]["content"])
         self.assertIn("speech_text", body["messages"][0]["content"])
-        self.assertEqual(mocked.call_args.kwargs["timeout"], 18)
+        self.assertEqual(mocked.call_args.kwargs["timeout"], 10)
 
     def test_openrouter_rejects_paid_model_before_network(self):
         with patch.dict(os.environ, {"OPENROUTER_API_KEY": "test"}):
@@ -161,7 +161,7 @@ class AssistantApiTests(unittest.TestCase):
                 main._openrouter_reply("salam", "system")
         body = json.loads(mocked.call_args.args[0].data)
         self.assertGreaterEqual(body["max_tokens"], 700)
-        self.assertEqual(mocked.call_args.kwargs["timeout"], 18)
+        self.assertEqual(mocked.call_args.kwargs["timeout"], 10)
 
     def test_urdu_response_separates_chat_and_pronunciation_text(self):
         raw = json.dumps({"reply": "Main Hoshi hoon.", "speech_text": "میں ہوشی ہوں۔"})

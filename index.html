@@ -160,7 +160,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 <p class="small">Delivery styles tune your device’s speech voice. They do not add a new anime voice. Pakistani Urdu (ur-PK) is preferred when installed. Urdu mode never substitutes Hindi or English voices. Voice quality and Urdu pronunciation depend on the installed speech engine.</p>
 </div></div>
 <div class="section" id="screenControlSection" style="display:none"><h2>BASIC PHONE CONTROLS</h2><p class="small">Optional Android Accessibility permission. Only the actions you tap run; HOSHI does not inspect screen text or upload screenshots. Screenshot requires Android 9 or newer.</p><div class="quick"><button type="button" id="screenPermissionBtn">Enable permission</button><button type="button" data-screen-action="screenshot">Take screenshot</button><button type="button" data-screen-action="back">Back</button><button type="button" data-screen-action="home">Home</button><button type="button" data-screen-action="swipe_up">Swipe up</button><button type="button" data-screen-action="swipe_down">Swipe down</button></div></div>
-<div class="section" id="settings"><div class="statusrow"><h2>WAKE WORD</h2><button class="toggle" id="wakeToggle">Hey HOSHI: OFF</button></div><p class="small">Wake-word detection works only while this page is open, foregrounded and microphone access is granted. This web prototype cannot listen reliably while the phone is locked or the app is closed.</p></div>
+<div class="section" id="settings"><div class="statusrow"><h2>WAKE WORD</h2><button class="toggle" id="wakeToggle">Hey HOSHI: OFF</button></div><p class="small">One tap listens for one command, then the microphone stays off during Hoshi's response. Hey Hoshi is optional within the same utterance; background listening is disabled.</p></div>
 <div class="section" id="personalityPanel"><h2>PERSONALITY MODE</h2><label for="personalitySelect" class="small">How should Hoshi sound?</label><select id="personalitySelect" aria-label="Hoshi personality mode"><option value="balanced">Balanced · caring and playful</option><option value="playful">Playful · more teasing and jokes</option><option value="affectionate">Affectionate · softer and warmer</option><option value="calm">Calm · gentle and thoughtful</option></select><p class="small">This changes reply style, not Hoshi’s identity or boundaries.</p></div>
 <div class="section" id="commandShortcuts"><h2>TRY A COMMAND</h2><p class="small">“Hey HOSHI” · “What time is it?” · “Open Google” · “Open YouTube” · “Help” · “Stop speaking”</p><div class="quick"><button data-cmd="what time is it">Time</button><button data-cmd="today's date">Date</button><button data-cmd="open Google">Google</button><button data-cmd="open YouTube">YouTube</button><button data-cmd="help">Help</button></div></div>
 <div class="section" id="appLinks"><h2>APP SHORTCUTS · OPEN EXTERNAL SERVICES</h2><p class="small">These are website shortcuts, not account-connected integrations. Sign in to each service yourself if needed.</p><div class="app-shortcuts">
@@ -370,7 +370,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
    const spokenMessage=String(speechText||message).replace(/[*_`#]/g,'').trim();
    if(urduMode&&(!/[\u0600-\u06ff]/.test(spokenMessage)||/[\u0900-\u097f]/.test(spokenMessage))){setStatus('URDU SPEECH TEXT UNAVAILABLE · REPLY SHOWN IN CHAT');return}
 
-   if(recognition&&listening){try{recognition.stop()}catch(e){}}
+   if(recognition&&listening){listening=false;try{recognition.abort()}catch(e){}recognition=null;}
    const basePitch=Number($('pitchSlider').value)||1.12;
    const baseRate=Number($('rateSlider').value)||0.92;
    const voiceMood={happy:[0.05,0.03],excited:[0.08,0.06],playful:[0.06,0.05],affectionate:[0.04,-0.03],shy:[0.06,-0.05],sad:[-0.08,-0.08],concerned:[-0.05,-0.06],annoyed:[-0.04,0.02],thinking:[-0.02,-0.03],caring:[0,0]}[currentEmotion]||[0,0];
@@ -391,7 +391,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
    const voice=chooseVoice();if(voice)u.voice=voice;
    u.lang=voice?voice.lang:commandLanguage;u.rate=rate;u.pitch=pitch;u.volume=1;
     u.onstart=()=>{if(speechId===speechSequence)setSpeaking(true)};
-    u.onend=()=>{if(speechId!==speechSequence)return;setSpeaking(false);if(listening&&recognition){clearTimeout(restartTimer);restartTimer=setTimeout(()=>{try{recognition.start()}catch(e){}},350)}};
+    u.onend=()=>{if(speechId!==speechSequence)return;setSpeaking(false);};
     u.onerror=e=>{if(speechId!==speechSequence)return;setSpeaking(false);if(e&&e.error!=='canceled'&&e.error!=='interrupted'){if(urduMode)playOnlineUrdu(currentSpeech);else setStatus('VOICE OUTPUT FAILED · CHECK DEVICE TEXT-TO-SPEECH')}};
    let spoken=false;
    const speak=()=>{if(spoken||speechId!==speechSequence)return;spoken=true;const current=chooseVoice();if(urduMode&&!current){$('voiceEngineStatus').textContent='Online Urdu voice · preparing audio';playOnlineUrdu(currentSpeech);return}if(current){u.voice=current;u.lang=current.lang}synth.speak(u)};
@@ -422,39 +422,53 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  else {reply.textContent='HOSHI soch rahi hai…';askCloud(text);return;}
  setStatus(listening?(wakeEnabled?'LISTENING FOR WAKE WORD':'LISTENING'):'READY');setTimeout(()=>orb.classList.remove('active'),900)
  }
- function startListening(){lastVoiceError="";if(!Recognition){say('Speech recognition is not supported in this browser. Try Chrome, or use the text command box.');setStatus('VOICE RECOGNITION UNAVAILABLE');return}
- if(recognition&&listening)return;
- recognition=new Recognition();recognition.lang=commandLanguage;recognition.continuous=false;recognition.interimResults=false;
- recognition.onstart=()=>{listening=true;$('wakeBtn').textContent='🎙 Listening…';setStatus(wakeEnabled?'LISTENING FOR “HEY HOSHI”':'LISTENING');};
- recognition.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++){if(!e.results[i].isFinal)continue;const heard=e.results[i][0].transcript.trim();const lower=heard.toLowerCase();input.value=heard;
- if(!wakeEnabled){processCommand(heard);continue}
- if(awaitingCommand){awaitingCommand=false;processCommand(heard);continue}
- if(lower.includes('hey hoshi')||lower.includes('hey, hoshi')||lower.includes('a hoshi')){const after=heard.replace(/hey[, ]*hoshi/i,'').trim();if(after){processCommand(after)}else{awaitingCommand=true;setStatus('HOSHI AWAKE · SAY YOUR COMMAND');reply.textContent='I’m listening. What can I do for you?';if(voiceReplies)say(commandLanguage==='ur-PK'?'Ji, main sun rahi hoon.':'Yes, I am listening.','caring',true,commandLanguage==='ur-PK'?'جی، میں سن رہی ہوں۔':null)}}
- }}
- recognition.onerror=e=>{
-  const error=String(e&&e.error||'unknown');
-  if(error==='no-speech'||error==='aborted')return;
-  const messages={
-   'not-allowed':'MICROPHONE PERMISSION REQUIRED',
-   'service-not-allowed':'MICROPHONE PERMISSION REQUIRED',
-   'audio-capture':'NO MICROPHONE FOUND · CHECK DEVICE',
-   'language-not-supported':'VOICE LANGUAGE NOT SUPPORTED · CHANGE LANGUAGE',
-   'network':'VOICE NETWORK ERROR · CHECK CONNECTION THEN RETRY'
+ function startListening(){
+  if(listening){stopListening();return}
+  stopSpeaking();lastVoiceError="";
+  if(!Recognition){setStatus('MIC UNSUPPORTED · USE HOSHI ANDROID APP OR TYPE A COMMAND');return}
+  const instance=new Recognition();recognition=instance;
+  instance.lang=commandLanguage;instance.continuous=false;instance.interimResults=false;
+  instance.maxAlternatives=1;let submitted=false,sessionEnded=false;
+  listening=true;$('wakeBtn').textContent='🎙 Listening…';setStatus('STARTING MICROPHONE…');
+  const timer=setTimeout(()=>{if(!sessionEnded&&recognition===instance){finish();setStatus('NO SPEECH HEARD · TAP MIC TO RETRY')}},18000);
+  function finish(){sessionEnded=true;listening=false;awaitingCommand=false;clearTimeout(timer);
+   if(recognition===instance)recognition=null;
+   instance.onresult=null;instance.onerror=null;instance.onend=null;
+   try{instance.abort()}catch(_){}
+   $('wakeBtn').textContent='🎙 Start listening';
+  }
+  instance.onstart=()=>{if(!sessionEnded)setStatus('LISTENING · SAY ONE COMMAND')};
+  instance.onresult=e=>{if(sessionEnded||submitted)return;
+   for(let i=e.resultIndex;i<e.results.length;i++){
+    if(!e.results[i].isFinal)continue;
+    const heard=String(e.results[i][0].transcript||'').trim();if(!heard)continue;
+    submitted=true;finish();input.value=heard;
+    if(wakeEnabled){
+      const cleaned=heard.replace(/^hey[, ]*hoshi[,: ]*/i,'').trim();
+      if(cleaned===heard){setStatus('SAY HEY HOSHI · TAP MIC AGAIN');return}
+      if(!cleaned){setStatus('TAP MIC AGAIN TO GIVE COMMAND');return}
+      processCommand(cleaned);return;
+    }
+    processCommand(heard);return;
+   }
   };
-  lastVoiceError=messages[error]||('VOICE ERROR · '+error.toUpperCase());
-  listening=false;awaitingCommand=false;clearTimeout(restartTimer);
-  $('wakeBtn').textContent='🎙 Start listening';setStatus(lastVoiceError);
-  try{recognition.stop()}catch(_){}
- };
- recognition.onend=()=>{listening=false;awaitingCommand=false;clearTimeout(restartTimer);$('wakeBtn').textContent='🎙 Start listening';if(!lastVoiceError&&status.textContent.startsWith('LISTENING'))setStatus('MIC STOPPED · TAP MIC AGAIN')};
- try{recognition.start()}
-    catch(e){listening=false;lastVoiceError='VOICE RESTART FAILED · TAP TO RETRY';$('wakeBtn').textContent='🎙 Start listening';setStatus(lastVoiceError)}
-   },500);
-  }else{$('wakeBtn').textContent='🎙 Start listening';if(!lastVoiceError)setStatus('READY')}
- };
- try{recognition.start()}catch(e){listening=false;lastVoiceError='COULD NOT START MICROPHONE · CHECK PERMISSIONS';$('wakeBtn').textContent='🎙 Start listening';setStatus(lastVoiceError)}
+  instance.onerror=e=>{if(sessionEnded)return;
+   const error=String(e&&e.error||'unknown');
+   const messages={'not-allowed':'MIC PERMISSION REQUIRED','audio-capture':'MIC NOT AVAILABLE',
+    'no-speech':'NO SPEECH HEARD','network':'SPEECH RECOGNITION NETWORK ERROR',
+    'language-not-supported':'URDU SPEECH SERVICE NOT AVAILABLE'};
+   lastVoiceError=messages[error]||'MIC ERROR · '+error.toUpperCase();
+   finish();setStatus(lastVoiceError+' · TAP TO RETRY');
+  };
+  instance.onend=()=>{if(sessionEnded)return;finish();setStatus('MIC STOPPED · TAP TO SPEAK AGAIN')};
+  try{instance.start()}catch(_){finish();setStatus('MIC START FAILED · CHECK PERMISSION')}
  }
- function stopListening(){stopSpeaking();listening=false;awaitingCommand=false;clearTimeout(restartTimer);if(recognition){try{recognition.onend=null;recognition.stop()}catch(e){}recognition=null}if('speechSynthesis'in window)window.speechSynthesis.cancel();$('wakeBtn').textContent='🎙 Start listening';setStatus('LISTENING STOPPED')}
+ function stopListening(){
+  listening=false;awaitingCommand=false;clearTimeout(restartTimer);
+  const old=recognition;recognition=null;
+  if(old){old.onend=null;old.onerror=null;old.onresult=null;try{old.abort()}catch(_){}}
+  $('wakeBtn').textContent='🎙 Start listening';stopSpeaking();setStatus('LISTENING STOPPED');
+ }
  // Migrate old country selections to the single Hoshi delivery profile.
  let savedVoiceStyle='soft',savedPitch=null,savedRate=null;try{savedVoiceStyle=localStorage.getItem('hoshiVoiceStyle')||'soft';if(localStorage.getItem('hoshiVoiceStyle')){savedPitch=Number(localStorage.getItem('jarvisVoicePitch'));savedRate=Number(localStorage.getItem('jarvisVoiceRate'))}}catch(e){}
  applyVoiceStyle(savedVoiceStyle,false);
@@ -479,7 +493,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  $('wakeBtn').onclick=()=>{stopSpeaking();if(listening)stopListening();else startListening()};$('stopBtn').onclick=stopListening;
  $('testBtn').onclick=()=>askCloud('Test connection. Tell me whether the JARVIS cloud API received this message.');
  $('speakToggle').onclick=()=>{voiceReplies=!voiceReplies;try{localStorage.setItem('hoshiVoiceReplies',String(voiceReplies))}catch(e){}$('speakToggle').textContent=voiceReplies?'🔊 Voice replies: ON':'🔇 Voice replies: OFF';$('utilityVoice').textContent=voiceReplies?'ON':'OFF';if(!voiceReplies)stopSpeaking()};
- $('languageToggle').onclick=()=>{commandLanguage=commandLanguage==='ur-PK'?'en-US':'ur-PK';try{localStorage.setItem('hoshiLanguage',commandLanguage)}catch(e){}$('languageToggle').textContent=commandLanguage==='ur-PK'?'🗣 Language: Urdu':'🗣 Language: English';refreshVoices();if(listening){stopListening();startListening()}say(commandLanguage==='ur-PK'?'Urdu mode on. Ab Urdu ya Roman Urdu mein command bolain.':'English mode on. Speak your command in English.',null,false,commandLanguage==='ur-PK'?'اردو زبان منتخب ہے۔ اب اردو میں بات کریں۔':null)};
+ $('languageToggle').onclick=()=>{commandLanguage=commandLanguage==='ur-PK'?'en-US':'ur-PK';try{localStorage.setItem('hoshiLanguage',commandLanguage)}catch(e){}$('languageToggle').textContent=commandLanguage==='ur-PK'?'🗣 Language: Urdu':'🗣 Language: English';refreshVoices();if(listening)stopListening()say(commandLanguage==='ur-PK'?'Urdu mode on. Ab Urdu ya Roman Urdu mein command bolain.':'English mode on. Speak your command in English.',null,false,commandLanguage==='ur-PK'?'اردو زبان منتخب ہے۔ اب اردو میں بات کریں۔':null)};
  $('wakeToggle').onclick=()=>{wakeEnabled=!wakeEnabled;try{localStorage.setItem('hoshiWakeWord',String(wakeEnabled))}catch(e){}$('wakeToggle').textContent='Hey HOSHI: '+(wakeEnabled?'ON':'OFF');setStatus(listening?(wakeEnabled?'LISTENING FOR “HEY HOSHI”':'LISTENING'):'READY')};
  $('viewHistoryBtn').onclick=()=>{const panel=$('memoryPanel');if(panel)panel.scrollIntoView({behavior:'smooth',block:'start'})};
  $('screenshotQuickBtn').onclick=()=>{if(!window.JarvisBridge){setStatus('SCREENSHOT NEEDS THE HOSHI ANDROID APP');return}if(!window.JarvisBridge.isEnabled()){setStatus('ENABLE ANDROID ACCESSIBILITY FOR SCREENSHOT');window.JarvisBridge.requestSettings();return}const queued=window.JarvisBridge.performAction('screenshot');setStatus(queued?'SCREENSHOT ACTION REQUESTED · CHECK ANDROID SYSTEM UI':'SCREENSHOT ACTION UNAVAILABLE · ANDROID 9 OR NEWER REQUIRED')};

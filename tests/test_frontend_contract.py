@@ -45,7 +45,7 @@ class FrontendContractTests(unittest.TestCase):
         self.assertIn("./assets/hoshi-expressions.webp", SERVICE_WORKER)
         self.assertIn("./memory-privacy.js", SERVICE_WORKER)
         self.assertIn('<script src="./memory-privacy.js"></script>', HTML)
-        self.assertRegex(SERVICE_WORKER, r'CACHE_NAME\\s*=\\s*"hoshi-shell-v\\d+"')
+        self.assertRegex(SERVICE_WORKER, r'CACHE_NAME\s*=\s*"hoshi-shell-v\d+"')
         self.assertIn("./hoshi-task-router.js", SERVICE_WORKER)
         self.assertIn('<script src="./hoshi-task-router.js"></script>', HTML)
         self.assertIn("./assets/hoshi-hero-background.svg", SERVICE_WORKER)

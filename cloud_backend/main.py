@@ -407,14 +407,21 @@ def health():
     gemini_configured = bool(os.getenv("GEMINI_API_KEY", "").strip())
     groq_configured = bool(os.getenv("GROQ_API_KEY", "").strip())
     openrouter_configured = bool(os.getenv("OPENROUTER_API_KEY", "").strip())
+    try:
+        openjarvis_configured = openjarvis_endpoint() is not None
+    except OpenJarvisUnavailable:
+        openjarvis_configured = False
     return {
         "ok": True,
         "service": "hoshi-cloud-api",
         "version": app.version,
         "gemini_api": "interactions" if gemini_configured else None,
-        "ai_connected": openrouter_configured or gemini_configured or groq_configured,
+        "ai_connected": openjarvis_configured or openrouter_configured or gemini_configured or groq_configured,
         "reply_fallback_enabled": True,
         "voice_fast_path": True,
+        "openjarvis_configured": openjarvis_configured,
+        "openjarvis_mode": "optional-remote-agent" if openjarvis_configured else "not-configured",
+        "calculator_tool": True,
         "openrouter_configured": openrouter_configured,
         "openrouter_model": OPENROUTER_MODEL if openrouter_configured else None,
         "gemini_configured": gemini_configured,

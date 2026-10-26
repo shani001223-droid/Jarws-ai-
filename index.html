@@ -103,7 +103,8 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 <button type="button" data-hoshi-command="phone home">⌂ Home</button>
 <button type="button" data-hoshi-command="swipe up">↑ Swipe</button>
 <button type="button" data-hoshi-command="take screenshot">▣ Screenshot</button>
-</div><div class="hoshi-draft"><label for="hoshiDraft">Writing pad · local to this device</label><textarea id="hoshiDraft" rows="3" maxlength="2000" placeholder="Hoshi, note likho…"></textarea><div class="hoshi-tool-grid"><button type="button" id="copyHoshiDraft">Copy text</button><button type="button" id="shareHoshiDraft">Share draft</button></div><p id="draftStatus" class="small" role="status">Draft is not automatically sent.</p></div></section></div><div data-panel="trading" hidden>
+</div><button type="button" id="enablePhoneAccess" class="primary">Enable phone Accessibility permission</button>
+<div class="hoshi-draft"><label for="hoshiDraft">Writing pad · local to this device</label><textarea id="hoshiDraft" rows="3" maxlength="2000" placeholder="Hoshi, note likho…"></textarea><div class="hoshi-tool-grid"><button type="button" id="copyHoshiDraft">Copy text</button><button type="button" id="shareHoshiDraft">Share draft</button></div><p id="draftStatus" class="small" role="status">Draft is not automatically sent.</p></div></section></div><div data-panel="trading" hidden>
 <p class="small">Live keyless market data · public Binance Spot reference only. No real or demo orders are placed.</p>
 <div class="trading-selects"><label>Pair<select id="tradePair" aria-label="Trading pair"><option>BTCUSDT</option><option>ETHUSDT</option><option>SOLUSDT</option><option>BNBUSDT</option></select></label><label>Timeframe<select id="tradeInterval" aria-label="Chart timeframe"><option>5m</option><option>1m</option><option>15m</option><option>1h</option><option>4h</option><option>1d</option></select></label></div>
 <div class="trade-card"><div class="trade-label">Spot market price · USDT</div><div id="tradePrice" class="trade-price">—</div><div id="tradeChange" class="trade-muted">24h change: —</div><div id="tradeSource" class="trade-muted">Source: Binance Spot · read-only</div></div>
@@ -459,6 +460,12 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
    if(navigator.share){navigator.share({text}).catch(()=>{});draftStatus.textContent='Review the share chooser before sending.';return true}
    draftStatus.textContent='Sharing needs the Hoshi Android app or supported browser.';return false
   }
+  $('enablePhoneAccess').onclick=()=>{
+   if(window.JarvisBridge&&typeof window.JarvisBridge.requestSettings==='function'){
+    window.JarvisBridge.requestSettings();
+    draftStatus.textContent='Enable HOSHI basic screen controls in Android Accessibility settings.';
+   } else draftStatus.textContent='Accessibility setup needs the Hoshi Android app.';
+  };
   $('copyHoshiDraft').onclick=copyHoshiDraft;
   $('shareHoshiDraft').onclick=shareHoshiDraft;
   document.querySelectorAll('[data-hoshi-command]').forEach(button=>button.onclick=()=>processCommand(button.dataset.hoshiCommand));

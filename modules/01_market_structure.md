@@ -44,6 +44,22 @@ Cross-venue spot/futures differences and revised history can alter levels.
 
 3. **[BTCUSDT, 4h](https://www.tradingview.com/chart/?symbol=BINANCE%3ABTCUSDT&interval=240)** — Mark the latest confirmed 4h range and inspect the 1h/15m view separately. A 15m bullish break against 4h lower highs is countertrend evidence, not all-timeframe confluence.
 
+## Dated source observations — 27 October 2026
+
+These three examples add actual source observations to the conditional chart
+walkthroughs above. They are **point-in-time measurements**, not a claim that a
+profitable setup exists now. After this date, treat them as historical examples.
+[Captured values, timestamps, source/replay URLs and series digests](chart_examples_snapshot_20261027.json)
+are retained for review. The macro series are daily/weekly and lag retrieval.
+For 1h/4h OB/FVG observations the same geometric detector is demonstrated on
+that frame; the actual V2 API uses 15m for entry-pattern checks.
+
+| Chart / series | Closed bar / observation date | Observed fact and limit |
+| --- | --- | --- |
+| BTCUSDT 15m | 2026-10-27T12:44:59.999000+00:00 | close=80345 USDT; confirmed structure=mixed_structure; support=80313.8; resistance=80379.4. Strict two-right-bar confirmation; a null level stays unavailable. |
+| ETHUSDT 1h | 2026-10-27T11:59:59.999000+00:00 | close=2316.04 USDT; confirmed structure=lower_highs_lower_lows; support=2304.44; resistance=2323.8. Strict two-right-bar confirmation; a null level stays unavailable. |
+| BTCUSDT 4h | 2026-10-27T11:59:59.999000+00:00 | close=79910 USDT; confirmed structure=mixed_structure; support=79800; resistance=80000. Strict two-right-bar confirmation; a null level stays unavailable. |
+
 ## Sources and attribution
 
 - https://www.cmegroup.com/education/courses/technical-analysis/support-and-resistance

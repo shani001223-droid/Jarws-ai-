@@ -40,6 +40,23 @@ class TradingKnowledgeTests(unittest.TestCase):
         self.assertIn("foreign exchange existed long before", text)
         self.assertIn("not HFT's invention", text)
 
+    def test_dated_observations_preserve_asof_source_identity_and_lag(self):
+        snapshot = json.loads((ROOT / "modules" / "chart_examples_snapshot_20261027.json").read_text())
+        self.assertEqual(len(snapshot["charts"]), 3)
+        for chart in snapshot["charts"]:
+            self.assertLess(chart["last_closed_at"], chart["as_of_ms"])
+            self.assertEqual(chart["last_closed_at"], chart["last_candle"]["close_time"])
+            self.assertTrue(chart["source_url"].startswith("https://data-api.binance.vision/api/v3/klines?"))
+            self.assertIn("endTime=" + str(chart["last_closed_at"]), chart["replay_url"])
+            self.assertFalse(chart["orders_enabled"])
+        self.assertEqual(len(snapshot["macro_observations"]), 3)
+        self.assertIn("NOT ICE DXY", snapshot["macro_observations"][0]["note"])
+        cot = snapshot["macro_observations"][2]
+        self.assertLess(cot["position_as_of"], cot["retrieved_on"])
+        for lesson in brain.load_knowledge().lessons[1:]:
+            self.assertIn("## Dated source observations", lesson.content)
+            self.assertIn("not a claim that a", lesson.content)
+
     def test_unknown_ids_and_paths_cannot_load_files(self):
         for key in ("../main.py", "/etc/passwd", "https://example.com", "nonexistent"):
             with self.assertRaises(KeyError):

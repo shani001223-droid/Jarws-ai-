@@ -44,6 +44,22 @@ feed; time eligibility is not news clearance. PO3 phases are not known in advanc
 
 3. **[BTCUSDT, 4h](https://www.tradingview.com/chart/?symbol=BINANCE%3ABTCUSDT&interval=240)** — Compare one winter and one summer 14:00 New York observation using replay. The UTC hour shifts with DST; using Pakistan local time as if it were New York changes eligibility and must fail the time check.
 
+## Dated source observations — 27 October 2026
+
+These three examples add actual source observations to the conditional chart
+walkthroughs above. They are **point-in-time measurements**, not a claim that a
+profitable setup exists now. After this date, treat them as historical examples.
+[Captured values, timestamps, source/replay URLs and series digests](chart_examples_snapshot_20261027.json)
+are retained for review. The macro series are daily/weekly and lag retrieval.
+For 1h/4h OB/FVG observations the same geometric detector is demonstrated on
+that frame; the actual V2 API uses 15m for entry-pattern checks.
+
+| Chart / series | Closed bar / observation date | Observed fact and limit |
+| --- | --- | --- |
+| BTCUSDT 15m | 2026-10-27T12:44:59.999000+00:00 | retrieval clock=2026-10-27T08:45:55.792000-04:00; active HOSHI window(s)=new_york. Candle closed at the timestamp in this row; time eligibility alone does not establish Silver Bullet or PO3. |
+| ETHUSDT 1h | 2026-10-27T11:59:59.999000+00:00 | retrieval clock=2026-10-27T08:45:55.495000-04:00; active HOSHI window(s)=new_york. Candle closed at the timestamp in this row; time eligibility alone does not establish Silver Bullet or PO3. |
+| BTCUSDT 4h | 2026-10-27T11:59:59.999000+00:00 | retrieval clock=2026-10-27T08:45:55.860000-04:00; active HOSHI window(s)=new_york. Candle closed at the timestamp in this row; time eligibility alone does not establish Silver Bullet or PO3. |
+
 ## Sources and attribution
 
 - https://www.youtube.com/@InnerCircleTrader

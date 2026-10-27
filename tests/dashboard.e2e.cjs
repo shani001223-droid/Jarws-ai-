@@ -710,6 +710,17 @@ async function main() {
     const focusBackground=await focusPage.evaluate(()=>getComputedStyle(document.querySelector('#nightroom')).backgroundImage);
     assert.equal(focusBackground.includes('url('),false,'Focus mode must not download or display room/character images');
     await focusPage.locator('[data-tab="settings"]').click();
+    // Confirm the selected panel before interacting with its child. If a
+    // browser regression hides it, report actual DOM/CSS state rather than
+    // masking the problem with a forced click on the hidden control.
+    console.log('Focus settings state:',await focusPage.evaluate(()=>{
+      const panel=document.querySelector('[data-panel="settings"]');
+      const sheet=document.querySelector('#nightSheet');
+      return {sheetHidden:sheet.hidden,panelHidden:panel.hidden,
+        selected:document.querySelector('[data-tab="settings"]').getAttribute('aria-selected'),
+        display:getComputedStyle(panel).display};
+    }));
+    await focusPage.locator('#nightSheet:not([hidden]) [data-panel="settings"]:not([hidden])').waitFor({state:'visible'});
     assert.match(await focusPage.locator('#focusModeToggle').innerText(),/ON/);
     await focusPage.locator('#focusModeToggle').click();
     assert.equal(await focusPage.locator('.nightroom.focus-mode').count(),0);

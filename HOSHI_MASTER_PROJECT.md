@@ -180,7 +180,7 @@ The five 20-point factors are HTF trend, liquidity reference/target,
 discount/premium plus OB, later FVG retest and DST-aware New York time. The
 0–100 result is rule coverage, not win probability, 99.999% accuracy, profitable
 alpha or a real order. Thirty chart links are explicitly conditional inspection
-exercises, not verified current setups. No production merge, new paid model,
+exercises, supplemented by 30 dated source observations with preserved timestamps and source URLs; neither is a claim of verified current setups. No production merge, new paid model,
 live macro/order-flow feed or physical phone acceptance is implied. Existing
 task checkboxes remain governed solely by the canonical 60-task roadmap.
 

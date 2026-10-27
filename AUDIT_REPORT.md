@@ -44,7 +44,7 @@ This extends the existing assistant; it is not a new app, trading account, or mo
 | --- | --- | --- |
 | Day 1 | Audit, history, Market Structure, Candlestick Psychology, Order Blocks, SMC, ICT | Complete: audit, history and Modules 1–5 pushed |
 | Day 2 | Liquidity, FVG, Indicators/Order Flow, Global Money Flow, Risk/Psychology; knowledge loader | Complete: Modules 6–10 pushed; integrity-checked loader implemented |
-| Day 3 | Confluence V2, API integration, final system prompt, backend/import checks | Implemented locally; integration checks in progress |
+| Day 3 | Confluence V2, API integration, final system prompt, backend/import checks | Source pushed; final CI verification in progress |
 
 Every curriculum module must include Definition, Application Zone, Failure Zone and three linked live-chart inspection exercises. **Links/conditional exercises must never be described as verified live setups.** Current price examples require a timestamped source snapshot; unavailable data must stay unavailable. ICT/SMC terminology is an operational heuristic, not a demonstrated market law.
 
@@ -105,3 +105,18 @@ Continue on the existing development branch, preserve configured Gemini/Groq/fre
 - Integration commit [d462610d6aa0](https://github.com/shani001223-droid/Jarws-ai-/commit/d462610d6aa098c05f7b29ff83d74fbad6722334) passed the **actual Docker V2 HTTP / knowledge / DST smoke**, [run 40506228434](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40506228434).
 - Its full CI [run 40506228456](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40506228456) failed because the newly added FastAPI TestClient tests require `httpx2` on a clean Starlette runner. The local environment had an older `httpx` fallback, masking the undeclared test dependency. This failed run is not counted as passed.
 - Added root `requirements-dev.txt` (existing runtime requirements + explicit `httpx2`) and made CI install it. The production Docker runtime does not acquire a test-only HTTP client. Re-run final CI after this fix; do not skip API tests.
+
+## Dated chart/example checkpoint
+
+- Added **three source observations to each of the ten modules** (30 in total), distinct from the three conditional walkthroughs per lesson. Three actual crypto chart series were captured with venue, symbol, timeframe, retrieval UTC, closed-bar UTC, reproducible end-time URL and candle-series SHA-256. Macro examples preserve separate FRED daily observation dates and CFTC weekly position-as-of dates, not invented intraday macro values.
+- Captured crypto bars: BTCUSDT 15m closed 2026-10-27T12:44:59.999Z; ETHUSDT 1h and BTCUSDT 4h closed 2026-10-27T11:59:59.999Z. These were source observations at capture, not proof the public API will always be reachable.
+- File: `modules/chart_examples_snapshot_20261027.json`; repeatable keyless crypto capture script: `scripts/capture_trading_examples.py`. This does not add a server-side live macro feed. Dated examples become historical after their recorded observation time. No positive pattern is invented where the detector reports none.
+- Clean-runner fix [4261f9a62074](https://github.com/shani001223-droid/Jarws-ai-/commit/4261f9a6207432db0f3e68da59049d4efa968181) passed the Python/API and Node steps, but [run 40506467402](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40506467402) failed later in the **existing mobile focus-settings browser smoke** because the toggle was hidden. This is not recorded as a full CI pass. Added explicit selected-panel visibility/state diagnostics and re-ran final CI without forced clicks or skipped assertions.
+- Local rerun with the actual declared `httpx2` test dependency passed all 357 then-existing Python tests in 12.666 s; the added snapshot integrity test passes separately (9 knowledge tests). Final aggregate and final GitHub results are recorded below after completion.
+- Push: `HOSHI UPGRADE: Added Timestamped Chart Examples and Final Knowledge - Day 3`.
+
+## Concurrent canonical-branch integration
+
+- While this upgrade was being tested, the existing master-project workflow advanced the same branch through `7f1fece3ca2ed9818768c30afd1428a97bf12318`, adding separate Task 41 paper-risk research and fixing the first-install service-worker reload. Its source changes were fetched and merged before this push; none were overwritten or force-pushed. Our lease rejected a stale write attempt as intended.
+- The Settings failure was a first-install service-worker `controllerchange` reload interrupting the panel interaction. Existing-workflow fix `53211a50f06970d7729afb82e00640f42a7e56d0` refreshes only if a controller was already present. Actual [CI 40506953064](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40506953064) passed on that fix. Our mobile regression keeps all assertions and adds visible-panel state checks.
+- The canonical roadmap now contains independently verified Task 40/41 updates from that existing workflow. Earlier pending statements in this audit describe the fetched baseline, not a rollback of those completed tasks. This V2 upgrade does not maintain a competing 60-task scoreboard.

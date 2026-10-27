@@ -1,0 +1,483 @@
+{
+  "kind": "dated_source_observations_not_current_signal",
+  "version": "hoshi-example-snapshot-v1",
+  "note": "Single-venue point-in-time facts. Re-fetch before using as current. No profitability, independent source or institutional-intent claim.",
+  "charts": [
+    {
+      "symbol": "BTCUSDT",
+      "timeframe": "15m",
+      "source": "Binance Spot public OHLCV, one venue",
+      "retrieved_at": "2026-10-27T12:45:55.792000+00:00",
+      "as_of_ms": 1793105155792,
+      "last_closed_at": 1793105099999,
+      "last_closed_utc": "2026-10-27T12:44:59.999000+00:00",
+      "source_url": "https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=15m&limit=500",
+      "replay_url": "https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=15m&limit=499&endTime=1793105099999",
+      "bars_used": 499,
+      "last_candle": {
+        "time": 1793104200000,
+        "open": 80248.16,
+        "high": 80386.18,
+        "low": 80184.0,
+        "close": 80344.96,
+        "volume": 212.02816,
+        "close_time": 1793105099999
+      },
+      "candle_series_sha256": "c9e2a86211b0cffb8dda1a95b0cbab4a3a0afe81d5975cf55ec7278e1c9ae27c",
+      "structure": {
+        "last_closed_at": 1793105099999,
+        "last_close": 80344.96,
+        "structure": "mixed_structure",
+        "support": 80313.81,
+        "resistance": 80379.37,
+        "previous_20_low": 79506.0,
+        "previous_20_high": 80248.9,
+        "confirmed_swing_highs": [
+          {
+            "price": 80379.37,
+            "pivot_at": 1793065499999,
+            "confirmed_at": 1793067299999
+          },
+          {
+            "price": 79934.82,
+            "pivot_at": 1793072699999,
+            "confirmed_at": 1793074499999
+          },
+          {
+            "price": 80048.01,
+            "pivot_at": 1793080799999,
+            "confirmed_at": 1793082599999
+          },
+          {
+            "price": 80026.57,
+            "pivot_at": 1793087999999,
+            "confirmed_at": 1793089799999
+          },
+          {
+            "price": 79890.92,
+            "pivot_at": 1793092499999,
+            "confirmed_at": 1793094299999
+          },
+          {
+            "price": 80162.44,
+            "pivot_at": 1793098799999,
+            "confirmed_at": 1793100599999
+          }
+        ],
+        "confirmed_swing_lows": [
+          {
+            "price": 79718.0,
+            "pivot_at": 1793079899999,
+            "confirmed_at": 1793081699999
+          },
+          {
+            "price": 79558.49,
+            "pivot_at": 1793084399999,
+            "confirmed_at": 1793086199999
+          },
+          {
+            "price": 79728.0,
+            "pivot_at": 1793090699999,
+            "confirmed_at": 1793092499999
+          },
+          {
+            "price": 79506.0,
+            "pivot_at": 1793096999999,
+            "confirmed_at": 1793098799999
+          },
+          {
+            "price": 79858.88,
+            "pivot_at": 1793100599999,
+            "confirmed_at": 1793102399999
+          },
+          {
+            "price": 79843.11,
+            "pivot_at": 1793103299999,
+            "confirmed_at": 1793105099999
+          }
+        ],
+        "pivot_confirmation_bars": 2
+      },
+      "indicators": {
+        "last_closed_at": 1793105099999,
+        "last_close": 80344.96,
+        "candles_used": 499,
+        "values": {
+          "ema9": 80026.32082347412,
+          "ema20": 79919.43154938721,
+          "ema21": 79915.2501887568,
+          "ema50": 79908.7392850335,
+          "rsi14": 68.11562125446318,
+          "atr14": 168.39194376140625,
+          "volume_sma20_base": 105.8038145,
+          "volume_ratio20": 2.0039746298560908,
+          "utc_session_vwap": 79927.56100593349
+        },
+        "vwap_session_start": 1793059200000,
+        "vwap_full_session_from_open": true
+      },
+      "body_fraction": 0.47878128400438347,
+      "lower_wick_fraction": 0.317340983282252,
+      "upper_wick_fraction": 0.2038777327133645,
+      "active_bull_gap_patterns": [
+        {
+          "gap": {
+            "low": 79647.52,
+            "high": 79920.75,
+            "formed_at": 1793098799999
+          },
+          "order_block": {
+            "low": 79510.0,
+            "high": 79804.18,
+            "origin_at": 1793096099999,
+            "confirmed_at": 1793098799999
+          },
+          "retested": false,
+          "ob_overlap": false,
+          "observed_at": 1793105099999
+        }
+      ],
+      "active_bear_gap_patterns": [],
+      "recent_ssl_reclaim": {
+        "level": 79858.88,
+        "confirmed_at": 1793102399999,
+        "swept_at": 1793103299999,
+        "kind": "ssl_reclaim"
+      },
+      "recent_bsl_reclaim": null,
+      "clock": {
+        "passed": true,
+        "timezone": "America/New_York",
+        "local_time": "2026-10-27T08:45:55.792000-04:00",
+        "active_windows": [
+          "new_york"
+        ],
+        "weekday_only": true,
+        "note": "HOSHI research windows; crypto trades 24/7. Not a news/holiday clearance."
+      },
+      "orders_enabled": false
+    },
+    {
+      "symbol": "ETHUSDT",
+      "timeframe": "1h",
+      "source": "Binance Spot public OHLCV, one venue",
+      "retrieved_at": "2026-10-27T12:45:55.495000+00:00",
+      "as_of_ms": 1793105155495,
+      "last_closed_at": 1793102399999,
+      "last_closed_utc": "2026-10-27T11:59:59.999000+00:00",
+      "source_url": "https://data-api.binance.vision/api/v3/klines?symbol=ETHUSDT&interval=1h&limit=500",
+      "replay_url": "https://data-api.binance.vision/api/v3/klines?symbol=ETHUSDT&interval=1h&limit=499&endTime=1793102399999",
+      "bars_used": 499,
+      "last_candle": {
+        "time": 1793098800000,
+        "open": 2316.5,
+        "high": 2322.63,
+        "low": 2312.59,
+        "close": 2316.04,
+        "volume": 5460.3239,
+        "close_time": 1793102399999
+      },
+      "candle_series_sha256": "a0dd8619cd39a2691c55da0dd78cc9db124643087fa2c9821ccbb4f3b4e2f558",
+      "structure": {
+        "last_closed_at": 1793102399999,
+        "last_close": 2316.04,
+        "structure": "lower_highs_lower_lows",
+        "support": 2304.44,
+        "resistance": 2323.8,
+        "previous_20_low": 2297.44,
+        "previous_20_high": 2344.72,
+        "confirmed_swing_highs": [
+          {
+            "price": 2343.77,
+            "pivot_at": 1792929599999,
+            "confirmed_at": 1792936799999
+          },
+          {
+            "price": 2365.4,
+            "pivot_at": 1792951199999,
+            "confirmed_at": 1792958399999
+          },
+          {
+            "price": 2338.27,
+            "pivot_at": 1793008799999,
+            "confirmed_at": 1793015999999
+          },
+          {
+            "price": 2344.72,
+            "pivot_at": 1793030399999,
+            "confirmed_at": 1793037599999
+          },
+          {
+            "price": 2333.97,
+            "pivot_at": 1793066399999,
+            "confirmed_at": 1793073599999
+          },
+          {
+            "price": 2323.8,
+            "pivot_at": 1793087999999,
+            "confirmed_at": 1793095199999
+          }
+        ],
+        "confirmed_swing_lows": [
+          {
+            "price": 2318.0,
+            "pivot_at": 1792922399999,
+            "confirmed_at": 1792929599999
+          },
+          {
+            "price": 2293.09,
+            "pivot_at": 1792987199999,
+            "confirmed_at": 1792994399999
+          },
+          {
+            "price": 2304.44,
+            "pivot_at": 1793005199999,
+            "confirmed_at": 1793012399999
+          },
+          {
+            "price": 2295.88,
+            "pivot_at": 1793023199999,
+            "confirmed_at": 1793030399999
+          },
+          {
+            "price": 2302.22,
+            "pivot_at": 1793059199999,
+            "confirmed_at": 1793066399999
+          },
+          {
+            "price": 2300.84,
+            "pivot_at": 1793087999999,
+            "confirmed_at": 1793095199999
+          }
+        ],
+        "pivot_confirmation_bars": 2
+      },
+      "indicators": {
+        "last_closed_at": 1793102399999,
+        "last_close": 2316.04,
+        "candles_used": 499,
+        "values": {
+          "ema9": 2315.003555145191,
+          "ema20": 2317.0181449776965,
+          "ema21": 2317.263987744589,
+          "ema50": 2326.9854369706527,
+          "rsi14": 48.03154057247666,
+          "atr14": 15.273143773276766,
+          "volume_sma20_base": 5636.00551,
+          "volume_ratio20": 0.9688287015177174,
+          "utc_session_vwap": 2315.3501172728966
+        },
+        "vwap_session_start": 1793059200000,
+        "vwap_full_session_from_open": true
+      },
+      "body_fraction": 0.04581673306773287,
+      "lower_wick_fraction": 0.3436254980079513,
+      "upper_wick_fraction": 0.6105577689243159,
+      "active_bull_gap_patterns": [],
+      "active_bear_gap_patterns": [],
+      "recent_ssl_reclaim": {
+        "level": 2300.84,
+        "confirmed_at": 1793095199999,
+        "swept_at": 1793098799999,
+        "kind": "ssl_reclaim"
+      },
+      "recent_bsl_reclaim": {
+        "level": 2323.8,
+        "confirmed_at": 1793095199999,
+        "swept_at": 1793098799999,
+        "kind": "bsl_reclaim"
+      },
+      "clock": {
+        "passed": true,
+        "timezone": "America/New_York",
+        "local_time": "2026-10-27T08:45:55.495000-04:00",
+        "active_windows": [
+          "new_york"
+        ],
+        "weekday_only": true,
+        "note": "HOSHI research windows; crypto trades 24/7. Not a news/holiday clearance."
+      },
+      "orders_enabled": false
+    },
+    {
+      "symbol": "BTCUSDT",
+      "timeframe": "4h",
+      "source": "Binance Spot public OHLCV, one venue",
+      "retrieved_at": "2026-10-27T12:45:55.860000+00:00",
+      "as_of_ms": 1793105155860,
+      "last_closed_at": 1793102399999,
+      "last_closed_utc": "2026-10-27T11:59:59.999000+00:00",
+      "source_url": "https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=4h&limit=500",
+      "replay_url": "https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=4h&limit=499&endTime=1793102399999",
+      "bars_used": 499,
+      "last_candle": {
+        "time": 1793088000000,
+        "open": 79806.71,
+        "high": 80162.44,
+        "low": 79506.0,
+        "close": 79910.01,
+        "volume": 1467.27166,
+        "close_time": 1793102399999
+      },
+      "candle_series_sha256": "b3d8caedc871536ae41e9fbda680af14a50f9a11bf498080d5c80f09d57f6106",
+      "structure": {
+        "last_closed_at": 1793102399999,
+        "last_close": 79910.01,
+        "structure": "mixed_structure",
+        "support": 79800.0,
+        "resistance": 80000.0,
+        "previous_20_low": 79220.74,
+        "previous_20_high": 81213.64,
+        "confirmed_swing_highs": [
+          {
+            "price": 84898.0,
+            "pivot_at": 1792612799999,
+            "confirmed_at": 1792641599999
+          },
+          {
+            "price": 82033.84,
+            "pivot_at": 1792727999999,
+            "confirmed_at": 1792756799999
+          },
+          {
+            "price": 82060.88,
+            "pivot_at": 1792771199999,
+            "confirmed_at": 1792799999999
+          },
+          {
+            "price": 81033.69,
+            "pivot_at": 1792900799999,
+            "confirmed_at": 1792929599999
+          },
+          {
+            "price": 80951.57,
+            "pivot_at": 1792958399999,
+            "confirmed_at": 1792987199999
+          },
+          {
+            "price": 80844.7,
+            "pivot_at": 1793030399999,
+            "confirmed_at": 1793059199999
+          }
+        ],
+        "confirmed_swing_lows": [
+          {
+            "price": 80939.54,
+            "pivot_at": 1792699199999,
+            "confirmed_at": 1792727999999
+          },
+          {
+            "price": 80513.0,
+            "pivot_at": 1792799999999,
+            "confirmed_at": 1792828799999
+          },
+          {
+            "price": 79220.74,
+            "pivot_at": 1792857599999,
+            "confirmed_at": 1792886399999
+          },
+          {
+            "price": 80087.7,
+            "pivot_at": 1792929599999,
+            "confirmed_at": 1792958399999
+          },
+          {
+            "price": 79368.67,
+            "pivot_at": 1792987199999,
+            "confirmed_at": 1793015999999
+          },
+          {
+            "price": 79451.35,
+            "pivot_at": 1793030399999,
+            "confirmed_at": 1793059199999
+          }
+        ],
+        "pivot_confirmation_bars": 2
+      },
+      "indicators": {
+        "last_closed_at": 1793102399999,
+        "last_close": 79910.01,
+        "candles_used": 499,
+        "values": {
+          "ema9": 80063.61977064381,
+          "ema20": 80407.9467962772,
+          "ema21": 80439.48990055533,
+          "ema50": 81130.62437030887,
+          "rsi14": 39.77081486425699,
+          "atr14": 736.2432691649966,
+          "volume_sma20_base": 1889.2274830000001,
+          "volume_ratio20": 0.7766516595820664,
+          "utc_session_vwap": 79879.78076106304
+        },
+        "vwap_session_start": 1793059200000,
+        "vwap_full_session_from_open": true
+      },
+      "body_fraction": 0.15736396319539941,
+      "lower_wick_fraction": 0.4580921333252168,
+      "upper_wick_fraction": 0.3845439034793838,
+      "active_bull_gap_patterns": [],
+      "active_bear_gap_patterns": [
+        {
+          "gap": {
+            "low": 82267.79,
+            "high": 82670.74,
+            "formed_at": 1792670399999
+          },
+          "order_block": {
+            "low": 83266.38,
+            "high": 84828.0,
+            "origin_at": 1792598399999,
+            "confirmed_at": 1792670399999
+          },
+          "retested": false,
+          "ob_overlap": false,
+          "observed_at": 1793102399999
+        }
+      ],
+      "recent_ssl_reclaim": null,
+      "recent_bsl_reclaim": null,
+      "clock": {
+        "passed": true,
+        "timezone": "America/New_York",
+        "local_time": "2026-10-27T08:45:55.860000-04:00",
+        "active_windows": [
+          "new_york"
+        ],
+        "weekday_only": true,
+        "note": "HOSHI research windows; crypto trades 24/7. Not a news/holiday clearance."
+      },
+      "orders_enabled": false
+    }
+  ],
+  "macro_observations": [
+    {
+      "series": "DTWEXBGS",
+      "source_url": "https://fred.stlouisfed.org/series/DTWEXBGS",
+      "observation_date": "2026-10-23",
+      "value": 121.3202,
+      "units": "Index Jan 2006=100; daily; not seasonally adjusted",
+      "retrieved_on": "2026-10-27",
+      "note": "Fed broad dollar, NOT ICE DXY; page updated 26 October 2026"
+    },
+    {
+      "series": "DGS10",
+      "source_url": "https://fred.stlouisfed.org/series/DGS10",
+      "observation_date": "2026-10-23",
+      "value": 5.0,
+      "units": "percent; daily; not seasonally adjusted",
+      "retrieved_on": "2026-10-27",
+      "note": "10-year constant-maturity yield, not a bond price; page updated 26 October 2026"
+    },
+    {
+      "series": "CFTC Euro FX CME futures-only legacy COT",
+      "source_url": "https://www.cftc.gov/dea/futures/deacmesf.htm",
+      "position_as_of": "2026-10-20",
+      "noncommercial_long": 226421,
+      "noncommercial_short": 360945,
+      "open_interest": 877940,
+      "units": "contracts; each Euro FX contract EUR125000",
+      "retrieved_on": "2026-10-27",
+      "note": "Lagged weekly report; exact publication timestamp not supplied by this report page. Net long-minus-short = -134524; not all investors or spot flows."
+    }
+  ]
+}

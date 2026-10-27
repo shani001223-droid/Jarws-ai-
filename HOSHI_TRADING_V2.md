@@ -9,7 +9,7 @@ paid model, exchange account or real order capability is introduced.
 - `modules/trading_history_complete.md`: corrected historical timeline.
 - `modules/01_*.md` through `10_*.md`: definitions, application/failure zones
   and **30 conditional linked live-chart inspection exercises**. These are not
-  claims of currently detected profitable setups or completed chart replay.
+  claims of currently detected profitable setups or completed chart replay. Each module also includes three actual dated source observations from 27 October 2026, with source/closed-bar timestamps in `modules/chart_examples_snapshot_20261027.json`. Crypto measurements use three captured chart series; macro examples cite lagged FRED/CFTC observations. These are snapshots, not a new live macro feed.
 - `cloud_backend/brain.py`: bounded integrity-checked load of all eleven
   lessons; relevant two-lesson retrieval for trading chat, including short
   Groq voice requests. Model weights are not trained or replaced.

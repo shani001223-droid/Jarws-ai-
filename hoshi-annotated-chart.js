@@ -133,9 +133,10 @@
    }
   };
   png.onclick=()=>{
-   if(!report)return;
+   const snapshot=report;
+   if(!snapshot)return;
    canvas.toBlob(blob=>{
-    if(blob)save(blob,'Hoshi_'+report.symbol+'_'+report.interval+'_paper_chart.png');
+    if(blob)save(blob,'Hoshi_'+snapshot.symbol+'_'+snapshot.interval+'_paper_chart.png');
     else status.textContent='PNG export unavailable on this device.';
    },'image/png');
   };

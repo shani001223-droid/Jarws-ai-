@@ -22,11 +22,13 @@ try:
     from .market_data_quality import public_urls, verify_spot_market, MarketDataQualityError
     from .market_structure import analyze_market_structure, MarketStructureError
     from .market_indicators import analyze_market_indicators, MarketIndicatorsError
+    from .setup_assessment import assess_spot_setup, SetupAssessmentError
 except ImportError:
     from trading_research import closed_candles, research, backtest, SimulationConfig
     from market_data_quality import public_urls, verify_spot_market, MarketDataQualityError
     from market_structure import analyze_market_structure, MarketStructureError
     from market_indicators import analyze_market_indicators, MarketIndicatorsError
+    from setup_assessment import assess_spot_setup, SetupAssessmentError
 try:
     from .ad_studio import create_ad_pack
     from .artifact_verifier import verify_ad_pack, ArtifactVerificationError
@@ -1422,6 +1424,41 @@ def trading_market_indicators(response: Response, symbol: str = "BTCUSDT"):
         result["source"] = "Binance Spot public closed candles (single venue)"
         result["fetched_at"] = min(stamps)
         result["independently_cross_checked"] = False
+        return result
+    finally:
+        _RESEARCH_SLOTS.release()
+
+
+@app.get("/api/trading/setup-assessment")
+def trading_setup_assessment(response: Response, symbol: str = "BTCUSDT"):
+    """Task 40: six correlated evidence-family checks, paper watchlist only.
+
+    Reuses one set of 15m/1h/4h Binance Spot closed histories for Task 38/39
+    analyzers. Independent Kraken data quality is NOT implicitly inherited.
+    """
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    pair = _research_pair(symbol)
+    if not _RESEARCH_SLOTS.acquire(blocking=False):
+        raise HTTPException(status_code=429, detail="Research busy. Retry shortly.")
+    try:
+        with ThreadPoolExecutor(max_workers=3) as pool:
+            jobs = {tf: pool.submit(_research_history, pair, tf)
+                    for tf in ("15m", "1h", "4h")}
+            fetched = {tf: jobs[tf].result() for tf in jobs}
+        now = int(time.time())
+        stamps = [stamp for _, stamp in fetched.values()]
+        if (any(not isinstance(stamp, int) or isinstance(stamp, bool)
+                or stamp > now + 5 or stamp < now - 120 for stamp in stamps)
+                or max(stamps) - min(stamps) > 120):
+            raise HTTPException(status_code=503, detail="Research sources are stale. No current setup claim.")
+        try:
+            result = assess_spot_setup(
+                {tf: bars for tf, (bars, _) in fetched.items()}, pair)
+        except SetupAssessmentError:
+            raise HTTPException(status_code=503, detail="Closed-candle setup verification failed.") from None
+        result["source"] = "Binance Spot public closed candles (single venue)"
+        result["fetched_at"] = min(stamps)
         return result
     finally:
         _RESEARCH_SLOTS.release()

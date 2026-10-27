@@ -173,3 +173,7 @@ The user asked to proceed after V2 source verification. [HOSHI_RELEASE_PRECHECK.
 ## Merged-candidate clean-runner correction
 
 The first merged-source CI (40509641702 / 40509636857) exposed a missing declared `httpx` dependency used by main's existing observability concurrency test. The new FastAPI TestClient also needs `httpx2`; these are distinct clients. `requirements-dev.txt` now includes both, and `requirements-test.txt` delegates to that complete set. No test was skipped, and the first failed run is not counted as passed. Actual Docker and sandbox checks on merge source 9ffabcc6c5cce8cbd7b9c6efb440d1dab48d9f54 already passed; final CI evidence follows after the dependency correction.
+
+## Release candidate verified
+
+Local 390 Python / 75 Node checks and actual GitHub full browser/API, Docker, sandbox and Android build checks passed on `f62237b15ba2cd383c136042fe5c3732973c51b6`. Exact run IDs, retained failures and the remaining Render workspace blocker are in [HOSHI_RELEASE_PRECHECK.md](HOSHI_RELEASE_PRECHECK.md). No production merge/deploy or physical phone acceptance.

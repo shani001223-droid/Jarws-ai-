@@ -1,6 +1,6 @@
 # HOSHI release precheck — 27 October 2026
 
-This is preparation for the existing Hoshi release, not a production deployment.
+The release candidate is now source/test verified; production deployment is pending required Render workspace identification.
 
 ## Exact sources
 
@@ -73,3 +73,28 @@ execution, deployed behavior or physical-device acceptance.
 ## Merged-candidate clean-runner correction
 
 The first merged-source CI (40509641702 / 40509636857) exposed a missing declared `httpx` dependency used by main's existing observability concurrency test. The new FastAPI TestClient also needs `httpx2`; these are distinct clients. `requirements-dev.txt` now includes both, and `requirements-test.txt` delegates to that complete set. No test was skipped, and the first failed run is not counted as passed. Actual Docker and sandbox checks on merge source 9ffabcc6c5cce8cbd7b9c6efb440d1dab48d9f54 already passed; final CI evidence follows after the dependency correction.
+
+## Release candidate verification complete
+
+Verified source and test-dependency head: `f62237b15ba2cd383c136042fe5c3732973c51b6`.
+
+| Check | Actual evidence | Result |
+| --- | --- | --- |
+| Full Python/API/security, Node and desktop/mobile Chromium | [PR run 40509935031](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40509935031), [push run 40509928879](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40509928879) | Passed |
+| Actual backend Docker build, Uvicorn health and V2 lesson/timezone checks | [40509935055](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40509935055) | Passed |
+| Docker sandbox isolation / denial / output limit / deadline | [40509935295](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40509935295), second attempt | Passed |
+| Android debug APK | [40509935254](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40509935254) | Passed; not a physical phone test |
+
+The sandbox first attempt timed out while starting the first tiny container on
+the CI runner; an explicit re-run passed with the same source and original
+wall-clock/network/isolation limits. No assertion or safety boundary was removed.
+The earlier missing-client failure is recorded above and fixed by declaring both
+HTTP clients. Local merged-source counts remain **390 Python / 75 Node passed**.
+
+APK artifact: `hoshi-debug-apk`, ID `12736950866`, recorded archive digest `sha256:4ecd57a7874d925037502dfb39b3b2bab2910f2da560801315989cdefd3fe26f`, from the exact verified source above. It is a debug build, not proof the new backend is live.
+
+PR #24 is conflict-free and remains draft while release prerequisites are
+completed. The only current deployment blocker is the connected Render tool's
+required workspace identification: **My Workspace** must be confirmed before
+service/deploy configuration can be inspected. There has been no production
+merge, Render deployment, new charge, secret edit or physical-phone test.

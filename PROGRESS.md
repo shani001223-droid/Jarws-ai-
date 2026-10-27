@@ -9,8 +9,8 @@ entire branch was already deployed. Production V2 remains a separate release.
 
 ## Current measured progress
 
-**Day 1: completed 5 of 48 planned knowledge chapters — 10.42%; 43 chapters,
-89.58% of the declared curriculum, remain.**
+**Day 1: completed 6 of 48 planned knowledge chapters — 12.50%; 42 chapters,
+87.50% of the declared curriculum, remain.**
 
 The denominator is the initial, expandable file manifest in
 `knowledge_base/manifest.json`. It is not a percentage of every fact on Earth,
@@ -26,6 +26,7 @@ topics require an explicit manifest/progress revision, never silent omission.
 | `00_HISTORY_OF_EVERYTHING/all_wars_and_market_impact.md` | Source-checked; four fixed NASDAQ event windows, alternative explanations and instrument/timezone limits |
 | `00_HISTORY_OF_EVERYTHING/all_bubbles.md` | Source-checked; valuation sensitivity, historical cases, counterexamples and execution limits |
 | `01_MARKET_STRUCTURE/structure_and_swings.md` | Source-checked; actual dated BTCUSDT pivots, confirmation lag and stale-label counterexample; offline source/digest/causality checks |
+| `01_MARKET_STRUCTURE/trends_ranges_and_multitimeframe.md` | Source-checked; three actual daily/weekly comparisons, complete-week boundaries, insufficiency and breached higher-frame states |
 | Remaining curriculum documents | Pending; no empty placeholder chapters counted as complete |
 | Brain loader and runtime knowledge bundle | Pending — the new chapter is not yet consumed by Hoshi |
 | 40/20/20/20 history/liquidity/structure/global-flow engine | Pending — weights will mean evidence coverage, not an invented win probability |
@@ -61,6 +62,8 @@ topics require an explicit manifest/progress revision, never silent omission.
 - **Day 1 continuation:** completed the bubbles chapter with an explicit valuation example, credit/price feedback mechanisms, source criticism and the separate problems of valuation, timing and executable risk. The four initial history-family chapters are source-checked; this does not mean all historical knowledge or V3 integration is complete. Prior war-history receipt: [17895dd8](https://github.com/shani001223-droid/Jarws-ai-/commit/17895dd805bfe593c9c9b7bdc33feee05e822262); its [actual integrity CI](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40583099221) passed.
 
 - **28 October, Day 1:** completed `structure_and_swings.md` with 2360 substantive body words. Captured 611 genuine daily Binance Spot BTCUSDT candles across three bounded 2020/2021/2022 windows, including exact response hashes and UTC knowledge times. Seven offline evidence tests verify corruption rejection, confirmation lag, ties, completed weeks and every captured historical prefix. The November 2022 counterexample shows why a rising stored swing label cannot authorize continuation after its confirmed low is broken; this requirement is recorded for later V3 integration, not claimed implemented in runtime. Binance-derived material is explicitly attributed and scoped to CC BY-NC-SA non-commercial research. Prior bubbles receipt: [e3cdf754](https://github.com/shani001223-droid/Jarws-ai-/commit/e3cdf7549cac975131d74d20f0c42c1a6fffe687); [actual integrity CI 40583577055](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40583577055) completed successfully. Main remains `3f411640...`; backup remains `51b88506...`.
+
+- **28 October, Day 1:** completed `trends_ranges_and_multitimeframe.md` (2398 substantive body words). Three reconstructed cases distinguish insufficient weekly history (30 April 2020), daily/weekly disagreement (16 August 2021), and a breached higher-frame rising label (23 November 2022). Incomplete weeks are excluded, daily/weekly prices have separate observation times, and no profitable range or independent multi-frame confirmation is asserted. Prior chapter [57cc8828](https://github.com/shani001223-droid/Jarws-ai-/commit/57cc8828623710607ca1449027c82bc733e2fbc7) passed [actual GitHub integrity and seven evidence regressions, run 40590293132](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40590293132). Runtime integration remains pending.
 
 ## Completion and release rules
 

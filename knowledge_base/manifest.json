@@ -45,7 +45,10 @@
     },
     {
       "path": "knowledge_base/01_MARKET_STRUCTURE/trends_ranges_and_multitimeframe.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2398,
+      "sha256": "3e8b0d9a4181734883058fefd8d8edd6261d620fb444108ea6a6692903559a52"
     },
     {
       "path": "knowledge_base/01_MARKET_STRUCTURE/breakouts_retests_and_regimes.md",

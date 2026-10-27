@@ -215,3 +215,8 @@ Added `all_bubbles.md`: original detailed valuation/feedback analysis, failure z
 ## V3 structure and swings receipt — 28 October 2026
 
 Added `structure_and_swings.md` with 2360 substantive words, three actual dated OHLC cases and original causal/invalidation analysis. Companion source evidence contains 611 captured daily BTCUSDT spot candles with exact raw-response hashes, UTC alignment, bounded URLs and non-commercial data attribution. Added offline receipt/causal-prefix regression checks; no runtime trading or UI changes. Observed limitation for later V3 integration: last confirmed swing-pair state may remain rising after current price has breached its latest low (10 November 2022); a continuation gate must handle the contradiction or WAIT. Curriculum: 5/48 (10.42%); all runtime/release gates remain pending. Prior head `e3cdf7549cac975131d74d20f0c42c1a6fffe687` passed actual curriculum CI 40583577055. No production/global-roadmap changes.
+
+
+## V3 trends and multiple-timeframe receipt — 28 October 2026
+
+Added `trends_ranges_and_multitimeframe.md` with 2398 substantive words and three actual dated daily/weekly comparisons. Defines separate trend/range hypotheses, frame roles, cutoff alignment, complete-week aggregation, inadequate warmup and contradictory stale references. Source-checked curriculum: 6/48 (12.50%); no runtime retrieval, probability, order, production or global-roadmap claim. Prior chapter source `57cc8828623710607ca1449027c82bc733e2fbc7` passed actual CI 40590293132, including all seven evidence regressions.

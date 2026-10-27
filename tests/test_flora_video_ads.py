@@ -54,6 +54,10 @@ class FloraVideoTests(unittest.TestCase):
             video.render_flora_video_draft("not_a_product", photo, "image/png")
         with self.assertRaises(video.FloraVideoError):
             video.render_flora_video_draft("gold_kit", b"bad", "image/png")
+        # Header claims three seconds but PCM payload is truncated.
+        with self.assertRaises(video.FloraVideoError):
+            video.render_flora_video_draft("shampoo", photo, "image/png",
+                                           audio_wav=tone[:-5000], audio_rights_attested=True)
 
     def test_missing_ffmpeg_fails_closed(self):
         with patch.object(video.shutil, "which", return_value=None):

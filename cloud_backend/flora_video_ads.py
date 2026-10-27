@@ -46,6 +46,9 @@ def _validate_wav(audio: bytes) -> None:
                     or rate not in (16000, 24000, 44100, 48000)
                     or not (3 <= duration <= 5)):
                 raise FloraVideoError("WAV must be 16-bit PCM, 3-5 seconds.")
+            expected_bytes = sound.getnframes() * sound.getnchannels() * sound.getsampwidth()
+            if len(sound.readframes(sound.getnframes())) != expected_bytes:
+                raise FloraVideoError("Truncated WAV audio.")
     except (wave.Error, EOFError, OSError, ValueError, ZeroDivisionError):
         raise FloraVideoError("Invalid WAV audio.") from None
 

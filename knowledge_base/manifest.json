@@ -94,7 +94,10 @@
     },
     {
       "path": "knowledge_base/02_CANDLESTICK_AND_CHART_PATTERNS/rare_candlestick_and_gap_variants.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2812,
+      "sha256": "b5f78c6fd1276db5754d0a024156391b874f6c2e9fcbafd7615668bb744b31ca"
     },
     {
       "path": "knowledge_base/03_SUPPLY_DEMAND_ORDERBLOCKS/supply_demand_zones.md",
@@ -264,7 +267,7 @@
     {
       "path": "knowledge_base/02_CANDLESTICK_AND_CHART_PATTERNS/pattern_observations_20261028.json",
       "kind": "pattern_cases",
-      "sha256": "aa450e09a76a710170d6a3b81fe6fc89b5b224bd3ebc555dcde044bf789d5e1b"
+      "sha256": "740372217e102c1558d18502e6ae2a9132071dc153721c80f5ae227394edaeb6"
     }
   ],
   "scope_history": [

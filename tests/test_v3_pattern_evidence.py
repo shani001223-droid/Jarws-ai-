@@ -138,6 +138,27 @@ class V3PatternTests(unittest.TestCase):
         p["pattern_studies"][2]["case"]["events"].pop()
         with self.assertRaises(AssertionError): e.check_receipt(p, ROOT)
 
+    def test_rare_extension_is_separate_from_later_confirmation(self):
+        p = receipt(); windows = e.check_receipt(p, ROOT)
+        cases = [x["case"] for x in p["rare_cases"]]
+        self.assertIsNone(cases[0]["outcome"]["first_confirmation"])
+        self.assertEqual(cases[1]["outcome"]["first_confirmation"]["date"], "2021-04-03")
+        self.assertEqual(cases[2]["outcome"]["first_confirmation"]["date"], "2022-09-28")
+        entry = p["rare_cases"][1]; case = entry["case"]
+        prefix = [b for b in windows[entry["source_window_sha256"]] if b["close_time"] <= case["known_at"]]
+        early = e.inside_extension_case(prefix, case["inside_date"])
+        self.assertIsNone(early["outcome"])
+        self.assertEqual(early["reclaim_level"], case["reclaim_level"])
+
+    def test_body_gap_is_not_a_full_range_gap_or_a_success_rate(self):
+        p = receipt(); e.check_receipt(p, ROOT)
+        gaps = [x["case"] for x in p["gap_summaries"]]
+        self.assertEqual([x["strict_real_body_gaps"] for x in gaps], [28,24,36])
+        self.assertEqual([x["strict_full_range_gaps"] for x in gaps], [0,0,0])
+        self.assertTrue(all(x["pattern_success_rate"] is None for x in gaps))
+        p["rare_cases"][0]["case"]["outcome"]["first_confirmation"] = {"date":"2020-02-17"}
+        with self.assertRaises(AssertionError): e.check_receipt(p, ROOT)
+
 
 if __name__ == "__main__":
     unittest.main()

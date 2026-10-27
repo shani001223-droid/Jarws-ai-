@@ -185,6 +185,49 @@ def candle_event_study(bars):
             "win_probability": None, "strategy_pnl": None, "orders_enabled": False}
 
 
+def inside_extension_case(bars, inside_date):
+    """Original Hikkake-like geometry; not TA-Lib parity or an intent claim.
+
+    Strict inside bar, then both extrema shift down/up; inspect exactly three
+    SUBSEQUENT closes for an opposite-boundary reclaim. Setup is known only
+    after the extension closes. Missing horizon remains null.
+    """
+    i = next(i for i, b in enumerate(bars) if utc_day(b["time"]) == inside_date)
+    assert i >= 1 and i+1 < len(bars)
+    mother, inside, extension = bars[i-1:i+2]
+    assert inside["high"] < mother["high"] and inside["low"] > mother["low"]
+    down = extension["high"] < inside["high"] and extension["low"] < inside["low"]
+    up = extension["high"] > inside["high"] and extension["low"] > inside["low"]
+    assert down or up
+    level = inside["high"] if down else inside["low"]
+    record = lambda b: {"date": utc_day(b["time"]), "close_time": b["close_time"],
+                        **{k:b[k] for k in ("open", "high", "low", "close")}}
+    result = {"method": "hoshi-inside-extension-1", "inside_date": inside_date,
+              "mother": record(mother), "inside": record(inside), "extension": record(extension),
+              "known_at": extension["close_time"], "reclaim_direction": "above" if down else "below",
+              "reclaim_level": level, "orders_enabled": False, "win_probability": None}
+    future = bars[i+2:i+5]
+    if len(future) != 3:
+        return {**result, "outcome_status": "incomplete", "outcome": None}
+    confirming = next((b for b in future if (b["close"] > level if down else b["close"] < level)), None)
+    return {**result, "outcome_status": "observed", "outcome": {
+        "available_at": future[-1]["close_time"], "observation_bars": 3,
+        "subsequent_closes": [record(b) for b in future],
+        "first_confirmation": record(confirming) if confirming else None}}
+
+
+def gap_summary(bars):
+    body_gaps = full_range_gaps = 0
+    for prior, current in zip(bars, bars[1:]):
+        body_gaps += (min(current["open"],current["close"]) > max(prior["open"],prior["close"])
+                      or max(current["open"],current["close"]) < min(prior["open"],prior["close"]))
+        full_range_gaps += current["low"] > prior["high"] or current["high"] < prior["low"]
+    return {"method": "hoshi-strict-adjacent-gaps-1", "window_start": utc_day(bars[0]["time"]),
+            "window_end": utc_day(bars[-1]["time"]), "adjacent_comparisons": len(bars)-1,
+            "strict_real_body_gaps": body_gaps, "strict_full_range_gaps": full_range_gaps,
+            "gap_magnitude_filter": None, "pattern_success_rate": None}
+
+
 def check_receipt(payload, root):
     assert payload["schema_version"] == "hoshi-v3-pattern-evidence-1"
     assert payload["source_receipt"] == SOURCE
@@ -204,4 +247,8 @@ def check_receipt(payload, root):
         assert harmonic_case(windows[entry["source_window_sha256"]], entry["case"]["dates"]) == entry["case"]
     for entry in payload.get("pattern_studies", []):
         assert candle_event_study(windows[entry["source_window_sha256"]]) == entry["case"]
+    for entry in payload.get("rare_cases", []):
+        assert inside_extension_case(windows[entry["source_window_sha256"]], entry["case"]["inside_date"]) == entry["case"]
+    for entry in payload.get("gap_summaries", []):
+        assert gap_summary(windows[entry["source_window_sha256"]]) == entry["case"]
     return windows

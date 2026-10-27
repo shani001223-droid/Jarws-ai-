@@ -9,8 +9,8 @@ entire branch was already deployed. Production V2 remains a separate release.
 
 ## Current measured progress
 
-**Day 1: completed 12 of 49 planned knowledge chapters — 24.49%; 37 chapters,
-75.51% of the declared curriculum, remain.**
+**Day 1: completed 13 of 49 planned knowledge chapters — 26.53%; 36 chapters,
+73.47% of the declared curriculum, remain.**
 
 The denominator is the versioned, expandable file manifest in
 `knowledge_base/manifest.json`. Scope revision 2 explicitly expands the initial
@@ -33,7 +33,7 @@ topics require an explicit manifest/progress revision, never silent omission.
 | `01_MARKET_STRUCTURE/breakouts_retests_and_regimes.md` | Source-checked; frozen prior-20-bar boundaries and real contact/no-contact/failure cases; event and later outcome clocks are separate |
 | `01_MARKET_STRUCTURE/auction_theory_and_microstructure.md` | Source-checked; matching/auction/profile distinctions and real 2010/2014/2020 episodes; raw historical queue/feed gaps disclosed |
 | `02_CANDLESTICK_AND_CHART_PATTERNS/candlestick_pattern_catalogue.md` | Source-checked; core families, explicit geometric rule versions and three replayed dated examples; no library-output probability claims |
-| `02_CANDLESTICK_AND_CHART_PATTERNS/rare_candlestick_and_gap_variants.md` | Newly declared pending scope expansion; no placeholder counted as complete |
+| `02_CANDLESTICK_AND_CHART_PATTERNS/rare_candlestick_and_gap_variants.md` | Source-checked; rare family distinctions, exact gap definitions and three actual inside-extension cases; absent strict full-range gaps remain absence, not success |
 | `02_CANDLESTICK_AND_CHART_PATTERNS/classical_chart_patterns.md` | Source-checked; three actual two-turn cases, delayed activation, absence and cancellation before a later break; no simulated fills |
 | `02_CANDLESTICK_AND_CHART_PATTERNS/harmonic_and_geometric_patterns.md` | Source-checked; attributed framework distinctions, original leg algebra and three measured negative cases; no complete recognizer or probability claim |
 | `02_CANDLESTICK_AND_CHART_PATTERNS/pattern_testing_and_failures.md` | Source-checked; exhaustive scans within three bounded windows, adverse/overlapping/incomplete outcomes and hypothetical cost sensitivity; not independent holdout or account returns |
@@ -86,6 +86,9 @@ topics require an explicit manifest/progress revision, never silent omission.
 - **28 October, Day 1:** completed `harmonic_and_geometric_patterns.md` (2282 substantive words). Checked public creator definitions without copying proprietary materials or adopting promotional accuracy claims. Three real consecutive-pivot examples include a near single ratio with incompatible geometry; all remain unvalidated with null win probability. Source contradictions are disclosed rather than inventing a discovery year or unified variant. Twenty evidence regressions passed locally, including unconfirmed/substituted-anchor rejection and no false certification. Prior [9bcbbcd2](https://github.com/shani001223-droid/Jarws-ai-/commit/9bcbbcd2267e9b9478bd388c4591a161e5d917cf) passed [actual curriculum/evidence CI 40599169629](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40599169629). Next declared chapter: `pattern_testing_and_failures.md`; integration/release remain pending.
 
 - **28 October, Day 1:** completed `pattern_testing_and_failures.md` (2046 substantive words). Exhaustively measured the fixed bullish-body-engulfing predicate within the existing three source windows: 57 detections, 56 complete five-bar endpoints and one explicitly missing endpoint, with all adverse cases and overlaps retained. The 2022 sample mean is negative; 2020 has a negative median and a near-zero raw mean that turns negative under an explicitly hypothetical deduction. These are descriptive, already inspected samples, not independent holdouts, fills or portfolio PnL. Added zero-event/incomplete-event and exhaustive-ledger regressions: all 22 offline evidence tests passed locally. Prior [6e3fcdbe](https://github.com/shani001223-droid/Jarws-ai-/commit/6e3fcdbede26443d333666b2b524c4686a4be2c0) passed [actual curriculum/evidence CI 40599736342](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40599736342). Next declared chapter is `rare_candlestick_and_gap_variants.md`; runtime retrieval, weighted strategy and release gates remain pending.
+
+
+- **28 October, Day 1:** completed `rare_candlestick_and_gap_variants.md` (2812 substantive words), covering compound definitions and body/session/full-range gap distinctions. Three genuine BTCUSDT inside-extension cases preserve no confirmation, a confirmation followed by return, and a late close after unconfirmed wick crossings. Across 608 adjacent comparisons there are 88 unfiltered body gaps and zero strict full-range gaps; no gap success rate is invented. The original detector is explicitly not TA-Lib parity. All 24 offline evidence regressions passed locally. Prior [ad89205f](https://github.com/shani001223-droid/Jarws-ai-/commit/ad89205f67166b7806afff0d32f802b11e0d8008) passed [actual curriculum/evidence CI 40600340588](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40600340588). Current curriculum: 13/49 (26.53%); the next declared chapter is `03_SUPPLY_DEMAND_ORDERBLOCKS/supply_demand_zones.md`. Source completion is separate from pending runtime/release integration.
 
 ## Completion and release rules
 

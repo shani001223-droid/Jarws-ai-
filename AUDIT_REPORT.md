@@ -250,3 +250,8 @@ Added `harmonic_and_geometric_patterns.md` with 2282 substantive words, limited 
 ## V3 pattern testing and retained failures — 28 October 2026
 
 Added `pattern_testing_and_failures.md` with 2046 substantive words and three genuine dated source-window studies. Preserved all 57 detections, 56 complete endpoints, one missing endpoint and adverse/overlapping results. Baselines and arbitrary cost deductions are explicitly descriptive, not account PnL, measured fees or independent performance; win_probability and strategy_pnl remain null. All 22 offline evidence regressions passed locally, including empty/incomplete outcomes and ledger corruption. Source-checked curriculum: 12/49 (24.49%) of scope revision 2; rare/gap expansion, runtime integration and exact-head release remain pending. Prior `6e3fcdbede26443d333666b2b524c4686a4be2c0` passed actual CI 40599736342. No production or unrelated project state changed.
+
+
+## V3 rare candles and gap distinctions — 28 October 2026
+
+Added `rare_candlestick_and_gap_variants.md` with 2812 substantive words and checked primary definitions. Three actual dated BTCUSDT cases preserve absent, transient and delayed closing confirmation. Added exact, unfiltered body/full-range gap diagnostics: 88 body gaps, zero full-range gaps over 608 comparisons, with no inferred success probability. Original Hoshi geometry is separate from native-library parity. All 24 offline evidence regressions passed locally. Source-checked curriculum: 13/49 (26.53%), scope revision 2; runtime/release gates remain pending. Prior `ad89205f67166b7806afff0d32f802b11e0d8008` passed actual CI 40600340588. No main, backup, V2 controls or unrelated roadmap changes.

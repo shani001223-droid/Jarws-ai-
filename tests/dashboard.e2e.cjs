@@ -689,8 +689,36 @@ async function main() {
     assert.equal(await page.locator('#sourceResearchResult a').innerText(),
       '<img src=x onerror=alert(1)>');
     assert.equal(apiMessages.length,beforeSourceNews,'Fixed-source news must not call LLM');
+    // Focus Home must work on an actual narrow mobile browser independently
+    // of existing full-workspace tests. No external assets are required to
+    // render the CSS orb; existing tools are preserved behind Settings.
+    const focusContext=await browser.newContext({viewport:{width:390,height:844}});
+    await focusContext.addInitScript(()=>{
+      try{localStorage.setItem('hoshiVoiceReplies','false')}catch(_){}
+    });
+    await focusContext.route('https://jarws-ai-2.onrender.com/**',route=>{
+      const endpoint=new URL(route.request().url()).pathname;
+      return route.fulfill({status:200,headers:{'Access-Control-Allow-Origin':'*','Content-Type':'application/json'},body:JSON.stringify(endpoint==='/health'?{ok:true,ai_connected:true}:{})});
+    });
+    const focusPage=await focusContext.newPage();
+    focusPage.on('pageerror',error=>pageErrors.push(error.message));
+    await focusPage.goto(url,{waitUntil:'domcontentloaded'});
+    await focusPage.locator('.focus-core').waitFor({state:'visible'});
+    assert.equal(await focusPage.locator('.nightroom.focus-mode').count(),1);
+    assert.equal(await focusPage.locator('[data-tab="chat"]').isVisible(),false);
+    assert.equal(await focusPage.locator('[data-tab="settings"]').isVisible(),true);
+    const focusBackground=await focusPage.evaluate(()=>getComputedStyle(document.querySelector('#nightroom')).backgroundImage);
+    assert.equal(focusBackground.includes('url('),false,'Focus mode must not download or display room/character images');
+    await focusPage.locator('[data-tab="settings"]').click();
+    assert.match(await focusPage.locator('#focusModeToggle').innerText(),/ON/);
+    await focusPage.locator('#focusModeToggle').click();
+    assert.equal(await focusPage.locator('.nightroom.focus-mode').count(),0);
+    assert.equal(await focusPage.locator('[data-tab="chat"]').isVisible(),true);
+    await focusPage.locator('[data-tab="chat"]').click();
+    assert.equal(await focusPage.locator('#commandInput').isVisible(),true);
+    await focusContext.close();
     assert.deepEqual(pageErrors,[]);
-    console.log('PASS — nightroom layout, chat, voice settings, tabs and narrow phone widths');
+    console.log('PASS — minimal black animated focus home and full tool access on mobile');
   } finally {
     if (browser) await browser.close();
     await new Promise(resolve => server.close(resolve));

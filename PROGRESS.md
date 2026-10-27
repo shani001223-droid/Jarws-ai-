@@ -9,8 +9,8 @@ entire branch was already deployed. Production V2 remains a separate release.
 
 ## Current measured progress
 
-**Day 1: completed 15 of 49 planned knowledge chapters — 30.61%; 34 chapters,
-69.39% of the declared curriculum, remain.**
+**Day 1: completed 16 of 49 planned knowledge chapters — 32.65%; 33 chapters,
+67.35% of the declared curriculum, remain.**
 
 The denominator is the versioned, expandable file manifest in
 `knowledge_base/manifest.json`. Scope revision 2 explicitly expands the initial
@@ -39,6 +39,8 @@ topics require an explicit manifest/progress revision, never silent omission.
 | `02_CANDLESTICK_AND_CHART_PATTERNS/pattern_testing_and_failures.md` | Source-checked; exhaustive scans within three bounded windows, adverse/overlapping/incomplete outcomes and hypothetical cost sensitivity; not independent holdout or account returns |
 | `03_SUPPLY_DEMAND_ORDERBLOCKS/supply_demand_zones.md` | Source-checked; causal pivot-wick geometry and three actual contact/no-contact/invalidation cases; no hidden-order inference or fill claim |
 | `03_SUPPLY_DEMAND_ORDERBLOCKS/orderblock_identification_and_validation.md` | Source-checked; audited existing V2 formation arithmetic on actual daily examples, distinct gap/block invalidation and no-return outcomes; no full runtime or canonical creator-method certification |
+| `03_SUPPLY_DEMAND_ORDERBLOCKS/mitigation_breakers_and_retests.md` | Pending: original lesson body/captions unavailable at two exact URLs recorded in manifest; third-party ASR summaries are not substituted as primary proof |
+| `03_SUPPLY_DEMAND_ORDERBLOCKS/execution_and_zone_failure_cases.md` | Source-checked; three real dated path/absence/failure cases, hypothetical sizing, same-bar ambiguity, source-time and execution limitations; no fills or runtime replay claimed |
 | Remaining curriculum documents | Pending; no empty placeholder chapters counted as complete |
 | Brain loader and runtime knowledge bundle | Pending — new source chapters are not yet consumed by Hoshi |
 | 40/20/20/20 history/liquidity/structure/global-flow engine | Pending — weights will mean evidence coverage, not an invented win probability |
@@ -97,6 +99,10 @@ topics require an explicit manifest/progress revision, never silent omission.
 
 
 - **28 October, Day 1:** completed `orderblock_identification_and_validation.md` (2148 substantive words). Audited the existing V2 origin/body/break/gap formation convention without changing runtime. Three real daily BTCUSDT cases distinguish a surviving closing boundary with a lower wick and filled gap, an absent return, and a bearish first-contact failure. Anonymous order-level and actual iceberg evidence are distinguished from OHLC labels; original licensed creator-course parity remains an explicit gap. All 30 offline evidence regressions passed locally, including formation-clock and fabricated-origin checks. Prior [bb350300](https://github.com/shani001223-droid/Jarws-ai-/commit/bb35030063e62e0c34d7e867e2286249557613e1) passed [actual curriculum/evidence CI 40605147178](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40605147178). Current curriculum: 15/49 (30.61%); next is `mitigation_breakers_and_retests.md`. Runtime/release gates remain pending.
+
+
+- **28 October, Day 1:** completed independent `execution_and_zone_failure_cases.md` (2212 substantive words) with three genuine dated BTCUSDT cases. Historical OHLC facts are distinct from explicitly hypothetical order instructions; same-bar entry/stop/target coverage, absent return and first-contact invalidation retain unknown fills and null PnL. Checked current primary order/filter documentation, without inventing historical symbol filters or fee tiers. All 30 offline evidence regressions passed locally. Prior [fcafafe2](https://github.com/shani001223-droid/Jarws-ai-/commit/fcafafe2a39e8526f8b38a4d302ecc81cbd68691) passed [actual curriculum/evidence CI 40605486533](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40605486533). Curriculum: 16/49 (32.65%); 33 chapters remain.
+- **Exact source gap, retained pending:** `mitigation_breakers_and_retests.md` has not been written or counted. Primary lesson `https://www.youtube.com/watch?v=FOUzW0QmsfI` repeatedly failed retrieval; `https://www.youtube.com/watch?v=UrS-mtGHtAA` returned its title and navigation without lesson body/captions. Third-party ASR pages were used only to discover original URLs, not as primary proof of technical definitions. These exact gaps are recorded in the manifest; do not call a generic support/resistance flip a certified creator breaker. Recheck accessible original material in a later run while continuing independent pending work, next `04_SMC_COMPLETE/bos_choch_and_displacement.md` if the lesson gap persists. Scope remains 49, including this uncompleted chapter. Runtime/release integration remains pending; main is unmerged and backup preserved.
 
 ## Completion and release rules
 

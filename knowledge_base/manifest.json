@@ -115,11 +115,29 @@
     },
     {
       "path": "knowledge_base/03_SUPPLY_DEMAND_ORDERBLOCKS/mitigation_breakers_and_retests.md",
-      "status": "pending"
+      "status": "pending",
+      "source_review": {
+        "reviewed_on": "2026-10-28",
+        "status": "primary_lesson_content_unavailable",
+        "attempts": [
+          {
+            "url": "https://www.youtube.com/watch?v=FOUzW0QmsfI",
+            "result": "Repeated primary watch-page retrieval failed; original lesson body/captions not obtained."
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=UrS-mtGHtAA",
+            "result": "Primary title retrieved, but body contains navigation only; original lesson/captions unavailable."
+          }
+        ],
+        "remaining_requirement": "Check original creator definitions and distinguish mitigation/breaker construction before writing and counting this chapter. Third-party ASR summaries are not accepted as primary technical evidence. No placeholder or canonical recognizer is counted as delivered."
+      }
     },
     {
       "path": "knowledge_base/03_SUPPLY_DEMAND_ORDERBLOCKS/execution_and_zone_failure_cases.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2212,
+      "sha256": "1af0fadc799a655aea60e86505016fdd67484c7fddc88527bd30142b436648ce"
     },
     {
       "path": "knowledge_base/04_SMC_COMPLETE/bos_choch_and_displacement.md",

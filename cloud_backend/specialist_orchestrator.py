@@ -20,10 +20,12 @@ try:
     from .ad_studio import CATALOG
     from .artifact_verifier import verify_ad_pack
     from .role_delegation import run_product_ad_roles
+    from .output_validation import validate_campaign_zip, OutputFormatError
 except ImportError:  # Direct Uvicorn working-directory imports.
     from ad_studio import CATALOG
     from artifact_verifier import verify_ad_pack
     from role_delegation import run_product_ad_roles
+    from output_validation import validate_campaign_zip, OutputFormatError
 
 
 _REQUESTS = {
@@ -159,6 +161,15 @@ def _package(artifacts: list[tuple[str, bytes]]) -> tuple[bytes, dict]:
                 if archive.read(key + ".zip") != data:
                     raise SpecialistError("campaign_verification_failed")
     except (BadZipFile, OSError, ValueError, EOFError):
+        raise SpecialistError("campaign_verification_failed") from None
+    # Task 35: a second, format-focused validator re-opens the finished
+    # archive and verifies the manifest, nested PNGs and honest storyboard.
+    # A hash or the producer's own success flag is not sufficient evidence.
+    try:
+        format_evidence = validate_campaign_zip(payload)
+        if format_evidence["products"] != [key for key, _ in artifacts]:
+            raise SpecialistError("campaign_verification_failed")
+    except (OutputFormatError, SpecialistError):
         raise SpecialistError("campaign_verification_failed") from None
     return payload, manifest
 

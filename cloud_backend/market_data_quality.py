@@ -157,10 +157,12 @@ def verify_spot_market(symbol: str, interval: str, binance_payload,
         raise MarketDataQualityError("stale_fetch")
     last = first[-1]
     # Real Binance quote volume (USDT) is separately checked against OHLC.
-    quote_volume = _number(binance_payload[-1][7])
-    if binance_payload[-1][6] >= now_ms:
-        # The final row is still forming; last closed row precedes it.
-        quote_volume = _number(binance_payload[-2][7])
+    # Use validated open-time identity rather than comparing raw API types.
+    # The provider may encode integer timestamps as decimal strings.
+    final_closed_row = (binance_payload[-1]
+                        if int(binance_payload[-1][0]) == last.time
+                        else binance_payload[-2])
+    quote_volume = _number(final_closed_row[7])
     return {
         "symbol": symbol, "interval": interval, "market": "spot",
         "mode": "public-market-data-quality", "status": "verified_sources_agree",

@@ -34,6 +34,12 @@ live data guarantee. Only trusted validated closed bars are accepted.
 Provider timestamps are checked for freshness before analysis.
 
 Tests: tests/test_paper_risk.py; real Uvicorn route smoke in the existing
-Docker backend workflow. GitHub CI links and completion checkbox belong
-ONLY in HOSHI_60_TASK_MASTER_ROADMAP.md after final checks pass.
-Realme Note 50, Render production, OpenJarvis and Task 06 remain pending.
+Docker backend workflow. Python/Node/Playwright passed on descendant
+53211a50f06970d7729afb82e00640f42a7e56d0:
+https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40506953064 .
+Docker build, Uvicorn health and Task 41 HTTP 422 smoke passed on code commit
+3ec43676b8956aa39cf677c4866c05f34d87d8cd:
+https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40506668826 .
+Task 41 is checked only in the canonical roadmap. Mock/CI tests are not
+live-provider or production acceptance. Realme Note 50, Render production,
+OpenJarvis and Task 06 remain pending.

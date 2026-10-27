@@ -5,7 +5,7 @@
 
 ## Current release / review routing (27 October 2026)
 
-Production main now includes PR #24, merged as `1a0f532afb34d5f3f1d939b2daef86ec9fd46e29`; the existing Render frontend and primary backend were verified live. See [release evidence](HOSHI_RELEASE_PRECHECK.md). The development branch remains `hoshi/dnd-foundation-20261026`. **PR #24 is merged, not an active draft**: first find the current open PR for this branch; create at most one successor draft when new changes require review. Historical PR #24 references below describe prior development evidence. Do not create a second project or reset the roadmap.
+Production main now includes PR #24, merged as `1a0f532afb34d5f3f1d939b2daef86ec9fd46e29`; the existing Render frontend and primary backend were verified live. See [release evidence](HOSHI_RELEASE_PRECHECK.md). The development branch remains `hoshi/dnd-foundation-20261026`. **PR #24 is merged, not an active draft**: first find the current open PR for this branch; create at most one successor draft PR when new changes require review. Historical PR #24 references below describe prior development evidence. Do not create a second project or reset the roadmap.
 
 ## 1. Identity, history and final scope
 

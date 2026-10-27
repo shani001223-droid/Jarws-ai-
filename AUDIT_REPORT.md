@@ -255,3 +255,8 @@ Added `pattern_testing_and_failures.md` with 2046 substantive words and three ge
 ## V3 rare candles and gap distinctions — 28 October 2026
 
 Added `rare_candlestick_and_gap_variants.md` with 2812 substantive words and checked primary definitions. Three actual dated BTCUSDT cases preserve absent, transient and delayed closing confirmation. Added exact, unfiltered body/full-range gap diagnostics: 88 body gaps, zero full-range gaps over 608 comparisons, with no inferred success probability. Original Hoshi geometry is separate from native-library parity. All 24 offline evidence regressions passed locally. Source-checked curriculum: 13/49 (26.53%), scope revision 2; runtime/release gates remain pending. Prior `ad89205f67166b7806afff0d32f802b11e0d8008` passed actual CI 40600340588. No main, backup, V2 controls or unrelated roadmap changes.
+
+
+## V3 supply/demand zone receipt — 28 October 2026
+
+Added `supply_demand_zones.md` with 2228 substantive words, checked primary references and three genuine dated BTCUSDT pivot-wick cases. New offline receipt stores delayed feature availability, fixed twenty-bar outcomes, a noncontact case and first-contact invalidation; fills, strategy PnL and institutional intent remain unknown. Three added causal/lifecycle/corruption regressions bring the local passing evidence suite to 27. Curriculum: 14/49 (28.57%); runtime and release gates pending. Prior `27ce58e34ecfa7ae0618aeda95b2fdeb83756a1b` passed actual CI 40604738836. No V2 runtime, main, backup, identity/Stop/privacy/voice or unrelated roadmap changes.

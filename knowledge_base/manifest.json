@@ -101,7 +101,10 @@
     },
     {
       "path": "knowledge_base/03_SUPPLY_DEMAND_ORDERBLOCKS/supply_demand_zones.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2228,
+      "sha256": "39283c9c1a88e321f65e4b1a63e53ffed78425dab155282b1bec150f3a46b073"
     },
     {
       "path": "knowledge_base/03_SUPPLY_DEMAND_ORDERBLOCKS/orderblock_identification_and_validation.md",
@@ -268,6 +271,11 @@
       "path": "knowledge_base/02_CANDLESTICK_AND_CHART_PATTERNS/pattern_observations_20261028.json",
       "kind": "pattern_cases",
       "sha256": "740372217e102c1558d18502e6ae2a9132071dc153721c80f5ae227394edaeb6"
+    },
+    {
+      "path": "knowledge_base/03_SUPPLY_DEMAND_ORDERBLOCKS/zone_observations_20261028.json",
+      "kind": "zone_cases",
+      "sha256": "7792ffc995e8783c59288c3bc92dd75c996ecfcbccd4861b1f73b73bed431598"
     }
   ],
   "scope_history": [

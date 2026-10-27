@@ -158,3 +158,7 @@ These are **reference filenames**, not files automatically imported from Library
 - [Independent spot market data quality gate](HOSHI_MARKET_DATA_QUALITY.md)
 
 **Any new feature belongs inside this one project and must be linked back here.**
+
+## Minimal focus interface and quick-reply latency
+- Verified development-only black animated CSS core, Settings toggle restoring all existing tools, Android-friendly Stop control, and distinct short-vs-long provider time budgets: [HOSHI_FOCUS_AND_SPEED.md](HOSHI_FOCUS_AND_SPEED.md).
+- Mobile Chromium tests and Docker smoke passed as linked in that note; no Realme Note 50 latency benchmark, production merge/deploy, or 0.1-second guarantee. Do not replace the user-requested minimal orb with a girl/room background by default.

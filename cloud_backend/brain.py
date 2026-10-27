@@ -113,6 +113,8 @@ def trading_context(message: str) -> str:
             "market", "candlestick", "candle", "fvg", "order block", "smc", "ict",
             "liquidity", "bsl", "ssl", "rsi", "ema", "vwap", "atr", "dxy", "cot",
             "wyckoff", "elliott", "killzone", "kill zone", "silver bullet", "confluence",
+            "bonds", "bond yields", "intermarket", "money flow", "risk management",
+            "fair value gap", "order flow", "turtle soup", "trading psychology",
             "stop loss", "take profit", "ٹریڈنگ", "مارکیٹ")
     if not any(_matches(word, text) for word in gate):
         return ""

@@ -162,6 +162,25 @@ These are **reference filenames**, not files automatically imported from Library
 
 **Any new feature belongs inside this one project and must be linked back here.**
 
+## Trading knowledge / confluence V2 extension (27 Oct 2026)
+
+The existing development branch now includes the user's requested ten-module
+curriculum plus corrected 1602–2025 history in root `modules/`, a hash-checked
+backend knowledge bundle/loader, `HOSHI_SYSTEM_PROMPT_FINAL.txt`, and
+`cloud_backend/strategy_engine.py`. Existing `cloud_backend/main.py` exposes
+`/history`, read-only `/learn`, and `/confluence_score`. Relevant lessons reach
+both full and short voice provider prompts; this is retrieval, not model training.
+See [the V2 API/formula guide](HOSHI_TRADING_V2.md) and
+[the audit / commit evidence](AUDIT_REPORT.md).
+
+The five 20-point factors are HTF trend, liquidity reference/target,
+discount/premium plus OB, later FVG retest and DST-aware New York time. The
+0–100 result is rule coverage, not win probability, 99.999% accuracy, profitable
+alpha or a real order. Thirty chart links are explicitly conditional inspection
+exercises, not verified current setups. No production merge, new paid model,
+live macro/order-flow feed or physical phone acceptance is implied. Existing
+task checkboxes remain governed solely by the canonical 60-task roadmap.
+
 ## Minimal focus interface and quick-reply latency
 - Verified development-only black animated CSS core, Settings toggle restoring all existing tools, Android-friendly Stop control, and distinct short-vs-long provider time budgets: [HOSHI_FOCUS_AND_SPEED.md](HOSHI_FOCUS_AND_SPEED.md).
 - Mobile Chromium tests and Docker smoke passed as linked in that note; no Realme Note 50 latency benchmark, production merge/deploy, or 0.1-second guarantee. Do not replace the user-requested minimal orb with a girl/room background by default.

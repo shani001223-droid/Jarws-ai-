@@ -4,6 +4,8 @@
 
 **Current structure:** one GitHub repository with web frontend, Python backend, Android bridge, verified tools and user-approved design assets. New work goes to the reviewed Hoshi development branch ([draft PR #24](https://github.com/shani001223-droid/Jarws-ai-/pull/24)); it is **not automatically live** on Render. Do not duplicate the project or silently merge production changes.
 
+**Trading V2 development update (27 Oct 2026):** [audit and commit evidence](AUDIT_REPORT.md), [ten-module curriculum + history](modules/), and [exact API/rules/deployment guide](HOSHI_TRADING_V2.md). Adds `/history`, `/learn`, `/confluence_score`, integrity-checked knowledge retrieval and a five-factor 0–100 **rule-coverage** score. It is paper research, not calibrated accuracy or real trading. Older interface/voice descriptions below are historical; current master decisions take precedence.
+
 ---
 
 ## Free public API integrations (read-only, zero new API keys)

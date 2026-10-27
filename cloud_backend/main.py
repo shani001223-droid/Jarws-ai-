@@ -23,12 +23,16 @@ try:
     from .market_structure import analyze_market_structure, MarketStructureError
     from .market_indicators import analyze_market_indicators, MarketIndicatorsError
     from .setup_assessment import assess_spot_setup, SetupAssessmentError
+    from .brain import load_knowledge, knowledge_index, get_lesson, trading_context, KnowledgeError
+    from .strategy_engine import confluence_score, ConfluenceError
 except ImportError:
     from trading_research import closed_candles, research, backtest, SimulationConfig
     from market_data_quality import public_urls, verify_spot_market, MarketDataQualityError
     from market_structure import analyze_market_structure, MarketStructureError
     from market_indicators import analyze_market_indicators, MarketIndicatorsError
     from setup_assessment import assess_spot_setup, SetupAssessmentError
+    from brain import load_knowledge, knowledge_index, get_lesson, trading_context, KnowledgeError
+    from strategy_engine import confluence_score, ConfluenceError
 try:
     from .ad_studio import create_ad_pack
     from .artifact_verifier import verify_ad_pack, ArtifactVerificationError
@@ -128,6 +132,44 @@ def agent_route(payload: AgentRouteRequest):
 
 class GoalSpecRequest(BaseModel):
     message: str = Field(min_length=1, max_length=4000)
+
+
+def _knowledge_result(module_id: Optional[str] = None):
+    try:
+        return get_lesson(module_id) if module_id is not None else knowledge_index()
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Unknown trading lesson. Use GET /learn for IDs.") from None
+    except KnowledgeError:
+        raise HTTPException(status_code=503, detail="Versioned trading knowledge unavailable.") from None
+
+
+@app.get("/history")
+def trading_history(response: Response):
+    """Read the versioned market timeline, not a user's private chat history."""
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    return _knowledge_result("history")
+
+
+@app.get("/learn")
+def trading_learn(response: Response, module: Optional[str] = Query(default=None, max_length=64)):
+    """List fixed lesson IDs, or retrieve one. Never trains or writes memory."""
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    return _knowledge_result(module)
+
+
+class LearnRequest(BaseModel):
+    model_config = {"extra": "forbid"}
+    module: str = Field(min_length=1, max_length=64)
+
+
+@app.post("/learn")
+def trading_learn_post(payload: LearnRequest, response: Response):
+    """Read-only lesson selection; arbitrary content/paths are not accepted."""
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    return _knowledge_result(payload.module)
 
 
 @app.post("/api/agent/spec")
@@ -880,6 +922,11 @@ def assistant(payload: AssistantRequest):
             return AssistantResponse(reply="Jawab: " + computed, mode="calculator",
                                      emotion="happy", speech_text="جواب ہے " + computed + "۔")
         return AssistantResponse(reply="Answer: " + computed, mode="calculator", emotion="happy")
+    try:
+        knowledge_prompt = load_knowledge().system_prompt
+        knowledge_context = trading_context(message)
+    except KnowledgeError:
+        raise HTTPException(status_code=503, detail="Versioned assistant knowledge unavailable.") from None
     brief_spoken = bool(payload.fast and not re.search(
         r"\b(write|draft|likho|banao|bana do|create|code|script|detail|tafseel|explain|samjhao|plan|report|steps|poora|full)\b",
         message, re.I,
@@ -913,7 +960,8 @@ def assistant(payload: AssistantRequest):
     }.get(user_mood, "Use a natural, balanced tone.")
 
     language_hint = (
-        "You are HOSHI, a warm, clever, playful AI companion with a consistent identity. "
+        knowledge_prompt + "\n"
+        + "You are HOSHI, a warm, clever, playful AI companion with a consistent identity. "
         + "Likely user mood: " + user_mood + ". " + mood_guidance + " "
         + style_hint + " "
         "Use the user's language: if they write Roman Urdu, answer in natural Pakistani Roman Urdu; "
@@ -937,6 +985,8 @@ def assistant(payload: AssistantRequest):
 
     # Keep full and fast providers aligned on emotional boundaries.
     language_hint += " " + personality_guardrails(message, user_mood)
+    if knowledge_context:
+        language_hint += "\n\n" + knowledge_context
 
     if str(payload.locale or "").lower().startswith("ur"):
         language_hint += (
@@ -1012,7 +1062,8 @@ def assistant(payload: AssistantRequest):
     quick_groq_problem = None
     if provider_plan.fast_voice_first:
         quick_instruction = (
-            "You are HOSHI, a warm, truthful, playful, respectful AI assistant. "
+            knowledge_prompt + "\n"
+            + "You are HOSHI, a warm, truthful, playful, respectful AI assistant. "
             "Answer the user's actual question in ONE natural short sentence (around 12-22 words). "
             "Do not invent actions or facts. Avoid repetitive greetings, manipulation, or claims of real feelings. "
             + style_hint + " "
@@ -1028,6 +1079,8 @@ def assistant(payload: AssistantRequest):
             quick_instruction = language_hint
         else:
             quick_instruction += " " + personality_guardrails(message, user_mood, concise=True)
+            if knowledge_context:
+                quick_instruction += "\n\n" + knowledge_context
         try:
             quick = make_assistant_response(
                 _groq_reply(request_input, quick_instruction, quick=brief_spoken), "groq", message, payload.locale
@@ -1425,6 +1478,47 @@ def trading_market_indicators(response: Response, symbol: str = "BTCUSDT"):
         result["fetched_at"] = min(stamps)
         result["independently_cross_checked"] = False
         return result
+    finally:
+        _RESEARCH_SLOTS.release()
+
+
+@app.get("/confluence_score")
+def trading_confluence_score(
+    response: Response,
+    symbol: str = Query(default="BTCUSDT", max_length=16),
+    direction: Literal["long", "short"] = Query(default="long"),
+):
+    """Five correlated 0–100 rule-coverage checks from closed public Spot bars.
+
+    Server obtains the candles/time; clients cannot submit pass flags or scores.
+    No account authentication, model request, training, orders or API key.
+    """
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    pair = _research_pair(symbol)
+    if not _RESEARCH_SLOTS.acquire(blocking=False):
+        raise HTTPException(status_code=429, detail="Research busy. Retry shortly.")
+    try:
+        with ThreadPoolExecutor(max_workers=3) as pool:
+            jobs = {tf: pool.submit(_research_history, pair, tf) for tf in ("15m", "1h", "4h")}
+            fetched = {tf: future.result() for tf, future in jobs.items()}
+        now_ms = int(time.time() * 1000)
+        stamps = [stamp for _, stamp in fetched.values()]
+        if (any(isinstance(stamp, bool) or not isinstance(stamp, int)
+                or stamp > now_ms // 1000 + 5 or stamp < now_ms // 1000 - 120 for stamp in stamps)
+                or max(stamps) - min(stamps) > 120):
+            raise HTTPException(status_code=503, detail="Stale sources. No confluence score generated.")
+        result = confluence_score({tf: bars for tf, (bars, _) in fetched.items()}, pair, now_ms, direction)
+        result["source"] = "Binance Spot public closed candles (single venue)"
+        result["fetched_at"] = min(stamps)
+        return result
+    except ConfluenceError:
+        raise HTTPException(status_code=503, detail="Closed-candle confluence verification failed. No score generated.") from None
+    except HTTPException:
+        raise
+    except Exception as exc:
+        _safe_log_failure("trading.confluence", exc)
+        raise HTTPException(status_code=503, detail="Confluence research unavailable. No score generated.") from None
     finally:
         _RESEARCH_SLOTS.release()
 

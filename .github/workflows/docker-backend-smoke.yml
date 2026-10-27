@@ -94,6 +94,31 @@ jobs:
           assert "detail" in payload and "BTCUSDT" in payload["detail"], payload
           print("Task 40 Docker API route registered; unsupported pair rejected")
           PY
+          # Validate knowledge files and timezone data inside the actual image.
+          docker exec -i "$container" python - <<'PY'
+          import json
+          from urllib.request import urlopen
+          from urllib.error import HTTPError
+          from datetime import datetime
+          from brain import load_knowledge
+          from strategy_engine import time_filter
+          assert len(load_knowledge().lessons) == 11
+          for path in ("/history", "/learn?module=ict"):
+              with urlopen("http://127.0.0.1:8000" + path, timeout=5) as response:
+                  result = json.load(response)
+                  assert result["version"] == "hoshi-trading-knowledge-v2"
+                  assert result["orders_enabled"] is False
+                  assert result["training_enabled"] is False
+          try:
+              urlopen("http://127.0.0.1:8000/confluence_score?symbol=SOLUSDT", timeout=5)
+              raise AssertionError("Unsupported pair must fail before network")
+          except HTTPError as exc:
+              assert exc.code == 422
+          for timestamp in ("2026-07-07T14:30:00+00:00", "2026-01-06T15:30:00+00:00"):
+              now = int(datetime.fromisoformat(timestamp).timestamp()*1000)
+              assert time_filter(now)["active_windows"] == ["silver_bullet_am"]
+          print("V2 Docker lessons, HTTP routes and NY DST timezone data OK")
+          PY
           # Task 34: verify the actual built image can import and execute
           # a scoped offline specialist without a model key or external service.
           docker exec -i "$container" python - <<'PY'

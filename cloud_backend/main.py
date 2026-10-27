@@ -23,6 +23,7 @@ try:
     from .market_structure import analyze_market_structure, MarketStructureError
     from .market_indicators import analyze_market_indicators, MarketIndicatorsError
     from .setup_assessment import assess_spot_setup, SetupAssessmentError
+    from .paper_risk import assess_paper_risk, PaperRiskError, validate_paper_settings
     from .brain import load_knowledge, knowledge_index, get_lesson, trading_context, KnowledgeError
     from .strategy_engine import confluence_score, ConfluenceError
 except ImportError:
@@ -31,6 +32,7 @@ except ImportError:
     from market_structure import analyze_market_structure, MarketStructureError
     from market_indicators import analyze_market_indicators, MarketIndicatorsError
     from setup_assessment import assess_spot_setup, SetupAssessmentError
+    from paper_risk import assess_paper_risk, PaperRiskError, validate_paper_settings
     from brain import load_knowledge, knowledge_index, get_lesson, trading_context, KnowledgeError
     from strategy_engine import confluence_score, ConfluenceError
 try:
@@ -1551,6 +1553,46 @@ def trading_setup_assessment(response: Response, symbol: str = "BTCUSDT"):
                 {tf: bars for tf, (bars, _) in fetched.items()}, pair)
         except SetupAssessmentError:
             raise HTTPException(status_code=503, detail="Closed-candle setup verification failed.") from None
+        result["source"] = "Binance Spot public closed candles (single venue)"
+        result["fetched_at"] = min(stamps)
+        return result
+    finally:
+        _RESEARCH_SLOTS.release()
+
+
+@app.get("/api/trading/paper-risk")
+def trading_paper_risk(response: Response, symbol: str = "BTCUSDT",
+                       equity_usdt: float = Query(default=100, ge=10, le=100_000),
+                       risk_pct: float = Query(default=.5, ge=.1, le=1),
+                       fee_bps: float = Query(default=10, ge=1, le=100),
+                       slippage_bps: float = Query(default=5, ge=1, le=100)):
+    """Task 41: hypothetical spot risk/1R/2R only, no order or live fill."""
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    pair = _research_pair(symbol)
+    try:
+        validate_paper_settings(equity_usdt, risk_pct, fee_bps, slippage_bps)
+    except PaperRiskError:
+        raise HTTPException(status_code=422, detail="Invalid paper-only risk settings.") from None
+    if not _RESEARCH_SLOTS.acquire(blocking=False):
+        raise HTTPException(status_code=429, detail="Research busy. Retry shortly.")
+    try:
+        with ThreadPoolExecutor(max_workers=3) as pool:
+            jobs = {tf: pool.submit(_research_history, pair, tf)
+                    for tf in ("15m", "1h", "4h")}
+            fetched = {tf: jobs[tf].result() for tf in jobs}
+        now = int(time.time())
+        stamps = [stamp for _, stamp in fetched.values()]
+        if (any(not isinstance(stamp, int) or isinstance(stamp, bool)
+                or stamp > now + 5 or stamp < now - 120 for stamp in stamps)
+                or max(stamps) - min(stamps) > 120):
+            raise HTTPException(status_code=503, detail="Paper risk sources stale; no proposal.")
+        try:
+            result = assess_paper_risk(
+                {tf: bars for tf, (bars, _) in fetched.items()}, pair,
+                equity_usdt, risk_pct, fee_bps, slippage_bps)
+        except PaperRiskError:
+            raise HTTPException(status_code=503, detail="Paper risk verification failed.") from None
         result["source"] = "Binance Spot public closed candles (single venue)"
         result["fetched_at"] = min(stamps)
         return result

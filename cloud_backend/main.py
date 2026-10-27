@@ -24,6 +24,7 @@ try:
     from .market_indicators import analyze_market_indicators, MarketIndicatorsError
     from .setup_assessment import assess_spot_setup, SetupAssessmentError
     from .paper_risk import assess_paper_risk, PaperRiskError, validate_paper_settings
+    from .annotated_charts import build_annotated_chart, render_annotated_png, AnnotatedChartError
     from .brain import load_knowledge, knowledge_index, get_lesson, trading_context, KnowledgeError
     from .strategy_engine import confluence_score, ConfluenceError
 except ImportError:
@@ -33,6 +34,7 @@ except ImportError:
     from market_indicators import analyze_market_indicators, MarketIndicatorsError
     from setup_assessment import assess_spot_setup, SetupAssessmentError
     from paper_risk import assess_paper_risk, PaperRiskError, validate_paper_settings
+    from annotated_charts import build_annotated_chart, render_annotated_png, AnnotatedChartError
     from brain import load_knowledge, knowledge_index, get_lesson, trading_context, KnowledgeError
     from strategy_engine import confluence_score, ConfluenceError
 try:
@@ -1608,6 +1610,42 @@ def trading_paper_risk(response: Response, symbol: str = "BTCUSDT",
         result["source"] = "Binance Spot public closed candles (single venue)"
         result["fetched_at"] = min(stamps)
         return result
+    finally:
+        _RESEARCH_SLOTS.release()
+
+
+@app.get("/api/trading/annotated-chart")
+def trading_annotated_chart(response: Response, symbol: str = "BTCUSDT",
+                            interval: Literal["15m", "1h", "4h"] = "15m",
+                            output: Literal["json", "png"] = "json"):
+    """Task 42: timestamped spot research PNG/JSON, no orders or fills."""
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    pair = _research_pair(symbol)
+    if not _RESEARCH_SLOTS.acquire(blocking=False):
+        raise HTTPException(status_code=429, detail="Research busy. Retry shortly.")
+    try:
+        with ThreadPoolExecutor(max_workers=3) as pool:
+            jobs = {tf: pool.submit(_research_history, pair, tf)
+                    for tf in ("15m", "1h", "4h")}
+            fetched = {tf: jobs[tf].result() for tf in jobs}
+        now = int(time.time())
+        stamps = [stamp for _, stamp in fetched.values()]
+        if (any(type(stamp) is not int or stamp > now + 5 or stamp < now - 120
+                for stamp in stamps) or max(stamps) - min(stamps) > 120):
+            raise HTTPException(status_code=503, detail="Chart sources stale; no export generated.")
+        try:
+            chart = build_annotated_chart(
+                {tf: bars for tf, (bars, _) in fetched.items()}, pair, interval, min(stamps))
+            if output == "png":
+                png = render_annotated_png(chart)
+                return Response(content=png, media_type="image/png", headers={
+                    "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff",
+                    "Content-Disposition": 'attachment; filename="Hoshi_' + pair + '_' + interval + '_paper_chart.png"',
+                })
+            return chart
+        except AnnotatedChartError:
+            raise HTTPException(status_code=503, detail="Closed-candle chart verification failed.") from None
     finally:
         _RESEARCH_SLOTS.release()
 

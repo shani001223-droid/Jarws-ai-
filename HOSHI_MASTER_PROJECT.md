@@ -165,6 +165,7 @@ These are **reference filenames**, not files automatically imported from Library
 - [Flora ad generator](HOSHI_AGENT_PRODUCT_ADS.md)
 - [Production release and rollback](DEPLOYMENT_ROLLBACK.md)
 - [Spot research rules, formulas and simulation limits](HOSHI_TRADING_RESEARCH.md)
+- [Task 42 closed-candle PNG/JSON chart development and limits](HOSHI_ANNOTATED_CHARTS.md)
 - [Multi-timeframe confirmed swing structure and limits](HOSHI_MARKET_STRUCTURE.md)
 - [Reproducible multi-timeframe technical indicator formulas and limits](HOSHI_MARKET_INDICATORS.md)
 - [Independent spot market data quality gate](HOSHI_MARKET_DATA_QUALITY.md)

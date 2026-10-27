@@ -1,7 +1,7 @@
 # HOSHI AI — ONE MASTER PROJECT
 **Start here. Single canonical index for the whole assistant.**
 
-> Updated: 26 October 2026. This is a unified project map, **not** a declaration that unfinished features work. Keep every future Hoshi/JARVIS discussion, decision, code change, test, build and issue linked to this one repository and this one project file.
+> Updated: 27 October 2026. This is a unified project map, **not** a declaration that unfinished features work. Keep every future Hoshi/JARVIS discussion, decision, code change, test, build and issue linked to this one repository and this one project file.
 
 ## Current release / review routing (27 October 2026)
 

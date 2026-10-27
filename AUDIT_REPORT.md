@@ -20,6 +20,8 @@ PR #24 merged as `1a0f532afb34d5f3f1d939b2daef86ec9fd46e29` and the existing Ren
 
 **Post-release verification:** [PR #28](https://github.com/shani001223-droid/Jarws-ai-/pull/28) corrects obsolete Outfit assertions for the approved core. On pushed test head `1a68b754720e94dfcf375c8b51fdee37a218232a`, actual [live Render browser run 40515342689](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40515342689) and [full regression 40515342724](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40515342724) both passed: 390 Python / 75 Node tests, browser layouts and V2 routes. This receipt update changes documents only and records the previous commit's results; the earlier live-test failure is preserved. Use `[skip render]` when merging the test/document follow-up so unchanged runtime source is not redeployed.
 
+Release receipts were pushed in [df1d51d40820](https://github.com/shani001223-droid/Jarws-ai-/commit/df1d51d40820abf7a06d1f0d6c46571213a8a7ac). The final documentation follow-through also corrects the roadmap's obsolete active-PR heading and master date without changing any task checkbox or claiming phone acceptance.
+
 ## Day 1 — fetched baseline
 
 - Development branch / existing draft PR: `hoshi/dnd-foundation-20261026`, [PR #24](https://github.com/shani001223-droid/Jarws-ai-/pull/24).

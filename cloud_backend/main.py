@@ -41,6 +41,7 @@ try:  # Handles either cloud_backend package import or direct uvicorn main:app.
     from .job_records import JobRecordStore, JobCapacityError, JobStateError
     from .job_queue import ScheduledJobQueue, QueueCapacityError
     from .verified_artifact_store import VerifiedArtifactStore, ArtifactStorageError
+    from .job_reporting import build_job_report
 except ImportError:
     from openjarvis_bridge import ask_openjarvis, endpoint as openjarvis_endpoint, wants_agent, OpenJarvisUnavailable
     from agent_tools import try_calculate
@@ -55,6 +56,7 @@ except ImportError:
     from job_records import JobRecordStore, JobCapacityError, JobStateError
     from job_queue import ScheduledJobQueue, QueueCapacityError
     from verified_artifact_store import VerifiedArtifactStore, ArtifactStorageError
+    from job_reporting import build_job_report
 
 app = FastAPI(title="HOSHI AI Cloud API", version="0.9.1")
 
@@ -267,6 +269,35 @@ def download_job_artifact(job_id: str, request: FastAPIRequest):
         "X-Content-Type-Options": "nosniff",
         "Content-Disposition": 'attachment; filename="flora_ads.zip"',
     })
+
+
+
+@app.get("/api/agent/jobs/{job_id}/report")
+def get_private_job_report(job_id: str, request: FastAPIRequest, response: Response):
+    """Pull-only quiet progress; final success needs rehashed private evidence.
+
+    This endpoint never schedules, sends notifications, starts workers or
+    exposes the operator token to a browser/mobile bundle.
+    """
+    jobs = _private_job_store(request)
+    root = os.getenv("HOSHI_ARTIFACT_ROOT", "").strip()
+    artifacts = None
+    if root:
+        try:
+            artifacts = VerifiedArtifactStore(jobs, root)
+        except Exception as exc:
+            # Still return a review-required report rather than false success.
+            _safe_log_failure("jobs.report_artifacts", exc)
+    try:
+        report = build_job_report(jobs, job_id, artifacts)
+    except Exception as exc:
+        _safe_log_failure("jobs.report", exc)
+        raise HTTPException(status_code=503, detail="Private job report unavailable.") from None
+    if report is None:
+        raise HTTPException(status_code=404, detail="Job not found.")
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    return report
 
 
 

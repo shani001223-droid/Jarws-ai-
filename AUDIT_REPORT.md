@@ -195,3 +195,8 @@ The first merged-source CI (40509641702 / 40509636857) exposed a missing declare
 ## Release candidate verified
 
 Local 390 Python / 75 Node checks and actual GitHub full browser/API, Docker, sandbox and Android build checks passed on `f62237b15ba2cd383c136042fe5c3732973c51b6`. Exact run IDs, retained failures and the remaining Render workspace blocker are in [HOSHI_RELEASE_PRECHECK.md](HOSHI_RELEASE_PRECHECK.md). No production merge/deploy or physical phone acceptance.
+
+
+## V3 chapter receipt — 28 October 2026
+
+Added `all_market_crashes.md` with source-linked dated cases and actual FRED NASDAQ/S&P window observations in companion JSON. Curriculum coverage is 2/48 (4.17%), separate from pending brain/engine/release gates. Initial V3 commit `35f20fc296403cff68d771acd9e743cfdff688c6` passed content-integrity CI run 40579433726. The user clarified that 67 days was a joke; the same continuation task now has no artificial duration cap and pauses after verified completion. No production or global-roadmap change.

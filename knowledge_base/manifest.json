@@ -17,7 +17,10 @@
     },
     {
       "path": "knowledge_base/00_HISTORY_OF_EVERYTHING/all_market_crashes.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2434,
+      "sha256": "fc9dbcfa36b34557e21b197c978e4ecd925a42bafcaea4e7c574ce16c1022c25"
     },
     {
       "path": "knowledge_base/00_HISTORY_OF_EVERYTHING/all_wars_and_market_impact.md",
@@ -208,5 +211,11 @@
     "bounded_brain_loader_and_bundle": "pending",
     "history_liquidity_structure_global_flow_engine": "pending",
     "exact_head_verification_and_release": "pending"
-  }
+  },
+  "data_receipts": [
+    {
+      "path": "knowledge_base/00_HISTORY_OF_EVERYTHING/market_crash_observations_20261028.json",
+      "sha256": "dfea6aa2f69f4a58ed81e2eeff459d58f68ec30ee3e0386cda6ecd6d2602de5d"
+    }
+  ]
 }

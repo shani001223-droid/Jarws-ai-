@@ -1,0 +1,41 @@
+{
+  "reviewed_on": "2026-10-28",
+  "timezone_for_review_date": "Asia/Karachi",
+  "observations": [
+    {
+      "series": "NASDAQCOM",
+      "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=NASDAQCOM&cosd=2000-03-01&coed=2002-10-31",
+      "status": "fetched",
+      "rows": 671,
+      "peak": [
+        "2000-03-10",
+        5048.62
+      ],
+      "later_window_low": [
+        "2002-10-09",
+        1114.11
+      ],
+      "return_pct": -77.93238548355788,
+      "response_sha256": "0952a95b99bd39c696f1c9abb5f418c3d2c76909915bfdfe3ed51565d645c872",
+      "measurement": "Closing price index; requested-window maximum and subsequent minimum. Not a total return or strategy result.",
+      "peak_to_window_low_calendar_days": 943
+    },
+    {
+      "series": "SP500",
+      "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=SP500&cosd=2020-02-01&coed=2020-04-01",
+      "status": "fetched",
+      "rows": 42,
+      "peak": [
+        "2020-02-19",
+        3386.15
+      ],
+      "later_window_low": [
+        "2020-03-23",
+        2237.4
+      ],
+      "return_pct": -33.924959024260595,
+      "measurement": "Closing price index; requested-window maximum and subsequent minimum. Not a total return or strategy result.",
+      "peak_to_window_low_calendar_days": 33
+    }
+  ]
+}

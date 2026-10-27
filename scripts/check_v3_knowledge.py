@@ -7,6 +7,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
+from datetime import date
 from pathlib import Path, PurePosixPath
 import re
 
@@ -64,6 +66,27 @@ def check():
     assert folders == FOLDERS, "Every requested folder family must remain in the declared scope"
     actual = {str(p.relative_to(ROOT)) for p in (ROOT / "knowledge_base").rglob("*.md")}
     assert actual <= seen, "Unmanifested curriculum files: " + str(actual-seen)
+    for receipt in manifest.get("data_receipts", []):
+        rel = PurePosixPath(receipt["path"])
+        assert (len(rel.parts) == 3 and rel.parts[0] == "knowledge_base"
+                and rel.parts[1] in FOLDERS and ".." not in rel.parts
+                and rel.suffix == ".json"), rel
+        raw = (ROOT / str(rel)).read_bytes()
+        assert len(raw) <= 1000000 and hashlib.sha256(raw).hexdigest() == receipt["sha256"], rel
+        payload = json.loads(raw)
+        for item in payload["observations"]:
+            assert item["status"] in ("fetched", "unavailable")
+            if item["status"] == "unavailable":
+                assert "return_pct" not in item, "Missing data cannot become a zero return"
+                continue
+            assert item["series"] in ("NASDAQCOM", "SP500")
+            assert item["url"].startswith("https://fred.stlouisfed.org/graph/fredgraph.csv?")
+            peak_date, peak = item["peak"]
+            trough_date, trough = item["later_window_low"]
+            assert all(type(x) in (int, float) and math.isfinite(x) and x > 0 for x in (peak, trough))
+            assert peak_date <= trough_date and trough <= peak
+            assert math.isclose(item["return_pct"], (trough/peak-1)*100, abs_tol=1e-9)
+            assert item["peak_to_window_low_calendar_days"] == (date.fromisoformat(trough_date)-date.fromisoformat(peak_date)).days
     total = len(manifest["documents"])
     assert total and len(done) <= total
     return {"completed_documents": len(done), "planned_documents": total,

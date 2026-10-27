@@ -80,7 +80,10 @@
     },
     {
       "path": "knowledge_base/02_CANDLESTICK_AND_CHART_PATTERNS/harmonic_and_geometric_patterns.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2282,
+      "sha256": "28271a3ae07b4be8ad9dc06032a401d373d644509a0e0058d9031ae11f6aa73a"
     },
     {
       "path": "knowledge_base/02_CANDLESTICK_AND_CHART_PATTERNS/pattern_testing_and_failures.md",
@@ -258,7 +261,7 @@
     {
       "path": "knowledge_base/02_CANDLESTICK_AND_CHART_PATTERNS/pattern_observations_20261028.json",
       "kind": "pattern_cases",
-      "sha256": "c348daca5cfddeabe6aca0f5d244d013a726d3812081280e503fd05690c33d7b"
+      "sha256": "25ba733987393448cf5c74f90a80b96d83afb34e7f12ae1b924b7503fb28a4c6"
     }
   ],
   "scope_history": [

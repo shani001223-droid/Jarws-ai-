@@ -240,3 +240,8 @@ Added `candlestick_pattern_catalogue.md` with 2600 substantive words and three a
 ## V3 classical-pattern receipt — 28 October 2026
 
 Added `classical_chart_patterns.md` with 2169 substantive words, checked primary education sources and three real dated BTCUSDT cases. The original two-turn measurement retains pivot confirmation delay, frozen neckline, ten-bar horizon and cancellation precedence; no pattern-certified profit or order is asserted. Eighteen offline evidence regressions passed locally. Source-checked curriculum: 10/49 (20.41%), scope revision 2; rare/gap chapter and runtime/release work remain pending. Prior `931f2104d558e7d7f8616cdf6a8381889b719e77` passed actual CI 40598659841. No main, backup, V2 or unrelated project changes.
+
+
+## V3 harmonic geometry receipt — 28 October 2026
+
+Added `harmonic_and_geometric_patterns.md` with 2282 substantive words, limited attributed primary-framework definitions and original ratio/confirmation analysis. Three actual five-pivot cases remain negative/unvalidated; one near ratio does not become certified geometry, a fill or calibrated confidence. Conflicting creator-page details and incomplete full-method access remain explicit. Twenty offline evidence regressions passed locally. Curriculum: 11/49 (22.45%), scope revision 2; all runtime/release gates pending. Prior source `9bcbbcd2267e9b9478bd388c4591a161e5d917cf` passed actual CI 40599169629. Existing source-response hashes, main, backup and V2 controls are preserved.

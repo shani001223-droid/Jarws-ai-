@@ -112,6 +112,38 @@ def two_turn_case(bars, kind, first_date, second_date):
         "eligible_break_before_cancellation": eligible}}
 
 
+def harmonic_case(bars, dates):
+    """Five consecutive alternating pivots; ratio diagnostics, NOT a match.
+
+    Only two necessary Gartley ratios are compared with explicit +/-0.03
+    exploratory tolerance. Passing either/both is not full pattern validation.
+    No projected D price is called an observed fill or confirmed turning point.
+    """
+    assert len(dates) == 5 and len(set(dates)) == 5 and dates == sorted(dates)
+    last = next(i for i, b in enumerate(bars) if utc_day(b["time"]) == dates[-1])
+    assert last+2 < len(bars)
+    points = pivots(bars[:last+3])
+    selected = [p for p in points if utc_day(p["pivot_at"]) in dates]
+    assert len(selected) == 5, "Ambiguous same-bar high/low or unavailable pivot"
+    offset = points.index(selected[0])
+    assert selected == points[offset:offset+5], "Skipping inconvenient pivots is a different method"
+    assert all(a["kind"] != b["kind"] and a["pivot_at"] < b["pivot_at"]
+               for a, b in zip(selected, selected[1:]))
+    x, a, b, c, d = (p["price"] for p in selected)
+    xa, ab, bc, cd = abs(a-x), abs(b-a), abs(c-b), abs(d-c)
+    assert min(xa, ab, bc) > 0
+    ratios = {"AB_over_XA": ab/xa, "BC_over_AB": bc/ab, "CD_over_BC": cd/bc,
+              "AD_over_XA": abs(d-a)/xa, "CD_over_AB": cd/ab}
+    return {"method": "hoshi-five-pivot-ratios-1", "dates": dates, "points": selected,
+            "known_at": bars[last+2]["close_time"], "ratios": ratios,
+            "gartley_necessary_ratio_diagnostics": {
+                "tolerance_absolute_ratio_units": .03,
+                "AB_near_0_618": abs(ratios["AB_over_XA"]-.618) <= .03,
+                "AD_near_0_786": abs(ratios["AD_over_XA"]-.786) <= .03},
+            "classification": "ratio_measurements_only", "pattern_validated": False,
+            "win_probability": None, "orders_enabled": False}
+
+
 def check_receipt(payload, root):
     assert payload["schema_version"] == "hoshi-v3-pattern-evidence-1"
     assert payload["source_receipt"] == SOURCE
@@ -127,4 +159,6 @@ def check_receipt(payload, root):
         case = entry["case"]
         assert two_turn_case(windows[entry["source_window_sha256"]], case["kind"],
                              case["first_date"], case["second_date"]) == case
+    for entry in payload.get("harmonic_cases", []):
+        assert harmonic_case(windows[entry["source_window_sha256"]], entry["case"]["dates"]) == entry["case"]
     return windows

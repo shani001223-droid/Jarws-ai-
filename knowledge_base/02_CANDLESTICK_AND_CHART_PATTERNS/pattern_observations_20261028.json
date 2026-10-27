@@ -281,5 +281,193 @@
         }
       }
     }
+  ],
+  "harmonic_cases": [
+    {
+      "source_window_sha256": "0a8fd6b6cee125cb5de8a199f86c88a5d9dacd572070a2f0999852154f688fea",
+      "case": {
+        "method": "hoshi-five-pivot-ratios-1",
+        "dates": [
+          "2020-06-15",
+          "2020-06-16",
+          "2020-06-20",
+          "2020-06-22",
+          "2020-06-27"
+        ],
+        "points": [
+          {
+            "kind": "low",
+            "price": 8910.45,
+            "pivot_at": 1592265599999,
+            "confirmed_at": 1592438399999
+          },
+          {
+            "kind": "high",
+            "price": 9589.0,
+            "pivot_at": 1592351999999,
+            "confirmed_at": 1592524799999
+          },
+          {
+            "kind": "low",
+            "price": 9170.95,
+            "pivot_at": 1592697599999,
+            "confirmed_at": 1592870399999
+          },
+          {
+            "kind": "high",
+            "price": 9780.0,
+            "pivot_at": 1592870399999,
+            "confirmed_at": 1593043199999
+          },
+          {
+            "kind": "low",
+            "price": 8833.0,
+            "pivot_at": 1593302399999,
+            "confirmed_at": 1593475199999
+          }
+        ],
+        "known_at": 1593475199999,
+        "ratios": {
+          "AB_over_XA": 0.6160931397833612,
+          "BC_over_AB": 1.4568831479488107,
+          "CD_over_BC": 1.554880551678846,
+          "AD_over_XA": 1.1141404465404183,
+          "CD_over_AB": 2.2652792728142606
+        },
+        "gartley_necessary_ratio_diagnostics": {
+          "tolerance_absolute_ratio_units": 0.03,
+          "AB_near_0_618": true,
+          "AD_near_0_786": false
+        },
+        "classification": "ratio_measurements_only",
+        "pattern_validated": false,
+        "win_probability": null,
+        "orders_enabled": false
+      }
+    },
+    {
+      "source_window_sha256": "6d533be481380a79e5ee6ab85436cfa6bac8c5b50ae6ff2080b433901610c1ee",
+      "case": {
+        "method": "hoshi-five-pivot-ratios-1",
+        "dates": [
+          "2021-03-05",
+          "2021-03-13",
+          "2021-03-16",
+          "2021-03-18",
+          "2021-03-25"
+        ],
+        "points": [
+          {
+            "kind": "low",
+            "price": 46300.0,
+            "pivot_at": 1614988799999,
+            "confirmed_at": 1615161599999
+          },
+          {
+            "kind": "high",
+            "price": 61844.0,
+            "pivot_at": 1615679999999,
+            "confirmed_at": 1615852799999
+          },
+          {
+            "kind": "low",
+            "price": 53271.34,
+            "pivot_at": 1615939199999,
+            "confirmed_at": 1616111999999
+          },
+          {
+            "kind": "high",
+            "price": 60129.97,
+            "pivot_at": 1616111999999,
+            "confirmed_at": 1616284799999
+          },
+          {
+            "kind": "low",
+            "price": 50427.56,
+            "pivot_at": 1616716799999,
+            "confirmed_at": 1616889599999
+          }
+        ],
+        "known_at": 1616889599999,
+        "ratios": {
+          "AB_over_XA": 0.5515092640247042,
+          "BC_over_AB": 0.8000585582537978,
+          "CD_over_BC": 1.4146279942204196,
+          "AD_over_XA": 0.7344595985589296,
+          "CD_over_AB": 1.1317852335214507
+        },
+        "gartley_necessary_ratio_diagnostics": {
+          "tolerance_absolute_ratio_units": 0.03,
+          "AB_near_0_618": false,
+          "AD_near_0_786": false
+        },
+        "classification": "ratio_measurements_only",
+        "pattern_validated": false,
+        "win_probability": null,
+        "orders_enabled": false
+      }
+    },
+    {
+      "source_window_sha256": "5860446413d27c8678d93b80ce791940ad4e06b76a512b6e1230f6b4ab19b74f",
+      "case": {
+        "method": "hoshi-five-pivot-ratios-1",
+        "dates": [
+          "2022-05-26",
+          "2022-05-31",
+          "2022-06-03",
+          "2022-06-06",
+          "2022-06-07"
+        ],
+        "points": [
+          {
+            "kind": "low",
+            "price": 28019.56,
+            "pivot_at": 1653609599999,
+            "confirmed_at": 1653782399999
+          },
+          {
+            "kind": "high",
+            "price": 32399.0,
+            "pivot_at": 1654041599999,
+            "confirmed_at": 1654214399999
+          },
+          {
+            "kind": "low",
+            "price": 29282.36,
+            "pivot_at": 1654300799999,
+            "confirmed_at": 1654473599999
+          },
+          {
+            "kind": "high",
+            "price": 31765.64,
+            "pivot_at": 1654559999999,
+            "confirmed_at": 1654732799999
+          },
+          {
+            "kind": "low",
+            "price": 29218.96,
+            "pivot_at": 1654646399999,
+            "confirmed_at": 1654819199999
+          }
+        ],
+        "known_at": 1654819199999,
+        "ratios": {
+          "AB_over_XA": 0.7116526313866613,
+          "BC_over_AB": 0.7967811489296163,
+          "CD_over_BC": 1.0255307496536845,
+          "AD_over_XA": 0.7261293681383926,
+          "CD_over_AB": 0.8171235689717133
+        },
+        "gartley_necessary_ratio_diagnostics": {
+          "tolerance_absolute_ratio_units": 0.03,
+          "AB_near_0_618": false,
+          "AD_near_0_786": false
+        },
+        "classification": "ratio_measurements_only",
+        "pattern_validated": false,
+        "win_probability": null,
+        "orders_enabled": false
+      }
+    }
   ]
 }

@@ -9,8 +9,8 @@ entire branch was already deployed. Production V2 remains a separate release.
 
 ## Current measured progress
 
-**Day 1: completed 10 of 49 planned knowledge chapters — 20.41%; 39 chapters,
-79.59% of the declared curriculum, remain.**
+**Day 1: completed 11 of 49 planned knowledge chapters — 22.45%; 38 chapters,
+77.55% of the declared curriculum, remain.**
 
 The denominator is the versioned, expandable file manifest in
 `knowledge_base/manifest.json`. Scope revision 2 explicitly expands the initial
@@ -35,6 +35,7 @@ topics require an explicit manifest/progress revision, never silent omission.
 | `02_CANDLESTICK_AND_CHART_PATTERNS/candlestick_pattern_catalogue.md` | Source-checked; core families, explicit geometric rule versions and three replayed dated examples; no library-output probability claims |
 | `02_CANDLESTICK_AND_CHART_PATTERNS/rare_candlestick_and_gap_variants.md` | Newly declared pending scope expansion; no placeholder counted as complete |
 | `02_CANDLESTICK_AND_CHART_PATTERNS/classical_chart_patterns.md` | Source-checked; three actual two-turn cases, delayed activation, absence and cancellation before a later break; no simulated fills |
+| `02_CANDLESTICK_AND_CHART_PATTERNS/harmonic_and_geometric_patterns.md` | Source-checked; attributed framework distinctions, original leg algebra and three measured negative cases; no complete recognizer or probability claim |
 | Remaining curriculum documents | Pending; no empty placeholder chapters counted as complete |
 | Brain loader and runtime knowledge bundle | Pending — new source chapters are not yet consumed by Hoshi |
 | 40/20/20/20 history/liquidity/structure/global-flow engine | Pending — weights will mean evidence coverage, not an invented win probability |
@@ -80,6 +81,8 @@ topics require an explicit manifest/progress revision, never silent omission.
 - **28 October, Day 1 — scope revision 2:** completed `candlestick_pattern_catalogue.md` (2600 substantive words), measured three real 2020/2021/2022 BTCUSDT examples and added six offline pattern regressions. Source examples distinguish shape, context, later confirmation and raw price endpoints from trades. The original 48-file scope now explicitly contains 49 files: rare/gap compound definitions remain a separate pending chapter rather than being falsely counted as covered by core geometry. Nine source-checked chapters therefore mean 18.37% of revision 2; forty remain. Prior source [9eae855b](https://github.com/shani001223-droid/Jarws-ai-/commit/9eae855bd8778fa7f2c6748642fe49ac5b756b20) passed [actual integrity CI 40591570863](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40591570863). Runtime retrieval, weighted strategy and release gates are still pending.
 
 - **28 October, Day 1:** completed `classical_chart_patterns.md` (2169 substantive words) with conventional families and a precisely versioned original two-turn protocol. Three genuine BTCUSDT cases preserve an eligible later neckline close, a failed candidate without activation, and cancellation before a later crossing. Added two causality/corruption regressions; all eighteen evidence tests passed locally. Prior [931f2104](https://github.com/shani001223-droid/Jarws-ai-/commit/931f2104d558e7d7f8616cdf6a8381889b719e77) passed [actual GitHub content/evidence CI 40598659841](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40598659841). A documented source chapter and an eligible geometric event remain separate from runtime knowledge, fills and strategy performance.
+
+- **28 October, Day 1:** completed `harmonic_and_geometric_patterns.md` (2282 substantive words). Checked public creator definitions without copying proprietary materials or adopting promotional accuracy claims. Three real consecutive-pivot examples include a near single ratio with incompatible geometry; all remain unvalidated with null win probability. Source contradictions are disclosed rather than inventing a discovery year or unified variant. Twenty evidence regressions passed locally, including unconfirmed/substituted-anchor rejection and no false certification. Prior [9bcbbcd2](https://github.com/shani001223-droid/Jarws-ai-/commit/9bcbbcd2267e9b9478bd388c4591a161e5d917cf) passed [actual curriculum/evidence CI 40599169629](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40599169629). Next declared chapter: `pattern_testing_and_failures.md`; integration/release remain pending.
 
 ## Completion and release rules
 

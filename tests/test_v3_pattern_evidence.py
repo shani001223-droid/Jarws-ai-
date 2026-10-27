@@ -87,6 +87,27 @@ class V3PatternTests(unittest.TestCase):
         p = receipt(); p["classical_cases"][0]["case"]["outcome"]["first_neckline_beyond_close"]["close"] += 1
         with self.assertRaises(AssertionError): e.check_receipt(p, ROOT)
 
+    def test_one_near_fibonacci_ratio_does_not_become_a_validated_pattern(self):
+        p = receipt(); e.check_receipt(p, ROOT)
+        cases = [x["case"] for x in p["harmonic_cases"]]
+        self.assertTrue(cases[0]["gartley_necessary_ratio_diagnostics"]["AB_near_0_618"])
+        self.assertFalse(cases[0]["gartley_necessary_ratio_diagnostics"]["AD_near_0_786"])
+        for case in cases:
+            self.assertFalse(case["pattern_validated"])
+            self.assertIsNone(case["win_probability"])
+        p["harmonic_cases"][0]["case"]["pattern_validated"] = True
+        with self.assertRaises(AssertionError): e.check_receipt(p, ROOT)
+
+    def test_unconfirmed_or_substituted_harmonic_anchor_rejected(self):
+        p = receipt(); windows = e.check_receipt(p, ROOT)
+        entry = p["harmonic_cases"][0]; case = entry["case"]; b = windows[entry["source_window_sha256"]]
+        prefix = [x for x in b if x["close_time"] <= case["points"][-1]["pivot_at"]]
+        with self.assertRaises(AssertionError): e.harmonic_case(prefix, case["dates"])
+        confirmed = [x for x in b if x["close_time"] <= case["known_at"]]
+        self.assertEqual(e.harmonic_case(confirmed, case["dates"]), case)
+        substituted = case["dates"][:]; substituted[1] = "2020-06-18"
+        with self.assertRaises(AssertionError): e.harmonic_case(b, substituted)
+
 
 if __name__ == "__main__":
     unittest.main()

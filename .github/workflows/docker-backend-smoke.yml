@@ -1,0 +1,148 @@
+name: HOSHI Docker backend smoke
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "cloud_backend/**"
+      - ".github/workflows/docker-backend-smoke.yml"
+  push:
+    branches: [hoshi/dnd-foundation-20261026]
+    paths:
+      - "cloud_backend/**"
+      - ".github/workflows/docker-backend-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  docker-backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify backend imports and Docker build context
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import ast
+          root = Path("cloud_backend")
+          dockerfile = (root / "Dockerfile").read_text()
+          assert "COPY *.py ./" in dockerfile, "Docker image must contain all sibling .py modules"
+          for file in root.glob("*.py"):
+              ast.parse(file.read_text(encoding="utf8"), filename=str(file))
+          assert (root / "ad_studio.py").is_file()
+          assert (root / "artifact_verifier.py").is_file()
+          assert (root / "persona_policy.py").is_file()
+          print("Docker context includes import dependencies")
+          PY
+      - name: Build actual Hoshi backend Docker image
+        run: docker build --pull -t hoshi-backend-smoke -f cloud_backend/Dockerfile cloud_backend
+      - name: Verify imported app, health and agent routes inside container
+        shell: bash
+        run: |
+          set -euo pipefail
+          container=$(docker run -d -e PORT=8000 -p 127.0.0.1:18765:8000 hoshi-backend-smoke)
+          trap 'docker logs --tail 60 "$container" || true; docker rm -f "$container" || true' EXIT
+          ready=0
+          for attempt in $(seq 1 45); do
+            if curl --fail --silent --show-error --max-time 2 http://127.0.0.1:18765/health > /tmp/hoshi-health.json 2>/dev/null; then
+              ready=1
+              break
+            fi
+            sleep 1
+          done
+          test "$ready" -eq 1 || { echo 'Container failed health probe'; exit 1; }
+          python3 - <<'PY'
+          import json
+          with open("/tmp/hoshi-health.json") as f:
+              payload=json.load(f)
+          assert payload.get("ok") is True, payload
+          print("Backend /health OK (test without AI secrets)")
+          PY
+          curl --fail --silent --show-error --max-time 8 \
+            -H "Content-Type: application/json" \
+            -d '{"message":"Flora ki shampoo ad banao"}' \
+            http://127.0.0.1:18765/api/agent/route > /tmp/hoshi-route.json
+          python3 - <<'PY'
+          import json
+          with open("/tmp/hoshi-route.json") as f:
+              payload=json.load(f)
+          assert isinstance(payload,dict) and bool(payload), "Agent route empty"
+          print("Backend /api/agent/route OK")
+          PY
+          curl --fail --silent --show-error --max-time 8 \
+            http://127.0.0.1:18765/api/agent/capabilities > /tmp/hoshi-capabilities.json
+          python3 - <<'PY'
+          import json
+          with open("/tmp/hoshi-capabilities.json") as f:
+              payload=json.load(f)
+          assert payload.get("ok") is True
+          assert any(t.get("id")=="create_product_ads" for t in payload["tools"])
+          print("Backend /api/agent/capabilities OK")
+          PY
+          # Task 40: the real Uvicorn image must expose the read-only
+          # assessment route and reject unsupported symbols before network.
+          setup_status=$(curl --silent --show-error --max-time 5 -o /tmp/hoshi-setup-invalid.json \
+            -w '%{http_code}' 'http://127.0.0.1:18765/api/trading/setup-assessment?symbol=SOLUSDT')
+          test "$setup_status" = 422 || { echo "Setup route expected 422, got $setup_status"; exit 1; }
+          python3 - <<'PY'
+          import json
+          with open("/tmp/hoshi-setup-invalid.json") as f:
+              payload = json.load(f)
+          assert "detail" in payload and "BTCUSDT" in payload["detail"], payload
+          print("Task 40 Docker API route registered; unsupported pair rejected")
+          PY
+          # Task 41: real image must expose the read-only paper risk route.
+          paper_status=$(curl --silent --show-error --max-time 5 -o /tmp/hoshi-paper-invalid.json \
+            -w '%{http_code}' 'http://127.0.0.1:18765/api/trading/paper-risk?symbol=SOLUSDT')
+          test "$paper_status" = 422 || { echo "Paper risk route expected 422, got $paper_status"; exit 1; }
+          python3 - <<'PY'
+          import json
+          with open("/tmp/hoshi-paper-invalid.json") as f:
+              payload = json.load(f)
+          assert "detail" in payload and "BTCUSDT" in payload["detail"], payload
+          print("Task 41 Docker paper risk route registered; unsupported pair rejected")
+          PY
+          # Validate knowledge files and timezone data inside the actual image.
+          docker exec -i "$container" python - <<'PY'
+          import json
+          from urllib.request import urlopen
+          from urllib.error import HTTPError
+          from datetime import datetime
+          from brain import load_knowledge
+          from strategy_engine import time_filter
+          assert len(load_knowledge().lessons) == 11
+          for path in ("/history", "/learn?module=ict"):
+              with urlopen("http://127.0.0.1:8000" + path, timeout=5) as response:
+                  result = json.load(response)
+                  assert result["version"] == "hoshi-trading-knowledge-v2"
+                  assert result["orders_enabled"] is False
+                  assert result["training_enabled"] is False
+          try:
+              urlopen("http://127.0.0.1:8000/confluence_score?symbol=SOLUSDT", timeout=5)
+              raise AssertionError("Unsupported pair must fail before network")
+          except HTTPError as exc:
+              assert exc.code == 422
+          for timestamp in ("2026-07-07T14:30:00+00:00", "2026-01-06T15:30:00+00:00"):
+              now = int(datetime.fromisoformat(timestamp).timestamp()*1000)
+              assert time_filter(now)["active_windows"] == ["silver_bullet_am"]
+          print("V2 Docker lessons, HTTP routes and NY DST timezone data OK")
+          PY
+          # Task 34: verify the actual built image can import and execute
+          # a scoped offline specialist without a model key or external service.
+          docker exec -i "$container" python - <<'PY'
+          import base64, hashlib, io, json, zipfile
+          from specialist_orchestrator import orchestrate_flora_campaign
+          result = orchestrate_flora_campaign(("shampoo",))
+          assert result["ok"] is True, result.get("error_code")
+          assert result["persisted"] is False and result["published"] is False
+          payload = base64.b64decode(result["artifact"]["zip_base64"], validate=True)
+          assert hashlib.sha256(payload).hexdigest() == result["artifact"]["sha256"]
+          with zipfile.ZipFile(io.BytesIO(payload)) as archive:
+              assert set(archive.namelist()) == {"manifest.json", "shampoo.zip"}
+              manifest = json.loads(archive.read("manifest.json"))
+              assert manifest["products"][0]["product_key"] == "shampoo"
+          print("Scoped specialist Docker runtime + verified offline ZIP OK")
+          PY

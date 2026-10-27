@@ -13,6 +13,7 @@ import android.webkit.JavascriptInterface
 class JarvisBridge(private val activity: MainActivity) {
     private val mainHandler = Handler(Looper.getMainLooper())
     private val allowedActions = setOf("back", "home", "swipe_up", "swipe_down", "screenshot")
+    private val localUiActions = setOf("tap_chat", "tap_settings", "type_draft", "scroll_up", "scroll_down")
 
     @JavascriptInterface
     fun speakNative(text: String, language: String, pitch: Float, rate: Float): Boolean {
@@ -29,8 +30,19 @@ class JarvisBridge(private val activity: MainActivity) {
     @JavascriptInterface
     fun openKnownApp(action: String): Boolean = activity.openKnownApp(action)
 
+    /** A queued request ID lets the dashboard distinguish accepted vs failed intent handoff. */
+    @JavascriptInterface
+    fun openKnownAppVerified(action: String, requestId: Int): Boolean {
+        if (requestId !in 1..1_000_000_000) return false
+        return activity.openKnownApp(action, requestId)
+    }
+
     @JavascriptInterface
     fun saveAdZip(base64Zip: String, filename: String): Boolean = activity.saveAdZip(base64Zip, filename)
+
+    /** Opens Android's document picker; cannot silently inspect other apps. */
+    @JavascriptInterface
+    fun chooseScreenshotForLocalOcr(): Boolean = activity.chooseScreenshotForLocalOcr()
 
     @JavascriptInterface
     fun copyUserText(text: String): Boolean = activity.copyUserText(text)
@@ -83,13 +95,49 @@ class JarvisBridge(private val activity: MainActivity) {
         return true
     }
 
+    /**
+     * Bounded Hoshi-only UI action with a caller-generated request ID.
+     * The immediate Boolean only acknowledges queuing. Actual DOM evidence
+     * is delivered asynchronously by MainActivity without leaking draft text.
+     */
+    @JavascriptInterface
+    fun cancelQueuedActions(): Boolean = activity.cancelQueuedActions()
+
+    @JavascriptInterface
+    fun performLocalUiAction(action: String, payload: String, requestId: Int): Boolean {
+        if (requestId !in 1..1_000_000_000 || action !in localUiActions || !isEnabled() ||
+            JarvisAccessibilityService.instance == null) return false
+        if (action == "type_draft") {
+            if (payload.length !in 1..240 || payload.isBlank() ||
+                payload.any { it.code < 32 || it.code == 127 }) return false
+        } else if (payload.isNotEmpty()) return false
+        val epoch = activity.currentActionEpoch()
+        return mainHandler.post {
+            if (activity.isActionEpochCurrent(epoch)) {
+                if (isEnabled() && JarvisAccessibilityService.instance != null) {
+                    activity.dispatchLocalUiAction(action, payload, requestId)
+                } else {
+                    activity.reportLocalUiActionResult(requestId, false)
+                }
+            }
+        }
+    }
+
     @JavascriptInterface
     fun performAction(action: String): Boolean {
+        // The Android accessibility toggle alone does not prove the service
+        // is connected. Fail closed rather than reporting a fake queued action.
         if (action !in allowedActions || !isEnabled()) return false
         if (action == "screenshot" && Build.VERSION.SDK_INT < Build.VERSION_CODES.P) return false
-        val queued = mainHandler.post {
-            JarvisAccessibilityService.instance?.performBasicAction(action)
+        if (JarvisAccessibilityService.instance == null) return false
+        // Returning true means only that the request was queued on the UI
+        // thread, NOT that Android completed the gesture or took a screenshot.
+        val epoch = activity.currentActionEpoch()
+        return mainHandler.post {
+            val liveService = JarvisAccessibilityService.instance
+            if (activity.isActionEpochCurrent(epoch) && isEnabled() && liveService != null) {
+                liveService.performBasicAction(action)
+            }
         }
-        return queued
     }
 }

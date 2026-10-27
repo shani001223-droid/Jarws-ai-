@@ -1,3 +1,13 @@
+# HOSHI AI — One Unified Project
+
+> **START HERE:** [HOSHI_MASTER_PROJECT.md](HOSHI_MASTER_PROJECT.md) is the single canonical project overview for all former JARVIS/JARWS/ALTRON/VALTRON ideas and today's Hoshi AI assistant. [HOSHI_60_TASK_MASTER_ROADMAP.md](HOSHI_60_TASK_MASTER_ROADMAP.md) is the **only current 60-task completion tracker**. The historical material below may describe older versions of the app; the master document and current verified CI/deploy evidence take precedence.
+
+**Current structure:** one GitHub repository with web frontend, Python backend, Android bridge, verified tools and user-approved design assets. New work goes to the reviewed Hoshi development branch ([draft PR #24](https://github.com/shani001223-droid/Jarws-ai-/pull/24)); it is **not automatically live** on Render. Do not duplicate the project or silently merge production changes.
+
+**Trading V2 development update (27 Oct 2026):** [audit and commit evidence](AUDIT_REPORT.md), [ten-module curriculum + history](modules/), and [exact API/rules/deployment guide](HOSHI_TRADING_V2.md). Adds `/history`, `/learn`, `/confluence_score`, integrity-checked knowledge retrieval and a five-factor 0–100 **rule-coverage** score. It is paper research, not calibrated accuracy or real trading. Older interface/voice descriptions below are historical; current master decisions take precedence.
+
+---
+
 ## Free public API integrations (read-only, zero new API keys)
 
 Hoshi's **Trading** tab now requests public Binance **Spot** ticker and recent candles via the Hoshi backend, displaying the price, 24-hour change, a simple close-price trend, EMA 9, SMA 20, RSI 14, and Crypto Fear & Greed. These are **not Futures quotes or trade signals**. Trade placement, exchange-account access and automated trading are **not** implemented by this change.

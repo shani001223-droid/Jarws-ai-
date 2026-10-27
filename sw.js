@@ -1,5 +1,5 @@
-const CACHE_NAME = "hoshi-shell-v29";
-const APP_SHELL = ["./", "./index.html", "./trading.css", "./speech-pipeline.js", "./profile-store.js", "./profile-memory.html", "./profile-memory.js", "./hoshi-core.css", "./hoshi-core.mjs", "./hoshi-core-ui.mjs", "./manifest.json", "./reminder-parser.js", "./assistant-commands.js", "./memory-privacy.js", "./hoshi-diagnostics.js", "./hoshi-product-ads.js", "./assets/hoshi-expressions.webp", "./assets/hoshi-hero-background.svg", "./assets/hoshi-app-icon.svg", "./assets/hoshi-nightroom.webp"];
+const CACHE_NAME = "hoshi-shell-v33";
+const APP_SHELL = ["./", "./index.html", "./trading.css", "./hoshi-focus.css", "./manifest.json", "./reminder-parser.js", "./assistant-commands.js", "./memory-privacy.js", "./hoshi-memory-store.js", "./hoshi-product-ads.js", "./hoshi-task-router.js", "./hoshi-trading-research.js", "./hoshi-source-research.js", "./hoshi-speech-input.js", "./hoshi-local-ui-actions.js", "./assets/hoshi-expressions.webp", "./assets/hoshi-hero-background.svg", "./assets/hoshi-app-icon.svg", "./assets/hoshi-nightroom.webp", "./speech-pipeline.js", "./profile-store.js", "./profile-memory.html", "./profile-memory.js", "./hoshi-core.css", "./hoshi-core.mjs", "./hoshi-core-ui.mjs", "./hoshi-diagnostics.js"];
 
 self.addEventListener("install", event => {
   event.waitUntil(

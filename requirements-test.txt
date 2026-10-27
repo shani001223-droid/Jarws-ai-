@@ -1,3 +1,2 @@
--r cloud_backend/requirements.txt
-# TestClient is not a production runtime dependency.
-httpx>=0.28,<0.29
+# Compatibility entry point; keep one complete test dependency set.
+-r requirements-dev.txt

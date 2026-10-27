@@ -1,30 +1,88 @@
 """HOSHI cloud API with server-side Gemini and Groq fallback."""
 import asyncio
 import hashlib
+import hmac
 import time
-from collections import OrderedDict
+from collections import OrderedDict, deque
 import json
 import os
 import re
-from typing import Optional
+import logging
+from typing import Optional, Literal
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-from fastapi import FastAPI, HTTPException, Response
+from fastapi import FastAPI, HTTPException, Response, Query, Request as FastAPIRequest
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from threading import BoundedSemaphore, Lock
-from collections import deque
+from concurrent.futures import ThreadPoolExecutor
+try:
+    from .trading_research import closed_candles, research, backtest, SimulationConfig
+    from .market_data_quality import public_urls, verify_spot_market, MarketDataQualityError
+    from .market_structure import analyze_market_structure, MarketStructureError
+    from .market_indicators import analyze_market_indicators, MarketIndicatorsError
+    from .setup_assessment import assess_spot_setup, SetupAssessmentError
+    from .paper_risk import assess_paper_risk, PaperRiskError, validate_paper_settings
+    from .brain import load_knowledge, knowledge_index, get_lesson, trading_context, KnowledgeError
+    from .strategy_engine import confluence_score, ConfluenceError
+except ImportError:
+    from trading_research import closed_candles, research, backtest, SimulationConfig
+    from market_data_quality import public_urls, verify_spot_market, MarketDataQualityError
+    from market_structure import analyze_market_structure, MarketStructureError
+    from market_indicators import analyze_market_indicators, MarketIndicatorsError
+    from setup_assessment import assess_spot_setup, SetupAssessmentError
+    from paper_risk import assess_paper_risk, PaperRiskError, validate_paper_settings
+    from brain import load_knowledge, knowledge_index, get_lesson, trading_context, KnowledgeError
+    from strategy_engine import confluence_score, ConfluenceError
 try:
     from .ad_studio import create_ad_pack
+    from .artifact_verifier import verify_ad_pack, ArtifactVerificationError
 except ImportError:
     from ad_studio import create_ad_pack
+    from artifact_verifier import verify_ad_pack, ArtifactVerificationError
 try:  # Handles either cloud_backend package import or direct uvicorn main:app.
     from .openjarvis_bridge import ask_openjarvis, endpoint as openjarvis_endpoint, wants_agent, OpenJarvisUnavailable
     from .agent_tools import try_calculate
+    from .permission_policy import check_agent_action
+    from .task_router import route_task
+    from .goal_spec import goal_to_deliverables
+    from .milestone_planner import plan_milestones
+    from .provider_policy import choose_providers
+    from .free_llm_providers import available_free_providers, ask_free_provider, OptionalProviderError
+    from .urdu_tts_text import normalize_urdu_speech
+    from .persona_policy import personality_guardrails
+    from .latency_budget import provider_timeout
+    from .job_records import JobRecordStore, JobCapacityError, JobStateError
+    from .job_queue import ScheduledJobQueue, QueueCapacityError
+    from .verified_artifact_store import VerifiedArtifactStore, ArtifactStorageError
+    from .job_reporting import build_job_report
+    from .source_research import browse_sources, SourceUnavailable
+    from .scoped_connectors import (
+        read_scoped_github_file, github_connector_ready,
+        InvalidConnectorPath, ScopedConnectorError,
+    )
 except ImportError:
     from openjarvis_bridge import ask_openjarvis, endpoint as openjarvis_endpoint, wants_agent, OpenJarvisUnavailable
     from agent_tools import try_calculate
+    from permission_policy import check_agent_action
+    from task_router import route_task
+    from goal_spec import goal_to_deliverables
+    from milestone_planner import plan_milestones
+    from provider_policy import choose_providers
+    from free_llm_providers import available_free_providers, ask_free_provider, OptionalProviderError
+    from urdu_tts_text import normalize_urdu_speech
+    from persona_policy import personality_guardrails
+    from latency_budget import provider_timeout
+    from job_records import JobRecordStore, JobCapacityError, JobStateError
+    from job_queue import ScheduledJobQueue, QueueCapacityError
+    from verified_artifact_store import VerifiedArtifactStore, ArtifactStorageError
+    from job_reporting import build_job_report
+    from source_research import browse_sources, SourceUnavailable
+    from scoped_connectors import (
+        read_scoped_github_file, github_connector_ready,
+        InvalidConnectorPath, ScopedConnectorError,
+    )
 
 try:
     from .observability import install_observability
@@ -32,6 +90,13 @@ except ImportError:
     from observability import install_observability
 
 app = FastAPI(title="HOSHI AI Cloud API", version="0.9.1")
+
+_LOGGER = logging.getLogger("hoshi.backend")
+
+
+def _safe_log_failure(component: str, error: Exception) -> None:
+    """Log a stable error category only. No user text, provider bodies or keys."""
+    _LOGGER.warning("hoshi_failure component=%s kind=%s", component, type(error).__name__)
 
 origins = [item.strip() for item in os.getenv("ALLOWED_ORIGINS", "*").split(",") if item.strip()]
 app.add_middleware(
@@ -66,6 +131,320 @@ class AssistantResponse(BaseModel):
     speech_text: Optional[str] = None
 
 
+class AgentRouteRequest(BaseModel):
+    message: str = Field(min_length=1, max_length=2000)
+
+
+@app.post("/api/agent/route")
+def agent_route(payload: AgentRouteRequest):
+    """Classify the next workflow without falsely claiming it was executed."""
+    return route_task(payload.message).as_payload()
+
+
+class GoalSpecRequest(BaseModel):
+    message: str = Field(min_length=1, max_length=4000)
+
+
+def _knowledge_result(module_id: Optional[str] = None):
+    try:
+        return get_lesson(module_id) if module_id is not None else knowledge_index()
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Unknown trading lesson. Use GET /learn for IDs.") from None
+    except KnowledgeError:
+        raise HTTPException(status_code=503, detail="Versioned trading knowledge unavailable.") from None
+
+
+@app.get("/history")
+def trading_history(response: Response):
+    """Read the versioned market timeline, not a user's private chat history."""
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    return _knowledge_result("history")
+
+
+@app.get("/learn")
+def trading_learn(response: Response, module: Optional[str] = Query(default=None, max_length=64)):
+    """List fixed lesson IDs, or retrieve one. Never trains or writes memory."""
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    return _knowledge_result(module)
+
+
+class LearnRequest(BaseModel):
+    model_config = {"extra": "forbid"}
+    module: str = Field(min_length=1, max_length=64)
+
+
+@app.post("/learn")
+def trading_learn_post(payload: LearnRequest, response: Response):
+    """Read-only lesson selection; arbitrary content/paths are not accepted."""
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    return _knowledge_result(payload.module)
+
+
+@app.post("/api/agent/spec")
+def agent_spec(payload: GoalSpecRequest):
+    """Return concrete acceptance deliverables; do not start a background job."""
+    return goal_to_deliverables(payload.message)
+
+
+@app.post("/api/agent/milestones")
+def agent_milestones(payload: GoalSpecRequest):
+    """Return a dependency-ordered verification plan, without running a worker."""
+    return plan_milestones(payload.message)
+
+
+
+@app.get("/api/research/sources")
+def research_sources(
+    response: Response,
+    topic: Literal["world", "technology", "science", "space"] = Query(...),
+    q: str = Query(default="", max_length=80),
+    limit: int = Query(default=5, ge=1, le=5),
+):
+    """Read-only, fixed trusted RSS sources with explicit article citations.
+
+    No arbitrary URL fetching, web-page execution, model-generated claims,
+    private keys, cross-app actions or automatic publishing.
+    """
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    try:
+        return browse_sources(topic, q, limit)
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Invalid source research request.") from None
+    except SourceUnavailable:
+        raise HTTPException(status_code=503, detail="Trusted public source temporarily unavailable.") from None
+    except Exception as exc:
+        _safe_log_failure("research.sources", exc)
+        raise HTTPException(status_code=503, detail="Source research unavailable.") from None
+
+
+class JobRecordRequest(BaseModel):
+    """Metadata-only: a job record is not a queued or executed task."""
+    kind: str = Field(min_length=1, max_length=48)
+    request_key: Optional[str] = Field(default=None, min_length=1, max_length=80)
+
+
+def _private_job_store(request: FastAPIRequest) -> JobRecordStore:
+    """Fail closed unless the operator has configured BOTH auth and storage.
+
+    The token belongs in server-side environment variables only, never in
+    the APK/browser. SQLite on ephemeral hosting does not survive redeploy.
+    """
+    token = os.getenv("HOSHI_JOB_API_TOKEN", "")
+    location = os.getenv("HOSHI_JOB_DB_PATH", "").strip()
+    if len(token) < 32 or not location:
+        raise HTTPException(status_code=503, detail="Private job records are not configured.")
+    provided = request.headers.get("authorization", "")
+    if not hmac.compare_digest(provided, "Bearer " + token):
+        raise HTTPException(status_code=401, detail="Private job authentication required.",
+                            headers={"WWW-Authenticate": "Bearer"})
+    try:
+        return JobRecordStore(location)
+    except Exception as exc:
+        _safe_log_failure("jobs.storage", exc)
+        raise HTTPException(status_code=503, detail="Private job storage unavailable.") from None
+
+
+@app.get("/api/agent/connectors")
+def private_connector_status(request: FastAPIRequest, response: Response):
+    """Operator-only configuration inventory; no network probe or secret output."""
+    _private_job_store(request)
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    return {
+        "github": {
+            "configured": github_connector_ready(os.getenv("HOSHI_GITHUB_READ_TOKEN", "")),
+            "scope": "canonical_repository_branch_allowlisted_files",
+            "remote_verified": False,
+        },
+        "storage": {
+            "configured": bool(os.getenv("HOSHI_ARTIFACT_ROOT", "").strip()),
+            "scope": "existing_private_verified_flora_artifact_reads",
+            "remote_verified": False,
+        },
+        "writes_enabled": False,
+        "note": "Configuration only; no live GitHub/storage availability or worker is implied.",
+    }
+
+
+@app.get("/api/agent/connectors/github/file")
+def private_github_connector_file(path: str, request: FastAPIRequest,
+                                  response: Response):
+    """Read fixed-branch source with server-only GitHub and operator tokens.
+
+    GitHub content is returned as untrusted data; it is not executed or
+    inserted into an AI prompt. No arbitrary repository/URL or write API.
+    """
+    _private_job_store(request)
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    try:
+        return read_scoped_github_file(
+            path, os.getenv("HOSHI_GITHUB_READ_TOKEN", ""))
+    except InvalidConnectorPath:
+        raise HTTPException(status_code=422, detail="GitHub file outside approved scope.") from None
+    except ScopedConnectorError:
+        raise HTTPException(status_code=503, detail="Private GitHub read unavailable.") from None
+    except Exception as exc:
+        _safe_log_failure("connectors.github", exc)
+        raise HTTPException(status_code=503, detail="Private GitHub read unavailable.") from None
+
+
+@app.post("/api/agent/jobs", status_code=201)
+def create_job_record(payload: JobRecordRequest, request: FastAPIRequest):
+    """Create a planned metadata record only. No background worker is started."""
+    store = _private_job_store(request)
+    try:
+        job = store.create(payload.kind, payload.request_key)
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Invalid job metadata.") from None
+    except JobCapacityError:
+        raise HTTPException(status_code=429, detail="Job record capacity reached.") from None
+    except Exception as exc:
+        _safe_log_failure("jobs.create", exc)
+        raise HTTPException(status_code=503, detail="Job record storage unavailable.") from None
+    return {"job": job, "executed": False, "worker_available": False,
+            "note": "Metadata saved only; no task was queued or executed."}
+
+
+@app.get("/api/agent/jobs/{job_id}")
+def get_job_record(job_id: str, request: FastAPIRequest):
+    """Authenticated lookup; random IDs alone never grant read access."""
+    store = _private_job_store(request)
+    try:
+        job = store.get(job_id)
+        queue = ScheduledJobQueue(store).status(job_id) if job is not None else None
+    except Exception as exc:
+        _safe_log_failure("jobs.lookup", exc)
+        raise HTTPException(status_code=503, detail="Job record storage unavailable.") from None
+    if job is None:
+        raise HTTPException(status_code=404, detail="Job not found.")
+    return {"job": job, "queue": queue, "executed": job["status"] == "succeeded",
+            "worker_available": False}
+
+
+class JobScheduleRequest(BaseModel):
+    """Private due-time metadata only; no autonomous executor is started."""
+    delay_seconds: int = Field(default=0, ge=0, le=86_400)
+
+
+@app.post("/api/agent/jobs/{job_id}/schedule", status_code=202)
+def schedule_job_record(job_id: str, payload: JobScheduleRequest,
+                        request: FastAPIRequest):
+    """Authenticated scheduling. No user payload, secret or task executor."""
+    store = _private_job_store(request)
+    try:
+        queue = ScheduledJobQueue(store)
+        scheduled = queue.enqueue(job_id, payload.delay_seconds)
+        job = store.get(job_id)
+    except (ValueError, JobStateError):
+        raise HTTPException(status_code=409, detail="Job cannot be scheduled.") from None
+    except QueueCapacityError:
+        raise HTTPException(status_code=429, detail="Private job queue is full.") from None
+    except Exception as exc:
+        _safe_log_failure("jobs.schedule", exc)
+        raise HTTPException(status_code=503, detail="Private job queue unavailable.") from None
+    return {"job": job, "queue": scheduled, "executed": False,
+            "worker_available": False,
+            "note": "Scheduled metadata only; no background executor is configured."}
+
+
+
+def _private_artifact_store(request: FastAPIRequest) -> VerifiedArtifactStore:
+    """Operator-authenticated artifact reads; no public upload/write route.
+
+    Both the metadata database and a private 0700 absolute artifact directory
+    must be configured on persistent storage. A successful response is never
+    proof that a worker ran or a job was completed.
+    """
+    jobs = _private_job_store(request)
+    root = os.getenv("HOSHI_ARTIFACT_ROOT", "").strip()
+    if not root:
+        raise HTTPException(status_code=503, detail="Private artifact storage is not configured.")
+    try:
+        return VerifiedArtifactStore(jobs, root)
+    except Exception as exc:
+        _safe_log_failure("artifacts.storage", exc)
+        raise HTTPException(status_code=503, detail="Private artifact storage unavailable.") from None
+
+
+@app.get("/api/agent/jobs/{job_id}/artifacts")
+def get_job_artifacts(job_id: str, request: FastAPIRequest):
+    """Read bounded verification metadata/checkpoints with server-only auth."""
+    store = _private_artifact_store(request)
+    try:
+        if store.jobs.get(job_id) is None:
+            raise HTTPException(status_code=404, detail="Job not found.")
+        metadata = store.metadata(job_id)
+        checkpoints = store.checkpoints(job_id)
+    except HTTPException:
+        raise
+    except ArtifactStorageError:
+        raise HTTPException(status_code=404, detail="Job not found.") from None
+    except Exception as exc:
+        _safe_log_failure("artifacts.lookup", exc)
+        raise HTTPException(status_code=503, detail="Private artifact lookup unavailable.") from None
+    return {"artifact": metadata, "checkpoints": checkpoints,
+            "persisted": metadata is not None,
+            "note": "Metadata only. Download rechecks the ZIP digest; no worker is auto-started."}
+
+
+@app.get("/api/agent/jobs/{job_id}/artifacts/download")
+def download_job_artifact(job_id: str, request: FastAPIRequest):
+    """Download only the fixed verified ZIP; rehash every read, never cache."""
+    store = _private_artifact_store(request)
+    try:
+        if store.jobs.get(job_id) is None or store.metadata(job_id) is None:
+            raise HTTPException(status_code=404, detail="Verified artifact not found.")
+        data = store.read_verified(job_id)
+    except HTTPException:
+        raise
+    except ArtifactStorageError as exc:
+        _safe_log_failure("artifacts.integrity", exc)
+        raise HTTPException(status_code=503, detail="Verified artifact unavailable or damaged.") from None
+    except Exception as exc:
+        _safe_log_failure("artifacts.download", exc)
+        raise HTTPException(status_code=503, detail="Private artifact storage unavailable.") from None
+    return Response(content=data, media_type="application/zip", headers={
+        "Cache-Control": "no-store",
+        "X-Content-Type-Options": "nosniff",
+        "Content-Disposition": 'attachment; filename="flora_ads.zip"',
+    })
+
+
+
+@app.get("/api/agent/jobs/{job_id}/report")
+def get_private_job_report(job_id: str, request: FastAPIRequest, response: Response):
+    """Pull-only quiet progress; final success needs rehashed private evidence.
+
+    This endpoint never schedules, sends notifications, starts workers or
+    exposes the operator token to a browser/mobile bundle.
+    """
+    jobs = _private_job_store(request)
+    root = os.getenv("HOSHI_ARTIFACT_ROOT", "").strip()
+    artifacts = None
+    if root:
+        try:
+            artifacts = VerifiedArtifactStore(jobs, root)
+        except Exception as exc:
+            # Still return a review-required report rather than false success.
+            _safe_log_failure("jobs.report_artifacts", exc)
+    try:
+        report = build_job_report(jobs, job_id, artifacts)
+    except Exception as exc:
+        _safe_log_failure("jobs.report", exc)
+        raise HTTPException(status_code=503, detail="Private job report unavailable.") from None
+    if report is None:
+        raise HTTPException(status_code=404, detail="Job not found.")
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    return report
+
+
+
 class AgentTaskRequest(BaseModel):
     task: str = Field(default="create_product_ads", max_length=48)
     message: str = Field(min_length=1, max_length=600)
@@ -86,10 +465,13 @@ def agent_capabilities():
     }
 
 @app.post("/api/agent/execute")
-def agent_execute(payload: AgentTaskRequest, request: __import__("fastapi").Request):
+def agent_execute(payload: AgentTaskRequest, request: FastAPIRequest):
     """Execute an explicitly allowlisted backend task; never shell commands."""
-    if payload.task != "create_product_ads":
+    decision = check_agent_action(payload.task)
+    if not decision.known:
         raise HTTPException(status_code=400, detail="Unknown agent task. Allowed: create_product_ads.")
+    if not decision.allowed:
+        raise HTTPException(status_code=403, detail=decision.reason)
     # IP is only used as a short-lived throttle, never persisted or returned.
     identifier = (request.client.host if request.client else "unknown")[:90]
     now = time.monotonic()
@@ -107,9 +489,31 @@ def agent_execute(payload: AgentTaskRequest, request: __import__("fastapi").Requ
     if not _AD_SLOTS.acquire(blocking=False):
         raise HTTPException(status_code=429, detail="Ad generator busy; retry shortly.")
     try:
-        return create_ad_pack(payload.message)
+        # Retry ONLY a pure, local, side-effect-free artifact generator after
+        # detecting corrupt/incomplete output. Two attempts maximum; do not
+        # blindly retry external posting, paid models, or device operations.
+        for attempt in range(1, 3):
+            result = create_ad_pack(payload.message)
+            try:
+                verified = verify_ad_pack(result, payload.message)
+            except ArtifactVerificationError as exc:
+                _safe_log_failure("ads.verify", exc)
+                if attempt == 2:
+                    raise HTTPException(
+                        status_code=502,
+                        detail="Ad Studio could not verify generated files after bounded repair.",
+                    ) from None
+                continue
+            result["verification"] = {**verified, "attempts": attempt}
+            return result
+    except HTTPException:
+        raise
     except ValueError as exc:
+        _safe_log_failure("ads.validation", exc)
         raise HTTPException(status_code=422, detail=str(exc)) from None
+    except Exception as exc:
+        _safe_log_failure("ads.render", exc)
+        raise HTTPException(status_code=502, detail="Ad Studio could not render files. Please retry later.") from None
     finally:
         _AD_SLOTS.release()
 
@@ -121,7 +525,8 @@ class SpeechRequest(BaseModel):
 
 async def synthesize_urdu(text: str, style: str) -> bytes:
     import edge_tts
-    rate, pitch = {"soft": ("+0%", "+12Hz"), "warm": ("-3%", "+8Hz"), "playful": ("+3%", "+18Hz")}.get(style, ("+0%", "+12Hz"))
+    # Modest pitch changes avoid exaggerated/chipmunk-like delivery.
+    rate, pitch = {"soft": ("-2%", "+2Hz"), "warm": ("-3%", "+1Hz"), "playful": ("+2%", "+7Hz")}.get(style, ("-2%", "+2Hz"))
     audio = bytearray()
     async for chunk in edge_tts.Communicate(text, "ur-PK-UzmaNeural", rate=rate, pitch=pitch).stream():
         if chunk["type"] == "audio":
@@ -142,6 +547,7 @@ async def speech(payload: SpeechRequest):
     text = payload.text.strip()
     if not re.search(r"[\u0600-\u06ff]", text) or re.search(r"[\u0900-\u097f]", text):
         raise HTTPException(status_code=400, detail="Urdu-script text is required for Urdu speech.")
+    text = normalize_urdu_speech(text)
     cache_key = hashlib.sha256((payload.style + "\0" + text).encode()).digest()
     cached = speech_cache.get(cache_key)
     if cached and cached[0] > time.monotonic():
@@ -153,7 +559,8 @@ async def speech(payload: SpeechRequest):
         audio = await asyncio.wait_for(generate(), timeout=25)
     except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="Online Urdu voice timed out. Tap Hear Hoshi to retry.") from None
-    except Exception:
+    except Exception as exc:
+        _safe_log_failure("speech.tts", exc)
         raise HTTPException(status_code=502, detail="Online Urdu voice is unavailable. Try again or install an Urdu device voice.") from None
     speech_cache[cache_key] = (time.monotonic() + 120, audio)
     speech_cache.move_to_end(cache_key)
@@ -319,7 +726,7 @@ def normalize_context_entries(context: Optional[list[str]]) -> list[str]:
     return normalized[-8:]
 
 
-def _openrouter_reply(message: str, language_hint: str) -> str:
+def _openrouter_reply(message: str, language_hint: str, *, timeout: float = 7) -> str:
     """Use only the free router or an explicitly free model; never auto-upgrade."""
     key = os.getenv("OPENROUTER_API_KEY", "").strip()
     if not key:
@@ -338,7 +745,7 @@ def _openrouter_reply(message: str, language_hint: str) -> str:
         method="POST",
     )
     try:
-        with urlopen(req, timeout=12) as response:
+        with urlopen(req, timeout=timeout) as response:
             data = json.loads(response.read().decode("utf-8"))
     except HTTPError as exc:
         explanations = {
@@ -401,7 +808,7 @@ def _groq_reply(message: str, language_hint: str, *, quick: bool = False) -> str
         method="POST",
     )
     try:
-        with urlopen(req, timeout=6 if quick else 12) as response:
+        with urlopen(req, timeout=5 if quick else 7) as response:
             data = json.loads(response.read().decode("utf-8"))
     except HTTPError as exc:
         provider_message = ""
@@ -447,10 +854,20 @@ def _groq_reply(message: str, language_hint: str, *, quick: bool = False) -> str
     except (json.JSONDecodeError, UnicodeDecodeError):
         raise RuntimeError("Groq returned an invalid response.") from None
 
-    choices = data.get("choices") or []
+    # A provider may return HTTP 200 with a malformed JSON shape. Treat this
+    # as a safe fallback error, not an uncaught 500/AttributeError.
+    if not isinstance(data, dict) or not isinstance(data.get("choices"), list):
+        raise RuntimeError("Groq returned an invalid response.")
+    choices = data["choices"]
     reply = ""
     if choices:
-        reply = str((choices[0].get("message") or {}).get("content") or "").strip()
+        first = choices[0]
+        if not isinstance(first, dict) or not isinstance(first.get("message"), dict):
+            raise RuntimeError("Groq returned an invalid response.")
+        content = first["message"].get("content")
+        if content is not None and not isinstance(content, str):
+            raise RuntimeError("Groq returned an invalid response.")
+        reply = (content or "").strip()
     if not reply:
         raise RuntimeError("Groq did not return text.")
     return reply
@@ -473,6 +890,7 @@ def health():
     gemini_configured = bool(os.getenv("GEMINI_API_KEY", "").strip())
     groq_configured = bool(os.getenv("GROQ_API_KEY", "").strip())
     openrouter_configured = bool(os.getenv("OPENROUTER_API_KEY", "").strip())
+    extra_providers = available_free_providers()
     try:
         openjarvis_configured = openjarvis_endpoint() is not None
     except OpenJarvisUnavailable:
@@ -482,7 +900,9 @@ def health():
         "service": "hoshi-cloud-api",
         "version": app.version,
         "gemini_api": "interactions" if gemini_configured else None,
-        "ai_connected": openjarvis_configured or openrouter_configured or gemini_configured or groq_configured,
+        "ai_connected": bool(openjarvis_configured or openrouter_configured or gemini_configured or groq_configured or extra_providers),
+        "extra_free_providers_configured": list(extra_providers),
+        "extra_free_providers_verified_online": False,
         "reply_fallback_enabled": True,
         "voice_fast_path": True,
         "openjarvis_configured": openjarvis_configured,
@@ -492,7 +912,7 @@ def health():
         "openrouter_model": OPENROUTER_MODEL if openrouter_configured else None,
         "gemini_configured": gemini_configured,
         "groq_configured": groq_configured,
-        "primary_provider": "openrouter" if openrouter_configured else ("gemini" if gemini_configured else ("groq" if groq_configured else None)),
+        "primary_provider": "openrouter" if openrouter_configured else ("gemini" if gemini_configured else ("groq" if groq_configured else (extra_providers[0] if extra_providers else None))),
         "fallback_provider": ("gemini" if gemini_configured else ("groq" if groq_configured else None)) if openrouter_configured else ("groq" if gemini_configured and groq_configured else None),
         "gemini_model": GEMINI_MODEL,
         "groq_model": GROQ_MODEL if groq_configured else None,
@@ -502,6 +922,7 @@ def health():
 
 @app.post("/api/assistant", response_model=AssistantResponse)
 def assistant(payload: AssistantRequest):
+    request_started_at = time.monotonic()
     gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
     groq_key = os.getenv("GROQ_API_KEY", "").strip()
 
@@ -515,6 +936,11 @@ def assistant(payload: AssistantRequest):
             return AssistantResponse(reply="Jawab: " + computed, mode="calculator",
                                      emotion="happy", speech_text="جواب ہے " + computed + "۔")
         return AssistantResponse(reply="Answer: " + computed, mode="calculator", emotion="happy")
+    try:
+        knowledge_prompt = load_knowledge().system_prompt
+        knowledge_context = trading_context(message)
+    except KnowledgeError:
+        raise HTTPException(status_code=503, detail="Versioned assistant knowledge unavailable.") from None
     brief_spoken = bool(payload.fast and not re.search(
         r"\b(write|draft|likho|banao|bana do|create|code|script|detail|tafseel|explain|samjhao|plan|report|steps|poora|full)\b",
         message, re.I,
@@ -548,7 +974,8 @@ def assistant(payload: AssistantRequest):
     }.get(user_mood, "Use a natural, balanced tone.")
 
     language_hint = (
-        "You are HOSHI, a warm, clever, playful AI companion with a consistent identity. "
+        knowledge_prompt + "\n"
+        + "You are HOSHI, a warm, clever, playful AI companion with a consistent identity. "
         + "Likely user mood: " + user_mood + ". " + mood_guidance + " "
         + style_hint + " "
         "Use the user's language: if they write Roman Urdu, answer in natural Pakistani Roman Urdu; "
@@ -570,6 +997,11 @@ def assistant(payload: AssistantRequest):
         "Answer the actual task first, clearly state uncertainties and avoid repetition."
     )
 
+    # Keep full and fast providers aligned on emotional boundaries.
+    language_hint += " " + personality_guardrails(message, user_mood)
+    if knowledge_context:
+        language_hint += "\n\n" + knowledge_context
+
     if str(payload.locale or "").lower().startswith("ur"):
         language_hint += (
             " The selected conversation language is Pakistani Urdu. This overrides device/browser language. "
@@ -585,8 +1017,50 @@ def assistant(payload: AssistantRequest):
     # OpenJarvis orchestrator and its configured tools/memory run on a real,
     # separate OpenJarvis server. No model/server is provisioned implicitly.
     # A bounded agent call is used for complex non-voice requests only.
+    extra_providers = available_free_providers()
+    provider_plan = choose_providers(
+        message, fast=payload.fast,
+        openrouter=bool(os.getenv("OPENROUTER_API_KEY", "").strip()),
+        gemini=bool(gemini_key), groq=bool(groq_key),
+        openjarvis=bool(os.getenv("OPENJARVIS_URL", "").strip() and os.getenv("OPENJARVIS_MODEL", "").strip()),
+        zai="zai" in extra_providers,
+        mistral="mistral" in extra_providers,
+        nvidia="nvidia" in extra_providers,
+    )
+    def network_budget(cap: float = 7.0) -> float:
+        # Short casual/voice answers get a bounded total serial wait. Rich
+        # writing/research keeps the existing larger provider deadline.
+        return provider_timeout(
+            request_started_at, time.monotonic(),
+            fast=brief_spoken, cap=cap,
+        )
+
+    def try_directory_fallback():
+        """Try only configured free-tier providers and never expose secret error bodies."""
+        for provider in provider_plan.order:
+            if provider not in extra_providers:
+                continue
+            # The client times out around 32 seconds. Do not launch a slow
+            # optional call if the cumulative provider chain already consumed
+            # the budget. Keep at least 1s for encoding/transferring the reply.
+            remaining = network_budget(cap=5.0)
+            if remaining < 1.0:
+                break
+            try:
+                reply = ask_free_provider(
+                    provider, request_input, language_hint,
+                    timeout=remaining,
+                )
+                answer = make_assistant_response(reply, provider, message, payload.locale)
+                if str(payload.locale or "").lower().startswith("ur") and not answer.speech_text:
+                    continue
+                return answer
+            except (OptionalProviderError, RuntimeError, HTTPException) as exc:
+                _safe_log_failure("assistant.free_" + provider, exc)
+        return None
+
     openjarvis_problem = None
-    if wants_agent(message, fast=payload.fast):
+    if provider_plan.agent_first:
         try:
             if openjarvis_endpoint() is not None:
                 remote = ask_openjarvis(request_input, language_hint, timeout=7)
@@ -600,9 +1074,10 @@ def assistant(payload: AssistantRequest):
     # slow OpenRouter -> Gemini -> Groq chain on normal spoken questions.
     # Tool commands execute locally on Android and never reach this route.
     quick_groq_problem = None
-    if payload.fast and groq_key:
+    if provider_plan.fast_voice_first:
         quick_instruction = (
-            "You are HOSHI, a warm, truthful, playful, respectful AI assistant. "
+            knowledge_prompt + "\n"
+            + "You are HOSHI, a warm, truthful, playful, respectful AI assistant. "
             "Answer the user's actual question in ONE natural short sentence (around 12-22 words). "
             "Do not invent actions or facts. Avoid repetitive greetings, manipulation, or claims of real feelings. "
             + style_hint + " "
@@ -616,6 +1091,10 @@ def assistant(payload: AssistantRequest):
         # Full writing/research instructions must not be truncated to a short voice soundbite.
         if not brief_spoken:
             quick_instruction = language_hint
+        else:
+            quick_instruction += " " + personality_guardrails(message, user_mood, concise=True)
+            if knowledge_context:
+                quick_instruction += "\n\n" + knowledge_context
         try:
             quick = make_assistant_response(
                 _groq_reply(request_input, quick_instruction, quick=brief_spoken), "groq", message, payload.locale
@@ -624,6 +1103,7 @@ def assistant(payload: AssistantRequest):
                 return quick
             quick_groq_problem = "Groq did not return usable Urdu speech text."
         except (RuntimeError, HTTPException) as error:
+            _safe_log_failure("assistant.groq_fast", error)
             quick_groq_problem = str(error)
         # Other providers remain available, but never call the failed Groq route twice.
 
@@ -631,22 +1111,28 @@ def assistant(payload: AssistantRequest):
     # to independently configured providers for invalid/incomplete replies or
     # temporary errors. Never retry endlessly or switch to paid models.
     openrouter_problem = None
-    if os.getenv("OPENROUTER_API_KEY", "").strip():
+    if "openrouter" in provider_plan.order and network_budget() >= 1.0:
         try:
-            reply = _openrouter_reply(request_input, language_hint)
+            reply = _openrouter_reply(
+                request_input, language_hint, timeout=network_budget(),
+            )
             response = make_assistant_response(reply, "openrouter", message, payload.locale)
             if str(payload.locale or "").lower().startswith("ur") and not response.speech_text:
                 raise RuntimeError("OpenRouter omitted valid Urdu pronunciation text.")
             return response
         except (RuntimeError, HTTPException) as error:
+            _safe_log_failure("assistant.openrouter", error)
             openrouter_problem = str(error.detail) if isinstance(error, HTTPException) else str(error)
             if not (gemini_key or groq_key):
+                extra_result = try_directory_fallback()
+                if extra_result is not None:
+                    return extra_result
                 raise HTTPException(status_code=502, detail=openrouter_problem) from None
 
     # Gemini is primary when OpenRouter is missing or failed. Temporary overload
     # and incomplete/malformed Urdu formatting can use the Groq backup.
     # error, timeout, or malformed response triggers Groq when its key is set.
-    if gemini_key:
+    if gemini_key and network_budget() >= 1.0:
         body = {
             "model": GEMINI_MODEL,
             "input": request_input,
@@ -667,7 +1153,7 @@ def assistant(payload: AssistantRequest):
         gemini_problem = "Gemini Interactions API did not return a usable response."
         should_fallback = False
         try:
-            with urlopen(req, timeout=12) as response:
+            with urlopen(req, timeout=network_budget()) as response:
                 data = json.loads(response.read().decode("utf-8"))
             steps = data.get("steps") or []
             reply = "\n".join(
@@ -706,7 +1192,8 @@ def assistant(payload: AssistantRequest):
         except (URLError, TimeoutError):
             gemini_problem = "Gemini connection failed or timed out."
             should_fallback = True
-        except (json.JSONDecodeError, UnicodeDecodeError, IndexError, KeyError, TypeError):
+        except (json.JSONDecodeError, UnicodeDecodeError, IndexError, KeyError, TypeError, AttributeError, ValueError):
+            # Includes unexpected list/null/invalid block shapes in HTTP-200 JSON.
             gemini_problem = "Gemini returned an invalid response."
             should_fallback = True
 
@@ -715,26 +1202,47 @@ def assistant(payload: AssistantRequest):
                 reply = _groq_reply(request_input, language_hint)
                 return make_assistant_response(reply, "groq", message, payload.locale)
             except (RuntimeError, HTTPException) as groq_error:
+                extra_result = try_directory_fallback()
+                if extra_result is not None:
+                    return extra_result
                 raise HTTPException(
                     status_code=502,
                     detail=gemini_problem + " Groq fallback also failed: " + str(groq_error),
                 ) from None
         if should_fallback:
+            extra_result = try_directory_fallback()
+            if extra_result is not None:
+                return extra_result
             raise HTTPException(
                 status_code=503,
                 detail=gemini_problem + (" Fast Groq already failed; no repeated call." if quick_groq_problem
                     else " Groq fallback is unavailable because GROQ_API_KEY is missing from this running service."),
             ) from None
+        extra_result = try_directory_fallback()
+        if extra_result is not None:
+            return extra_result
         raise HTTPException(status_code=502, detail=gemini_problem) from None
 
     # If Gemini is not configured, Groq can serve requests on its own.
-    if groq_key and quick_groq_problem is None:
+    if groq_key and quick_groq_problem is None and network_budget() >= 1.0:
         try:
             reply = _groq_reply(request_input, language_hint)
             return make_assistant_response(reply, "groq", message, payload.locale)
         except (RuntimeError, HTTPException) as groq_error:
+            extra_result = try_directory_fallback()
+            if extra_result is not None:
+                return extra_result
             raise HTTPException(status_code=502, detail=str(groq_error)) from None
 
+    extra_result = try_directory_fallback()
+    if extra_result is not None:
+        return extra_result
+
+    if brief_spoken and network_budget() < 1.0:
+        raise HTTPException(
+            status_code=504,
+            detail="Quick reply exceeded the free-provider time budget. Retry or turn off fast mode.",
+        ) from None
     if openrouter_problem:
         raise HTTPException(status_code=502, detail=openrouter_problem) from None
     if openjarvis_problem:
@@ -744,14 +1252,12 @@ def assistant(payload: AssistantRequest):
 
     raise HTTPException(
         status_code=503,
-        detail="No AI key is configured in the running service. Add OPENROUTER_API_KEY, GEMINI_API_KEY or GROQ_API_KEY to the Render Environment Group, attach it to this service, and redeploy.",
+        detail="No usable AI provider is configured or responding. Set a free provider API key in the backend secret environment and verify its free-tier eligibility.",
     )
 
 
 # --- Free public data: read-only, allowlisted providers, no API keys. ---
 # All public API paths are fixed here; callers cannot supply a destination URL.
-from threading import Lock
-from fastapi import Query
 
 PUBLIC_API_SOURCES = {
     "binance_spot": {"name": "Binance Spot Public Market Data", "documentation": "https://github.com/binance/binance-spot-api-docs/blob/master/faqs/market_data_only.md", "authentication": "none"},
@@ -862,6 +1368,288 @@ def public_candles(symbol: str = "BTCUSDT", interval: str = "5m"):
                 "note": "Indicator calculations use public spot candles, not a trading signal."}
     except (ValueError, KeyError, TypeError, IndexError, OverflowError) as exc:
         raise HTTPException(status_code=503, detail="Candle provider returned invalid data.") from exc
+
+
+_RESEARCH_SLOTS = BoundedSemaphore(2)
+
+
+@app.get("/api/trading/data-quality")
+def trading_data_quality(
+    response: Response,
+    symbol: str = "BTCUSDT",
+    interval: Literal["15m", "1h", "4h"] = "15m",
+):
+    """Two independent public spot venues; no orders or trading credentials.
+
+    This strict endpoint fails closed on missing/stale/mismatched candles and
+    inconsistent base/quote volumes. It does not certify strategy profitability.
+    """
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    pair = _research_pair(symbol)
+    try:
+        binance_url, kraken_url = public_urls(pair, interval)
+    except MarketDataQualityError:
+        raise HTTPException(status_code=422, detail="Unsupported market data request.") from None
+    if not _RESEARCH_SLOTS.acquire(blocking=False):
+        raise HTTPException(status_code=429, detail="Research busy. Retry shortly.")
+    try:
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            binance_future = pool.submit(_public_data, "quality-v1:binance:" + pair + ":" + interval, binance_url, 30)
+            kraken_future = pool.submit(_public_data, "quality-v1:kraken:" + pair + ":" + interval, kraken_url, 30)
+            first, first_at = binance_future.result()
+            second, second_at = kraken_future.result()
+        try:
+            return verify_spot_market(pair, interval, first, second, int(time.time()*1000), first_at, second_at)
+        except MarketDataQualityError:
+            raise HTTPException(status_code=503, detail="Independent spot candle/volume verification failed. No current-market claim.") from None
+    finally:
+        _RESEARCH_SLOTS.release()
+
+
+def _research_pair(symbol):
+    pair = _public_pair(symbol)
+    if pair not in {"BTCUSDT", "ETHUSDT"}:
+        raise HTTPException(status_code=422, detail="Research supports BTCUSDT and ETHUSDT only.")
+    return pair
+
+
+def _research_history(pair, interval):
+    data, fetched = _public_data("research-v1:" + pair + ":" + interval,
+        "https://data-api.binance.vision/api/v3/klines?symbol=" + pair
+        + "&interval=" + interval + "&limit=500", 30)
+    try:
+        return closed_candles(data, interval, int(time.time()*1000)), fetched
+    except (ValueError, TypeError, IndexError, OverflowError) as exc:
+        raise HTTPException(status_code=503, detail="Research candles invalid, incomplete or stale. No proposal generated.") from exc
+
+
+@app.get("/api/trading/structure")
+def trading_market_structure(response: Response, symbol: str = "BTCUSDT"):
+    """Descriptive 15m/1h/4h S/R from confirmed, closed Binance Spot bars.
+
+    This does NOT inherit the independent Kraken verification from /data-quality.
+    It is single-source research, not a trade signal or market-wide price oracle.
+    """
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    pair = _research_pair(symbol)
+    if not _RESEARCH_SLOTS.acquire(blocking=False):
+        raise HTTPException(status_code=429, detail="Research busy. Retry shortly.")
+    try:
+        with ThreadPoolExecutor(max_workers=3) as pool:
+            jobs = {tf: pool.submit(_research_history, pair, tf)
+                    for tf in ("15m", "1h", "4h")}
+            fetched = {tf: jobs[tf].result() for tf in jobs}
+        now = int(time.time())
+        stamps = [stamp for _, stamp in fetched.values()]
+        if (any(not isinstance(stamp, int) or stamp > now + 5
+                or stamp < now - 120 for stamp in stamps)
+                or max(stamps) - min(stamps) > 120):
+            raise HTTPException(status_code=503, detail="Research sources are stale. No current structure claim.")
+        try:
+            result = analyze_market_structure(
+                {tf: bars for tf, (bars, _) in fetched.items()}, pair)
+        except MarketStructureError:
+            raise HTTPException(status_code=503, detail="Closed-candle structure verification failed.") from None
+        result["source"] = "Binance Spot public closed candles (single venue)"
+        result["fetched_at"] = min(stamps)
+        result["independently_cross_checked"] = False
+        return result
+    finally:
+        _RESEARCH_SLOTS.release()
+
+
+@app.get("/api/trading/indicators")
+def trading_market_indicators(response: Response, symbol: str = "BTCUSDT"):
+    """Reproducible descriptive EMA/RSI/ATR/volume/VWAP on closed spot bars.
+
+    Source is Binance Spot only; Task 37's independent venue gate does not
+    automatically verify these results. No orders, keys or recommendations.
+    """
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    pair = _research_pair(symbol)
+    if not _RESEARCH_SLOTS.acquire(blocking=False):
+        raise HTTPException(status_code=429, detail="Research busy. Retry shortly.")
+    try:
+        with ThreadPoolExecutor(max_workers=3) as pool:
+            jobs = {tf: pool.submit(_research_history, pair, tf)
+                    for tf in ("15m", "1h", "4h")}
+            fetched = {tf: jobs[tf].result() for tf in jobs}
+        now = int(time.time())
+        stamps = [stamp for _, stamp in fetched.values()]
+        if (any(not isinstance(stamp, int) or isinstance(stamp, bool)
+                or stamp > now + 5 or stamp < now - 120 for stamp in stamps)
+                or max(stamps) - min(stamps) > 120):
+            raise HTTPException(status_code=503, detail="Research sources are stale. No current indicator claim.")
+        try:
+            result = analyze_market_indicators(
+                {tf: bars for tf, (bars, _) in fetched.items()}, pair)
+        except MarketIndicatorsError:
+            raise HTTPException(status_code=503, detail="Closed-candle indicator verification failed.") from None
+        result["source"] = "Binance Spot public closed candles (single venue)"
+        result["fetched_at"] = min(stamps)
+        result["independently_cross_checked"] = False
+        return result
+    finally:
+        _RESEARCH_SLOTS.release()
+
+
+@app.get("/confluence_score")
+def trading_confluence_score(
+    response: Response,
+    symbol: str = Query(default="BTCUSDT", max_length=16),
+    direction: Literal["long", "short"] = Query(default="long"),
+):
+    """Five correlated 0–100 rule-coverage checks from closed public Spot bars.
+
+    Server obtains the candles/time; clients cannot submit pass flags or scores.
+    No account authentication, model request, training, orders or API key.
+    """
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    pair = _research_pair(symbol)
+    if not _RESEARCH_SLOTS.acquire(blocking=False):
+        raise HTTPException(status_code=429, detail="Research busy. Retry shortly.")
+    try:
+        with ThreadPoolExecutor(max_workers=3) as pool:
+            jobs = {tf: pool.submit(_research_history, pair, tf) for tf in ("15m", "1h", "4h")}
+            fetched = {tf: future.result() for tf, future in jobs.items()}
+        now_ms = int(time.time() * 1000)
+        stamps = [stamp for _, stamp in fetched.values()]
+        if (any(isinstance(stamp, bool) or not isinstance(stamp, int)
+                or stamp > now_ms // 1000 + 5 or stamp < now_ms // 1000 - 120 for stamp in stamps)
+                or max(stamps) - min(stamps) > 120):
+            raise HTTPException(status_code=503, detail="Stale sources. No confluence score generated.")
+        result = confluence_score({tf: bars for tf, (bars, _) in fetched.items()}, pair, now_ms, direction)
+        result["source"] = "Binance Spot public closed candles (single venue)"
+        result["fetched_at"] = min(stamps)
+        return result
+    except ConfluenceError:
+        raise HTTPException(status_code=503, detail="Closed-candle confluence verification failed. No score generated.") from None
+    except HTTPException:
+        raise
+    except Exception as exc:
+        _safe_log_failure("trading.confluence", exc)
+        raise HTTPException(status_code=503, detail="Confluence research unavailable. No score generated.") from None
+    finally:
+        _RESEARCH_SLOTS.release()
+
+
+@app.get("/api/trading/setup-assessment")
+def trading_setup_assessment(response: Response, symbol: str = "BTCUSDT"):
+    """Task 40: six correlated evidence-family checks, paper watchlist only.
+
+    Reuses one set of 15m/1h/4h Binance Spot closed histories for Task 38/39
+    analyzers. Independent Kraken data quality is NOT implicitly inherited.
+    """
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    pair = _research_pair(symbol)
+    if not _RESEARCH_SLOTS.acquire(blocking=False):
+        raise HTTPException(status_code=429, detail="Research busy. Retry shortly.")
+    try:
+        with ThreadPoolExecutor(max_workers=3) as pool:
+            jobs = {tf: pool.submit(_research_history, pair, tf)
+                    for tf in ("15m", "1h", "4h")}
+            fetched = {tf: jobs[tf].result() for tf in jobs}
+        now = int(time.time())
+        stamps = [stamp for _, stamp in fetched.values()]
+        if (any(not isinstance(stamp, int) or isinstance(stamp, bool)
+                or stamp > now + 5 or stamp < now - 120 for stamp in stamps)
+                or max(stamps) - min(stamps) > 120):
+            raise HTTPException(status_code=503, detail="Research sources are stale. No current setup claim.")
+        try:
+            result = assess_spot_setup(
+                {tf: bars for tf, (bars, _) in fetched.items()}, pair)
+        except SetupAssessmentError:
+            raise HTTPException(status_code=503, detail="Closed-candle setup verification failed.") from None
+        result["source"] = "Binance Spot public closed candles (single venue)"
+        result["fetched_at"] = min(stamps)
+        return result
+    finally:
+        _RESEARCH_SLOTS.release()
+
+
+@app.get("/api/trading/paper-risk")
+def trading_paper_risk(response: Response, symbol: str = "BTCUSDT",
+                       equity_usdt: float = Query(default=100, ge=10, le=100_000),
+                       risk_pct: float = Query(default=.5, ge=.1, le=1),
+                       fee_bps: float = Query(default=10, ge=1, le=100),
+                       slippage_bps: float = Query(default=5, ge=1, le=100)):
+    """Task 41: hypothetical spot risk/1R/2R only, no order or live fill."""
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    pair = _research_pair(symbol)
+    try:
+        validate_paper_settings(equity_usdt, risk_pct, fee_bps, slippage_bps)
+    except PaperRiskError:
+        raise HTTPException(status_code=422, detail="Invalid paper-only risk settings.") from None
+    if not _RESEARCH_SLOTS.acquire(blocking=False):
+        raise HTTPException(status_code=429, detail="Research busy. Retry shortly.")
+    try:
+        with ThreadPoolExecutor(max_workers=3) as pool:
+            jobs = {tf: pool.submit(_research_history, pair, tf)
+                    for tf in ("15m", "1h", "4h")}
+            fetched = {tf: jobs[tf].result() for tf in jobs}
+        now = int(time.time())
+        stamps = [stamp for _, stamp in fetched.values()]
+        if (any(not isinstance(stamp, int) or isinstance(stamp, bool)
+                or stamp > now + 5 or stamp < now - 120 for stamp in stamps)
+                or max(stamps) - min(stamps) > 120):
+            raise HTTPException(status_code=503, detail="Paper risk sources stale; no proposal.")
+        try:
+            result = assess_paper_risk(
+                {tf: bars for tf, (bars, _) in fetched.items()}, pair,
+                equity_usdt, risk_pct, fee_bps, slippage_bps)
+        except PaperRiskError:
+            raise HTTPException(status_code=503, detail="Paper risk verification failed.") from None
+        result["source"] = "Binance Spot public closed candles (single venue)"
+        result["fetched_at"] = min(stamps)
+        return result
+    finally:
+        _RESEARCH_SLOTS.release()
+
+
+@app.get("/api/trading/research")
+def trading_research(symbol: str = "BTCUSDT"):
+    pair = _research_pair(symbol)
+    if not _RESEARCH_SLOTS.acquire(blocking=False):
+        raise HTTPException(status_code=429, detail="Research busy. Retry shortly.")
+    try:
+        with ThreadPoolExecutor(max_workers=3) as pool:
+            results = dict(zip(("15m", "1h", "4h"), pool.map(
+                lambda interval: _research_history(pair, interval), ("15m", "1h", "4h"))))
+        return research({tf: value[0] for tf, value in results.items()}, pair,
+                        min(value[1] for value in results.values()))
+    finally:
+        _RESEARCH_SLOTS.release()
+
+
+class TradingBacktestRequest(BaseModel):
+    model_config = {"extra": "forbid"}
+    symbol: str = "BTCUSDT"
+    strategy: str = Field(default="trend_pullback", pattern="^(trend_pullback|breakout_retest)$")
+    equity: float = Field(default=1000, ge=10, le=100_000, allow_inf_nan=False)
+    risk_pct: float = Field(default=.5, ge=.1, le=1, allow_inf_nan=False)
+    daily_loss_limit: float = Field(default=10, ge=.1, le=1000, allow_inf_nan=False)
+    fee_bps: float = Field(default=10, ge=1, le=100, allow_inf_nan=False)
+    slippage_bps: float = Field(default=5, ge=1, le=100, allow_inf_nan=False)
+
+
+@app.post("/api/trading/backtest")
+def trading_backtest(payload: TradingBacktestRequest):
+    pair = _research_pair(payload.symbol)
+    if not _RESEARCH_SLOTS.acquire(blocking=False):
+        raise HTTPException(status_code=429, detail="Research busy. Retry shortly.")
+    try:
+        bars, fetched = _research_history(pair, "15m")
+        cfg = SimulationConfig(**payload.model_dump(exclude={"symbol", "strategy"}))
+        result = backtest(bars, payload.strategy, cfg)
+        return dict(result, symbol=pair, source="Binance Spot", fetched_at=fetched)
+    finally:
+        _RESEARCH_SLOTS.release()
 
 
 @app.get("/api/public/sentiment")

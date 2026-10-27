@@ -8,3 +8,6 @@
 .trade-gauge[aria-valuenow]:after{content:"";position:absolute;bottom:1px;left:50%;width:42px;height:2px;background:#d2eaff;box-shadow:0 0 6px #6fc7ff;transform-origin:0 50%;transform:rotate(calc(-180deg + var(--sentiment)*1.8deg))}
 
 @media(max-width:600px){.trade-dashboard .trade-chart-axis{font-size:19px}}
+
+.trade-research{margin-top:12px}.trade-research-settings{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:12px 0}.trade-research-settings label{font-size:11px;color:#b0c9e7}.trade-research-settings input,.trade-research-settings select{display:block;width:100%;box-sizing:border-box;background:#0e2040;border:1px solid #2c5da4;border-radius:7px;padding:9px;color:#d9ebff;margin-top:5px}.trade-research-actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.trade-research summary{cursor:pointer;min-height:32px;color:#a7d9ff}.trade-research #tradeResearchOutput{overflow-wrap:anywhere}.trade-consent{display:flex;align-items:center;gap:8px;font-size:11px;margin:15px 0}.trade-consent input{width:auto;min-width:18px;min-height:18px;margin:0}.trade-research [role=status]{color:#a9d7fc}.trade-research #tradeJournal{color:#9ab8d9}
+@media(max-width:600px){.trade-research-settings{grid-template-columns:repeat(2,minmax(0,1fr))}.trade-research-actions button{flex:1;min-height:42px}}

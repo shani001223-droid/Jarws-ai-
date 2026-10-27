@@ -7,6 +7,7 @@
 <meta name="description" content="HOSHI — your mobile-first AI companion">
 <link rel="stylesheet" href="./trading.css">
 <link rel="manifest" href="./manifest.json">
+<link rel="preconnect" href="https://jarws-ai-2.onrender.com" crossorigin>
 <link rel="icon" type="image/svg+xml" href="./assets/hoshi-app-icon.svg">
 <title>HOSHI — AI Companion</title>
 <style>
@@ -102,10 +103,11 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 #adStudioResult .ad-caption{white-space:pre-wrap;font-size:12px}
 </style>
 <link rel="stylesheet" href="./hoshi-core.css">
+<link rel="stylesheet" href="./hoshi-focus.css">
 <script type="module" src="./hoshi-core-ui.mjs"></script>
 </head>
 <body>
-<main id="nightroom" class="nightroom" aria-label="Hoshi nightroom assistant"><header class="night-head"><div class="night-brand">Hoshi ✧ 星<small>Your AI Assistant ♡</small></div><div id="nightConnection"></div></header><div class="night-conversation" id="nightConversation"><div id="nightMood" class="night-mood" aria-live="polite">✧ Caring</div><button type="button" id="nightAudioRetry" hidden>▶ Suno Hoshi</button><div id="voiceTiming" aria-live="polite">Voice timings appear after a command</div></div>        <div id="hoshiEnergy" class="core" data-state="idle" role="img" aria-label="Animated holographic AI energy core">
+<main id="nightroom" class="nightroom focus-mode" aria-label="Hoshi personal assistant"><header class="night-head"><div class="night-brand">Hoshi ✧ 星<small>Your AI Assistant ♡</small></div><div id="nightConnection"></div></header><div class="night-conversation" id="nightConversation"><div id="nightMood" class="night-mood" aria-live="polite">✧ Caring</div><button type="button" id="nightAudioRetry" hidden>▶ Suno Hoshi</button><div id="voiceTiming" aria-live="polite">Voice timings appear after a command</div></div>        <div id="hoshiEnergy" class="core focus-core" data-state="idle" role="img" aria-label="Animated holographic AI energy core">
           <div class="core-glow"></div>
           <div class="orbit orbit-outer"></div><div class="orbit orbit-middle"></div><div class="orbit orbit-inner"></div>
           <svg class="core-grid" viewBox="0 0 400 400" aria-hidden="true">
@@ -119,7 +121,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
           <div class="spark spark-one"></div><div class="spark spark-two"></div><div class="spark spark-three"></div>
           <span class="core-mark" aria-hidden="true">◇</span>
         </div>
-<div class="night-mic" id="nightMic"></div><nav class="night-tabs" aria-label="Main navigation"><button type="button" data-tab="chat" aria-selected="true"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M3 10L12 3l9 7v11h-6v-7H9v7H3z"/></svg></span>Chat</button><button type="button" data-tab="trading" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M5 3v18M12 3v18M19 3v18M3 7h4v7H3zM10 5h4v5h-4zM17 11h4v6h-4z"/></svg></span>Trading</button><button type="button" data-tab="influencer" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h4l2-3h6l2 3h4v14H3z M16 13a4 4 0 1 1-8 0a4 4 0 0 1 8 0"/></svg></span>AI Influencer</button><button type="button" data-tab="outfit" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M8 3l4 2l4-2l6 5l-4 4l-2-2v11H8V10l-2 2l-4-4z"/></svg></span>Outfit</button><button type="button" data-tab="settings" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8a4 4 0 0 0 0-8 M9 3h6l1 3l3 1l2 5l-2 5l-3 1l-1 3H9l-1-3l-3-1l-2-5l2-5l3-1z"/></svg></span>Settings</button></nav><section class="night-sheet" id="nightSheet" hidden aria-label="Assistant panel"><div class="sheet-head"><h2 id="sheetTitle">Chat</h2><button type="button" class="sheet-close" aria-label="Close panel">×</button></div><div data-panel="chat"><section class="hoshi-tools"><p class="small">Actions · allowed phone controls need Android Accessibility permission.</p><div class="hoshi-tool-grid">
+<div class="night-mic" id="nightMic"></div><button type="button" id="focusStop" class="focus-stop" aria-label="Stop Hoshi speaking or answering">■ Stop</button><nav class="night-tabs" aria-label="Main navigation"><button type="button" data-tab="chat" aria-selected="true"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M3 10L12 3l9 7v11h-6v-7H9v7H3z"/></svg></span>Chat</button><button type="button" data-tab="trading" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M5 3v18M12 3v18M19 3v18M3 7h4v7H3zM10 5h4v5h-4zM17 11h4v6h-4z"/></svg></span>Trading</button><button type="button" data-tab="influencer" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h4l2-3h6l2 3h4v14H3z M16 13a4 4 0 1 1-8 0a4 4 0 0 1 8 0"/></svg></span>AI Influencer</button><button type="button" data-tab="outfit" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M8 3l4 2l4-2l6 5l-4 4l-2-2v11H8V10l-2 2l-4-4z"/></svg></span>Outfit</button><button type="button" data-tab="settings" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8a4 4 0 0 0 0-8 M9 3h6l1 3l3 1l2 5l-2 5l-3 1l-1 3H9l-1-3l-3-1l-2-5l2-5l3-1z"/></svg></span>Settings</button></nav><section class="night-sheet" id="nightSheet" hidden aria-label="Assistant panel"><div class="sheet-head"><h2 id="sheetTitle">Chat</h2><button type="button" class="sheet-close" aria-label="Close panel">×</button></div><div data-panel="chat"><section class="hoshi-tools"><p class="small">Actions · allowed phone controls need Android Accessibility permission.</p><div class="hoshi-tool-grid">
 <button type="button" data-hoshi-command="open YouTube">▶ YouTube</button>
 <button type="button" data-hoshi-command="open WhatsApp">◉ WhatsApp</button>
 <button type="button" data-hoshi-command="open Telegram">➤ Telegram</button>
@@ -129,7 +131,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 <button type="button" data-hoshi-command="swipe up">↑ Swipe</button>
 <button type="button" data-hoshi-command="take screenshot">▣ Screenshot</button>
 </div><button type="button" id="enablePhoneAccess" class="primary">Enable phone Accessibility permission</button>
-<div class="hoshi-draft"><label for="hoshiDraft">Writing pad · local to this device</label><textarea id="hoshiDraft" rows="3" maxlength="2000" placeholder="Hoshi, note likho…"></textarea><div class="hoshi-tool-grid"><button type="button" id="useHoshiReply">Use AI reply</button><button type="button" id="copyHoshiDraft">Copy text</button><button type="button" id="shareHoshiDraft">Share draft</button></div><p id="draftStatus" class="small" role="status">Draft is not automatically sent.</p></div></section><section id="adStudioResult" hidden aria-live="polite"></section></div><div data-panel="trading" hidden>
+<div class="hoshi-draft"><label for="hoshiDraft">Writing pad · local to this device</label><textarea id="hoshiDraft" rows="3" maxlength="2000" placeholder="Hoshi, note likho…"></textarea><div class="hoshi-tool-grid"><button type="button" id="useHoshiReply">Use AI reply</button><button type="button" id="copyHoshiDraft">Copy text</button><button type="button" id="shareHoshiDraft">Share draft</button></div><p id="draftStatus" class="small" role="status">Draft is not automatically sent.</p></div></section><section id="adStudioResult" hidden aria-live="polite"></section><section id="sourceResearchResult" hidden aria-live="polite" class="section" aria-label="Fresh source citations"></section></div><div data-panel="trading" hidden>
 <div id="tradeDashboard" class="trade-dashboard">
 <aside class="trade-rail"><div class="trade-logo"><img src="./assets/hoshi-app-icon.svg" width="36" height="36" alt=""><div>Hoshi AI<small>Trading Assistant</small></div></div><nav aria-label="Trading workspace"><button type="button" data-trade-target="tradeOverview" aria-pressed="true">↗ Trading</button><button type="button" data-trade-target="tradeAnalysis">◈ Analysis</button><button type="button" data-trade-target="tradeNews">▤ News</button><button type="button" data-trade-target="tradeWatchlist">☆ Watchlist</button><button type="button" data-trade-target="tradeExecution">▣ Positions</button></nav><div class="trade-rail-note">Trade smart.<br>Understand the chart.<span>✧ With Hoshi</span></div></aside>
 <div class="trade-content">
@@ -137,9 +139,24 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 <section id="tradeOverview" class="trade-overview trade-box"><div class="trade-pair-row"><label class="trade-pair-label"><span class="trade-coin">₿</span><select id="tradePair" aria-label="Trading pair"><option value="BTCUSDT">BTC / USDT</option><option value="ETHUSDT">ETH / USDT</option><option value="SOLUSDT">SOL / USDT</option><option value="BNBUSDT">BNB / USDT</option></select></label><strong id="tradePrice" class="trade-price">—</strong><span id="tradeChange" class="trade-change">24h change: —</span></div><div class="trade-summary"><span id="tradeSource">Binance Spot · waiting for data</span><span>24h volume <strong id="tradeVolume">—</strong></span><label>Timeframe <select id="tradeInterval" aria-label="Chart timeframe"><option>5m</option><option>1m</option><option>15m</option><option>1h</option><option>4h</option><option>1d</option></select></label></div></section>
 <div class="trade-hero-grid"><section class="trade-chart-box trade-box"><div class="trade-card-head"><h3>Market chart</h3><div class="trade-chart-tools"><button type="button" id="tradeCandles" aria-pressed="true">Candles</button><button type="button" id="tradeLine" aria-pressed="false">Line</button><button type="button" id="tradeRange" aria-pressed="false" title="Show the high and low of displayed candles">Range</button></div></div><div class="trade-chart-legend"><span class="trade-positive">EMA 9</span><span class="trade-violet">SMA 20</span><span>Binance Spot · OHLCV</span></div><svg id="tradeChart" viewBox="0 0 720 360" width="100%" role="img" aria-label="Public Binance Spot candlestick chart"><text x="20" y="170" fill="#9ab2c6" font-size="14">Loading market candles…</text></svg><div id="tradeChartNote" class="trade-muted">Historical spot candles · volume below · range is not a trade signal</div></section><aside class="trade-companion trade-box"><img src="./assets/outfits/kimono.webp" alt="Hoshi with silver-white hair, blue eyes and her blue floral kimono" width="1024" height="1536" loading="lazy"><div class="trade-companion-top">✧ Hoshi’s market room</div><div class="trade-companion-caption">“Pehle chart samjho,<br>phir apna faisla karo.” ♡<button type="button" id="tradeAsk">✧ Ask Hoshi</button></div></aside></div>
 <div class="trade-info-grid"><section id="tradeAnalysis" class="trade-box"><h3>◈ Market analysis</h3><div id="tradeIndicators" class="trade-muted">EMA 9 · SMA 20 · RSI 14: waiting for candles</div><p class="trade-muted">Indicators describe past prices. They do not predict returns.</p><button type="button" id="tradeFocusChart">View chart ↑</button></section><section class="trade-box"><h3>◉ Market sentiment</h3><div id="tradeGauge" class="trade-gauge" role="meter" aria-label="Crypto Fear and Greed Index" aria-valuemin="0" aria-valuemax="100"><span id="tradeGaugeValue">—</span></div><div id="tradeSentiment" class="trade-muted">Fear &amp; Greed: waiting for data</div><a class="trade-small-link" href="https://alternative.me/crypto/fear-and-greed-index/" target="_blank" rel="noopener noreferrer">Source: Alternative.me ↗</a></section><section id="tradeNews" class="trade-box"><h3>▤ Market news</h3><span class="trade-status-chip">Feed not connected</span><p class="trade-muted">No verified news headlines are loaded here.</p><a href="https://www.binance.com/en/square/news/all" target="_blank" rel="noopener noreferrer">Open Binance News ↗</a></section></div>
+<section id="tradeResearch" class="trade-box trade-research" aria-label="Paper research lab">
+<div class="trade-card-head"><h3>◈ Hoshi research lab</h3><span class="trade-status-chip">Spot long · paper only</span></div>
+<p>BTC / ETH · closed candles only. Historical tests are experiments, not forward demo trades.</p>
+<details id="tradeResearchSettings"><summary>Simulation settings</summary><div class="trade-research-settings">
+<label>Strategy<select id="tradeStrategy"><option value="trend_pullback">Trend pullback</option><option value="breakout_retest">Breakout + retest</option></select></label>
+<label>Virtual equity (USDT)<input id="paper_equity" type="number" min="10" max="100000" step="any" value="1000"></label>
+<label>Risk per trade (%)<input id="paper_risk_pct" type="number" min="0.1" max="1" step="0.1" value="0.5"></label>
+<label>Daily gross loss cap (USDT)<input id="paper_daily_loss_limit" type="number" min="0.1" max="1000" step="any" value="10"></label>
+<label>Fee per side (bps)<input id="paper_fee_bps" type="number" min="1" max="100" step="any" value="10"></label>
+<label>Slippage per side (bps)<input id="paper_slippage_bps" type="number" min="1" max="100" step="any" value="5"></label>
+</div><p class="trade-muted">10 bps = 0.1%. Defaults are simulation assumptions, not your account fees. No leverage.</p></details>
+<div class="trade-research-actions"><button type="button" id="tradeResearchRun">Research BTC / ETH</button><button type="button" id="tradeBacktestRun">Test strategy</button><button type="button" id="tradeResearchExport" disabled>Export JSON</button></div>
+<p id="tradeResearchStatus" role="status" aria-live="polite"></p><div id="tradeResearchOutput" aria-live="polite"></div>
+<label class="trade-consent"><input id="tradeJournalConsent" type="checkbox"> Save last 10 simulation summaries on this device</label><div id="tradeJournal"></div><button type="button" id="tradeJournalClear">Clear saved summaries</button>
+</section>
 <div class="trade-bottom-grid"><section id="tradeExecution" class="trade-box"><h3>▣ Orders &amp; positions</h3><span class="trade-status-chip">Account not connected</span><p class="trade-muted">No real or demo orders are placed. Positions, profit, leverage and balances are unavailable.</p><button type="button" disabled>Order placement unavailable</button></section><section id="tradeWatchlist" class="trade-box"><div class="trade-card-head"><h3>☆ Watchlist</h3><button type="button" id="tradeWatchToggle">+ Add pair</button></div><div id="tradeWatchRows"></div><p class="trade-muted">Saved on this device. Select a pair to fetch its current spot data.</p></section></div>
 <footer class="trade-footer"><p id="tradeStatus" role="status" aria-live="polite">Open this tab to fetch public market information.</p><span>Keyless public data · Refresh for latest values · provider/network availability applies</span></footer>
-</div></div></div><div data-panel="influencer" hidden><p>AI Influencer tools are not connected yet.</p></div><div data-panel="outfit" hidden><p class="small">Choose a look. It applies to the main screen and is saved on this device.</p><div id="outfitGrid" class="outfit-grid"></div><p id="outfitFeedback" class="small" role="status"></p></div><div data-panel="settings" hidden><p><a href="./profile-memory.html">Import / manage private memory</a></p><details id="clientDiagnostics" class="section"><summary>Safe error report</summary><p class="small">Sirf request IDs aur error counts. Chat, keys aur error messages record nahi hote. Report isi page ki memory mein hai; automatically upload nahi hoti.</p><pre id="clientDiagnosticReport" style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:10px;max-height:220px;overflow:auto"></pre><div class="hoshi-tool-grid"><button type="button" id="copyDiagnosticReport">Copy safe report</button><button type="button" id="clearDiagnosticReport">Clear report</button></div><p id="clientDiagnosticStatus" class="small" role="status"></p></details><button type="button" id="nativeRemindersBtn" hidden>View / cancel reminders</button></div></section></main>
+</div></div></div><div data-panel="influencer" hidden><p>AI Influencer tools are not connected yet.</p></div><div data-panel="outfit" hidden><p class="small">Choose a look. It applies to the main screen and is saved on this device.</p><div id="outfitGrid" class="outfit-grid"></div><p id="outfitFeedback" class="small" role="status"></p></div><div data-panel="settings" hidden><button type="button" id="focusModeToggle" aria-pressed="true">Minimal home screen: ON</button><p class="small">Black animated core by default. Switch OFF to reveal Chat, Trading, Outfit and other existing tabs. No tools are deleted.</p><p><a href="./profile-memory.html">Import / manage private memory</a></p><details id="clientDiagnostics" class="section"><summary>Safe error report</summary><p class="small">Sirf request IDs aur error counts. Chat, keys aur error messages record nahi hote. Report isi page ki memory mein hai; automatically upload nahi hoti.</p><pre id="clientDiagnosticReport" style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:10px;max-height:220px;overflow:auto"></pre><div class="hoshi-tool-grid"><button type="button" id="copyDiagnosticReport">Copy safe report</button><button type="button" id="clearDiagnosticReport">Clear report</button></div><p id="clientDiagnosticStatus" class="small" role="status"></p></details><button type="button" id="nativeRemindersBtn" hidden>View / cancel reminders</button></div></section></main>
 <div class="dashboard-shell">
 <aside class="sidebar" aria-label="HOSHI navigation">
 <div class="brand-mark">H<span>OSHI</span></div>
@@ -179,11 +196,11 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 </div><aside class="utility-column" aria-label="HOSHI status and shortcuts">
 <div class="section utility-clock"><div class="clock-caption"><div class="small">YOUR LOCAL TIME</div><div class="pill">DEVICE</div></div><div class="clock-time"><span id="clockHour">--:--</span> <span class="clock-meridiem" id="clockMeridiem">--</span></div><div class="clock-date" id="clockDate">Loading local date…</div></div>
 <div class="section"><h2>QUICK ACTIONS</h2><div class="quick-grid"><button type="button" data-cmd="what time is it"><span>◷</span>Time now</button><button type="button" data-cmd="today's date"><span>▦</span>Today's date</button><button type="button" id="screenshotQuickBtn"><span>▣</span>Take screenshot</button><button type="button" data-cmd="open YouTube"><span>▶</span>Open YouTube</button></div></div>
-<div class="section"><h2>SYSTEM STATUS</h2><div class="system-metrics"><div class="system-metric"><span>Cloud AI</span><strong id="utilityConnection">Checking…</strong></div><div class="system-metric"><span>Expression</span><strong id="utilityEmotion">CARING</strong></div><div class="system-metric"><span>Local memory</span><strong id="utilityMemory">ON</strong></div><div class="system-metric"><span>Voice reply</span><strong id="utilityVoice">ON</strong></div></div></div>
+<div class="section"><h2>SYSTEM STATUS</h2><div class="system-metrics"><div class="system-metric"><span>Cloud AI</span><strong id="utilityConnection">Checking…</strong></div><div class="system-metric"><span>Expression</span><strong id="utilityEmotion">CARING</strong></div><div class="system-metric"><span>Local memory</span><strong id="utilityMemory">OFF</strong></div><div class="system-metric"><span>Voice reply</span><strong id="utilityVoice">ON</strong></div></div></div>
 <div class="section"><h2>RECENT CONVERSATION</h2><p class="small">Latest saved turns on this device.</p><div class="recent-activity" id="recentActivity"><div class="activity-line">Start a conversation to see recent activity.</div></div><div class="quick"><button type="button" id="viewHistoryBtn">View all history</button></div></div>
 </aside></div>
 <div class="bottom-workspace">
-<div class="section" id="memoryPanel"><div class="statusrow"><h2>HOSHI MEMORY & CHAT HISTORY</h2><button class="toggle" type="button" id="memoryToggle">Local memory: ON</button></div><p class="small">Recent chat is saved locally. A small recent context is sent with AI requests for continuity. Messages that look like credentials, recovery phrases, OTPs, email addresses, phone numbers, or long numeric identifiers are filtered from local history. These checks are heuristic. Edit or delete individual entries, turn memory off, or clear history any time.</p><div id="chatHistory" class="chat-history" aria-live="polite">Your recent conversation will appear here.</div><div class="quick"><button type="button" id="clearMemoryBtn">Clear history</button></div></div>
+<div class="section" id="memoryPanel"><div class="statusrow"><h2>HOSHI MEMORY & CHAT HISTORY</h2><button class="toggle" type="button" id="memoryToggle">Local memory: OFF</button></div><p class="small">Memory is OFF until you opt in. When enabled, up to 12 recent turns stay in this browser and up to 8 filtered turns are sent with AI requests for context. Secret detection is heuristic, not guaranteed. Export your local JSON or clear it any time. Turning memory OFF deletes saved history. Browser data clearing also deletes it; no cloud sync is provided.</p><div id="chatHistory" class="chat-history" aria-live="polite">Your recent conversation will appear here.</div><div class="quick"><button type="button" id="exportMemoryBtn">Export JSON</button><button type="button" id="clearMemoryBtn">Clear history</button></div></div>
 <div class="section" id="voicePanel"><div class="voice-heading"><span class="voice-star" aria-hidden="true">✦</span><div><h2>HOSHI VOICE</h2><p class="small">A softer way to talk.</p></div><span class="pill">ON DEVICE</span></div><div class="voice-grid">
 <p class="voice-intro">Gentle, warm and a little playful. Choose Hoshi’s delivery.</p>
 <div class="voice-styles" role="group" aria-label="Hoshi voice delivery">
@@ -196,12 +213,17 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 <audio id="hoshiAudio" controls hidden preload="none" aria-label="Hoshi Urdu voice playback" style="width:100%;max-width:100%"></audio>
 <p class="small">Fast mode uses an available Urdu device or browser voice. Online fallback sends spoken reply text to Microsoft. Turn voice replies off to disable speech. If automatic playback is blocked, tap Play above.</p>
 <details class="voice-fine-tune"><summary>Fine tune delivery</summary>
-<div class="voice-setting"><label for="pitchSlider">Softness / pitch</label><output id="pitchValue">1.12×</output><input id="pitchSlider" type="range" min="0.8" max="1.4" step="0.01" value="1.12" aria-label="Voice pitch"></div>
-<div class="voice-setting"><label for="rateSlider">Speaking speed</label><output id="rateValue">0.88×</output><input id="rateSlider" type="range" min="0.75" max="1.15" step="0.01" value="0.88" aria-label="Speaking speed"></div>
+<div class="voice-setting"><label for="pitchSlider">Softness / pitch</label><output id="pitchValue">1.04×</output><input id="pitchSlider" type="range" min="0.8" max="1.4" step="0.01" value="1.04" aria-label="Voice pitch"></div>
+<div class="voice-setting"><label for="rateSlider">Speaking speed</label><output id="rateValue">0.94×</output><input id="rateSlider" type="range" min="0.75" max="1.15" step="0.01" value="0.94" aria-label="Speaking speed"></div>
 <button type="button" id="resetVoiceBtn">Restore soft voice</button></details>
 <p class="small">Delivery styles tune your device’s speech voice. They do not add a new anime voice. Pakistani Urdu (ur-PK) is preferred when installed. Urdu mode never substitutes Hindi or English voices. Voice quality and Urdu pronunciation depend on the installed speech engine.</p>
 </div></div>
-<div class="section" id="screenControlSection" style="display:none"><h2>BASIC PHONE CONTROLS</h2><p class="small">Optional Android Accessibility permission. Only the actions you tap run; HOSHI does not inspect screen text or upload screenshots. Screenshot requires Android 9 or newer.</p><div class="quick"><button type="button" id="screenPermissionBtn">Enable permission</button><button type="button" data-screen-action="screenshot">Take screenshot</button><button type="button" data-screen-action="back">Back</button><button type="button" data-screen-action="home">Home</button><button type="button" data-screen-action="swipe_up">Swipe up</button><button type="button" data-screen-action="swipe_down">Swipe down</button></div></div>
+<div class="section" id="screenControlSection" style="display:none"><h2>BASIC PHONE CONTROLS</h2><p class="small">Optional Android Accessibility permission for Back/Home/Swipe and system screenshot. The basic control service does not inspect screen text or upload screenshots. The separate OCR reader works only on an image you explicitly choose. Screenshot requires Android 9 or newer.</p><div class="quick"><button type="button" id="screenPermissionBtn">Enable permission</button><button type="button" data-screen-action="screenshot">Take screenshot</button><button type="button" data-screen-action="back">Back</button><button type="button" data-screen-action="home">Home</button><button type="button" data-screen-action="swipe_up">Swipe up</button><button type="button" data-screen-action="swipe_down">Swipe down</button></div><h3>READ SAVED SCREENSHOT · PRIVATE</h3><p class="small">Choose a screenshot. Roman Urdu/English text is read on this phone using offline OCR; Urdu script is not supported. Nothing is uploaded, saved or sent to AI automatically. Avoid sensitive screenshots.</p><div class="quick"><button type="button" id="screenOcrBtn">Choose screenshot to read</button><button type="button" id="screenOcrClearBtn">Clear reading</button></div><p id="screenOcrStatus" class="small" role="status" aria-live="polite">No screenshot selected.</p><pre id="screenOcrOutput" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:240px;overflow:auto" aria-label="On-device screenshot text"></pre><h3>HOSHI-ONLY TAP / TYPE / SCROLL</h3><p class="small">Optional Android accessibility permission required. Actions stay inside this Hoshi screen: switch tabs, edit an unsent chat draft or scroll the Hoshi sheet. No other apps, auto-send, passwords or purchases. A verified result checks Hoshi tab, unsent draft or sheet movement only; it cannot verify another app or Android system action.</p><div class="quick"><button type="button" id="localUiChatBtn">Tap Chat tab</button><button type="button" id="localUiSettingsBtn">Tap Settings tab</button><button type="button" id="localUiScrollUpBtn">Scroll up</button><button type="button" id="localUiScrollDownBtn">Scroll down</button></div><label class="small" for="localUiDraft">Draft for Hoshi chat (never auto-send)</label><input id="localUiDraft" type="text" maxlength="240" autocomplete="off" placeholder="Roman Urdu draft"><button type="button" id="localUiTypeBtn">Type draft in Chat</button><p id="localUiStatus" role="status" class="small">No local action requested.</p>
+<h3>ACTION SAFETY · PRIVATE</h3>
+<p class="small">Pause blocks new Hoshi screen/app actions. Emergency Stop also interrupts voice and pending AI replies. Resume requires your tap. Already completed Android actions cannot be undone. History is session-only action names and outcomes; no drafts, screenshots or account data are saved.</p>
+<div class="quick"><button type="button" id="actionPauseBtn">Ⅱ Pause actions</button><button type="button" id="actionResumeBtn" disabled>▶ Resume actions</button><button type="button" id="actionEmergencyStopBtn">■ Emergency stop</button><button type="button" id="actionHistoryClearBtn">Clear action history</button></div>
+<p id="actionSafetyStatus" role="status" aria-live="polite" class="small">Action controls ready.</p>
+<ol id="actionHistory" aria-label="Recent local action outcomes" class="small" style="max-height:180px;overflow:auto;padding-left:22px"></ol></div>
 <div class="section" id="settings"><div class="statusrow"><h2>WAKE WORD</h2><button class="toggle" id="wakeToggle">Hey HOSHI: OFF</button></div><p class="small">One tap listens for one command, then the microphone stays off during Hoshi's response. Hey Hoshi is optional within the same utterance; background listening is disabled.</p></div>
 <div class="section" id="personalityPanel"><h2>PERSONALITY MODE</h2><label for="personalitySelect" class="small">How should Hoshi sound?</label><select id="personalitySelect" aria-label="Hoshi personality mode"><option value="balanced">Balanced · caring and playful</option><option value="playful">Playful · more teasing and jokes</option><option value="affectionate">Affectionate · softer and warmer</option><option value="calm">Calm · gentle and thoughtful</option></select><p class="small">This changes reply style, not Hoshi’s identity or boundaries.</p></div>
 <div class="section" id="commandShortcuts"><h2>TRY A COMMAND</h2><p class="small">“Hey HOSHI” · “What time is it?” · “Open Google” · “Open YouTube” · “Help” · “Stop speaking”</p><div class="quick"><button data-cmd="what time is it">Time</button><button data-cmd="today's date">Date</button><button data-cmd="open Google">Google</button><button data-cmd="open YouTube">YouTube</button><button data-cmd="help">Help</button></div></div>
@@ -223,9 +245,15 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 <script src="./assistant-commands.js"></script>
 <script src="./reminder-parser.js"></script>
 <script src="./memory-privacy.js"></script>
+<script src="./hoshi-memory-store.js"></script>
 <script src="./speech-pipeline.js"></script>
 <script src="./profile-store.js"></script>
 <script src="./hoshi-product-ads.js"></script>
+<script src="./hoshi-task-router.js"></script>
+<script src="./hoshi-trading-research.js"></script>
+<script src="./hoshi-source-research.js"></script>
+<script src="./hoshi-speech-input.js"></script>
+<script src="./hoshi-local-ui-actions.js"></script>
 <script>
 (()=> {
  const $=id=>document.getElementById(id), status=$('status'), reply=$('reply'), input=$('commandInput'), orb=$('orb');
@@ -236,7 +264,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  $('nightMic').append($('wakeBtn'));$('wakeBtn').setAttribute('aria-label','Start or stop microphone');
  const chatPanel=shell.querySelector('[data-panel="chat"]'),settingsPanel=shell.querySelector('[data-panel="settings"]');
  $('nightAudioRetry').onclick=()=>{$('hoshiAudio').play().then(()=>{$('nightAudioRetry').hidden=true}).catch(()=>setStatus('AUDIO BLOCKED · CHECK MEDIA SETTINGS'))};
- chatPanel.append($('commandForm'),$('adStudioResult'),$('memoryPanel'));
+ chatPanel.append($('commandForm'),$('adStudioResult'),$('sourceResearchResult'),$('memoryPanel'));
  settingsPanel.append(document.querySelector('.controls'),document.querySelector('.bottom-workspace'));
  function updateDiagnosticReport(){const d=window.HoshiDiagnostics;$('clientDiagnosticReport').textContent=d?JSON.stringify(d.snapshot(),null,2):'Diagnostics unavailable; reload to retry.'}
  $('clientDiagnostics').addEventListener('toggle',()=>{if($('clientDiagnostics').open)updateDiagnosticReport()});
@@ -245,6 +273,23 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 
  if(window.JarvisBridge&&typeof window.JarvisBridge.showReminders==='function'){$('nativeRemindersBtn').hidden=false;$('nativeRemindersBtn').onclick=()=>window.JarvisBridge.showReminders()}
  $('stopBtn').hidden=true;$('testBtn').hidden=true;
+ $('focusStop').onclick=()=>interruptHoshi();
+ // Focus UI defaults ON for a clean private home. Advanced tools remain one tap
+ // away in Settings, and the user's chosen layout is kept on this device only.
+ let focusMode=true;
+ try{focusMode=localStorage.getItem('hoshiFocusModeV1')!=='false'}catch(_){}
+ function updateFocusMode(){
+   shell.classList.toggle('focus-mode',focusMode);
+   $('focusModeToggle').textContent='Minimal home screen: '+(focusMode?'ON':'OFF');
+   $('focusModeToggle').setAttribute('aria-pressed',String(focusMode));
+ }
+ $('focusModeToggle').onclick=()=>{
+   focusMode=!focusMode;
+   try{localStorage.setItem('hoshiFocusModeV1',String(focusMode))}catch(_){}
+   updateFocusMode();
+   if(!focusMode)applyOutfit(savedOutfit,false);
+ };
+ updateFocusMode();
  let activeTab='chat';
  function showTab(tab){activeTab=tab;$('nightSheet').scrollTop=0;shell.classList.toggle('trading-open',tab==='trading');$('nightSheet').classList.toggle('trading-sheet',tab==='trading');$('nightSheet').hidden=false;shell.querySelectorAll('[data-panel]').forEach(p=>p.hidden=p.dataset.panel!==tab);shell.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===tab)));$('sheetTitle').textContent={chat:'Chat',trading:'Trading',influencer:'AI Influencer',outfit:'Outfit',settings:'Settings'}[tab];if(tab==='chat')input.focus();if(tab==='trading')loadTradingData()}
  shell.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
@@ -256,7 +301,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  async function loadOutfitImage(path){if(!outfitImages.has(path))outfitImages.set(path,new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>{outfitImages.delete(path);reject(new Error('Outfit image could not load'))};img.src=path}));return outfitImages.get(path)}
  async function applyOutfit(id,persist=true){const sequence=++outfitRequest;const def=outfitDefinitions.find(d=>d.id===id)||outfitDefinitions[0];$('outfitFeedback').textContent='Applying '+def.name+'…';try{await loadOutfitImage(def.asset);if(sequence!==outfitRequest)return;shell.style.backgroundImage='url("'+def.asset+'")';shell.dataset.outfit=def.id;shell.dataset.outfitName=def.name;document.querySelectorAll('button[data-outfit]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.outfit===def.id)));if(persist){try{localStorage.setItem('hoshiOutfitV1',def.id)}catch(_){}}$('outfitFeedback').textContent=def.name+' applied';if(persist){$('nightSheet').hidden=true;input.blur()}}catch(error){if(sequence===outfitRequest)$('outfitFeedback').textContent='Outfit could not load. Check connection and try again.'}}
  for(const def of outfitDefinitions){const button=document.createElement('button');button.type='button';button.className='outfit-card';button.dataset.outfit=def.id;button.setAttribute('aria-pressed','false');button.setAttribute('aria-label','Wear '+def.name);const preview=document.createElement('img');preview.loading='lazy';preview.decoding='async';preview.src=def.asset;preview.alt='';preview.width=128;preview.height=192;button.append(preview);const label=document.createElement('span');label.textContent=def.name;button.append(label);button.onclick=()=>applyOutfit(def.id);$('outfitGrid').append(button)}
- let savedOutfit='original';try{savedOutfit=localStorage.getItem('hoshiOutfitV1')||'original'}catch(_){}applyOutfit(savedOutfit,false);
+ let savedOutfit='original';try{savedOutfit=localStorage.getItem('hoshiOutfitV1')||'original'}catch(_){}if(!focusMode)applyOutfit(savedOutfit,false);
  const API_BASE='https://jarws-ai-2.onrender.com';
  const tracedFetch=(...args)=>fetch(...args).then(response=>{if(window.HoshiDiagnostics)window.HoshiDiagnostics.noteResponse(response);return response},error=>{if(window.HoshiDiagnostics)window.HoshiDiagnostics.record(error&&error.name==='AbortError'?'request_cancelled':'request_failed');throw error});
 
@@ -332,6 +377,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  $('tradeFocusChart').onclick=()=>$('tradeOverview').scrollIntoView({block:'start'});
  $('tradeAsk').onclick=()=>{const text=$('tradePair').value+' '+$('tradeInterval').value+' spot market. Price: '+$('tradePrice').textContent+'. '+$('tradeIndicators').textContent+'. In indicators ka matlab samjhao; yeh sirf public market information hai.';showTab('chat');input.value=text;input.focus()};
  renderTradeWatch();
+ const tradingLab=window.HoshiTradingResearch.mount({backend:API_BASE});
 
  let voiceListenStartedAt=0,voiceTimes={listen:null,ai:null,audio:null};
  const voiceClock=()=>performance.now();
@@ -345,12 +391,12 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  window.hoshiNativeListeningState=active=>{if(nativeMicActive&&active)setStatus('LISTENING · SPEAK NOW')};
  window.hoshiNativeSpeechResult=heard=>{
   if(!nativeMicActive)return;markVoiceHeard();endNativeMic();
-  const text=String(heard||'').trim();if(!text){setStatus('NO SPEECH HEARD · TAP MIC TO RETRY');return}
-  input.value=text;
-  const command=wakeEnabled?text.replace(/^hey[, ]*hoshi[,: ]*/i,'').trim():text;
-  if(wakeEnabled&&command===text){setStatus('SAY HEY HOSHI · TAP AGAIN');return}
-  if(!command){setStatus('TAP MIC AGAIN AND SAY COMMAND');return}
-  processCommand(command,'voice')
+  const result=window.HoshiSpeechInput.choose(heard,wakeEnabled);
+  if(!result.heard){setStatus('NO SPEECH HEARD · TAP MIC TO RETRY');return}
+  input.value=result.heard;
+  if(result.needsWake){setStatus('SAY HEY HOSHI · TAP AGAIN');return}
+  if(!result.command){setStatus('TAP MIC AGAIN AND SAY COMMAND');return}
+  processCommand(result.command,'voice')
  };
  window.hoshiNativeSpeechError=error=>{
   if(!nativeMicActive)return;endNativeMic();setStatus('MIC ERROR · '+String(error||'speech unavailable').slice(0,100)+' · TAP TO RETRY')
@@ -378,10 +424,13 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  async function askCloud(message,fast=false){
   const requestId=++cloudRequestSequence;
   if(activeCloudController){try{activeCloudController.abort()}catch(_){}}
-  const modelStarted=voiceClock();voiceTimes.ai=null;voiceTimes.audio=null;displayVoiceTimes();setStatus('AI THINKING…');setEmotion('thinking');orb.classList.add('active');
+  const modelStarted=voiceClock();voiceTimes.ai=null;voiceTimes.audio=null;displayVoiceTimes();shell.classList.add('responding');setStatus(fast?'QUICK AI REPLY…':'AI THINKING…');setEmotion('thinking');orb.classList.add('active');
   const controller=typeof AbortController==='function'?new AbortController():null;
   activeCloudController=controller;
-  const timeout=controller?setTimeout(()=>controller.abort(),32000):null;
+  // The backend caps brief replies to a shorter provider budget. Give the
+  // network a little extra time, but never let a quick question wait 32s.
+  // Detailed work still keeps its original, longer network timeout.
+  const timeout=controller?setTimeout(()=>controller.abort(),fast?18000:32000):null;
   try{
    const options={method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,locale:commandLanguage,personality:getPersonality(),context:getCloudContextForRequest(message),fast})};
    if(controller)options.signal=controller.signal;
@@ -400,6 +449,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
   }finally{
    if(timeout!==null)clearTimeout(timeout);
    if(requestId===cloudRequestSequence){
+    shell.classList.remove('responding');
     if(activeCloudController===controller)activeCloudController=null;
     setTimeout(()=>orb.classList.remove('active'),900);
    }
@@ -409,12 +459,23 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  let fastPhoneVoice=true;
  try{fastPhoneVoice=localStorage.getItem('hoshiFastPhoneVoice')!=='false'}catch(_){}
  $('fastVoiceToggle').onclick=()=>{fastPhoneVoice=!fastPhoneVoice;try{localStorage.setItem('hoshiFastPhoneVoice',String(fastPhoneVoice))}catch(_){}refreshVoices()};
- const voiceStyles={soft:[1.12,0.88],warm:[1.04,0.85],playful:[1.18,0.96]};
+ const voiceStyles={soft:[1.04,0.94],warm:[1.01,0.90],playful:[1.09,1.02]};
  function refreshVoices(){const status=$('voiceEngineStatus');$('fastVoiceToggle').textContent='⚡ Fast phone voice: '+(fastPhoneVoice?'ON':'OFF');$('fastVoiceToggle').setAttribute('aria-pressed',String(fastPhoneVoice));if(window.JarvisBridge&&typeof window.JarvisBridge.supportsUrduSpeech==='function'&&window.JarvisBridge.supportsUrduSpeech()){status.textContent=fastPhoneVoice?'Fast device Urdu voice ready · no online audio fetch':'Natural online Urdu voice selected';return}const voice=chooseVoice();status.textContent=voice?'Urdu / selected-language speech ready':'Online Urdu fallback available · internet required'}
  function chooseVoice(){if(!('speechSynthesis'in window))return null;const voices=window.speechSynthesis.getVoices();const lang=(commandLanguage||'ur-PK').toLowerCase(),base=lang.split('-')[0];const female=/female|uzma|zira|samantha|aria|jenny|sara|siri|victoria|eva|sonia|karen/i;const locale=v=>String(v.lang||'').toLowerCase();const exact=voices.filter(v=>locale(v)===lang),same=voices.filter(v=>locale(v).split('-')[0]===base);return exact.find(v=>female.test(v.name))||exact[0]||same.find(v=>female.test(v.name))||same[0]||(base==='ur'?null:voices.find(v=>female.test(v.name))||voices[0])||null}
  function saveVoiceSettings(){const pitch=Number($('pitchSlider').value),rate=Number($('rateSlider').value);$('pitchValue').textContent=pitch.toFixed(2)+'×';$('rateValue').textContent=rate.toFixed(2)+'×';try{localStorage.setItem('jarvisVoicePitch',String(pitch));localStorage.setItem('jarvisVoiceRate',String(rate));localStorage.removeItem('jarvisVoiceKey');if(!localStorage.getItem('hoshiVoiceStyle'))localStorage.setItem('hoshiVoiceStyle','soft')}catch(e){}}
  function applyVoiceStyle(style,persist=true){const key=voiceStyles[style]?style:'soft';const [pitch,rate]=voiceStyles[key];$('pitchSlider').value=pitch;$('rateSlider').value=rate;document.querySelectorAll('[data-voice-style]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.voiceStyle===key)));if(persist){try{localStorage.setItem('hoshiVoiceStyle',key)}catch(e){}}saveVoiceSettings()}
  function stopSpeaking(){speechSequence++;currentSpeech=null;$('nightAudioRetry').hidden=true;if(speechAudioController){speechAudioController.abort();speechAudioController=null}const audio=$('hoshiAudio');audio.pause();audio.removeAttribute('src');audio.hidden=true;if(speechAudioUrl){URL.revokeObjectURL(speechAudioUrl);speechAudioUrl=null}if(window.JarvisBridge&&typeof window.JarvisBridge.stopNativeSpeech==='function')window.JarvisBridge.stopNativeSpeech();if('speechSynthesis'in window)window.speechSynthesis.cancel();setSpeaking(false)}
+ function interruptHoshi(){
+   shell.classList.remove('responding');
+   // Explicit user interruption cancels TTS AND a pending model request.
+   // Otherwise the late cloud reply may start speaking again.
+   cloudRequestSequence++;
+   if(activeCloudController){try{activeCloudController.abort()}catch(_){}}
+   activeCloudController=null;
+   if(window.HoshiSourceResearch)window.HoshiSourceResearch.cancel();
+   stopSpeaking();
+   orb.classList.remove('active');
+ }
  // Prefer first audible phrase over waiting for a long full MP3.
  // Future clauses are synthesized while the first clip plays.
  function splitUrduSpeech(text){return window.HoshiSpeechPipeline.split(text)}
@@ -471,16 +532,17 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
   void playPart(0).catch(()=>{if(request.id===speechSequence){setSpeaking(false);setStatus('URDU AUDIO UNAVAILABLE');stopLoading()}});
  }
  function getPersonality(){try{return localStorage.getItem('hoshiPersonality')||'balanced'}catch(e){return 'balanced'}}
- const MEMORY_KEY='hoshiConversationMemoryV1';
- let memoryEnabled=true;
- try{memoryEnabled=localStorage.getItem('hoshiMemoryEnabled')!=='false'}catch(e){}
+ const memoryStore=window.HoshiMemoryStore;
+ const MEMORY_KEY=memoryStore.MEMORY_KEY;
+ let memoryEnabled=memoryStore.consent(localStorage);
  function looksSensitive(text){return !window.HoshiPrivacy||typeof window.HoshiPrivacy.looksSensitive!=="function"||window.HoshiPrivacy.looksSensitive(text)}
- function getConversationContext(){if(!memoryEnabled)return [];try{const value=JSON.parse(localStorage.getItem(MEMORY_KEY)||'[]');const clean=Array.isArray(value)?value.filter(item=>item&&typeof item.content==='string'&&typeof item.role==='string'&&!looksSensitive(item.content)).slice(-12):[];if(Array.isArray(value)&&clean.length!==value.length)localStorage.setItem(MEMORY_KEY,JSON.stringify(clean));return clean}catch(e){return []}}
+ function getConversationContext(){return memoryEnabled?memoryStore.read(localStorage,looksSensitive):[]}
+ if(memoryEnabled)memoryStore.save(localStorage,getConversationContext(),looksSensitive);
  function renderRecentActivity(){const box=$('recentActivity');if(!box)return;box.replaceChildren();if(!memoryEnabled){const empty=document.createElement('div');empty.className='activity-line';empty.textContent='Local memory is off.';box.appendChild(empty);return}const history=getConversationContext().slice(-3).reverse();if(!history.length){const empty=document.createElement('div');empty.className='activity-line';empty.textContent='Start a conversation to see recent activity.';box.appendChild(empty);return}history.forEach(item=>{const row=document.createElement('div');row.className='activity-line '+(item.role==='user'?'user':'assistant');const content=String(item.content).replace(/\s+/g,' ');row.textContent=(item.role==='user'?'YOU · ':'HOSHI · ')+content.slice(0,92)+(content.length>92?'…':'');box.appendChild(row)})}
  function updateClock(){const now=new Date();const timeParts=new Intl.DateTimeFormat(undefined,{hour:'2-digit',minute:'2-digit',hour12:true}).formatToParts(now);const hour=timeParts.filter(part=>part.type==='hour'||part.type==='minute').map(part=>part.value).join(':');const meridiem=timeParts.find(part=>part.type==='dayPeriod');const h=$('clockHour'),m=$('clockMeridiem'),d=$('clockDate');if(h)h.textContent=hour;if(m)m.textContent=meridiem?meridiem.value.toUpperCase():'';if(d)d.textContent=new Intl.DateTimeFormat(undefined,{weekday:'long',month:'short',day:'numeric'}).format(now)}
  function getCloudContextForRequest(currentMessage){const history=getConversationContext();const last=history[history.length-1];if(last&&last.role==='user'&&last.content===String(currentMessage||'').slice(0,500))history.pop();let profile=[];try{if(memoryEnabled&&window.HoshiProfile)profile=window.HoshiProfile.context(localStorage,currentMessage)}catch(_){}return [...profile,...history.slice(-(8-profile.length)).map(item=>item.role+': '+item.content)]}
  function makeHistoryButton(label,ariaLabel,onClick){const button=document.createElement('button');button.type='button';button.className='history-action';button.textContent=label;button.setAttribute('aria-label',ariaLabel);button.addEventListener('click',onClick);return button}
- function persistHistory(history){localStorage.setItem(MEMORY_KEY,JSON.stringify(history.slice(-12)))}
+ function persistHistory(history){if(!memoryStore.save(localStorage,history,looksSensitive))throw new Error("Local memory unavailable")}
  function renderHistory(){const box=$('chatHistory');if(!box)return;const history=getConversationContext();box.replaceChildren();if(!memoryEnabled){editingMemoryIndex=null;box.textContent='Local memory is off.';return}if(!history.length){editingMemoryIndex=null;box.textContent='No saved conversation yet.';return}const start=Math.max(0,history.length-8);history.slice(-8).forEach((item,offset)=>{const index=start+offset;const row=document.createElement('div');row.className='history-item '+(item.role==='user'?'user':'assistant');if(editingMemoryIndex===index){const editor=document.createElement('textarea');editor.className='history-editor';editor.maxLength=500;editor.setAttribute('aria-label','Edit saved '+(item.role==='user'?'user':'HOSHI')+' message');editor.value=item.content;row.appendChild(editor);const actions=document.createElement('div');actions.className='history-actions';actions.appendChild(makeHistoryButton('Save','Save edited memory entry',()=>{const revised=editor.value.trim();if(!revised){setStatus('MEMORY ENTRY NOT SAVED · TEXT IS EMPTY');return}if(looksSensitive(revised)){setStatus('MEMORY ENTRY NOT SAVED · REMOVE SECRET OR SENSITIVE DETAILS');return}const latest=getConversationContext();if(!latest[index]){editingMemoryIndex=null;renderHistory();return}latest[index].content=revised.slice(0,500);try{persistHistory(latest);editingMemoryIndex=null;renderHistory();setStatus('MEMORY ENTRY UPDATED')}catch(e){setStatus('MEMORY UPDATE FAILED · STORAGE UNAVAILABLE')}}));actions.appendChild(makeHistoryButton('Cancel','Cancel editing memory entry',()=>{editingMemoryIndex=null;renderHistory()}));row.appendChild(actions)}else{const content=document.createElement('div');content.className='history-content';content.textContent=(item.role==='user'?'You: ':'HOSHI: ')+item.content;row.appendChild(content);const actions=document.createElement('div');actions.className='history-actions';actions.appendChild(makeHistoryButton('Edit','Edit saved '+(item.role==='user'?'user':'HOSHI')+' message',()=>{editingMemoryIndex=index;renderHistory()}));actions.appendChild(makeHistoryButton('Delete','Delete saved '+(item.role==='user'?'user':'HOSHI')+' message',()=>{const latest=getConversationContext();if(!latest[index])return;latest.splice(index,1);try{persistHistory(latest);editingMemoryIndex=null;renderHistory();setStatus('MEMORY ENTRY DELETED')}catch(e){setStatus('MEMORY DELETE FAILED · STORAGE UNAVAILABLE')}}));row.appendChild(actions)}box.appendChild(row)})}
  function rememberTurn(role,content){if(!memoryEnabled||!String(content||'').trim()||looksSensitive(content))return;try{const history=getConversationContext();history.push({role,content:String(content).slice(0,500),at:Date.now()});persistHistory(history);editingMemoryIndex=null;renderHistory();renderRecentActivity()}catch(e){const box=$('chatHistory');if(box)box.textContent='Local memory is unavailable in this browser.'}}
  function guessEmotion(text){const value=String(text||"").toLowerCase();if(/udaas|sad|dukhi|rona|upset|sorry/i.test(value))return "sad";if(/pareshan|tension|worried|concern|darr/i.test(value))return "concerned";if(/gussa|naraz|angry|annoyed/i.test(value))return "annoyed";if(/sharma|shy|blush/i.test(value))return "shy";if(/excited|zabardast|amazing|wah/i.test(value))return "excited";if(/mazak|mazaq|masti|haha|hehe|joke/i.test(value))return "playful";if(/pyar|pyaar|love you|miss you|jaan|hug/i.test(value))return "affectionate";if(/khush|happy|great|shukriya|thank you|😊|😄/i.test(value))return "happy";if(/kyun|kaise|why|how|explain|think/i.test(value))return "thinking";return "caring"}
@@ -503,8 +565,8 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
    if(urduMode&&(!/[\u0600-\u06ff]/.test(spokenMessage)||/[\u0900-\u097f]/.test(spokenMessage))){setStatus('URDU SPEECH TEXT UNAVAILABLE · REPLY SHOWN IN CHAT');return}
 
    if(recognition&&listening){listening=false;try{recognition.abort()}catch(e){}recognition=null;}
-   const basePitch=Number($('pitchSlider').value)||1.12;
-   const baseRate=Number($('rateSlider').value)||0.92;
+   const basePitch=Number($('pitchSlider').value)||1.04;
+   const baseRate=Number($('rateSlider').value)||0.94;
    const voiceMood={happy:[0.05,0.03],excited:[0.08,0.06],playful:[0.06,0.05],affectionate:[0.04,-0.03],shy:[0.06,-0.05],sad:[-0.08,-0.08],concerned:[-0.05,-0.06],annoyed:[-0.04,0.02],thinking:[-0.02,-0.03],caring:[0,0]}[currentEmotion]||[0,0];
    const pitch=Math.max(0.8,Math.min(1.6,basePitch+voiceMood[0]));
    const rate=Math.max(0.75,Math.min(1.15,baseRate+voiceMood[1]));
@@ -542,7 +604,50 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 
 
   const draftField=$('hoshiDraft'),draftStatus=$('draftStatus');
+  // Session-only safety metadata. Never record a draft, screenshot or command.
+  const actionSafety=window.HoshiLocalUiActions.createSafety(20);
+  // Persist only the stop/pause latch for this browser tab across a reload.
+  // Action history and any user text stay memory-only, never stored.
+  try{
+    const prior=sessionStorage.getItem('hoshiActionSafetyStateV1');
+    if(prior==='halted')actionSafety.emergencyStop();
+    else if(prior==='paused')actionSafety.pause();
+  }catch(_){}
+  function saveActionSafetyLatch(){
+    try{
+      const state=actionSafety.snapshot().state;
+      if(state==='running')sessionStorage.removeItem('hoshiActionSafetyStateV1');
+      else sessionStorage.setItem('hoshiActionSafetyStateV1',state);
+    }catch(_){}
+  }
+  function renderActionSafety(){
+    const node=$('actionSafetyStatus');if(!node)return;
+    const snapshot=actionSafety.snapshot();
+    node.textContent=snapshot.state==='halted'?'EMERGENCY STOP ACTIVE · tap Resume to unlock.':
+      snapshot.state==='paused'?'ACTIONS PAUSED · tap Resume to continue.':
+      'ACTIONS READY · local phone controls require Android permission.';
+    $('actionPauseBtn').disabled=snapshot.state!=='running';
+    $('actionResumeBtn').disabled=snapshot.state==='running';
+    const list=$('actionHistory');list.replaceChildren();
+    for(const item of snapshot.history){
+      const row=document.createElement('li');
+      row.textContent=new Date(item.at).toLocaleTimeString()+' · '+item.action.replaceAll('_',' ')+' · '+item.outcome.replaceAll('_',' ');
+      list.appendChild(row);
+    }
+  }
+  function recordAction(action,outcome){actionSafety.record(action,outcome);renderActionSafety()}
+  function actionsBlocked(){return actionSafety.blocked()}
   function phoneReply(text,spoken){reply.textContent=text;setStatus('PHONE ACTION · '+text);if(voiceReplies&&spoken)say(text,'caring',false,spoken)}
+  // Native intent result reports only whether Android accepted the handoff.
+  // It does not prove the destination app rendered or performed any action.
+  let appLaunchCounter=0,appLaunchPending=null,appLaunchTimer=null;
+  window.hoshiKnownAppLaunchResult=(id,action,accepted)=>{
+    if(!appLaunchPending||id!==appLaunchPending.id||
+       action!==appLaunchPending.action||typeof accepted!=='boolean')return;
+    appLaunchPending=null;clearTimeout(appLaunchTimer);appLaunchTimer=null;
+    recordAction('app_'+action,accepted?'accepted':'denied');
+    phoneReply(accepted?'Android accepted '+action+' launch request.':'Could not open '+action+'.',null);
+  };
   function saveHoshiDraft(text){
    draftField.value=String(text||'').slice(0,2000);
    draftStatus.textContent='Draft ready · review and copy/share manually.';
@@ -586,13 +691,32 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
       s.match(/^(youtube|whatsapp|telegram|browser|google|settings|tradingview)\s+(?:kholo|khol do|open karo|open)$/i);
     const bridge=window.JarvisBridge;
     if(openMatch){
+      if(actionsBlocked()){phoneReply('Actions paused. Open Settings and tap Resume first.',null);return true;}
       const target=openMatch[1].toLowerCase(),kind=target==='google'?'browser':target;
-      if(bridge&&typeof bridge.openKnownApp==='function'){
+      if(bridge&&typeof bridge.openKnownAppVerified==='function'){
+        if(appLaunchPending){phoneReply('Wait for the previous app request to finish.',null);return true;}
+        appLaunchCounter=appLaunchCounter>=1000000000?1:appLaunchCounter+1;
+        const id=appLaunchCounter;
+        const queued=bridge.openKnownAppVerified(kind,id);
+        if(queued){
+          appLaunchPending={id,action:kind};
+          appLaunchTimer=setTimeout(()=>{
+            if(appLaunchPending&&appLaunchPending.id===id){
+              appLaunchPending=null;appLaunchTimer=null;
+              recordAction('app_'+kind,'timeout');
+              phoneReply('No verified Android app launch result. Check your phone.',null);
+            }
+          },5000);
+          recordAction('app_'+kind,'queued');
+          phoneReply('Requesting '+target+' app…',null);
+        }else{recordAction('app_'+kind,'denied');phoneReply('App launch request rejected.',null);}
+      }else if(bridge&&typeof bridge.openKnownApp==='function'){
         const ok=bridge.openKnownApp(kind);
-        phoneReply(ok?'Opening '+target+' app…':'App could not be opened.',ok?'ایپ کھولنے کی کوشش کر رہی ہوں۔':null);
+        recordAction('app_'+kind,ok?'queued':'denied');
+        phoneReply(ok?'App launch requested: '+target+'.':'App could not be opened.',null);
       }else{
         const urls={youtube:'https://www.youtube.com/',whatsapp:'https://wa.me/',telegram:'https://web.telegram.org/',browser:'https://www.google.com/',settings:'',tradingview:'https://www.tradingview.com/'};
-        if(urls[kind]){window.open(urls[kind],'_blank','noopener');phoneReply('Opening '+target+' website…','ویب سائٹ کھولنے کی کوشش کر رہی ہوں۔')}
+        if(urls[kind]){window.open(urls[kind],'_blank','noopener');recordAction('app_'+kind,'queued');phoneReply('Opening '+target+' website…','ویب سائٹ کھولنے کی کوشش کر رہی ہوں۔')}
         else phoneReply('This action needs the Hoshi Android app.',null);
       }
       return true;
@@ -606,9 +730,11 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
     ];
     const action=screenPairs.find(([pattern])=>pattern.test(s));
     if(action){
+      if(actionsBlocked()){phoneReply('Actions paused. Tap Resume in Settings.',null);return true;}
       if(!bridge||typeof bridge.performAction!=='function'){phoneReply('Screen control sirf Android app mein available hai.',null);return true}
       if(!bridge.isEnabled()){phoneReply('Phone controls ke liye Accessibility permission enable karo.',null);showTab('settings');return true}
       const queued=bridge.performAction(action[1]);
+      recordAction('screen_'+action[1],queued?'queued':'denied');
       phoneReply(queued?'Phone action requested: '+action[1]+'.':'Phone action could not be queued.',null);
       return true;
     }
@@ -623,6 +749,14 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
     return false;
   }
  function processCommand(raw,source='text'){const text=String(raw||'').trim(),c=window.JarvisCommandUtils?window.JarvisCommandUtils.normalize(text):text.toLowerCase().replace(/[!?.,،۔]/g,' ').replace(/\s+/g,' ').trim();if(!c)return;
+ if(actionSafety.snapshot().state==='halted'){setStatus('EMERGENCY STOP ACTIVE · TAP RESUME IN SETTINGS');return;}
+ if(window.HoshiSourceResearch&&!window.HoshiSourceResearch.isIntent(text))window.HoshiSourceResearch.cancel();
+ if(window.HoshiSourceResearch&&window.HoshiSourceResearch.isIntent(text)){
+   rememberTurn('user',text);showTab('chat');
+   reply.textContent='Fresh public source headlines neeche links ke saath hain. Original article check karein; khabrein independently verify nahi ki gayi.';
+   window.HoshiSourceResearch.execute({text,backend:API_BASE,container:$('sourceResearchResult'),onStatus:setStatus});
+   return;
+ }
  if(window.HoshiAdStudio&&window.HoshiAdStudio.isIntent(text)){
   rememberTurn('user',text);showTab('chat');
   window.HoshiAdStudio.execute({
@@ -634,6 +768,21 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
   return;
  }
  if(handlePhoneOrWritingCommand(text))return;
+ // Unsupported project/screen requests must never be presented as executed.
+ // Keep normal chat and the existing real Flora ad generator unchanged.
+ const routed=window.HoshiTaskRouter&&window.HoshiTaskRouter.classify(text);
+ if(routed&&routed.intent==='trading_research'){
+   const pair=/\b(?:eth|ethereum)\b/i.test(text)?'ETHUSDT':'BTCUSDT';
+   $('tradePair').value=pair;tradingLab.reset();showTab('trading');
+   $('tradeResearch').scrollIntoView({block:'start'});tradingLab.run('research');
+   setStatus('SPOT RESEARCH · NO ORDERS');return;
+ }
+ if(routed&&!routed.ready&&routed.reason){
+   rememberTurn('user',text);showTab('chat');
+   reply.textContent=routed.reason;
+   setStatus('AGENT NOT READY · '+routed.intent.toUpperCase());
+   return;
+ }
  rememberTurn('user',text);setStatus('PROCESSING…');orb.classList.add('active');
  const has=(patterns)=>patterns.some(p=>p.test(c));
  const reminder=window.JarvisBridge&&window.JarvisReminderParser?window.JarvisReminderParser(text):null;
@@ -664,7 +813,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  }
  function startListening(){
   if(listening){stopListening();return}
-  stopSpeaking();lastVoiceError="";startVoiceTimer();
+  interruptHoshi();lastVoiceError="";startVoiceTimer();
   if(window.JarvisBridge&&typeof window.JarvisBridge.startNativeListening==='function'){
     nativeMicActive=true;listening=true;$('wakeBtn').textContent='🎙 Listening…';
     setStatus('STARTING ANDROID MICROPHONE…');
@@ -677,7 +826,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
   if(!Recognition){setStatus('MIC UNSUPPORTED · USE HOSHI ANDROID APP OR TYPE A COMMAND');return}
   const instance=new Recognition();recognition=instance;
   instance.lang=commandLanguage;instance.continuous=false;instance.interimResults=false;
-  instance.maxAlternatives=1;let submitted=false,sessionEnded=false;
+  instance.maxAlternatives=3;let submitted=false,sessionEnded=false;
   listening=true;$('wakeBtn').textContent='🎙 Listening…';setStatus('STARTING MICROPHONE…');
   const timer=setTimeout(()=>{if(!sessionEnded&&recognition===instance){finish();setStatus('NO SPEECH HEARD · TAP MIC TO RETRY')}},18000);
   function finish(){sessionEnded=true;listening=false;awaitingCommand=false;clearTimeout(timer);
@@ -690,15 +839,16 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
   instance.onresult=e=>{if(sessionEnded||submitted)return;
    for(let i=e.resultIndex;i<e.results.length;i++){
     if(!e.results[i].isFinal)continue;
-    const heard=String(e.results[i][0].transcript||'').trim();if(!heard)continue;
-    submitted=true;markVoiceHeard();finish();input.value=heard;
-    if(wakeEnabled){
-      const cleaned=heard.replace(/^hey[, ]*hoshi[,: ]*/i,'').trim();
-      if(cleaned===heard){setStatus('SAY HEY HOSHI · TAP MIC AGAIN');return}
-      if(!cleaned){setStatus('TAP MIC AGAIN TO GIVE COMMAND');return}
-      processCommand(cleaned,'voice');return;
+    const alternatives=[];
+    for(let j=0;j<Math.min(3,e.results[i].length||1);j++){
+      const candidate=e.results[i][j];if(candidate&&candidate.transcript)alternatives.push(candidate.transcript)
     }
-    processCommand(heard,'voice');return;
+    const result=window.HoshiSpeechInput.choose(alternatives,wakeEnabled);
+    if(!result.heard)continue;
+    submitted=true;markVoiceHeard();finish();input.value=result.heard;
+    if(result.needsWake){setStatus('SAY HEY HOSHI · TAP MIC AGAIN');return}
+    if(!result.command){setStatus('TAP MIC AGAIN AND SAY COMMAND');return}
+    processCommand(result.command,'voice');return;
    }
   };
   instance.onerror=e=>{if(sessionEnded)return;
@@ -730,23 +880,47 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  $('languageToggle').textContent=commandLanguage==='ur-PK'?'🗣 Language: Urdu':'🗣 Language: English';
  $('speakToggle').textContent=voiceReplies?'🔊 Voice replies: ON':'🔇 Voice replies: OFF';
  $('wakeToggle').textContent='Hey HOSHI: '+(wakeEnabled?'ON':'OFF');
- $('memoryToggle').onclick=()=>{memoryEnabled=!memoryEnabled;try{localStorage.setItem('hoshiMemoryEnabled',String(memoryEnabled))}catch(e){}$('memoryToggle').textContent='Local memory: '+(memoryEnabled?'ON':'OFF');$('utilityMemory').textContent=memoryEnabled?'ON':'OFF';if(!memoryEnabled){try{localStorage.removeItem(MEMORY_KEY)}catch(e){}}renderHistory();renderRecentActivity()};
- $('clearMemoryBtn').onclick=()=>{try{localStorage.removeItem(MEMORY_KEY)}catch(e){}renderHistory();renderRecentActivity();setStatus('HOSHI MEMORY CLEARED')};
+ $('memoryToggle').onclick=()=>{
+   const next=!memoryEnabled;
+   if(!memoryStore.setConsent(localStorage,next)){setStatus('MEMORY SETTING FAILED · DEVICE STORAGE UNAVAILABLE');return}
+   memoryEnabled=next;
+   if(memoryEnabled)memoryStore.save(localStorage,getConversationContext(),looksSensitive);
+   $('memoryToggle').textContent='Local memory: '+(memoryEnabled?'ON':'OFF');
+   $('utilityMemory').textContent=memoryEnabled?'ON':'OFF';
+   renderHistory();renderRecentActivity();
+   setStatus(memoryEnabled?'LOCAL MEMORY ENABLED · DEVICE ONLY':'LOCAL MEMORY OFF · SAVED HISTORY DELETED')
+ };
+ $('clearMemoryBtn').onclick=()=>{
+   if(!memoryStore.clear(localStorage)){setStatus('MEMORY DELETE FAILED · DEVICE STORAGE UNAVAILABLE');return}
+   editingMemoryIndex=null;renderHistory();renderRecentActivity();setStatus('HOSHI MEMORY CLEARED')
+ };
+ $('exportMemoryBtn').onclick=()=>{
+   const json=memoryStore.exportJson(localStorage,looksSensitive);
+   if(json===null){setStatus('ENABLE LOCAL MEMORY BEFORE EXPORT');return}
+   try{
+     const url=URL.createObjectURL(new Blob([json],{type:'application/json;charset=utf-8'}));
+     const link=document.createElement('a');
+     link.href=url;link.download='hoshi-local-memory.json';link.hidden=true;
+     document.body.appendChild(link);link.click();link.remove();
+     setTimeout(()=>URL.revokeObjectURL(url),1000);
+     setStatus('LOCAL MEMORY JSON EXPORTED · KEEP FILE PRIVATE');
+   }catch(_){setStatus('MEMORY EXPORT FAILED · CHECK DOWNLOAD PERMISSIONS')}
+ };
  renderHistory();renderRecentActivity();updateClock();setInterval(updateClock,15000);
  $('pitchSlider').addEventListener('input',saveVoiceSettings);$('rateSlider').addEventListener('input',saveVoiceSettings);
  document.querySelectorAll('[data-voice-style]').forEach(b=>b.addEventListener('click',()=>{stopSpeaking();applyVoiceStyle(b.dataset.voiceStyle)}));
- $('stopSpeakingBtn').onclick=()=>{stopSpeaking();setStatus('VOICE STOPPED')};
+ $('stopSpeakingBtn').onclick=()=>{interruptHoshi();setStatus('VOICE AND PENDING REPLY STOPPED')};
  $('previewVoiceBtn').onclick=()=>say(commandLanguage==='ur-PK'?'Suno… main Hoshi hoon. Aaram se batao, aaj tumhara din kaisa guzra?':'Hey… I am Hoshi. Take your time. Tell me about your day.','affectionate',true,commandLanguage==='ur-PK'?'سنو، میں ہوشی ہوں۔ آرام سے بتاؤ، آج تمہارا دن کیسا گزرا؟':null);
  $('resetVoiceBtn').onclick=()=>{stopSpeaking();applyVoiceStyle('soft');setStatus('SOFT VOICE RESTORED')};
  if('speechSynthesis'in window){refreshVoices();window.speechSynthesis.addEventListener('voiceschanged',refreshVoices)}
  saveVoiceSettings();refreshVoices();
- $('wakeBtn').onclick=()=>{stopSpeaking();if(listening)stopListening();else startListening()};$('stopBtn').onclick=stopListening;
+ $('wakeBtn').onclick=()=>{if(actionSafety.snapshot().state==='halted'){setStatus('EMERGENCY STOP ACTIVE · TAP RESUME IN SETTINGS');return;}stopSpeaking();if(listening)stopListening();else startListening()};$('stopBtn').onclick=stopListening;
  $('testBtn').onclick=()=>askCloud('Test connection. Tell me whether the JARVIS cloud API received this message.');
  $('speakToggle').onclick=()=>{voiceReplies=!voiceReplies;try{localStorage.setItem('hoshiVoiceReplies',String(voiceReplies))}catch(e){}$('speakToggle').textContent=voiceReplies?'🔊 Voice replies: ON':'🔇 Voice replies: OFF';$('utilityVoice').textContent=voiceReplies?'ON':'OFF';if(!voiceReplies)stopSpeaking()};
  $('languageToggle').onclick=()=>{commandLanguage=commandLanguage==='ur-PK'?'en-US':'ur-PK';try{localStorage.setItem('hoshiLanguage',commandLanguage)}catch(e){}$('languageToggle').textContent=commandLanguage==='ur-PK'?'🗣 Language: Urdu':'🗣 Language: English';refreshVoices();if(listening)stopListening();say(commandLanguage==='ur-PK'?'Urdu mode on. Ab Urdu ya Roman Urdu mein command bolain.':'English mode on. Speak your command in English.',null,false,commandLanguage==='ur-PK'?'اردو زبان منتخب ہے۔ اب اردو میں بات کریں۔':null)};
  $('wakeToggle').onclick=()=>{wakeEnabled=!wakeEnabled;try{localStorage.setItem('hoshiWakeWord',String(wakeEnabled))}catch(e){}$('wakeToggle').textContent='Hey HOSHI: '+(wakeEnabled?'ON':'OFF');setStatus(listening?(wakeEnabled?'LISTENING FOR “HEY HOSHI”':'LISTENING'):'READY')};
  $('viewHistoryBtn').onclick=()=>{const panel=$('memoryPanel');if(panel)panel.scrollIntoView({behavior:'smooth',block:'start'})};
- $('screenshotQuickBtn').onclick=()=>{if(!window.JarvisBridge){setStatus('SCREENSHOT NEEDS THE HOSHI ANDROID APP');return}if(!window.JarvisBridge.isEnabled()){setStatus('ENABLE ANDROID ACCESSIBILITY FOR SCREENSHOT');window.JarvisBridge.requestSettings();return}const queued=window.JarvisBridge.performAction('screenshot');setStatus(queued?'SCREENSHOT ACTION REQUESTED · CHECK ANDROID SYSTEM UI':'SCREENSHOT ACTION UNAVAILABLE · ANDROID 9 OR NEWER REQUIRED')};
+ $('screenshotQuickBtn').onclick=()=>{if(actionsBlocked()){setStatus('ACTIONS PAUSED · RESUME IN SETTINGS');return}if(!window.JarvisBridge){setStatus('SCREENSHOT NEEDS THE HOSHI ANDROID APP');return}if(!window.JarvisBridge.isEnabled()){setStatus('ENABLE ANDROID ACCESSIBILITY FOR SCREENSHOT');window.JarvisBridge.requestSettings();return}const queued=window.JarvisBridge.performAction('screenshot');recordAction('screen_screenshot',queued?'queued':'denied');setStatus(queued?'SCREENSHOT ACTION REQUESTED · CHECK ANDROID SYSTEM UI':'SCREENSHOT ACTION UNAVAILABLE · ANDROID 9 OR NEWER REQUIRED')};
  $('commandForm').onsubmit=e=>{e.preventDefault();processCommand(input.value);input.value=''};
  document.querySelectorAll('[data-ui-action]').forEach(button=>button.addEventListener('click',()=>{
   const action=button.dataset.uiAction;
@@ -757,16 +931,145 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
   else if(action==='more')$('appLinks').scrollIntoView({behavior:'smooth',block:'start'});
  }));
  document.querySelectorAll('[data-cmd]').forEach(b=>b.onclick=()=>processCommand(b.dataset.cmd));
+ // OCR callback stays local: never calls askCloud, localStorage or fetch.
+ let localOcrPending=false;
+ window.hoshiLocalOcrResult=raw=>{
+   if(!localOcrPending)return;
+   localOcrPending=false;
+   try{
+     const result=JSON.parse(String(raw));
+     if(result.engine!=='on-device-latin'||!Array.isArray(result.blocks))throw Error('invalid OCR');
+     const lines=result.blocks.slice(0,35).map(block=>String(block.text||'').slice(0,180)).filter(Boolean);
+     $('screenOcrOutput').textContent=lines.join('\n');
+     $('screenOcrStatus').textContent=lines.length?
+       'Read '+lines.length+' text areas locally'+(result.truncated?' (truncated)':'')+'. No upload.':
+       'No Roman Urdu/English text recognized in this screenshot.';
+   }catch(_){$('screenOcrOutput').textContent='';$('screenOcrStatus').textContent='Invalid local OCR result.'}
+ };
+ window.hoshiLocalOcrError=reason=>{
+   if(!localOcrPending)return;
+   localOcrPending=false;
+   $('screenOcrOutput').textContent='';
+   $('screenOcrStatus').textContent=String(reason||'Screenshot reading failed').slice(0,140);
+ };
  if(window.JarvisBridge){
    $('screenControlSection').style.display='block';
+   $('screenOcrBtn').onclick=()=>{
+     $('screenOcrOutput').textContent='';
+     const bridge=window.JarvisBridge;
+     if(typeof bridge.chooseScreenshotForLocalOcr!=='function'){
+       $('screenOcrStatus').textContent='Update the Hoshi Android APK to use offline OCR.';return;
+     }
+     localOcrPending=true;
+     const queued=bridge.chooseScreenshotForLocalOcr();
+     if(!queued)localOcrPending=false;
+     $('screenOcrStatus').textContent=queued?'Choose one screenshot in Android picker. Reading stays on phone.':'Screenshot picker unavailable.';
+   };
+   $('screenOcrClearBtn').onclick=()=>{
+     localOcrPending=false;
+     $('screenOcrOutput').textContent='';
+     $('screenOcrStatus').textContent='Reading cleared.';
+   };
    $('screenPermissionBtn').onclick=()=>window.JarvisBridge.requestSettings();
+   // Native executes only Hoshi's bounded UI controls; returns DOM evidence as Boolean.
+   window.hoshiExecuteLocalUiAction=(action,payload,id)=>{
+     if(!actionSafety.isCurrent(id,action))return false;
+     const engine=window.HoshiLocalUiActions;
+     return !!(engine&&engine.run(action,payload,document));
+   };
+   let localUiRequestId=0,localUiPending=0,localUiTimer=null;
+   // No draft text or screenshot is returned by native. Ignore stale/forged IDs.
+   window.hoshiLocalUiActionResult=(id,verified)=>{
+     if(!localUiPending||id!==localUiPending||typeof verified!=='boolean'||
+        !actionSafety.finish(id,verified))return;
+     localUiPending=0;
+     clearTimeout(localUiTimer);localUiTimer=null;
+     $('localUiStatus').textContent=verified?
+       'Verified: Hoshi UI reached the requested state.':
+       'Not verified: Hoshi UI did not reach the requested state.';
+     renderActionSafety();
+   };
+   const requestLocalUiAction=(action,payload='')=>{
+     const bridge=window.JarvisBridge;
+     if(actionsBlocked()){$('localUiStatus').textContent='Actions paused or stopped. Tap Resume first.';recordAction(action,'blocked');return;}
+     if(localUiPending){$('localUiStatus').textContent='Wait for the previous local action to finish.';return;}
+     if(typeof bridge.performLocalUiAction!=='function'){
+       $('localUiStatus').textContent='Update Hoshi Android APK for verified local actions.';return;
+     }
+     if(!bridge.isEnabled()){
+       $('localUiStatus').textContent='Enable Android accessibility permission first.';return;
+     }
+     localUiRequestId=localUiRequestId>=1000000000?1:localUiRequestId+1;
+     const id=localUiRequestId;
+     if(!actionSafety.begin(action,id)){$('localUiStatus').textContent='Local action rejected.';return;}
+     localUiPending=id;
+     renderActionSafety();
+     $('localUiStatus').textContent='Checking Hoshi UI state…';
+     localUiTimer=setTimeout(()=>{
+       if(localUiPending!==id)return;
+       localUiPending=0;localUiTimer=null;
+       actionSafety.cancel(id,'timeout');renderActionSafety();
+       $('localUiStatus').textContent='No verified result from Android. Check screen and retry.';
+     },4000);
+     let queued=false;
+     try{queued=bridge.performLocalUiAction(action,payload,id)}catch(_){queued=false;}
+     if(!queued&&localUiPending===id){
+       localUiPending=0;clearTimeout(localUiTimer);localUiTimer=null;
+       actionSafety.cancel(id,'denied');renderActionSafety();
+       $('localUiStatus').textContent='Local action denied or screen control unavailable.';
+     }
+   };
+   $('localUiChatBtn').onclick=()=>requestLocalUiAction('tap_chat');
+   $('localUiSettingsBtn').onclick=()=>requestLocalUiAction('tap_settings');
+   $('localUiScrollUpBtn').onclick=()=>requestLocalUiAction('scroll_up');
+   $('localUiScrollDownBtn').onclick=()=>requestLocalUiAction('scroll_down');
+   $('localUiTypeBtn').onclick=()=>requestLocalUiAction('type_draft',$('localUiDraft').value);
+   // Stop is latched until a fresh user tap on Resume. No auto-retry.
+   const invalidateQueuedActions=()=>{
+     if(localUiPending){localUiPending=0;clearTimeout(localUiTimer);localUiTimer=null;}
+     if(appLaunchPending){appLaunchPending=null;clearTimeout(appLaunchTimer);appLaunchTimer=null;}
+     localOcrPending=false; // Late OCR callbacks must not display private text.
+     const bridge=window.JarvisBridge;
+     try{return !!(bridge&&typeof bridge.cancelQueuedActions==='function'&&bridge.cancelQueuedActions())}
+     catch(_){return false}
+   };
+   $('actionPauseBtn').onclick=()=>{
+     if(!actionSafety.pause())return;
+     saveActionSafetyLatch();
+     const cancelled=invalidateQueuedActions();
+     $('localUiStatus').textContent=cancelled?'Actions paused; queued native actions invalidated.':
+       'Actions paused; older APK cannot revoke already queued native actions.';
+     renderActionSafety();
+   };
+   $('actionResumeBtn').onclick=()=>{
+     if(!actionSafety.resume())return;
+     saveActionSafetyLatch();
+     $('localUiStatus').textContent='Actions resumed by user.';
+     renderActionSafety();
+   };
+   $('actionEmergencyStopBtn').onclick=()=>{
+     actionSafety.emergencyStop();
+     saveActionSafetyLatch();
+     const cancelled=invalidateQueuedActions();
+     interruptHoshi();
+     if(listening||nativeMicActive)stopListening();
+     $('localUiStatus').textContent=cancelled?
+       'Emergency stop active. Voice/AI stopped; queued native actions invalidated.':
+       'Emergency stop active. Older APK may finish previously queued native actions.';
+     renderActionSafety();
+   };
+   $('actionHistoryClearBtn').onclick=()=>{actionSafety.clearHistory();renderActionSafety()};
+   renderActionSafety();
+
    document.querySelectorAll('[data-screen-action]').forEach(button=>button.addEventListener('click',()=>{
+     if(actionsBlocked()){setStatus('ACTIONS PAUSED · RESUME IN SETTINGS');return}
      if(!window.JarvisBridge.isEnabled()){setStatus('ENABLE SCREEN CONTROLS IN ANDROID SETTINGS');return}
      const queued=window.JarvisBridge.performAction(button.dataset.screenAction);
+     recordAction('screen_'+button.dataset.screenAction,queued?'queued':'denied');
      setStatus(button.dataset.screenAction==='screenshot'?(queued?'SCREENSHOT ACTION REQUESTED · CHECK ANDROID SYSTEM UI':'SCREENSHOT ACTION UNAVAILABLE'):(queued?'PHONE ACTION SENT':'SCREEN CONTROL SERVICE NOT CONNECTED'));
    }));
  }
- if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>{let refreshing=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!refreshing){refreshing=true;location.reload()}});navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(reg=>reg.update()).catch(()=>{});});
+ if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>{let refreshing=false;const hadController=!!navigator.serviceWorker.controller;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(hadController&&!refreshing){refreshing=true;location.reload()}});navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(reg=>reg.update()).catch(()=>{});});
  checkCloud();setInterval(checkCloud,60000);
  if(!Recognition&&!(window.JarvisBridge&&window.JarvisBridge.startNativeListening)){setStatus('TEXT MODE · BROWSER MIC UNSUPPORTED')}
 })();

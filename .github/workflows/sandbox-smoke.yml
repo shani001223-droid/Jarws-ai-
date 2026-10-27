@@ -1,0 +1,53 @@
+name: HOSHI isolated sandbox smoke
+
+on:
+  push:
+    branches: [hoshi/dnd-foundation-20261026]
+    paths:
+      - "cloud_backend/sandbox_runner.py"
+      - "tests/test_sandbox_runner.py"
+      - ".github/workflows/sandbox-smoke.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "cloud_backend/sandbox_runner.py"
+      - "tests/test_sandbox_runner.py"
+      - ".github/workflows/sandbox-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sandbox:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install backend dependencies for API route contract test
+        run: python -m pip install -r cloud_backend/requirements.txt
+      - name: Compile sandbox and run no-Docker safety tests
+        run: |
+          python -m py_compile cloud_backend/sandbox_runner.py
+          python -m unittest discover -s tests -p 'test_sandbox_runner.py' -v
+      - name: Install fixed local sandbox image for isolated smoke
+        run: docker pull python:3.12-alpine
+      - name: Test real Docker isolation, output limits and timeout
+        run: |
+          python - <<'PY'
+          from cloud_backend.sandbox_runner import run_python
+          result = run_python("print(7 * 6)", timeout_seconds=4)
+          assert result["ok"] and result["stdout"].strip() == "42", result
+          result = run_python("import socket; socket.create_connection(('1.1.1.1', 80), timeout=0.5)", timeout_seconds=4)
+          assert result["status"] == "failed", result
+          result = run_python("from pathlib import Path; Path('/usr/local/lib/blocked').write_text('x')", timeout_seconds=4)
+          assert result["status"] == "failed", result
+          result = run_python("print('x' * 100000)", timeout_seconds=4)
+          assert result["status"] == "output_limit", result
+          result = run_python("while True: pass", timeout_seconds=1.5)
+          assert result["status"] == "timed_out", result
+          print("Docker-only isolated Python smoke: PASS")
+          PY

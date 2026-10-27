@@ -53,12 +53,15 @@ async function main() {
   let browser;
   const apiMessages = [];
   const pageErrors = [];
+  let researchDelay=0,researchFail=false;
   try {
     browser = await chromium.launch({ headless: true });
     const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
     await context.addInitScript(() => {
       try {
         localStorage.setItem("hoshiVoiceReplies", "false");
+        // Existing full-workspace regression checks intentionally use legacy tabs.
+        localStorage.setItem("hoshiFocusModeV1", "false");
       } catch (_) {}
       // Headless CI has no microphone. Keep the voice fallback deterministic.
       try {
@@ -93,6 +96,19 @@ async function main() {
         return;
       }
       const endpoint = new URL(request.url()).pathname;
+      if(endpoint==='/api/trading/research'){
+        const symbol=new URL(request.url()).searchParams.get('symbol');
+        if(researchDelay)await new Promise(resolve=>setTimeout(resolve,researchDelay));
+        const frame={regime:'range',support:69000,resistance:71000,last_closed_at:1793000000000,indicators:{ema20:70000,ema50:70010,rsi14:50,atr14:200}};
+        try{await route.fulfill({status:researchFail?503:200,headers,body:JSON.stringify({symbol,source:'Binance Spot',fetched_at:1793000000,orders_enabled:false,mode:'research-only',decision:'wait',reason:'<img src=x onerror=alert(1)>',timeframes:{'15m':frame,'1h':frame,'4h':frame},proposals:[],note:'Spot only.'})});}catch(_){}
+        return;
+      }
+      if(endpoint==='/api/trading/backtest'){
+        const cfg=request.postDataJSON();
+        assert.equal(cfg.symbol,'BTCUSDT');assert.ok(cfg.risk_pct<=1);
+        await route.fulfill({status:200,headers,body:JSON.stringify({symbol:cfg.symbol,source:'Binance Spot',strategy:cfg.strategy,fetched_at:1793000000,orders_enabled:false,mode:'historical-paper-simulation',bars:499,initial_equity:1000,ending_equity:998,net_pnl:-2,trade_count:2,max_drawdown_pct:.5,fees_paid:1,win_rate_pct:50,expectancy:-1,profit_factor:.8,start_at:1792800000000,end_at:1793000000000,config:cfg,limitations:['Fixture only; not a profitability result.'],trades:[]})});
+        return;
+      }
       if (endpoint === "/health") {
         await route.fulfill({
           status: 200,
@@ -142,6 +158,17 @@ async function main() {
           preview_base64:null,
           products:[{product:"24K GOLD FACIAL KIT",price:"RS. 3,500",
             caption:"Flora 24K Gold Facial Kit, six products at Rs. 3,500."}]
+        })});
+        return;
+      }
+      if (endpoint === "/api/research/sources") {
+        assert.equal(request.method(), "GET");
+        assert.equal(new URL(request.url()).searchParams.get("topic"), "world");
+        await route.fulfill({status:200,headers,body:JSON.stringify({
+          topic:"world",publisher:"BBC News",retrieved_at:"2026-10-27T00:00:00+00:00",
+          items:[{title:"<img src=x onerror=alert(1)>",summary:"Source headline only",
+            publisher:"BBC News",published_at:"2026-10-26T23:00:00+00:00",
+            citation_url:"https://www.bbc.com/news/articles/grounded?tracking=1"}]
         })});
         return;
       }
@@ -210,6 +237,24 @@ async function main() {
     await page.locator('#adStudioResult button').click();
     assert.deepEqual(await page.evaluate(()=>window.__adSaved.map(x=>x.name)),['Flora_Product_Ads.zip']);
     assert.equal(apiMessages.length,beforeAdApi,'Ads must call task API, not waste a chat-model request');
+    // Unsupported multi-hour projects and chart screen actions are recognized,
+    // but must never be faked or silently sent to the chat model as execution.
+    const beforeUnsupported=apiMessages.length;
+    for(const [command,expected] of [
+      ['Mere liye ek puri game banaao','build_game'],
+      ['Hindi Urdu anime 300 episodes 30 min each banaao','render_anime'],
+      ['BTC chart analyse kro support resistance mark kro','chart_analysis']
+    ]){
+      await page.locator('#commandInput').fill(command);
+      await page.locator('#commandForm button').click();
+      assert.match(await page.locator('#status').innerText(),new RegExp('AGENT NOT READY.*'+expected,'i'));
+      assert.match(await page.locator('#reply').innerText(),/nahi|available|verified/i);
+      assert.equal(apiMessages.length,beforeUnsupported,'Unsupported agent must not be treated as completed AI task');
+    }
+    await page.locator('#commandInput').fill('How to create a game?');
+    await page.locator('#commandForm button').click();
+    await page.waitForFunction(()=>document.querySelector('#reply').textContent.includes('I can help'));
+    assert.equal(apiMessages.length,beforeUnsupported+1,'Explanations should still use ordinary chat');
     // No cloud model should be called for concrete Android actions or writing drafts.
     await page.evaluate(() => {
       window.__phoneActions = [];
@@ -238,6 +283,32 @@ async function main() {
       ['open','whatsapp'],['screen','back'],
       ['copy','Kal subah meeting hai'],['share','Kal subah meeting hai'],['permission']
     ]);
+    // Task 23: native app handoff is explicitly user-initiated and status-only.
+    await page.evaluate(()=>{
+      window.__verifiedIntents=[];
+      window.JarvisBridge.isEnabled=()=>false; // App launch must not need Accessibility.
+      window.JarvisBridge.openKnownAppVerified=(name,id)=>{
+        window.__verifiedIntents.push({name,id});return true;
+      };
+    });
+    await page.locator('#commandInput').fill('open Telegram');
+    await page.locator('#commandForm button').click();
+    const intent=await page.evaluate(()=>window.__verifiedIntents.at(-1));
+    assert.equal(intent.name,'telegram');
+    assert.match(await page.locator('#reply').innerText(),/Requesting telegram app/);
+    await page.evaluate(({id})=>window.hoshiKnownAppLaunchResult(id+1,'telegram',true),intent);
+    assert.match(await page.locator('#reply').innerText(),/Requesting telegram app/,'Ignore stale callback');
+    await page.evaluate(({id})=>window.hoshiKnownAppLaunchResult(id,'whatsapp',true),intent);
+    assert.match(await page.locator('#reply').innerText(),/Requesting telegram app/,'Ignore mismatched app');
+    await page.evaluate(({id})=>window.hoshiKnownAppLaunchResult(id,'telegram',false),intent);
+    assert.match(await page.locator('#reply').innerText(),/Could not open telegram/);
+    await page.locator('#commandInput').fill('open TradingView');
+    await page.locator('#commandForm button').click();
+    const secondIntent=await page.evaluate(()=>window.__verifiedIntents.at(-1));
+    assert.equal(secondIntent.name,'tradingview');
+    await page.evaluate(({id})=>window.hoshiKnownAppLaunchResult(id,'tradingview',true),secondIntent);
+    assert.match(await page.locator('#reply').innerText(),/Android accepted tradingview launch request/);
+    assert.equal(apiMessages.length,beforeLocalCommands,'Safe app intents never call AI');
     assert.match(await page.locator('#draftStatus').innerText(), /Accessibility/);
     await page.locator('[data-tab="settings"]').click();
     assert.equal(await page.locator('#voicePanel').isVisible(), true);
@@ -276,6 +347,39 @@ async function main() {
       assert.equal(await page.locator('[data-panel="'+tab+'"]').isVisible(),true);
       if(tab==='trading'){
         await page.waitForFunction(()=>document.querySelector('#tradePrice').textContent.includes('70,000.5'));
+        assert.equal(await page.locator('#tradeJournalConsent').isChecked(),false);
+        await page.locator('#tradeResearchRun').click();
+        await page.waitForFunction(()=>document.querySelector('#tradeResearchStatus').textContent.startsWith('Complete'));
+        assert.match(await page.locator('#tradeResearchOutput').innerText(),/WAIT/);
+        assert.equal(await page.locator('#tradeResearchOutput img').count(),0,'Upstream strings must be inert text');
+        const downloadPromise=page.waitForEvent('download');await page.locator('#tradeResearchExport').click();
+        const download=await downloadPromise;
+        assert.match(download.suggestedFilename(),/Hoshi_BTCUSDT_research.json/);
+        const exported=JSON.parse(fs.readFileSync(await download.path(),'utf8'));
+        assert.equal(exported.orders_enabled,false);
+        await page.locator('#tradeBacktestRun').click();
+        await page.waitForFunction(()=>document.querySelector('#tradeResearchStatus').textContent.startsWith('Complete'));
+        assert.match(await page.locator('#tradeResearchOutput').innerText(),/HISTORICAL SIMULATION/);
+        assert.equal(await page.evaluate(()=>localStorage.getItem('hoshiPaperJournalV1')),null);
+        await page.locator('#tradeJournalConsent').check();
+        await page.locator('#tradeResearchSettings summary').click();
+        await page.locator('#tradeStrategy').selectOption('breakout_retest');
+        await page.locator('#tradeBacktestRun').click();
+        await page.waitForFunction(()=>document.querySelector('#tradeResearchStatus').textContent.startsWith('Complete'));
+        assert.equal(JSON.parse(await page.evaluate(()=>localStorage.getItem('hoshiPaperJournalV1'))).length,1);
+        await page.locator('#tradeJournalClear').click();
+        assert.equal(await page.evaluate(()=>localStorage.getItem('hoshiPaperJournalV1')),null);
+        await page.locator('#tradeJournalConsent').uncheck();
+        researchFail=true;await page.locator('#tradeResearchRun').click();
+        await page.waitForFunction(()=>document.querySelector('#tradeResearchStatus').textContent.includes('(503)'));
+        assert.equal(await page.locator('#tradeResearchExport').isDisabled(),true);
+        assert.equal(await page.locator('#tradeResearchOutput').innerText(),'');researchFail=false;
+        researchDelay=500;await page.locator('#tradeResearchRun').click();
+        await page.locator('#tradePair').selectOption('ETHUSDT');
+        await page.waitForTimeout(600);
+        assert.equal(await page.locator('#tradeResearchOutput').innerText(),'','Late BTC result must not appear after selecting ETH');
+        researchDelay=0;await page.locator('#tradePair').selectOption('BTCUSDT');
+        await page.waitForFunction(()=>!document.querySelector('#tradeRefresh').disabled);
         assert.match(await page.locator('#tradeIndicators').innerText(), /RSI 14: 67.2/);
         assert.match(await page.locator('#tradeSentiment').innerText(), /Alternative.me/);
         assert.equal(await page.locator('#tradeChart [data-candle]').count(),80);
@@ -369,9 +473,261 @@ async function main() {
     await voicePage.waitForFunction(()=>document.querySelector("#reply").textContent.includes("Hoshi heard you"));
     assert.equal(heardRequests,1,"One mic tap must produce exactly one cloud request");
     assert.equal(await voicePage.evaluate(()=>window.micStartCount),1,"Mic must never auto-restart");
+
+    // Test real UI integration: the Urdu-script alternative should win only
+    // when the user explicitly enabled the Hey Hoshi wake-word filter.
+    await voicePage.evaluate(()=>document.querySelector('#wakeToggle').click());
+    await voicePage.locator('#wakeBtn').click();
+    const responseWithWake=voicePage.waitForResponse(r=>r.url().includes('/api/assistant'));
+    await voicePage.evaluate(()=>{
+      const recognition=window.lastMicInstance;
+      recognition.onresult({resultIndex:0,results:[{
+        isFinal:true,length:2,
+        0:{transcript:'some random words'},
+        1:{transcript:'ہے ہوشی, Why do stars shine'}
+      }]});
+      recognition.onend?.();
+    });
+    await responseWithWake;
+    assert.equal(heardRequests,2,'Urdu wake word alternative should make one request');
+    assert.equal(await voicePage.evaluate(()=>window.micStartCount),2);
+
+    // Without the wake word, recognized speech must NOT trigger a provider call.
+    await voicePage.locator('#wakeBtn').click();
+    await voicePage.evaluate(()=>{
+      window.lastMicInstance.onresult({resultIndex:0,results:[{
+        isFinal:true,length:1,0:{transcript:'why is water wet'}
+      }]});
+    });
+    assert.equal(heardRequests,2,'Wake mode rejects speech without an explicit wake word');
+    assert.equal(await voicePage.evaluate(()=>document.querySelector('#status').textContent.includes('SAY HEY HOSHI')),true);
+    // Stop Speaking must also cancel an in-flight cloud reply, so a stale
+    // result cannot start new speech after the user explicitly interrupts.
+    await voicePage.route('https://jarws-ai-2.onrender.com/api/assistant',async route=>{
+      const data=route.request().postDataJSON();
+      if(!String(data?.message||'').includes('delayed interruption test')){
+        await route.fallback();return;
+      }
+      await new Promise(resolve=>setTimeout(resolve,450));
+      try{
+        await route.fulfill({
+          status:200,headers:{'Access-Control-Allow-Origin':'*','Content-Type':'application/json'},
+          body:JSON.stringify({reply:'UNSAFE LATE REPLY',speech_text:'دیر سے جواب',mode:'mock',emotion:'happy'})
+        });
+      }catch(_){/* Fetch cancellation may close the route before delivery. */}
+    });
+    await voicePage.evaluate(()=>{
+      document.querySelector('#commandInput').value='Explain delayed interruption test';
+      document.querySelector('#commandForm').requestSubmit();
+    });
+    await voicePage.waitForFunction(()=>document.querySelector('#status').textContent.includes('AI THINKING'));
+    await voicePage.evaluate(()=>document.querySelector('#stopSpeakingBtn').click());
+    await voicePage.waitForTimeout(650);
+    assert.equal(await voicePage.evaluate(()=>document.querySelector('#reply').textContent.includes('UNSAFE LATE REPLY')),false);
+    assert.equal(await voicePage.evaluate(()=>document.querySelector('#status').textContent.includes('PENDING REPLY STOPPED')),true);
     await voiceContext.close();
+
+    // Task 17: consent is OFF by default; no previous chat is silently stored.
+    await page.locator('[data-tab="chat"]').click();
+    assert.match(await page.locator('#memoryToggle').innerText(), /OFF/);
+    assert.equal(await page.evaluate(()=>localStorage.getItem('hoshiConversationMemoryV1')),null);
+    await page.locator('#memoryToggle').click();
+    assert.match(await page.locator('#memoryToggle').innerText(), /ON/);
+    await page.locator('[data-tab="chat"]').click();
+    await page.locator('#commandInput').fill('Explain a calm evening');
+    const firstMemoryReply=page.waitForResponse(r=>r.url().endsWith('/api/assistant')&&r.request().postDataJSON().message==='Explain a calm evening');
+    await page.locator('#commandForm button').click();
+    await firstMemoryReply;
+    const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('hoshiConversationMemoryV1')));
+    assert.ok(saved.some(item=>item.role==='user'&&item.content==='Explain a calm evening'));
+    await page.evaluate(()=>localStorage.setItem('hoshiConversationMemoryV1',JSON.stringify([
+      {role:'user',content:'Explain a calm evening',at:1},
+      {role:'user',content:'my password is ABC',at:2}
+    ])));
+    const downloadPromise=page.waitForEvent('download');
+    await page.locator('#exportMemoryBtn').click();
+    const download=await downloadPromise;
+    assert.equal(download.suggestedFilename(),'hoshi-local-memory.json');
+    const exported=await download.createReadStream();
+    const chunks=[];for await(const chunk of exported)chunks.push(chunk);
+    const exportedData=JSON.parse(Buffer.concat(chunks).toString('utf8'));
+    assert.deepEqual(exportedData.turns.map(item=>item.content),['Explain a calm evening']);
+    await page.locator('#memoryToggle').click();
+    assert.match(await page.locator('#memoryToggle').innerText(), /OFF/);
+    assert.equal(await page.evaluate(()=>localStorage.getItem('hoshiConversationMemoryV1')),null);
+    await page.locator('[data-tab="chat"]').click();
+    await page.locator('#commandInput').fill('Explain the moon');
+    const afterOptOutReply=page.waitForResponse(r=>r.url().endsWith('/api/assistant')&&r.request().postDataJSON().message==='Explain the moon');
+    await page.locator('#commandForm button').click();
+    await afterOptOutReply;
+    assert.deepEqual(apiMessages.at(-1).context,[],'No prior chat sent after consent revoked');
+    assert.equal(await page.evaluate(()=>localStorage.getItem('hoshiConversationMemoryV1')),null);
+    // Explicit OCR must not forward screenshot text to the backend or execute HTML.
+    await context.addInitScript(() => {
+      window.__localOcrPickers = 0;
+      window.__cancelQueuedActions = 0;
+      window.JarvisBridge = {
+        isEnabled: () => true, requestSettings: () => {},
+        performAction: () => true,
+        cancelQueuedActions: () => { window.__cancelQueuedActions++; return true; },
+        chooseScreenshotForLocalOcr: () => { window.__localOcrPickers++; return true; },
+        performLocalUiAction: (action,payload,id) => {
+          setTimeout(() => window.hoshiLocalUiActionResult(id,
+            window.hoshiExecuteLocalUiAction(action,payload,id)), 0);
+          return true; // Native queues first, verifies DOM state asynchronously.
+        }
+      };
+    });
+    await page.reload();
+    // OCR controls live in the Settings sheet; Chat does not expose this private tool.
+    await page.locator('[data-tab="settings"]').click();
+    assert.equal(await page.locator('#screenControlSection').isVisible(), true,
+      'Native-only screen controls must be visible in Settings');
+    await page.locator('#screenOcrBtn').click();
+    assert.equal(await page.evaluate(() => window.__localOcrPickers), 1);
+    const messagesBeforeOcr = apiMessages.length;
+    await page.evaluate(() => window.hoshiLocalOcrResult(JSON.stringify({
+      engine:'on-device-latin',width:1080,height:2400,
+      blocks:[{text:'Roman Urdu screenshot',box:[10,20,300,50]},
+              {text:'<img src=x onerror=alert(1)>',box:[10,60,400,100]}],
+      truncated:false
+    })));
+    assert.match(await page.locator('#screenOcrOutput').innerText(), /Roman Urdu screenshot/);
+    assert.equal(await page.locator('#screenOcrOutput img').count(), 0, 'OCR text must not render as HTML');
+    assert.equal(apiMessages.length,messagesBeforeOcr,'OCR must not upload to backend');
+    await page.locator('#screenOcrClearBtn').click();
+    assert.equal(await page.locator('#screenOcrOutput').innerText(), '');
+    await page.evaluate(() => window.hoshiLocalOcrResult(JSON.stringify({
+      engine:'on-device-latin',blocks:[{text:'LATE SENSITIVE RESULT'}]
+    })));
+    assert.equal(await page.locator('#screenOcrOutput').innerText(), '', 'Clear must ignore late OCR results');
+    await page.locator('#screenOcrBtn').click();
+    await page.evaluate(() => window.hoshiLocalOcrError('No screenshot selected'));
+    assert.match(await page.locator('#screenOcrStatus').innerText(), /No screenshot selected/);
+    // Task 21: explicit native-bridge simulation only changes the local Hoshi UI.
+    const messagesBeforeLocalActions=apiMessages.length;
+    await page.locator('#localUiDraft').fill('Hoshi meri trading research ka draft');
+    await page.locator('#localUiTypeBtn').click();
+    await page.waitForFunction(()=>document.querySelector('#localUiStatus').textContent.includes('Verified:'));
+    assert.equal(await page.locator('#commandInput').inputValue(),
+      'Hoshi meri trading research ka draft');
+    assert.equal(await page.locator('[data-tab="chat"]').getAttribute('aria-selected'),'true');
+    assert.equal(apiMessages.length,messagesBeforeLocalActions,'Draft typing must not submit AI requests');
+    await page.locator('[data-tab="settings"]').click();
+    await page.locator('#localUiScrollDownBtn').click();
+    await page.waitForFunction(()=>/Verified:|Not verified:/.test(document.querySelector('#localUiStatus').textContent));
+    const beforeStale=await page.locator('#localUiStatus').textContent();
+    await page.evaluate(()=>window.hoshiLocalUiActionResult(999999,true));
+    assert.equal(await page.locator('#localUiStatus').textContent(),beforeStale,'Ignore stale action IDs');
+    await page.locator('#localUiChatBtn').click();
+    await page.waitForFunction(()=>document.querySelector('#localUiStatus').textContent.includes('Verified:'));
+    assert.equal(await page.locator('[data-tab="chat"]').getAttribute('aria-selected'),'true');
+    await page.locator('[data-tab="settings"]').click();
+    await page.evaluate(()=>{window.JarvisBridge.isEnabled=()=>false});
+    await page.locator('#localUiScrollUpBtn').click();
+    assert.match(await page.locator('#localUiStatus').textContent(),/permission first/i);
+    await page.evaluate(()=>window.hoshiLocalUiActionResult(999999,false));
+    assert.match(await page.locator('#localUiStatus').textContent(),/permission first/i);
+    assert.equal(apiMessages.length,messagesBeforeLocalActions);
+    // Task 24: pause blocks new actions and records metadata, not draft content.
+    await page.evaluate(()=>{window.JarvisBridge.isEnabled=()=>true});
+    await page.locator('#actionPauseBtn').click();
+    assert.match(await page.locator('#actionSafetyStatus').innerText(),/ACTIONS PAUSED/);
+    await page.locator('#localUiScrollDownBtn').click();
+    assert.match(await page.locator('#localUiStatus').innerText(),/paused or stopped/i);
+    await page.locator('#actionResumeBtn').click();
+    assert.match(await page.locator('#actionSafetyStatus').innerText(),/ACTIONS READY/);
+    await page.evaluate(()=>{
+      window.JarvisBridge.performLocalUiAction=(action,payload,id)=>{
+        setTimeout(()=>window.hoshiLocalUiActionResult(id,
+          window.hoshiExecuteLocalUiAction(action,payload,id)),650);
+        return true;
+      };
+    });
+    await page.locator('#localUiChatBtn').click();
+    await page.locator('#actionEmergencyStopBtn').click();
+    assert.match(await page.locator('#actionSafetyStatus').innerText(),/EMERGENCY STOP ACTIVE/);
+    await page.waitForTimeout(800);
+    assert.equal(await page.locator('[data-tab="settings"]').getAttribute('aria-selected'),'true',
+      'Late native callback must not perform a stopped action');
+    await page.locator('#localUiChatBtn').click();
+    assert.match(await page.locator('#localUiStatus').innerText(),/paused or stopped/i);
+    assert.ok(await page.evaluate(()=>window.__cancelQueuedActions)>=2,
+      'Pause and stop must invalidate native queued action epoch');
+    const historyText=await page.locator('#actionHistory').innerText();
+    assert.match(historyText,/emergency stop/);
+    assert.equal(historyText.includes('Hoshi meri trading research ka draft'),false,
+      'History must not contain unsent draft payloads');
+    assert.equal(apiMessages.length,messagesBeforeLocalActions,'Safety controls must not send AI requests');
+    await page.evaluate(()=>{
+      document.querySelector('#commandInput').value='Halted command should never reach AI';
+      document.querySelector('#commandForm').requestSubmit();
+      document.querySelector('#wakeBtn').click();
+    });
+    assert.match(await page.locator('#status').innerText(),/EMERGENCY STOP ACTIVE/);
+    assert.equal(apiMessages.length,messagesBeforeLocalActions,'Halted assistant must not dispatch a new AI request');
+    await page.reload();
+    await page.locator('[data-tab="settings"]').click();
+    assert.match(await page.locator('#actionSafetyStatus').innerText(),/EMERGENCY STOP ACTIVE/,
+      'Emergency-stop latch must survive a page reload');
+    await page.locator('#actionResumeBtn').click();
+    await page.locator('#actionHistoryClearBtn').click();
+    assert.equal(await page.locator('#actionHistory li').count(),0);
+    // Task 31: news commands render source citations as inert links, never as HTML
+    // or an uncited model reply, and do not call the assistant model.
+    await page.locator('[data-tab="chat"]').click();
+    const beforeSourceNews=apiMessages.length;
+    await page.locator('#commandInput').fill('world news');
+    await page.locator('#commandForm button').click();
+    await page.locator('#sourceResearchResult a').waitFor();
+    assert.equal(await page.locator('#sourceResearchResult a').count(),1);
+    assert.equal(await page.locator('#sourceResearchResult img').count(),0);
+    assert.equal(await page.locator('#sourceResearchResult a').getAttribute('href'),
+      'https://www.bbc.com/news/articles/grounded');
+    assert.equal(await page.locator('#sourceResearchResult a').innerText(),
+      '<img src=x onerror=alert(1)>');
+    assert.equal(apiMessages.length,beforeSourceNews,'Fixed-source news must not call LLM');
+    // Focus Home must work on an actual narrow mobile browser independently
+    // of existing full-workspace tests. No external assets are required to
+    // render the CSS orb; existing tools are preserved behind Settings.
+    const focusContext=await browser.newContext({viewport:{width:390,height:844}});
+    await focusContext.addInitScript(()=>{
+      try{localStorage.setItem('hoshiVoiceReplies','false')}catch(_){}
+    });
+    await focusContext.route('https://jarws-ai-2.onrender.com/**',route=>{
+      const endpoint=new URL(route.request().url()).pathname;
+      return route.fulfill({status:200,headers:{'Access-Control-Allow-Origin':'*','Content-Type':'application/json'},body:JSON.stringify(endpoint==='/health'?{ok:true,ai_connected:true}:{})});
+    });
+    const focusPage=await focusContext.newPage();
+    focusPage.on('pageerror',error=>pageErrors.push(error.message));
+    await focusPage.goto(url,{waitUntil:'domcontentloaded'});
+    await focusPage.locator('.focus-core').waitFor({state:'visible'});
+    assert.equal(await focusPage.locator('.nightroom.focus-mode').count(),1);
+    assert.equal(await focusPage.locator('[data-tab="chat"]').isVisible(),false);
+    assert.equal(await focusPage.locator('[data-tab="settings"]').isVisible(),true);
+    const focusBackground=await focusPage.evaluate(()=>getComputedStyle(document.querySelector('#nightroom')).backgroundImage);
+    assert.equal(focusBackground.includes('url('),false,'Focus mode must not download or display room/character images');
+    await focusPage.locator('[data-tab="settings"]').click();
+    // Confirm the selected panel before interacting with its child. If a
+    // browser regression hides it, report actual DOM/CSS state rather than
+    // masking the problem with a forced click on the hidden control.
+    console.log('Focus settings state:',await focusPage.evaluate(()=>{
+      const panel=document.querySelector('[data-panel="settings"]');
+      const sheet=document.querySelector('#nightSheet');
+      return {sheetHidden:sheet.hidden,panelHidden:panel.hidden,
+        selected:document.querySelector('[data-tab="settings"]').getAttribute('aria-selected'),
+        display:getComputedStyle(panel).display};
+    }));
+    await focusPage.locator('#nightSheet:not([hidden]) [data-panel="settings"]:not([hidden])').waitFor({state:'visible'});
+    assert.match(await focusPage.locator('#focusModeToggle').innerText(),/ON/);
+    await focusPage.locator('#focusModeToggle').click();
+    assert.equal(await focusPage.locator('.nightroom.focus-mode').count(),0);
+    assert.equal(await focusPage.locator('[data-tab="chat"]').isVisible(),true);
+    await focusPage.locator('[data-tab="chat"]').click();
+    assert.equal(await focusPage.locator('#commandInput').isVisible(),true);
+    await focusContext.close();
     assert.deepEqual(pageErrors,[]);
-    console.log('PASS — nightroom layout, chat, voice settings, tabs and narrow phone widths');
+    console.log('PASS — minimal black animated focus home and full tool access on mobile');
   } finally {
     if (browser) await browser.close();
     await new Promise(resolve => server.close(resolve));

@@ -16,6 +16,8 @@ import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.text.InputType
 import android.provider.Settings
 import android.view.Gravity
@@ -35,9 +37,12 @@ import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import org.json.JSONObject
+import org.json.JSONArray
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import java.util.Locale
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
 class MainActivity : Activity() {
     private data class NativeSpeech(val text: String, val language: String, val pitch: Float, val rate: Float)
@@ -46,6 +51,7 @@ class MainActivity : Activity() {
         private const val REQUEST_MICROPHONE = 4102
         private const val REQUEST_NOTIFICATIONS = 4103
         private const val REQUEST_NATIVE_MIC = 4104
+        private const val REQUEST_LOCAL_SCREENSHOT_OCR = 4105
         private const val DASHBOARD_URL = "https://jarws-ai-1.onrender.com/?native=1"
     }
 
@@ -58,6 +64,20 @@ class MainActivity : Activity() {
     private var nativeRecognizer: SpeechRecognizer? = null
     private var nativeMicActive = false
     private var pendingNativeLanguage: String? = null
+    // WebView @JavascriptInterface calls can arrive off the UI thread.
+    // Reserve the picker synchronously to prevent duplicate picker launches.
+    private val localOcrBusy = AtomicBoolean(false)
+    private val safeIntentHandler = Handler(Looper.getMainLooper())
+    // Shared with the WebView bridge: an emergency stop invalidates UI-thread
+    // actions queued before it, without storing payloads or permissions.
+    private val nativeActionEpoch = AtomicInteger(0)
+
+    fun currentActionEpoch(): Int = nativeActionEpoch.get()
+    fun isActionEpochCurrent(epoch: Int): Boolean = nativeActionEpoch.get() == epoch
+    fun cancelQueuedActions(): Boolean {
+        nativeActionEpoch.incrementAndGet()
+        return true // Cannot undo an Android action already dispatched.
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,7 +94,7 @@ class MainActivity : Activity() {
                         override fun onError(utteranceId: String?) = notifyHoshiVoiceError()
                         override fun onError(utteranceId: String?, errorCode: Int) = notifyHoshiVoiceError()
                     })
-                    textToSpeech?.setPitch(1.12f)
+                    textToSpeech?.setPitch(1.04f)
                     val queued = pendingSpeech
                     pendingSpeech = null
                     if (queued != null) speakNativeOnUiThread(queued)
@@ -213,11 +233,19 @@ class MainActivity : Activity() {
                 override fun onEvent(eventType: Int, params: Bundle?) {}
                 override fun onResults(results: Bundle?) {
                     if (!nativeMicActive || nativeRecognizer !== recognizer) return
-                    val heard = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                        ?.firstOrNull().orEmpty().trim()
+                    // Android recognizers frequently transcribe Roman Urdu with
+                    // more than one plausible script/spelling. Let the local
+                    // client choose a wake-bearing candidate when needed.
+                    val alternatives = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                        ?.asSequence()?.map { it.trim() }?.filter { it.isNotBlank() }
+                        ?.take(3)?.toList().orEmpty()
                     stopNativeListeningInternal()
-                    if (heard.isNotBlank()) sendNativeSpeechEvent("hoshiNativeSpeechResult", heard)
-                    else sendNativeSpeechEvent("hoshiNativeSpeechError", "No speech recognized")
+                    if (alternatives.isNotEmpty()) {
+                        val encoded = JSONArray(alternatives).toString()
+                        dashboardWebView?.evaluateJavascript(
+                            "window.hoshiNativeSpeechResult && window.hoshiNativeSpeechResult($encoded)", null
+                        )
+                    } else sendNativeSpeechEvent("hoshiNativeSpeechError", "No speech recognized")
                 }
                 override fun onError(error: Int) {
                     if (!nativeMicActive || nativeRecognizer !== recognizer) return
@@ -241,7 +269,7 @@ class MainActivity : Activity() {
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE, locale)
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, locale)
                 putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, false)
-                putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
+                putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3)
             }
             recognizer.startListening(intent)
         } catch (_: Exception) {
@@ -265,39 +293,82 @@ class MainActivity : Activity() {
     }
 
     /**
-     * User-requested shortcuts only. Never silently send a message, post online
-     * or interact with a trading account.
+     * Task 23: fixed, user-requested Android app shortcuts only. A true return
+     * means the UI-thread request was queued, not that an app actually opened.
+     * No caller-provided URL, component, recipient, message or trade payload.
+     * These shortcuts do not need Accessibility permission.
      */
-    fun openKnownApp(action: String): Boolean {
-        if (action !in setOf("youtube", "whatsapp", "telegram", "browser", "settings", "tradingview")) return false
-        runOnUiThread {
-            if (isFinishing) return@runOnUiThread
-            try {
-                val packageName = when (action) {
-                    "youtube" -> "com.google.android.youtube"
-                    "whatsapp" -> "com.whatsapp"
-                    "telegram" -> "org.telegram.messenger"
-                    else -> null
-                }
-                val app = packageName?.let { packageManager.getLaunchIntentForPackage(it) }
-                if (app != null) {
-                    startActivity(app)
-                } else {
-                    val fallback = when (action) {
-                        "settings" -> Intent(Settings.ACTION_SETTINGS)
-                        "browser" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/"))
-                        "tradingview" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://www.tradingview.com/"))
-                        "youtube" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/"))
-                        "whatsapp" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://www.whatsapp.com/"))
-                        else -> Intent(Intent.ACTION_VIEW, Uri.parse("https://web.telegram.org/"))
-                    }
-                    startActivity(fallback)
-                }
-            } catch (_: Exception) {
-                Toast.makeText(this, "App could not be opened.", Toast.LENGTH_SHORT).show()
-            }
+    fun openKnownApp(action: String, requestId: Int = 0): Boolean {
+        if (action !in setOf("youtube", "whatsapp", "telegram", "browser", "settings", "tradingview") ||
+            requestId !in 0..1_000_000_000 || isFinishing || isDestroyed) return false
+        val epoch = currentActionEpoch()
+        return safeIntentHandler.post {
+            if (isActionEpochCurrent(epoch)) dispatchKnownAppLaunch(action, requestId)
         }
-        return true
+    }
+
+    private fun dispatchKnownAppLaunch(action: String, requestId: Int) {
+        if (isFinishing || isDestroyed) return
+        val view = dashboardWebView ?: return
+        val originalUrl = view.url ?: return
+        val page = Uri.parse(originalUrl)
+        // The bridge is reachable from JavaScript; never trust it after navigation.
+        if (page.scheme != "https" || page.host != "jarws-ai-1.onrender.com") return
+        val packageName = when (action) {
+            "youtube" -> "com.google.android.youtube"
+            "whatsapp" -> "com.whatsapp"
+            "telegram" -> "org.telegram.messenger"
+            "tradingview" -> "com.tradingview.tradingviewapp"
+            else -> null
+        }
+        val accepted = try {
+            val installed = packageName?.let { packageManager.getLaunchIntentForPackage(it) }
+            if (installed != null) {
+                try {
+                    startActivity(installed)
+                    true
+                } catch (_: Exception) {
+                    launchFixedAppFallback(action)
+                }
+            } else {
+                launchFixedAppFallback(action)
+            }
+        } catch (_: Exception) {
+            false
+        }
+        if (!accepted) Toast.makeText(this, "App unavailable on this device.", Toast.LENGTH_SHORT).show()
+        reportKnownAppLaunchResult(requestId, action, accepted, view, originalUrl)
+    }
+
+    private fun launchFixedAppFallback(action: String): Boolean {
+        // Only these constant destinations may leave Hoshi; no user/AI URLs.
+        val intent = when (action) {
+            "settings" -> Intent(Settings.ACTION_SETTINGS)
+            "browser" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/"))
+            "youtube" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/"))
+            "whatsapp" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://www.whatsapp.com/"))
+            "telegram" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://web.telegram.org/"))
+            "tradingview" -> Intent(Intent.ACTION_VIEW, Uri.parse("https://www.tradingview.com/"))
+            else -> return false
+        }
+        return try {
+            startActivity(intent)
+            true // Android accepted the intent, not proof of destination rendering.
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    private fun reportKnownAppLaunchResult(
+        requestId: Int, action: String, accepted: Boolean, view: WebView, originalUrl: String
+    ) {
+        if (requestId == 0 || isFinishing || isDestroyed ||
+            dashboardWebView !== view || view.url != originalUrl) return
+        val outcome = if (accepted) "true" else "false"
+        view.evaluateJavascript(
+            "window.hoshiKnownAppLaunchResult && window.hoshiKnownAppLaunchResult(" +
+                requestId + "," + JSONObject.quote(action) + "," + outcome + ")", null
+        )
     }
 
     /** Save only validated Hoshi-generated ZIP bytes to user-visible Downloads.
@@ -340,6 +411,108 @@ class MainActivity : Activity() {
             }
         }.start()
         return true
+    }
+
+    /**
+     * Dispatch only allowlisted local Hoshi DOM actions, never other apps.
+     * This method must run on the Android UI thread (JarvisBridge posts it).
+     * WebView page-origin is rechecked at execution time to avoid navigation races.
+     */
+    fun dispatchLocalUiAction(action: String, payload: String, requestId: Int) {
+        if (isFinishing || isDestroyed) return
+        val view = dashboardWebView ?: return
+        val originalUrl = view.url ?: return
+        val page = Uri.parse(originalUrl)
+        if (page.scheme != "https" || page.host != "jarws-ai-1.onrender.com") return
+        if (requestId !in 1..1_000_000_000 ||
+            action !in setOf("tap_chat", "tap_settings", "type_draft", "scroll_up", "scroll_down")) return
+        if (action == "type_draft") {
+            if (payload.length !in 1..240 || payload.isBlank() ||
+                payload.any { it.code < 32 || it.code == 127 }) return
+        } else if (payload.isNotEmpty()) return
+        val script = "window.hoshiExecuteLocalUiAction && window.hoshiExecuteLocalUiAction(" +
+            JSONObject.quote(action) + "," + JSONObject.quote(payload) + "," + requestId + ")"
+        try {
+            view.evaluateJavascript(script) { raw ->
+                // The JavaScript result is a Boolean, not a screenshot or draft.
+                // Reject a stale callback after navigation or permission loss.
+                val verified = raw == "true" && dashboardWebView === view &&
+                    view.url == originalUrl && !isFinishing && !isDestroyed &&
+                    JarvisAccessibilityService.instance != null && JarvisBridge(this).isEnabled()
+                reportLocalUiActionResult(requestId, verified)
+            }
+        } catch (_: Exception) {
+            reportLocalUiActionResult(requestId, false)
+        }
+    }
+
+    /** A status-only callback to the trusted dashboard; never echoes user text. */
+    fun reportLocalUiActionResult(requestId: Int, verified: Boolean) {
+        if (requestId !in 1..1_000_000_000 || isFinishing || isDestroyed) return
+        val view = dashboardWebView ?: return
+        val page = Uri.parse(view.url ?: return)
+        if (page.scheme != "https" || page.host != "jarws-ai-1.onrender.com") return
+        val success = if (verified) "true" else "false"
+        view.evaluateJavascript(
+            "window.hoshiLocalUiActionResult && window.hoshiLocalUiActionResult($requestId,$success)",
+            null
+        )
+    }
+
+    /** User-selected screenshot only: no background capture or remote upload. */
+    fun chooseScreenshotForLocalOcr(): Boolean {
+        if (isFinishing || isDestroyed || !localOcrBusy.compareAndSet(false, true)) return false
+        runOnUiThread {
+            if (isFinishing || isDestroyed) {
+                localOcrBusy.set(false)
+                return@runOnUiThread
+            }
+            try {
+                val picker = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                    addCategory(Intent.CATEGORY_OPENABLE)
+                    type = "image/*"
+                }
+                startActivityForResult(picker, REQUEST_LOCAL_SCREENSHOT_OCR)
+            } catch (_: Exception) {
+                localOcrBusy.set(false)
+                sendLocalOcrError("Image picker unavailable")
+            }
+        }
+        return true // Picker reserved; recognition result arrives asynchronously.
+    }
+
+    private fun sendLocalOcrError(reason: String) {
+        dashboardWebView?.evaluateJavascript(
+            "window.hoshiLocalOcrError && window.hoshiLocalOcrError(${JSONObject.quote(reason)})", null
+        )
+    }
+
+    private fun sendLocalOcrResult(json: String) {
+        dashboardWebView?.evaluateJavascript(
+            "window.hoshiLocalOcrResult && window.hoshiLocalOcrResult(${JSONObject.quote(json)})", null
+        )
+    }
+
+    @Deprecated("Uses Android document picker activity result.")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode != REQUEST_LOCAL_SCREENSHOT_OCR) return
+        val uri = if (resultCode == RESULT_OK) data?.data else null
+        if (uri == null) {
+            localOcrBusy.set(false)
+            sendLocalOcrError("No screenshot selected")
+            return
+        }
+        LocalScreenshotOcr(this,
+            onResult = { json ->
+                localOcrBusy.set(false)
+                if (!isFinishing && !isDestroyed) sendLocalOcrResult(json)
+            },
+            onError = { reason ->
+                localOcrBusy.set(false)
+                if (!isFinishing && !isDestroyed) sendLocalOcrError(reason)
+            }
+        ).analyze(uri)
     }
 
     fun copyUserText(text: String): Boolean {

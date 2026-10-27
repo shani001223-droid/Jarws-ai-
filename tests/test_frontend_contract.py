@@ -45,7 +45,9 @@ class FrontendContractTests(unittest.TestCase):
         self.assertIn("./assets/hoshi-expressions.webp", SERVICE_WORKER)
         self.assertIn("./memory-privacy.js", SERVICE_WORKER)
         self.assertIn('<script src="./memory-privacy.js"></script>', HTML)
-        self.assertIn('CACHE_NAME = "hoshi-shell-v29"', SERVICE_WORKER)
+        self.assertRegex(SERVICE_WORKER, r'CACHE_NAME\s*=\s*"hoshi-shell-v\d+"')
+        self.assertIn("./hoshi-task-router.js", SERVICE_WORKER)
+        self.assertIn('<script src="./hoshi-task-router.js"></script>', HTML)
         self.assertIn("./assets/hoshi-hero-background.svg", SERVICE_WORKER)
 
     def test_hoshi_app_icon_is_wired_for_favicon_pwa_and_offline_shell(self):
@@ -89,6 +91,12 @@ class FrontendContractTests(unittest.TestCase):
         self.assertIn("if(requestId!==cloudRequestSequence)return;", HTML)
         self.assertIn("if(requestId===cloudRequestSequence)", HTML)
 
+    def test_soft_urdu_voice_defaults_avoid_exaggerated_pitch(self):
+        self.assertIn("const voiceStyles={soft:[1.04,0.94]", HTML)
+        self.assertIn("const basePitch=Number($('pitchSlider').value)||1.04", HTML)
+        self.assertIn("const baseRate=Number($('rateSlider').value)||0.94", HTML)
+        self.assertIn("textToSpeech?.setPitch(1.04f)", MAIN_ACTIVITY)
+
     def test_hoshi_voice_uses_native_engine_without_country_picker(self):
         self.assertNotIn('id="voiceSelect"', HTML)
         self.assertIn("One Hoshi delivery", HTML)
@@ -130,7 +138,8 @@ class FrontendContractTests(unittest.TestCase):
     def test_spoken_requests_use_fast_ai_mode_but_writing_actions_are_local(self):
         self.assertIn("askCloud(text,fastRequest)", HTML)
         self.assertIn("const fastRequest=source==='voice'", HTML)
-        self.assertIn("processCommand(command,'voice')", HTML)
+        self.assertIn("processCommand(result.command,'voice')", HTML)
+        self.assertIn('<script src="./hoshi-speech-input.js"></script>', HTML)
         self.assertIn("AI REPLIED IN ", HTML)
         self.assertIn("fast})", HTML)
 
@@ -169,6 +178,14 @@ class FrontendContractTests(unittest.TestCase):
         self.assertIn("Build.VERSION.SDK_INT < Build.VERSION_CODES.P", BRIDGE)
         self.assertIn("GLOBAL_ACTION_TAKE_SCREENSHOT", ACCESSIBILITY)
         self.assertIn("Build.VERSION.SDK_INT >= Build.VERSION_CODES.P", ACCESSIBILITY)
+
+    def test_user_can_interrupt_pending_ai_and_speech_before_late_response(self):
+        self.assertIn("function interruptHoshi()", HTML)
+        self.assertIn("cloudRequestSequence++;", HTML)
+        self.assertIn("if(activeCloudController){try{activeCloudController.abort()}", HTML)
+        self.assertIn("interruptHoshi();lastVoiceError", HTML)
+        self.assertIn("VOICE AND PENDING REPLY STOPPED", HTML)
+        self.assertIn("if(requestId!==cloudRequestSequence)return", HTML)
 
     def test_voice_speaking_state_and_network_timeouts_are_wired(self):
         self.assertIn("window.hoshiSetSpeaking=setSpeaking", HTML)

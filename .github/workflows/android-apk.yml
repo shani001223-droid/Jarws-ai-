@@ -2,7 +2,7 @@ name: Build HOSHI Android APK
 
 on:
   push:
-    branches: [main]
+    branches: [main, hoshi/dnd-foundation-20261026]
     paths:
       - "android/**"
       - ".github/workflows/android-apk.yml"

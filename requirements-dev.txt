@@ -1,0 +1,5 @@
+-r cloud_backend/requirements.txt
+# Starlette's TestClient requires this separately; not a server dependency.
+httpx2
+# Existing observability concurrency tests use httpx.AsyncClient/ASGITransport.
+httpx>=0.28,<0.29

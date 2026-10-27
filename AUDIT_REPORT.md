@@ -169,3 +169,7 @@ Final evidence log push: `HOSHI UPGRADE: Added Final Audit and Verification Evid
 ## Release preparation started — 27 October 2026
 
 The user asked to proceed after V2 source verification. [HOSHI_RELEASE_PRECHECK.md](HOSHI_RELEASE_PRECHECK.md) records the actual public endpoint observations, preservation of newer main changes, conflict resolution and pending Render workspace identification. Local merged-source verification passed 390 Python and 75 Node tests. Production has not been merged/deployed by this preparation; no live result is invented.
+
+## Merged-candidate clean-runner correction
+
+The first merged-source CI (40509641702 / 40509636857) exposed a missing declared `httpx` dependency used by main's existing observability concurrency test. The new FastAPI TestClient also needs `httpx2`; these are distinct clients. `requirements-dev.txt` now includes both, and `requirements-test.txt` delegates to that complete set. No test was skipped, and the first failed run is not counted as passed. Actual Docker and sandbox checks on merge source 9ffabcc6c5cce8cbd7b9c6efb440d1dab48d9f54 already passed; final CI evidence follows after the dependency correction.

@@ -69,3 +69,7 @@ secrets, plan, deployment or production main branch were changed.
 
 Passing source checks are not proof of 99.999% trading accuracy, real order
 execution, deployed behavior or physical-device acceptance.
+
+## Merged-candidate clean-runner correction
+
+The first merged-source CI (40509641702 / 40509636857) exposed a missing declared `httpx` dependency used by main's existing observability concurrency test. The new FastAPI TestClient also needs `httpx2`; these are distinct clients. `requirements-dev.txt` now includes both, and `requirements-test.txt` delegates to that complete set. No test was skipped, and the first failed run is not counted as passed. Actual Docker and sandbox checks on merge source 9ffabcc6c5cce8cbd7b9c6efb440d1dab48d9f54 already passed; final CI evidence follows after the dependency correction.

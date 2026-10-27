@@ -24,7 +24,10 @@
     },
     {
       "path": "knowledge_base/00_HISTORY_OF_EVERYTHING/all_wars_and_market_impact.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2510,
+      "sha256": "f46ea74a9016ee47d9ba2ce5d42e53eda0f55c187b6c66b180c3fa687a43c040"
     },
     {
       "path": "knowledge_base/00_HISTORY_OF_EVERYTHING/all_bubbles.md",
@@ -216,6 +219,11 @@
     {
       "path": "knowledge_base/00_HISTORY_OF_EVERYTHING/market_crash_observations_20261028.json",
       "sha256": "dfea6aa2f69f4a58ed81e2eeff459d58f68ec30ee3e0386cda6ecd6d2602de5d"
+    },
+    {
+      "path": "knowledge_base/00_HISTORY_OF_EVERYTHING/war_event_observations_20261028.json",
+      "kind": "event_windows",
+      "sha256": "4856c0f8f312fd6f3410c0d6f06ff580b7211638b08d2185ba915163827bd84a"
     }
   ]
 }

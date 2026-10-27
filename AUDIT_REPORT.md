@@ -200,3 +200,8 @@ Local 390 Python / 75 Node checks and actual GitHub full browser/API, Docker, sa
 ## V3 chapter receipt — 28 October 2026
 
 Added `all_market_crashes.md` with source-linked dated cases and actual FRED NASDAQ/S&P window observations in companion JSON. Curriculum coverage is 2/48 (4.17%), separate from pending brain/engine/release gates. Initial V3 commit `35f20fc296403cff68d771acd9e743cfdff688c6` passed content-integrity CI run 40579433726. The user clarified that 67 days was a joke; the same continuation task now has no artificial duration cap and pauses after verified completion. No production or global-roadmap change.
+
+
+## V3 war-history receipt — 28 October 2026
+
+Added `all_wars_and_market_impact.md` plus fixed-window, source-digested NASDAQ observations for four dated episodes. Positive and negative horizons are retained without claiming causality, calibrated probability or NAS100 execution access. Data integrity checks now verify event-window arithmetic and chronology. Curriculum coverage: 3/48 (6.25%); brain/engine/release remain pending. Prior crash source `8d39d4e193c6775c490e8a14bb0f5271d2c61875` passed actual CI 40582457180.

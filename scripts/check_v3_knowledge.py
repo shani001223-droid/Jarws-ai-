@@ -74,10 +74,32 @@ def check():
         raw = (ROOT / str(rel)).read_bytes()
         assert len(raw) <= 1000000 and hashlib.sha256(raw).hexdigest() == receipt["sha256"], rel
         payload = json.loads(raw)
+        kind = receipt.get("kind", "crash_windows")
+        assert kind in ("crash_windows", "event_windows"), kind
         for item in payload["observations"]:
             assert item["status"] in ("fetched", "unavailable")
             if item["status"] == "unavailable":
                 assert "return_pct" not in item, "Missing data cannot become a zero return"
+                continue
+            if kind == "event_windows":
+                assert item["series"] == "NASDAQCOM"
+                assert item["request_url"].startswith("https://fred.stlouisfed.org/graph/fredgraph.csv?")
+                assert re.fullmatch(r"[0-9a-f]{64}", item["source_sha256"])
+                event = date.fromisoformat(item["event_date"])
+                before = item["pre_event_close"]
+                assert date.fromisoformat(before["date"]) < event
+                assert type(before["close"]) in (int, float) and before["close"] > 0 and math.isfinite(before["close"])
+                sessions = item["post_event_trading_sessions"]
+                assert set(sessions) <= {"1", "5", "20"} and "1" in sessions
+                previous = None
+                for n in sorted(sessions, key=int):
+                    observation = sessions[n]
+                    stamp = date.fromisoformat(observation["date"])
+                    value = observation["close"]
+                    assert stamp >= event and (previous is None or stamp > previous)
+                    assert type(value) in (int, float) and value > 0 and math.isfinite(value)
+                    assert math.isclose(observation["return_from_pre_event_close_pct"], (value/before["close"]-1)*100, abs_tol=1e-9)
+                    previous = stamp
                 continue
             assert item["series"] in ("NASDAQCOM", "SP500")
             assert item["url"].startswith("https://fred.stlouisfed.org/graph/fredgraph.csv?")

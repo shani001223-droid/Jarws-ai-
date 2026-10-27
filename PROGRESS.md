@@ -9,8 +9,8 @@ entire branch was already deployed. Production V2 remains a separate release.
 
 ## Current measured progress
 
-**Day 1: completed 2 of 48 planned knowledge chapters — 4.17%; 46 chapters,
-95.83% of the declared curriculum, remain.**
+**Day 1: completed 3 of 48 planned knowledge chapters — 6.25%; 45 chapters,
+93.75% of the declared curriculum, remain.**
 
 The denominator is the initial, expandable file manifest in
 `knowledge_base/manifest.json`. It is not a percentage of every fact on Earth,
@@ -23,6 +23,7 @@ topics require an explicit manifest/progress revision, never silent omission.
 | Requested work/backup branches | Created and preserved |
 | `00_HISTORY_OF_EVERYTHING/history_of_money.md` | Written; source-checked; actual body count and SHA-256 recorded in manifest |
 | `00_HISTORY_OF_EVERYTHING/all_market_crashes.md` | Source-checked; actual NASDAQ/S&P observations and window calculations included |
+| `00_HISTORY_OF_EVERYTHING/all_wars_and_market_impact.md` | Source-checked; four fixed NASDAQ event windows, alternative explanations and instrument/timezone limits |
 | Remaining curriculum documents | Pending; no empty placeholder chapters counted as complete |
 | Brain loader and runtime knowledge bundle | Pending — the new chapter is not yet consumed by Hoshi |
 | 40/20/20/20 history/liquidity/structure/global-flow engine | Pending — weights will mean evidence coverage, not an invented win probability |
@@ -52,6 +53,8 @@ topics require an explicit manifest/progress revision, never silent omission.
   source/CI/progress and commit real verified work, not repeat a plan.
 
 - **Day 1 continuation:** completed crash-history research with explicit daily-loss, peak-to-trough and recovery definitions; fetched actual FRED NASDAQ and S&P observations, retained failed-source handling, and documented 2022–2026 observations with their actual cutoffs. Prior source receipt: [35f20fc](https://github.com/shani001223-droid/Jarws-ai-/commit/35f20fc296403cff68d771acd9e743cfdff688c6); its actual GitHub integrity check [40579433726](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40579433726) passed. The 67-day schedule cap was removed following the user clarification; other Hoshi schedules remain unchanged.
+
+- **Day 1 continuation:** completed the war-impact chapter and captured real NASDAQ Composite before/after observations for 2003, 2022, 2023 and 2026. First/fifth/twentieth sessions use one fixed rule; no headline-to-SHORT mapping or causal win rate is asserted. Prior crash receipt: [8d39d4e](https://github.com/shani001223-droid/Jarws-ai-/commit/8d39d4e193c6775c490e8a14bb0f5271d2c61875); its [actual integrity CI](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40582457180) passed.
 
 ## Completion and release rules
 

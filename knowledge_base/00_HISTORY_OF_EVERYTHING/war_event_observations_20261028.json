@@ -1,0 +1,127 @@
+{
+  "reviewed_on": "2026-10-28",
+  "review_timezone": "Asia/Karachi",
+  "protocol": "Last close before calendar event; first/fifth/twentieth observed session on or after event. Descriptive NASDAQ Composite price returns, not causal effects or strategy returns.",
+  "observations": [
+    {
+      "id": "iraq_2003",
+      "event_date": "2003-03-20",
+      "series": "NASDAQCOM",
+      "request_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=NASDAQCOM&cosd=2003-03-10&coed=2003-04-19",
+      "status": "fetched",
+      "source_sha256": "fc1b669be6d9e3b5d9ecd2ba71b485e2462d8c991636ba8a0337717300d06316",
+      "pre_event_close": {
+        "date": "2003-03-19",
+        "close": 1378.57
+      },
+      "post_event_trading_sessions": {
+        "1": {
+          "date": "2003-03-20",
+          "close": 1411.41,
+          "return_from_pre_event_close_pct": 2.382178634382015
+        },
+        "5": {
+          "date": "2003-03-26",
+          "close": 1383.35,
+          "return_from_pre_event_close_pct": 0.34673611060735965
+        },
+        "20": {
+          "date": "2003-04-16",
+          "close": 1391.99,
+          "return_from_pre_event_close_pct": 0.9734725113704767
+        }
+      },
+      "note": "Fixed retrospective event windows, not causal effects or executable trade returns."
+    },
+    {
+      "id": "ukraine_2022",
+      "event_date": "2022-02-24",
+      "series": "NASDAQCOM",
+      "request_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=NASDAQCOM&cosd=2022-02-14&coed=2022-03-26",
+      "status": "fetched",
+      "source_sha256": "ffbded2c48ea7d7ac9524e0d8d3eae091d599a5c440274c5c89947e7fcb1f146",
+      "pre_event_close": {
+        "date": "2022-02-23",
+        "close": 13037.49
+      },
+      "post_event_trading_sessions": {
+        "1": {
+          "date": "2022-02-24",
+          "close": 13473.59,
+          "return_from_pre_event_close_pct": 3.344969008605192
+        },
+        "5": {
+          "date": "2022-03-02",
+          "close": 13752.02,
+          "return_from_pre_event_close_pct": 5.480579467366797
+        },
+        "20": {
+          "date": "2022-03-23",
+          "close": 13922.6,
+          "return_from_pre_event_close_pct": 6.788960144935885
+        }
+      },
+      "note": "Fixed retrospective event windows, not causal effects or executable trade returns."
+    },
+    {
+      "id": "israel_2023",
+      "event_date": "2023-10-07",
+      "series": "NASDAQCOM",
+      "request_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=NASDAQCOM&cosd=2023-09-27&coed=2023-11-06",
+      "status": "fetched",
+      "source_sha256": "8d034865f81204ba78d18bd654c1ec2af7fd6d3b498764fdd9772251cad40a83",
+      "pre_event_close": {
+        "date": "2023-10-06",
+        "close": 13431.34
+      },
+      "post_event_trading_sessions": {
+        "1": {
+          "date": "2023-10-09",
+          "close": 13484.24,
+          "return_from_pre_event_close_pct": 0.3938549690500004
+        },
+        "5": {
+          "date": "2023-10-13",
+          "close": 13407.23,
+          "return_from_pre_event_close_pct": -0.1795055444951954
+        },
+        "20": {
+          "date": "2023-11-03",
+          "close": 13478.28,
+          "return_from_pre_event_close_pct": 0.34948113888859655
+        }
+      },
+      "note": "Fixed retrospective event windows, not causal effects or executable trade returns."
+    },
+    {
+      "id": "middle_east_2026",
+      "event_date": "2026-02-28",
+      "series": "NASDAQCOM",
+      "request_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=NASDAQCOM&cosd=2026-02-18&coed=2026-03-30",
+      "status": "fetched",
+      "source_sha256": "7553d6e0101d0c8e56b7d81916afe80314fd7d5361cf0864ac243e9e29878b1f",
+      "pre_event_close": {
+        "date": "2026-02-27",
+        "close": 22668.21
+      },
+      "post_event_trading_sessions": {
+        "1": {
+          "date": "2026-03-02",
+          "close": 22748.86,
+          "return_from_pre_event_close_pct": 0.355784598783937
+        },
+        "5": {
+          "date": "2026-03-06",
+          "close": 22387.68,
+          "return_from_pre_event_close_pct": -1.2375480904756042
+        },
+        "20": {
+          "date": "2026-03-27",
+          "close": 20948.36,
+          "return_from_pre_event_close_pct": -7.587056940093628
+        }
+      },
+      "note": "Fixed retrospective event windows, not causal effects or executable trade returns."
+    }
+  ]
+}

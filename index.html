@@ -194,7 +194,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 <button type="button" id="fastVoiceToggle" aria-pressed="true">⚡ Fast phone voice: ON</button><p class="small">Fast mode uses installed Pakistani Urdu voice immediately when available; otherwise natural online Urdu voice. Turn off for natural online voice only.</p>
 <div class="voice-actions"><button type="button" class="primary" id="previewVoiceBtn">▶ Hear Hoshi</button><button type="button" id="stopSpeakingBtn">■ Stop speaking</button></div>
 <audio id="hoshiAudio" controls hidden preload="none" aria-label="Hoshi Urdu voice playback" style="width:100%;max-width:100%"></audio>
-<p class="small">Urdu uses the online Hoshi voice so the phone does not substitute a different speaker. Spoken replies are sent to Microsoft. Turn voice replies off to disable it. If automatic playback is blocked, tap Play above.</p>
+<p class="small">Fast mode uses an available Urdu device or browser voice. Online fallback sends spoken reply text to Microsoft. Turn voice replies off to disable speech. If automatic playback is blocked, tap Play above.</p>
 <details class="voice-fine-tune"><summary>Fine tune delivery</summary>
 <div class="voice-setting"><label for="pitchSlider">Softness / pitch</label><output id="pitchValue">1.12×</output><input id="pitchSlider" type="range" min="0.8" max="1.4" step="0.01" value="1.12" aria-label="Voice pitch"></div>
 <div class="voice-setting"><label for="rateSlider">Speaking speed</label><output id="rateValue">0.88×</output><input id="rateSlider" type="range" min="0.75" max="1.15" step="0.01" value="0.88" aria-label="Speaking speed"></div>
@@ -223,6 +223,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 <script src="./assistant-commands.js"></script>
 <script src="./reminder-parser.js"></script>
 <script src="./memory-privacy.js"></script>
+<script src="./speech-pipeline.js"></script>
 <script src="./profile-store.js"></script>
 <script src="./hoshi-product-ads.js"></script>
 <script>
@@ -335,7 +336,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  let voiceListenStartedAt=0,voiceTimes={listen:null,ai:null,audio:null};
  const voiceClock=()=>performance.now();
  function displayVoiceTimes(){const val=n=>n===null?'—':(n/1000).toFixed(2)+'s';
-  $('voiceTiming').textContent='Mic '+val(voiceTimes.listen)+' · AI '+val(voiceTimes.ai)+' · Awaaz '+val(voiceTimes.audio);
+  $('voiceTiming').textContent='Mic '+val(voiceTimes.listen)+' · AI '+val(voiceTimes.ai)+' · Awaaz '+val(voiceTimes.audio)+' · AI + audio '+val(voiceTimes.ai===null||voiceTimes.audio===null?null:voiceTimes.ai+voiceTimes.audio);
  }
  function startVoiceTimer(){voiceListenStartedAt=voiceClock();voiceTimes={listen:null,ai:null,audio:null};displayVoiceTimes()}
  function markVoiceHeard(){if(voiceListenStartedAt>0){voiceTimes.listen=Math.max(0,voiceClock()-voiceListenStartedAt);voiceListenStartedAt=0;displayVoiceTimes()}}
@@ -377,7 +378,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  async function askCloud(message,fast=false){
   const requestId=++cloudRequestSequence;
   if(activeCloudController){try{activeCloudController.abort()}catch(_){}}
-  const modelStarted=voiceClock();voiceTimes.ai=null;displayVoiceTimes();setStatus('AI THINKING…');setEmotion('thinking');orb.classList.add('active');
+  const modelStarted=voiceClock();voiceTimes.ai=null;voiceTimes.audio=null;displayVoiceTimes();setStatus('AI THINKING…');setEmotion('thinking');orb.classList.add('active');
   const controller=typeof AbortController==='function'?new AbortController():null;
   activeCloudController=controller;
   const timeout=controller?setTimeout(()=>controller.abort(),32000):null;
@@ -416,49 +417,38 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  function stopSpeaking(){speechSequence++;currentSpeech=null;$('nightAudioRetry').hidden=true;if(speechAudioController){speechAudioController.abort();speechAudioController=null}const audio=$('hoshiAudio');audio.pause();audio.removeAttribute('src');audio.hidden=true;if(speechAudioUrl){URL.revokeObjectURL(speechAudioUrl);speechAudioUrl=null}if(window.JarvisBridge&&typeof window.JarvisBridge.stopNativeSpeech==='function')window.JarvisBridge.stopNativeSpeech();if('speechSynthesis'in window)window.speechSynthesis.cancel();setSpeaking(false)}
  // Prefer first audible phrase over waiting for a long full MP3.
  // Future clauses are synthesized while the first clip plays.
- function splitUrduSpeech(text){
-  let remaining=String(text||'').trim();
-  if(remaining.length<=140)return remaining?[remaining]:[];
-  const segments=[];
-  while(remaining.length>155&&segments.length<5){
-   const part=remaining.slice(0,150);let cut=-1;
-   for(const marker of ['۔','؟','!','?','،']){
-    const found=part.lastIndexOf(marker);if(found>=55)cut=Math.max(cut,found+1);
-   }
-   if(cut<55)cut=part.lastIndexOf(' ',135)+1;
-   if(cut<55)cut=150;
-   segments.push(remaining.slice(0,cut).trim());
-   remaining=remaining.slice(cut).trim();
-  }
-  if(remaining)segments.push(remaining);
-  return segments;
- }
+ function splitUrduSpeech(text){return window.HoshiSpeechPipeline.split(text)}
  async function playOnlineUrdu(request){
   if(!request||request.id!==speechSequence||cloudSpeechAttempt===request.id)return;
   cloudSpeechAttempt=request.id;
   const audioStarted=voiceClock();voiceTimes.audio=null;displayVoiceTimes();
   const controller=new AbortController();speechAudioController=controller;
-  const timeout=setTimeout(()=>controller.abort(),22000);
+
   setStatus('PREPARING FIRST URDU PHRASE…');
   let style='soft';try{style=localStorage.getItem('hoshiVoiceStyle')||'soft'}catch(_){}
   if(['happy','excited','playful'].includes(request.emotion))style='playful';
   else if(['sad','shy','concerned','affectionate','caring'].includes(request.emotion))style='warm';
   const segments=splitUrduSpeech(request.text);
-  if(!segments.length){clearTimeout(timeout);return}
-  const files=segments.map(part=>tracedFetch(API_BASE+'/api/speech',{
-   method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:part,style}),signal:controller.signal
-  }).then(async response=>{
-   if(!response.ok)throw new Error('Urdu voice provider unavailable');
-   const blob=await response.blob();if(!blob.size)throw new Error('Empty Urdu audio');
-   return blob;
-  }).catch(()=>null));
+  if(!segments.length){if(speechAudioController===controller)speechAudioController=null;return}
+  async function requestPart(part){
+   const clipTimer=setTimeout(()=>controller.abort(),22000);
+   try{
+    const response=await tracedFetch(API_BASE+'/api/speech',{
+     method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:part,style}),signal:controller.signal
+    });
+    if(!response.ok)throw new Error('Urdu voice provider unavailable');
+    const blob=await response.blob();if(!blob.size)throw new Error('Empty Urdu audio');return blob;
+   }finally{clearTimeout(clipTimer)}
+  }
+  const files=window.HoshiSpeechPipeline.queue(segments,requestPart,()=>request.id===speechSequence&&!controller.signal.aborted);
   const audio=$('hoshiAudio');
-  const stopLoading=()=>{clearTimeout(timeout);if(speechAudioController===controller)speechAudioController=null};
+  const stopLoading=()=>{controller.abort();if(speechAudioController===controller)speechAudioController=null};
   async function playPart(index){
    if(request.id!==speechSequence){stopLoading();return}
-   const blob=await files[index];
+   const blob=await files.get(index);
    if(request.id!==speechSequence){stopLoading();return}
    if(!blob){setSpeaking(false);setStatus('URDU AUDIO UNAVAILABLE · REPLY IS SHOWN IN CHAT');stopLoading();return}
+   if(index+1<segments.length)void files.get(index+1);
    if(speechAudioUrl){URL.revokeObjectURL(speechAudioUrl);speechAudioUrl=null}
    speechAudioUrl=URL.createObjectURL(blob);audio.src=speechAudioUrl;audio.hidden=false;
    audio.onplaying=()=>{
@@ -525,7 +515,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
        speechBeganAt=voiceClock();voiceTimes.audio=null;displayVoiceTimes();
        try{if(window.JarvisBridge.speakNative(spokenMessage,commandLanguage,pitch,rate)){setStatus('FAST DEVICE VOICE STARTING…');return}}catch(_){}
      }
-     playOnlineUrdu(currentSpeech);return
+     if(!(fastPhoneVoice&&chooseVoice()&&typeof SpeechSynthesisUtterance!=='undefined')){playOnlineUrdu(currentSpeech);return}
    }
    // One Hoshi delivery: online Urdu first; device speech handles other languages.
    if(window.JarvisBridge&&typeof window.JarvisBridge.speakNative==='function'&&(!urduMode||(typeof window.JarvisBridge.supportsUrduSpeech==='function'&&window.JarvisBridge.supportsUrduSpeech()))){
@@ -539,11 +529,11 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
    const u=new SpeechSynthesisUtterance(spokenMessage);
    const voice=chooseVoice();if(voice)u.voice=voice;
    u.lang=voice?voice.lang:commandLanguage;u.rate=rate;u.pitch=pitch;u.volume=1;
-    u.onstart=()=>{if(speechId===speechSequence)setSpeaking(true)};
+    u.onstart=()=>{if(speechId===speechSequence){setSpeaking(true);voiceTimes.audio=Math.max(0,voiceClock()-speechBeganAt);displayVoiceTimes()}};
     u.onend=()=>{if(speechId!==speechSequence)return;setSpeaking(false);};
     u.onerror=e=>{if(speechId!==speechSequence)return;setSpeaking(false);if(e&&e.error!=='canceled'&&e.error!=='interrupted'){if(urduMode)playOnlineUrdu(currentSpeech);else setStatus('VOICE OUTPUT FAILED · CHECK DEVICE TEXT-TO-SPEECH')}};
    let spoken=false;
-   const speak=()=>{if(spoken||speechId!==speechSequence)return;spoken=true;const current=chooseVoice();if(urduMode&&!current){$('voiceEngineStatus').textContent='Online Urdu voice · preparing audio';playOnlineUrdu(currentSpeech);return}if(current){u.voice=current;u.lang=current.lang}synth.speak(u)};
+   const speak=()=>{if(spoken||speechId!==speechSequence)return;spoken=true;const current=chooseVoice();if(urduMode&&!current){$('voiceEngineStatus').textContent='Online Urdu voice · preparing audio';playOnlineUrdu(currentSpeech);return}if(current){u.voice=current;u.lang=current.lang}speechBeganAt=voiceClock();voiceTimes.audio=null;synth.speak(u)};
    if(!synth.getVoices().length){
      const onVoices=()=>{synth.removeEventListener('voiceschanged',onVoices);refreshVoices();speak()};
      synth.addEventListener('voiceschanged',onVoices);setTimeout(speak,900);

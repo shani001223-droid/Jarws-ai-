@@ -91,6 +91,8 @@
 
 **Current verified roadmap snapshot at consolidation:** 15 of 60 tasks marked completed in `HOSHI_60_TASK_MASTER_ROADMAP.md`; check the latest file for changes, never hard-code progress elsewhere. Tasks 06 (live deploy/rollback/phone acceptance) and 11 (real OpenJarvis server) require resources/permissions not currently verified. Later tasks remain in the roadmap.
 
+**Scoped offline specialist orchestration (Task 34, verification pending):** `cloud_backend/specialist_orchestrator.py` coordinates a fixed Flora campaign pipeline: allowlisted catalogue planner, Task 27 creative role delegate, independent PNG/ZIP/catalogue/hash auditor and verified combined ZIP packager. Supports at most two distinct approved products, returns a real in-memory combined ZIP with SHA-256 manifest and checks optional trusted cancellation between stages. No user/model-defined tools, remote LLM swarm, HTTP endpoint, auto-worker, durable storage, MP4, publishing, account actions or real trading. Full CI and Docker runtime smoke must pass before the single canonical roadmap Task 34 is checked. See `HOSHI_SPECIALIST_ORCHESTRATION.md`.
+
 ## 5. Feature tracks — one assistant, modular execution
 
 1. **Hoshi chat & voice:** low-latency measured reply, robust Roman Urdu STT, soft Urdu female TTS, natural safe personality, explicit Stop and privacy controls.

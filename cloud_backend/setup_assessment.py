@@ -42,6 +42,8 @@ def _evaluate(structure: dict, indicators: dict) -> dict:
             or indicators.get("orders_enabled") is not False
             or structure.get("market") != "spot"
             or indicators.get("market") != "spot"
+            or structure.get("mode") != "structure-research-only"
+            or indicators.get("mode") != "indicators-research-only"
             or structure.get("alignment") not in (
                 "all_three_bullish_structure", "all_three_bearish_structure",
                 "mixed_timeframes", "insufficient_confirmation")
@@ -52,8 +54,18 @@ def _evaluate(structure: dict, indicators: dict) -> dict:
         metrics = indicators["timeframes"]
         if set(structures) != set(FRAMES) or set(metrics) != set(FRAMES):
             raise SetupAssessmentError("missing_timeframes")
+        regimes = []
         for tf in FRAMES:
             s, m = structures[tf], metrics[tf]
+            regime = s["structure"]
+            if regime not in ("higher_highs_higher_lows",
+                              "lower_highs_lower_lows", "mixed_structure",
+                              "insufficient_confirmed_swings"):
+                raise SetupAssessmentError("invalid_structure_regime")
+            if (s["pivot_confirmation_bars"] != 2
+                    or isinstance(s["pivot_confirmation_bars"], bool)):
+                raise SetupAssessmentError("unconfirmed_structure")
+            regimes.append(regime)
             if (s["last_closed_at"] != m["last_closed_at"]
                     or _number(s["last_close"]) != _number(m["last_close"])):
                 raise SetupAssessmentError("mismatched_analysis_snapshot")
@@ -73,6 +85,16 @@ def _evaluate(structure: dict, indicators: dict) -> dict:
             vwap = m["values"]["utc_session_vwap"]
             if vwap is not None and _number(vwap) <= 0:
                 raise SetupAssessmentError("invalid_vwap")
+        if all(r == "higher_highs_higher_lows" for r in regimes):
+            expected_alignment = "all_three_bullish_structure"
+        elif all(r == "lower_highs_lower_lows" for r in regimes):
+            expected_alignment = "all_three_bearish_structure"
+        elif "insufficient_confirmed_swings" in regimes:
+            expected_alignment = "insufficient_confirmation"
+        else:
+            expected_alignment = "mixed_timeframes"
+        if structure["alignment"] != expected_alignment:
+            raise SetupAssessmentError("inconsistent_structure_alignment")
     except (KeyError, TypeError, AttributeError) as exc:
         raise SetupAssessmentError("invalid_analysis_shape") from exc
 

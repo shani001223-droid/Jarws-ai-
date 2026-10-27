@@ -5,6 +5,7 @@ import hashlib
 from io import BytesIO
 import json
 import unittest
+from unittest.mock import patch
 from zipfile import ZIP_STORED, ZipFile
 
 from cloud_backend.output_validation import (
@@ -68,6 +69,17 @@ class OutputValidationTests(unittest.TestCase):
                     validate_png_media(invalid, expected_size=(1080, 1350))
         with self.assertRaises(OutputFormatError):
             validate_png_media(png, expected_size=(500, 500))
+
+    def test_specialist_does_not_return_success_when_format_gate_fails(self):
+        with patch("cloud_backend.specialist_orchestrator.validate_campaign_zip",
+                   side_effect=OutputFormatError("invalid_png_media")):
+            result = orchestrate_flora_campaign(["shampoo"])
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["failed_specialist"], "campaign_packager")
+        self.assertEqual(result["error_code"], "campaign_verification_failed")
+        self.assertIsNone(result["artifact"])
+        self.assertFalse(result["queued_job_completed"])
+        self.assertFalse(result["published"])
 
     def test_outer_manifest_digest_and_archive_tampering(self):
         with ZipFile(BytesIO(self.payload)) as outer:

@@ -726,6 +726,11 @@ async function main() {
     await page.locator('#tradeAnnotatedInterval').selectOption('15m');
     await page.locator('#tradeAnnotatedRun').click();
     await page.locator('#tradeAnnotatedCanvas').waitFor({state:'visible'});
+    await page.setViewportSize({width:390,height:844});
+    assert.equal(await page.evaluate(()=>{
+      const sheet=document.querySelector('#nightSheet');
+      return sheet.scrollWidth>sheet.clientWidth+1;
+    }),false,'Visible annotated chart must fit 390px mobile viewport');
     assert.equal(await page.locator('#tradeAnnotatedPng').isEnabled(),true);
     assert.equal(await page.locator('#tradeAnnotatedJson').isEnabled(),true);
     const drawn=await page.locator('#tradeAnnotatedCanvas').evaluate(c=>{

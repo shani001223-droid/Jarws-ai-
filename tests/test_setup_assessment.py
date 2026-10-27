@@ -15,11 +15,15 @@ FRAMES = ("15m", "1h", "4h")
 
 def sample_analysis():
     structure = {"symbol": "BTCUSDT", "market": "spot", "orders_enabled": False,
+                 "mode": "structure-research-only",
                  "alignment": "all_three_bullish_structure", "timeframes": {}}
     indicators = {"symbol": "BTCUSDT", "market": "spot", "orders_enabled": False,
+                  "mode": "indicators-research-only",
                   "formula_version": "spot-indicators-v1", "timeframes": {}}
     for tf in FRAMES:
-        structure["timeframes"][tf] = {"last_closed_at": 1000, "last_close": 112}
+        structure["timeframes"][tf] = {"last_closed_at": 1000, "last_close": 112,
+                                       "structure": "higher_highs_higher_lows",
+                                       "pivot_confirmation_bars": 2}
         indicators["timeframes"][tf] = {
             "last_closed_at": 1000, "last_close": 112,
             "vwap_full_session_from_open": True,
@@ -60,7 +64,7 @@ class AssessmentUnitTests(unittest.TestCase):
 
     def test_each_family_can_veto_watchlist(self):
         cases = (
-            lambda s, m: s.update(alignment="mixed_timeframes"),
+            lambda s, m: s["timeframes"]["1h"].update(structure="mixed_structure"),
             lambda s, m: m["timeframes"]["1h"]["values"].update(ema9=99),
             lambda s, m: m["timeframes"]["15m"]["values"].update(rsi14=75),
             lambda s, m: m["timeframes"]["15m"]["values"].update(volume_ratio20=1),
@@ -86,6 +90,12 @@ class AssessmentUnitTests(unittest.TestCase):
             lambda s, m: m.update(formula_version="unknown"),
             lambda s, m: s.update(orders_enabled=True),
             lambda s, m: m["timeframes"].pop("4h"),
+            lambda s, m: s["timeframes"]["1h"].update(structure="mixed_structure"),
+            lambda s, m: s["timeframes"]["1h"].update(pivot_confirmation_bars=0),
+            lambda s, m: s["timeframes"]["1h"].update(pivot_confirmation_bars=True),
+            lambda s, m: s["timeframes"]["1h"].update(structure="future_pivot"),
+            lambda s, m: s.update(mode="order-engine"),
+            lambda s, m: m.update(mode="order-engine"),
         )
         for mutate in mutations:
             with self.subTest(mutate=mutate):

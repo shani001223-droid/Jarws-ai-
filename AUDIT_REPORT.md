@@ -29,7 +29,7 @@ This extends the existing assistant; it is not a new app, trading account, or mo
 1. No versioned ten-module trading curriculum or history corpus, no knowledge loader, and no `/history`, `/learn`, `/confluence_score` routes.
 2. No reproducible implementation of the requested five-factor HOSHI CONFLUENCE V2, including New York DST-aware time handling.
 3. Root README retains historical nightroom/voice descriptions; canonical master file already records newer decisions. Preserve useful history and add an explicit current V2 entry.
-4. Docker currently copies only sibling `*.py`; a new curriculum must be inside the **`cloud_backend` build root** and explicitly copied. A root-only `modules/` would silently disappear from Render's backend deployment.
+4. Docker currently copies only sibling `*.py`; root `modules/` needs an integrity-tested runtime bundle inside the **`cloud_backend` build root** and an explicit Docker copy. A root-only directory would silently disappear from Render's backend deployment.
 5. Inline prompt knowledge is not connected to a repository corpus; short voice and full provider routes must both receive bounded relevant context.
 6. Task 40's existing 60-task checkbox is still pending full CI. Baseline GitHub check-runs/status lookup returned **zero**, not a passing CI result. Do not change unrelated checkboxes.
 7. No live economic-calendar, COT, DXY, bond, order-book or full market-wide liquidity data feed. OHLCV cannot prove institutional intent, resting stop locations, or an ICT narrative.
@@ -59,3 +59,5 @@ Later commits update this report atomically with each module. A commit cannot co
 ## Release gate
 
 Continue on the existing development branch, preserve configured Gemini/Groq/free-provider routing and Android controls, and test package imports **and** direct `uvicorn main:app` from `cloud_backend`. No new paid service/key is needed for deterministic curriculum/confluence work. Keep real orders disabled. A GitHub push is source delivery, not Render release or phone acceptance.
+
+- Day 1: **Trading History** completed as a repository curriculum module. Previous push receipt: [ec1c6992c834](https://github.com/shani001223-droid/Jarws-ai-/commit/ec1c6992c834260042061da59255f6c5cdf11d65). Linked chart exercises are conditional, not verified current setups.

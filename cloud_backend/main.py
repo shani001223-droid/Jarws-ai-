@@ -43,6 +43,10 @@ try:  # Handles either cloud_backend package import or direct uvicorn main:app.
     from .verified_artifact_store import VerifiedArtifactStore, ArtifactStorageError
     from .job_reporting import build_job_report
     from .source_research import browse_sources, SourceUnavailable
+    from .scoped_connectors import (
+        read_scoped_github_file, github_connector_ready,
+        InvalidConnectorPath, ScopedConnectorError,
+    )
 except ImportError:
     from openjarvis_bridge import ask_openjarvis, endpoint as openjarvis_endpoint, wants_agent, OpenJarvisUnavailable
     from agent_tools import try_calculate
@@ -59,6 +63,10 @@ except ImportError:
     from verified_artifact_store import VerifiedArtifactStore, ArtifactStorageError
     from job_reporting import build_job_report
     from source_research import browse_sources, SourceUnavailable
+    from scoped_connectors import (
+        read_scoped_github_file, github_connector_ready,
+        InvalidConnectorPath, ScopedConnectorError,
+    )
 
 app = FastAPI(title="HOSHI AI Cloud API", version="0.9.1")
 
@@ -175,6 +183,51 @@ def _private_job_store(request: FastAPIRequest) -> JobRecordStore:
     except Exception as exc:
         _safe_log_failure("jobs.storage", exc)
         raise HTTPException(status_code=503, detail="Private job storage unavailable.") from None
+
+
+@app.get("/api/agent/connectors")
+def private_connector_status(request: FastAPIRequest, response: Response):
+    """Operator-only configuration inventory; no network probe or secret output."""
+    _private_job_store(request)
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    return {
+        "github": {
+            "configured": github_connector_ready(os.getenv("HOSHI_GITHUB_READ_TOKEN", "")),
+            "scope": "canonical_repository_branch_allowlisted_files",
+            "remote_verified": False,
+        },
+        "storage": {
+            "configured": bool(os.getenv("HOSHI_ARTIFACT_ROOT", "").strip()),
+            "scope": "existing_private_verified_flora_artifact_reads",
+            "remote_verified": False,
+        },
+        "writes_enabled": False,
+        "note": "Configuration only; no live GitHub/storage availability or worker is implied.",
+    }
+
+
+@app.get("/api/agent/connectors/github/file")
+def private_github_connector_file(path: str, request: FastAPIRequest,
+                                  response: Response):
+    """Read fixed-branch source with server-only GitHub and operator tokens.
+
+    GitHub content is returned as untrusted data; it is not executed or
+    inserted into an AI prompt. No arbitrary repository/URL or write API.
+    """
+    _private_job_store(request)
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    try:
+        return read_scoped_github_file(
+            path, os.getenv("HOSHI_GITHUB_READ_TOKEN", ""))
+    except InvalidConnectorPath:
+        raise HTTPException(status_code=422, detail="GitHub file outside approved scope.") from None
+    except ScopedConnectorError:
+        raise HTTPException(status_code=503, detail="Private GitHub read unavailable.") from None
+    except Exception as exc:
+        _safe_log_failure("connectors.github", exc)
+        raise HTTPException(status_code=503, detail="Private GitHub read unavailable.") from None
 
 
 @app.post("/api/agent/jobs", status_code=201)

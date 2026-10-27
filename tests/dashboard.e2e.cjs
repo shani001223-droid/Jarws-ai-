@@ -59,6 +59,8 @@ async function main() {
     await context.addInitScript(() => {
       try {
         localStorage.setItem("hoshiVoiceReplies", "false");
+        // Existing full-workspace regression checks intentionally use legacy tabs.
+        localStorage.setItem("hoshiFocusModeV1", "false");
       } catch (_) {}
       // Headless CI has no microphone. Keep the voice fallback deterministic.
       try {

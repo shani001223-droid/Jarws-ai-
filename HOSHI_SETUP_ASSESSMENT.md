@@ -26,7 +26,10 @@ a support/does-not-support flag; `positive_families` is an evidence count,
 **not** a calibrated confidence or win probability. Any invalid source
 identity, mismatched candle timestamp/close, missing frame, nonfinite value,
 unverified formula version or corrupted history fails closed instead of
-issuing a watchlist signal. No entry/stop/TP, leverage, short, trade execution,
+issuing a watchlist signal. The assessment independently cross-checks the
+reported alignment against all three per-frame structure regimes and requires
+the two-right-closed-bar pivot confirmation contract; forged alignment,
+unknown analyzer modes and unsupported confirmation radii fail closed. No entry/stop/TP, leverage, short, trade execution,
 notification, auto-worker, provider key, posting or real trading is added.
 
 These families share the same Binance candles and are **correlated**, not

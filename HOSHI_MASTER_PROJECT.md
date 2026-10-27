@@ -11,6 +11,17 @@ Post-release test/document follow-up: [PR #28](https://github.com/shani001223-dr
 
 ## 1. Identity, history and final scope
 
+**User-authorized Trading V3 track (28 October 2026):** The explicitly requested
+`hoshi-v3-god-mode` branch extends this same repository; `backup-v2-to-v3`
+preserves source `51b88506d8c65dd0280f0f68783e86bd4bae6548`. Read
+[PROGRESS.md](PROGRESS.md) and `knowledge_base/manifest.json` for its scoped
+curriculum receipts and separate pending integration/release gates. The first
+money-history chapter is source content, not loaded runtime knowledge or model
+training. The user's requested 40/20/20/20 weights cannot be labelled a calibrated
+win probability without independent evidence. This explicit branch instruction
+applies to the V3 track; other development continues on its existing branch.
+The only overall Hoshi task scoreboard remains the 60-task roadmap below.
+
 **One project name:** HOSHI AI. Earlier concepts JARVIS, JARWS, ALTRON and VALTRON inform this project; do **not** start separate competing assistant repositories or duplicate implementations. The Javes trading bot remains a **separate demo-only experiment**, not silently merged into the Hoshi runtime. A future integration must be explicit and tested.
 
 **Purpose:** a private, mobile-first Pakistani Roman Urdu / Urdu voice assistant, practical enough to **complete permitted tasks and return real deliverables**, not merely say that work is done. It should understand goals, plan stages, execute the tools actually available, verify files, report failures clearly, and stop instantly when asked.

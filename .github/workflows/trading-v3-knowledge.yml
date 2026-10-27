@@ -1,0 +1,32 @@
+name: HOSHI V3 knowledge integrity
+
+on:
+  push:
+    branches: [hoshi-v3-god-mode]
+    paths:
+      - "knowledge_base/**"
+      - "PROGRESS.md"
+      - "scripts/check_v3_knowledge.py"
+      - ".github/workflows/trading-v3-knowledge.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "knowledge_base/**"
+      - "scripts/check_v3_knowledge.py"
+      - ".github/workflows/trading-v3-knowledge.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  curriculum-integrity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check minimum body words, required sections, examples and SHA receipts
+        run: python scripts/check_v3_knowledge.py

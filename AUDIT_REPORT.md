@@ -24,6 +24,16 @@ Release receipts were pushed in [df1d51d40820](https://github.com/shani001223-dr
 
 ## Day 1 — fetched baseline
 
+**Later V3 curriculum start, 28 October 2026:** user requested a new
+`hoshi-v3-god-mode` branch and `backup-v2-to-v3`, both created from freshly
+fetched development source `51b88506d8c65dd0280f0f68783e86bd4bae6548`.
+The first source-checked money-history chapter and [PROGRESS.md](PROGRESS.md)
+begin an explicit 48-document curriculum; initial document coverage is 2.08%.
+V3 brain integration, weighted engine and final release remain pending.
+No global roadmap checkbox, production branch or real-order capability is
+changed by this chapter commit. Mechanical word/digest checks are distinct
+from actual source review and from backend tests.
+
 - Development branch / existing draft PR: `hoshi/dnd-foundation-20261026`, [PR #24](https://github.com/shani001223-droid/Jarws-ai-/pull/24).
 - Audited starting commit: `accfceb23134554b85774ed72adc1dcbc7a14de5`.
 - Default production branch: `main`; PR base observed as `556c907c0f4b65b09d3cea5fd4d931bf23255069`.

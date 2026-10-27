@@ -7,10 +7,16 @@ this module. It never includes prompts, secrets, file paths or screenshots.
 """
 from __future__ import annotations
 
-from .job_records import JobRecordStore, _ID_RE
-from .job_queue import ScheduledJobQueue
-from .verified_artifact_store import VerifiedArtifactStore, ArtifactStorageError
-from .job_recovery import _REQUIRED_CHECKPOINTS
+try:
+    from .job_records import JobRecordStore, _ID_RE
+    from .job_queue import ScheduledJobQueue
+    from .verified_artifact_store import VerifiedArtifactStore, ArtifactStorageError
+    from .job_recovery import _REQUIRED_CHECKPOINTS
+except ImportError:  # Direct uvicorn main:app inside cloud_backend Docker image.
+    from job_records import JobRecordStore, _ID_RE
+    from job_queue import ScheduledJobQueue
+    from verified_artifact_store import VerifiedArtifactStore, ArtifactStorageError
+    from job_recovery import _REQUIRED_CHECKPOINTS
 
 # Explicitly recognized failure reasons; arbitrary worker text never leaves.
 _FAILURE_CODES = frozenset({

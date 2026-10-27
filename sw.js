@@ -1,5 +1,5 @@
-const CACHE_NAME = "hoshi-shell-v30";
-const APP_SHELL = ["./", "./index.html", "./trading.css", "./manifest.json", "./reminder-parser.js", "./assistant-commands.js", "./memory-privacy.js", "./hoshi-memory-store.js", "./hoshi-product-ads.js", "./hoshi-task-router.js", "./hoshi-trading-research.js", "./hoshi-speech-input.js", "./hoshi-local-ui-actions.js", "./assets/hoshi-expressions.webp", "./assets/hoshi-hero-background.svg", "./assets/hoshi-app-icon.svg", "./assets/hoshi-nightroom.webp"];
+const CACHE_NAME = "hoshi-shell-v31";
+const APP_SHELL = ["./", "./index.html", "./trading.css", "./manifest.json", "./reminder-parser.js", "./assistant-commands.js", "./memory-privacy.js", "./hoshi-memory-store.js", "./hoshi-product-ads.js", "./hoshi-task-router.js", "./hoshi-trading-research.js", "./hoshi-source-research.js", "./hoshi-speech-input.js", "./hoshi-local-ui-actions.js", "./assets/hoshi-expressions.webp", "./assets/hoshi-hero-background.svg", "./assets/hoshi-app-icon.svg", "./assets/hoshi-nightroom.webp"];
 
 self.addEventListener("install", event => {
   event.waitUntil(

@@ -31,6 +31,7 @@ class SourceResearchTests(unittest.TestCase):
     def setUp(self):
         with sr._CACHE_LOCK:
             sr._CACHE.clear()
+            sr._FAILURE_UNTIL.clear()
 
     def test_returns_real_citation_urls_timestamps_and_sorted_fresh_results(self):
         xml = feed(item("AI research", "<b>Science</b> report",
@@ -117,8 +118,11 @@ class SourceResearchTests(unittest.TestCase):
         with patch.object(sr, "_download", side_effect=sr.SourceUnavailable("transport")) as fetch:
             with self.assertRaises(sr.SourceUnavailable):
                 sr.browse_sources("world", now=NOW)
+            with self.assertRaises(sr.SourceUnavailable):
+                sr.browse_sources("world", now=NOW)
         fetch.assert_called_once()
         self.assertNotIn("world", sr._CACHE)
+        self.assertIn("world", sr._FAILURE_UNTIL)
 
     def test_nasa_source_is_separate_allowlist_and_freshness_window(self):
         xml = feed(item("NASA update", "Moon science",

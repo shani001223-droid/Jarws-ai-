@@ -31,7 +31,10 @@
     },
     {
       "path": "knowledge_base/00_HISTORY_OF_EVERYTHING/all_bubbles.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2403,
+      "sha256": "c585e20cd40083035a6729965bb52491ac4ee7bbf28301f51ec116013a06020d"
     },
     {
       "path": "knowledge_base/01_MARKET_STRUCTURE/structure_and_swings.md",

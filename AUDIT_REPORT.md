@@ -205,3 +205,8 @@ Added `all_market_crashes.md` with source-linked dated cases and actual FRED NAS
 ## V3 war-history receipt — 28 October 2026
 
 Added `all_wars_and_market_impact.md` plus fixed-window, source-digested NASDAQ observations for four dated episodes. Positive and negative horizons are retained without claiming causality, calibrated probability or NAS100 execution access. Data integrity checks now verify event-window arithmetic and chronology. Curriculum coverage: 3/48 (6.25%); brain/engine/release remain pending. Prior crash source `8d39d4e193c6775c490e8a14bb0f5271d2c61875` passed actual CI 40582457180.
+
+
+## V3 bubbles-history receipt — 28 October 2026
+
+Added `all_bubbles.md`: original detailed valuation/feedback analysis, failure zones, three dated real episodes and an evidence-first paper research procedure. Uses the existing checked NASDAQ observation receipt without asserting a peak-timing strategy or calibrated win rate. Four initial history chapters are source-checked: 4/48 (8.33%) of the declared curriculum. Runtime brain/weighted engine/release gates remain pending; no global task checkboxes changed. Prior war source `17895dd805bfe593c9c9b7bdc33feee05e822262` passed actual CI 40583099221. The 67-day cap is removed, and work continues without artificial delay.

@@ -67,3 +67,5 @@ Continue on the existing development branch, preserve configured Gemini/Groq/fre
 - Day 1: **Candlestick Psychology** completed as a repository curriculum module. Previous push receipt: [d63c44d52402](https://github.com/shani001223-droid/Jarws-ai-/commit/d63c44d524022a55696f61116efdc7de69ed8d74). Linked chart exercises are conditional, not verified current setups.
 
 - Day 1: **Order Blocks** completed as a repository curriculum module. Previous push receipt: [4c3b2656eb63](https://github.com/shani001223-droid/Jarws-ai-/commit/4c3b2656eb63db0403319d61616d8e0f2726b258). Linked chart exercises are conditional, not verified current setups.
+
+- Day 1: **SMC** completed as a repository curriculum module. Previous push receipt: [f2b60394f51b](https://github.com/shani001223-droid/Jarws-ai-/commit/f2b60394f51bbe323a1fec8018c0748f884aed8b). Linked chart exercises are conditional, not verified current setups.

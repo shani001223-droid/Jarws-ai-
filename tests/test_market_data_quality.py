@@ -58,6 +58,7 @@ class QualityUnitTests(unittest.TestCase):
 
     def test_rejects_stale_gapped_and_mismatched_sources(self):
         b, k = fixtures()
+        k["result"]["XXBTZUSD"][-2][2] = "111"
         k["result"]["XXBTZUSD"][-2][4] = "110"
         with self.assertRaises(mq.MarketDataQualityError):
             mq.verify_spot_market("BTCUSDT", "15m", b, k, NOW, NOW//1000, NOW//1000)
@@ -101,6 +102,18 @@ class QualityApiTests(unittest.TestCase):
         self.assertEqual(len(urls), 2)
         self.assertEqual(result["status"], "verified_sources_agree")
         self.assertEqual(response.headers["Cache-Control"], "no-store")
+
+    def test_api_rejects_disagreeing_sources_without_claiming_verified(self):
+        b, k = fixtures()
+        k["result"]["XXBTZUSD"][-2][2] = "111"
+        k["result"]["XXBTZUSD"][-2][4] = "110"
+        def fetch(key, url, ttl):
+            return (k if "kraken.com" in url else b), NOW//1000
+        with patch.object(main, "_public_data", side_effect=fetch), patch.object(main.time, "time", return_value=NOW/1000):
+            with self.assertRaises(main.HTTPException) as err:
+                main.trading_data_quality(Response(), "BTCUSDT", "15m")
+        self.assertEqual(err.exception.status_code, 503)
+        self.assertIn("No current-market claim", err.exception.detail)
 
     def test_unsupported_pair_no_network_and_upstream_failure_releases_slot(self):
         with patch.object(main, "_public_data") as fetch:

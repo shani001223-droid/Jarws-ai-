@@ -108,6 +108,36 @@ class V3PatternTests(unittest.TestCase):
         substituted = case["dates"][:]; substituted[1] = "2020-06-18"
         with self.assertRaises(AssertionError): e.harmonic_case(b, substituted)
 
+    def test_no_event_and_incomplete_event_are_not_zero_return_evidence(self):
+        no_event = bars([(10.,13.,9.,11.)]*9)
+        empty = e.candle_event_study(no_event)
+        self.assertEqual(empty["detected_events"], 0)
+        self.assertIsNone(empty["mean_raw_close_change_pct"])
+        tail = no_event[:]
+        tail[-2] = {**tail[-2], "open":12., "close":10.}
+        tail[-1] = {**tail[-1], "open":9., "close":13.}
+        incomplete = e.candle_event_study(tail)
+        self.assertEqual(incomplete["detected_events"], 1)
+        self.assertEqual(incomplete["incomplete_endpoints"], 1)
+        self.assertIsNone(incomplete["mean_raw_close_change_pct"])
+        self.assertIsNone(incomplete["events"][0]["outcome"])
+
+    def test_exhaustive_study_keeps_failed_overlapping_and_tail_events(self):
+        p = receipt(); e.check_receipt(p, ROOT)
+        studies = [x["case"] for x in p["pattern_studies"]]
+        self.assertEqual([x["detected_events"] for x in studies], [23,15,19])
+        self.assertEqual([x["observed_endpoints"] for x in studies], [23,14,19])
+        self.assertEqual([x["overlapping_forward_window_pairs"] for x in studies], [10,1,4])
+        self.assertAlmostEqual(studies[0]["mean_raw_close_change_pct"], .06357840362689461)
+        self.assertAlmostEqual(studies[0]["assumed_cost_sensitivity"][1]["mean_raw_change_minus_deduction"], -.1364215963731054)
+        self.assertLess(studies[2]["mean_raw_close_change_pct"], -1.)
+        for study in studies:
+            self.assertIsNone(study["strategy_pnl"])
+            self.assertIsNone(study["win_probability"])
+            self.assertEqual(study["status"], "exploratory_descriptive_not_holdout")
+        p["pattern_studies"][2]["case"]["events"].pop()
+        with self.assertRaises(AssertionError): e.check_receipt(p, ROOT)
+
 
 if __name__ == "__main__":
     unittest.main()

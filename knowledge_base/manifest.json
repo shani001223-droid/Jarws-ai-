@@ -87,7 +87,10 @@
     },
     {
       "path": "knowledge_base/02_CANDLESTICK_AND_CHART_PATTERNS/pattern_testing_and_failures.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2046,
+      "sha256": "b45d362879f74f31dcf9936abf2e1f2cea82c8ae7b719f5d731b94a99dbcba01"
     },
     {
       "path": "knowledge_base/02_CANDLESTICK_AND_CHART_PATTERNS/rare_candlestick_and_gap_variants.md",
@@ -261,7 +264,7 @@
     {
       "path": "knowledge_base/02_CANDLESTICK_AND_CHART_PATTERNS/pattern_observations_20261028.json",
       "kind": "pattern_cases",
-      "sha256": "25ba733987393448cf5c74f90a80b96d83afb34e7f12ae1b924b7503fb28a4c6"
+      "sha256": "aa450e09a76a710170d6a3b81fe6fc89b5b224bd3ebc555dcde044bf789d5e1b"
     }
   ],
   "scope_history": [

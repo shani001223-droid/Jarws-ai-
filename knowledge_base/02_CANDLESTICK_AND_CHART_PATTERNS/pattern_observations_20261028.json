@@ -469,5 +469,815 @@
         "orders_enabled": false
       }
     }
+  ],
+  "pattern_studies": [
+    {
+      "source_window_sha256": "0a8fd6b6cee125cb5de8a199f86c88a5d9dacd572070a2f0999852154f688fea",
+      "case": {
+        "method": "hoshi-engulfing-endpoints-1",
+        "status": "exploratory_descriptive_not_holdout",
+        "window_start": "2020-01-01",
+        "window_end": "2020-06-30",
+        "bars": 182,
+        "signal_comparisons": 181,
+        "events": [
+          {
+            "event_date": "2020-01-03",
+            "known_at": 1578095999999,
+            "observed_close": 7344.96,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1578527999999,
+              "fifth_date": "2020-01-08",
+              "fifth_close": 8055.98,
+              "forward_close_change_pct": 9.680379471093104
+            }
+          },
+          {
+            "event_date": "2020-01-10",
+            "known_at": 1578700799999,
+            "observed_close": 8197.02,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1579132799999,
+              "fifth_date": "2020-01-15",
+              "fifth_close": 8821.41,
+              "forward_close_change_pct": 7.617280426301254
+            }
+          },
+          {
+            "event_date": "2020-01-14",
+            "known_at": 1579046399999,
+            "observed_close": 8810.01,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1579478399999,
+              "fifth_date": "2020-01-19",
+              "fifth_close": 8701.7,
+              "forward_close_change_pct": -1.229397015440381
+            }
+          },
+          {
+            "event_date": "2020-01-21",
+            "known_at": 1579651199999,
+            "observed_close": 8736.03,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1580083199999,
+              "fifth_date": "2020-01-26",
+              "fifth_close": 8615.0,
+              "forward_close_change_pct": -1.3854119090708328
+            }
+          },
+          {
+            "event_date": "2020-01-26",
+            "known_at": 1580083199999,
+            "observed_close": 8615.0,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1580515199999,
+              "fifth_date": "2020-01-31",
+              "fifth_close": 9352.89,
+              "forward_close_change_pct": 8.565177016831104
+            }
+          },
+          {
+            "event_date": "2020-02-05",
+            "known_at": 1580947199999,
+            "observed_close": 9612.04,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1581379199999,
+              "fifth_date": "2020-02-10",
+              "fifth_close": 9851.83,
+              "forward_close_change_pct": 2.4946837507958675
+            }
+          },
+          {
+            "event_date": "2020-02-11",
+            "known_at": 1581465599999,
+            "observed_close": 10223.08,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1581897599999,
+              "fifth_date": "2020-02-16",
+              "fifth_close": 9917.27,
+              "forward_close_change_pct": -2.9913685503781595
+            }
+          },
+          {
+            "event_date": "2020-02-14",
+            "known_at": 1581724799999,
+            "observed_close": 10344.36,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1582156799999,
+              "fifth_date": "2020-02-19",
+              "fifth_close": 9593.79,
+              "forward_close_change_pct": -7.255837963875966
+            }
+          },
+          {
+            "event_date": "2020-02-18",
+            "known_at": 1582070399999,
+            "observed_close": 10164.71,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1582502399999,
+              "fifth_date": "2020-02-23",
+              "fifth_close": 9936.4,
+              "forward_close_change_pct": -2.246104414193806
+            }
+          },
+          {
+            "event_date": "2020-02-23",
+            "known_at": 1582502399999,
+            "observed_close": 9936.4,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1582934399999,
+              "fifth_date": "2020-02-28",
+              "fifth_close": 8692.91,
+              "forward_close_change_pct": -12.514492170202484
+            }
+          },
+          {
+            "event_date": "2020-03-23",
+            "known_at": 1585007999999,
+            "observed_close": 6467.31,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1585439999999,
+              "fifth_date": "2020-03-28",
+              "fifth_close": 6236.65,
+              "forward_close_change_pct": -3.5665523996839643
+            }
+          },
+          {
+            "event_date": "2020-03-30",
+            "known_at": 1585612799999,
+            "observed_close": 6394.38,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1586044799999,
+              "fifth_date": "2020-04-04",
+              "fifth_close": 6856.99,
+              "forward_close_change_pct": 7.234634163124487
+            }
+          },
+          {
+            "event_date": "2020-04-04",
+            "known_at": 1586044799999,
+            "observed_close": 6856.99,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1586476799999,
+              "fifth_date": "2020-04-09",
+              "fifth_close": 7283.54,
+              "forward_close_change_pct": 6.220659502201409
+            }
+          },
+          {
+            "event_date": "2020-04-06",
+            "known_at": 1586217599999,
+            "observed_close": 7329.9,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1586649599999,
+              "fifth_date": "2020-04-11",
+              "fifth_close": 6876.83,
+              "forward_close_change_pct": -6.181121161270953
+            }
+          },
+          {
+            "event_date": "2020-04-08",
+            "known_at": 1586390399999,
+            "observed_close": 7361.28,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1586822399999,
+              "fifth_date": "2020-04-13",
+              "fifth_close": 6837.91,
+              "forward_close_change_pct": -7.109768953225526
+            }
+          },
+          {
+            "event_date": "2020-04-18",
+            "known_at": 1587254399999,
+            "observed_close": 7248.6,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1587686399999,
+              "fifth_date": "2020-04-23",
+              "fifth_close": 7482.39,
+              "forward_close_change_pct": 3.2253124741329353
+            }
+          },
+          {
+            "event_date": "2020-04-29",
+            "known_at": 1588204799999,
+            "observed_close": 8778.57,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1588636799999,
+              "fifth_date": "2020-05-04",
+              "fifth_close": 8871.96,
+              "forward_close_change_pct": 1.0638406938715539
+            }
+          },
+          {
+            "event_date": "2020-05-01",
+            "known_at": 1588377599999,
+            "observed_close": 8826.96,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1588809599999,
+              "fifth_date": "2020-05-06",
+              "fifth_close": 9142.92,
+              "forward_close_change_pct": 3.579488294950939
+            }
+          },
+          {
+            "event_date": "2020-05-05",
+            "known_at": 1588723199999,
+            "observed_close": 9021.83,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1589155199999,
+              "fifth_date": "2020-05-10",
+              "fifth_close": 8722.77,
+              "forward_close_change_pct": -3.3148485395978367
+            }
+          },
+          {
+            "event_date": "2020-05-27",
+            "known_at": 1590623999999,
+            "observed_close": 9204.07,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1591055999999,
+              "fifth_date": "2020-06-01",
+              "fifth_close": 10200.77,
+              "forward_close_change_pct": 10.82890503874916
+            }
+          },
+          {
+            "event_date": "2020-05-30",
+            "known_at": 1590883199999,
+            "observed_close": 9697.72,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1591315199999,
+              "fifth_date": "2020-06-04",
+              "fifth_close": 9789.06,
+              "forward_close_change_pct": 0.9418708727412239
+            }
+          },
+          {
+            "event_date": "2020-06-01",
+            "known_at": 1591055999999,
+            "observed_close": 10200.77,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1591487999999,
+              "fifth_date": "2020-06-06",
+              "fifth_close": 9666.3,
+              "forward_close_change_pct": -5.239506429416618
+            }
+          },
+          {
+            "event_date": "2020-06-22",
+            "known_at": 1592870399999,
+            "observed_close": 9685.69,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1593302399999,
+              "fifth_date": "2020-06-27",
+              "fifth_close": 9012.0,
+              "forward_close_change_pct": -6.955518915017933
+            }
+          }
+        ],
+        "detected_events": 23,
+        "observed_endpoints": 23,
+        "incomplete_endpoints": 0,
+        "overlapping_forward_window_pairs": 10,
+        "positive_endpoints": 11,
+        "nonpositive_endpoints": 12,
+        "mean_raw_close_change_pct": 0.06357840362689461,
+        "median_raw_close_change_pct": -1.229397015440381,
+        "all_eligible_bar_baseline": {
+          "observed_endpoints": 176,
+          "mean_raw_close_change_pct": 1.1284912977643247,
+          "median_raw_close_change_pct": 1.3302666448498646
+        },
+        "assumed_cost_sensitivity": [
+          {
+            "assumed_fixed_deduction_percentage_points": 0.0,
+            "mean_raw_change_minus_deduction": 0.06357840362689461
+          },
+          {
+            "assumed_fixed_deduction_percentage_points": 0.2,
+            "mean_raw_change_minus_deduction": -0.1364215963731054
+          },
+          {
+            "assumed_fixed_deduction_percentage_points": 0.5,
+            "mean_raw_change_minus_deduction": -0.4364215963731054
+          }
+        ],
+        "win_probability": null,
+        "strategy_pnl": null,
+        "orders_enabled": false
+      }
+    },
+    {
+      "source_window_sha256": "6d533be481380a79e5ee6ab85436cfa6bac8c5b50ae6ff2080b433901610c1ee",
+      "case": {
+        "method": "hoshi-engulfing-endpoints-1",
+        "status": "exploratory_descriptive_not_holdout",
+        "window_start": "2021-03-01",
+        "window_end": "2021-08-31",
+        "bars": 184,
+        "signal_comparisons": 183,
+        "events": [
+          {
+            "event_date": "2021-03-03",
+            "known_at": 1614815999999,
+            "observed_close": 50349.37,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1615247999999,
+              "fifth_date": "2021-03-08",
+              "fifth_close": 52375.17,
+              "forward_close_change_pct": 4.023486291884071
+            }
+          },
+          {
+            "event_date": "2021-03-13",
+            "known_at": 1615679999999,
+            "observed_close": 61188.39,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1616111999999,
+              "fifth_date": "2021-03-18",
+              "fifth_close": 57648.16,
+              "forward_close_change_pct": -5.785787140338217
+            }
+          },
+          {
+            "event_date": "2021-03-26",
+            "known_at": 1616803199999,
+            "observed_close": 55025.59,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1617235199999,
+              "fifth_date": "2021-03-31",
+              "fifth_close": 58740.55,
+              "forward_close_change_pct": 6.7513315168451715
+            }
+          },
+          {
+            "event_date": "2021-04-08",
+            "known_at": 1617926399999,
+            "observed_close": 58077.52,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1618358399999,
+              "fifth_date": "2021-04-13",
+              "fifth_close": 63575.0,
+              "forward_close_change_pct": 9.465762312164848
+            }
+          },
+          {
+            "event_date": "2021-04-20",
+            "known_at": 1618963199999,
+            "observed_close": 56425.0,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1619395199999,
+              "fifth_date": "2021-04-25",
+              "fifth_close": 49066.77,
+              "forward_close_change_pct": -13.040726628267619
+            }
+          },
+          {
+            "event_date": "2021-04-26",
+            "known_at": 1619481599999,
+            "observed_close": 54001.39,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1619913599999,
+              "fifth_date": "2021-05-01",
+              "fifth_close": 57800.37,
+              "forward_close_change_pct": 7.034967062884867
+            }
+          },
+          {
+            "event_date": "2021-04-30",
+            "known_at": 1619827199999,
+            "observed_close": 57694.27,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1620259199999,
+              "fifth_date": "2021-05-05",
+              "fifth_close": 57436.11,
+              "forward_close_change_pct": -0.44746211365530586
+            }
+          },
+          {
+            "event_date": "2021-05-26",
+            "known_at": 1622073599999,
+            "observed_close": 39241.91,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1622505599999,
+              "fifth_date": "2021-05-31",
+              "fifth_close": 37253.81,
+              "forward_close_change_pct": -5.0662671618175725
+            }
+          },
+          {
+            "event_date": "2021-06-09",
+            "known_at": 1623283199999,
+            "observed_close": 37388.05,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1623715199999,
+              "fifth_date": "2021-06-14",
+              "fifth_close": 40516.29,
+              "forward_close_change_pct": 8.366951472462446
+            }
+          },
+          {
+            "event_date": "2021-06-29",
+            "known_at": 1625011199999,
+            "observed_close": 35911.73,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1625443199999,
+              "fifth_date": "2021-07-04",
+              "fifth_close": 35286.51,
+              "forward_close_change_pct": -1.7409910355195901
+            }
+          },
+          {
+            "event_date": "2021-07-11",
+            "known_at": 1626047999999,
+            "observed_close": 34258.99,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1626479999999,
+              "fifth_date": "2021-07-16",
+              "fifth_close": 31383.87,
+              "forward_close_change_pct": -8.392308121167613
+            }
+          },
+          {
+            "event_date": "2021-07-21",
+            "known_at": 1626911999999,
+            "observed_close": 32144.51,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1627343999999,
+              "fifth_date": "2021-07-26",
+              "fifth_close": 37237.6,
+              "forward_close_change_pct": 15.84435413698948
+            }
+          },
+          {
+            "event_date": "2021-08-04",
+            "known_at": 1628121599999,
+            "observed_close": 39723.18,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1628553599999,
+              "fifth_date": "2021-08-09",
+              "fifth_close": 46253.4,
+              "forward_close_change_pct": 16.439318302311158
+            }
+          },
+          {
+            "event_date": "2021-08-09",
+            "known_at": 1628553599999,
+            "observed_close": 46253.4,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1628985599999,
+              "fifth_date": "2021-08-14",
+              "fifth_close": 47068.51,
+              "forward_close_change_pct": 1.7622704493075014
+            }
+          },
+          {
+            "event_date": "2021-08-27",
+            "known_at": 1630108799999,
+            "observed_close": 49069.9,
+            "outcome_status": "incomplete",
+            "outcome": null
+          }
+        ],
+        "detected_events": 15,
+        "observed_endpoints": 14,
+        "incomplete_endpoints": 1,
+        "overlapping_forward_window_pairs": 1,
+        "positive_endpoints": 8,
+        "nonpositive_endpoints": 6,
+        "mean_raw_close_change_pct": 2.5153499531488306,
+        "median_raw_close_change_pct": 2.892878370595786,
+        "all_eligible_bar_baseline": {
+          "observed_endpoints": 178,
+          "mean_raw_close_change_pct": 0.3618118448496056,
+          "median_raw_close_change_pct": 0.6058284742532227
+        },
+        "assumed_cost_sensitivity": [
+          {
+            "assumed_fixed_deduction_percentage_points": 0.0,
+            "mean_raw_change_minus_deduction": 2.5153499531488306
+          },
+          {
+            "assumed_fixed_deduction_percentage_points": 0.2,
+            "mean_raw_change_minus_deduction": 2.3153499531488304
+          },
+          {
+            "assumed_fixed_deduction_percentage_points": 0.5,
+            "mean_raw_change_minus_deduction": 2.0153499531488306
+          }
+        ],
+        "win_probability": null,
+        "strategy_pnl": null,
+        "orders_enabled": false
+      }
+    },
+    {
+      "source_window_sha256": "5860446413d27c8678d93b80ce791940ad4e06b76a512b6e1230f6b4ab19b74f",
+      "case": {
+        "method": "hoshi-engulfing-endpoints-1",
+        "status": "exploratory_descriptive_not_holdout",
+        "window_start": "2022-05-01",
+        "window_end": "2022-12-31",
+        "bars": 245,
+        "signal_comparisons": 244,
+        "events": [
+          {
+            "event_date": "2022-05-04",
+            "known_at": 1651708799999,
+            "observed_close": 39690.0,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1652140799999,
+              "fifth_date": "2022-05-09",
+              "fifth_close": 30076.31,
+              "forward_close_change_pct": -24.221945074326023
+            }
+          },
+          {
+            "event_date": "2022-05-13",
+            "known_at": 1652486399999,
+            "observed_close": 29287.05,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1652918399999,
+              "fifth_date": "2022-05-18",
+              "fifth_close": 28715.32,
+              "forward_close_change_pct": -1.9521597429580595
+            }
+          },
+          {
+            "event_date": "2022-06-19",
+            "known_at": 1655683199999,
+            "observed_close": 20574.0,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1656115199999,
+              "fifth_date": "2022-06-24",
+              "fifth_close": 21237.69,
+              "forward_close_change_pct": 3.2258675998833475
+            }
+          },
+          {
+            "event_date": "2022-07-27",
+            "known_at": 1658966399999,
+            "observed_close": 22952.45,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1659398399999,
+              "fifth_date": "2022-08-01",
+              "fifth_close": 23268.01,
+              "forward_close_change_pct": 1.3748423370925522
+            }
+          },
+          {
+            "event_date": "2022-08-05",
+            "known_at": 1659743999999,
+            "observed_close": 23312.42,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1660175999999,
+              "fifth_date": "2022-08-10",
+              "fifth_close": 23954.05,
+              "forward_close_change_pct": 2.7523097130199403
+            }
+          },
+          {
+            "event_date": "2022-08-12",
+            "known_at": 1660348799999,
+            "observed_close": 24403.68,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1660780799999,
+              "fifth_date": "2022-08-17",
+              "fifth_close": 23342.66,
+              "forward_close_change_pct": -4.347786891157401
+            }
+          },
+          {
+            "event_date": "2022-08-25",
+            "known_at": 1661471999999,
+            "observed_close": 21559.04,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1661903999999,
+              "fifth_date": "2022-08-30",
+              "fifth_close": 19811.66,
+              "forward_close_change_pct": -8.105091877931493
+            }
+          },
+          {
+            "event_date": "2022-08-29",
+            "known_at": 1661817599999,
+            "observed_close": 20285.73,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1662249599999,
+              "fifth_date": "2022-09-03",
+              "fifth_close": 19831.9,
+              "forward_close_change_pct": -2.2371884078117854
+            }
+          },
+          {
+            "event_date": "2022-09-22",
+            "known_at": 1663891199999,
+            "observed_close": 19401.63,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1664323199999,
+              "fifth_date": "2022-09-27",
+              "fifth_close": 19079.13,
+              "forward_close_change_pct": -1.662231472304132
+            }
+          },
+          {
+            "event_date": "2022-09-28",
+            "known_at": 1664409599999,
+            "observed_close": 19412.82,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1664841599999,
+              "fifth_date": "2022-10-03",
+              "fifth_close": 19629.08,
+              "forward_close_change_pct": 1.1140061052438588
+            }
+          },
+          {
+            "event_date": "2022-10-12",
+            "known_at": 1665619199999,
+            "observed_close": 19155.53,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1666051199999,
+              "fifth_date": "2022-10-17",
+              "fifth_close": 19549.86,
+              "forward_close_change_pct": 2.058570031734974
+            }
+          },
+          {
+            "event_date": "2022-10-16",
+            "known_at": 1665964799999,
+            "observed_close": 19262.98,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1666396799999,
+              "fifth_date": "2022-10-21",
+              "fifth_close": 19164.37,
+              "forward_close_change_pct": -0.5119145635825828
+            }
+          },
+          {
+            "event_date": "2022-10-21",
+            "known_at": 1666396799999,
+            "observed_close": 19164.37,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1666828799999,
+              "fifth_date": "2022-10-26",
+              "fifth_close": 20771.59,
+              "forward_close_change_pct": 8.386500573720923
+            }
+          },
+          {
+            "event_date": "2022-11-29",
+            "known_at": 1669766399999,
+            "observed_close": 16442.53,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1670198399999,
+              "fifth_date": "2022-12-04",
+              "fifth_close": 17105.7,
+              "forward_close_change_pct": 4.033260088319746
+            }
+          },
+          {
+            "event_date": "2022-12-04",
+            "known_at": 1670198399999,
+            "observed_close": 17105.7,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1670630399999,
+              "fifth_date": "2022-12-09",
+              "fifth_close": 17128.56,
+              "forward_close_change_pct": 0.13363966397166305
+            }
+          },
+          {
+            "event_date": "2022-12-08",
+            "known_at": 1670543999999,
+            "observed_close": 17224.1,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1670975999999,
+              "fifth_date": "2022-12-13",
+              "fifth_close": 17774.7,
+              "forward_close_change_pct": 3.196683716420612
+            }
+          },
+          {
+            "event_date": "2022-12-12",
+            "known_at": 1670889599999,
+            "observed_close": 17209.83,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1671321599999,
+              "fifth_date": "2022-12-17",
+              "fifth_close": 16776.52,
+              "forward_close_change_pct": -2.51780523108015
+            }
+          },
+          {
+            "event_date": "2022-12-20",
+            "known_at": 1671580799999,
+            "observed_close": 16895.56,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1672012799999,
+              "fifth_date": "2022-12-25",
+              "fifth_close": 16832.11,
+              "forward_close_change_pct": -0.37554245020585686
+            }
+          },
+          {
+            "event_date": "2022-12-26",
+            "known_at": 1672099199999,
+            "observed_close": 16919.39,
+            "outcome_status": "observed",
+            "outcome": {
+              "available_at": 1672531199999,
+              "fifth_date": "2022-12-31",
+              "fifth_close": 16542.4,
+              "forward_close_change_pct": -2.22815361546721
+            }
+          }
+        ],
+        "detected_events": 19,
+        "observed_endpoints": 19,
+        "incomplete_endpoints": 0,
+        "overlapping_forward_window_pairs": 4,
+        "positive_endpoints": 9,
+        "nonpositive_endpoints": 10,
+        "mean_raw_close_change_pct": -1.1517968156535303,
+        "median_raw_close_change_pct": -0.37554245020585686,
+        "all_eligible_bar_baseline": {
+          "observed_endpoints": 239,
+          "mean_raw_close_change_pct": -1.414440457962022,
+          "median_raw_close_change_pct": -0.2761651630370454
+        },
+        "assumed_cost_sensitivity": [
+          {
+            "assumed_fixed_deduction_percentage_points": 0.0,
+            "mean_raw_change_minus_deduction": -1.1517968156535303
+          },
+          {
+            "assumed_fixed_deduction_percentage_points": 0.2,
+            "mean_raw_change_minus_deduction": -1.3517968156535303
+          },
+          {
+            "assumed_fixed_deduction_percentage_points": 0.5,
+            "mean_raw_change_minus_deduction": -1.6517968156535303
+          }
+        ],
+        "win_probability": null,
+        "strategy_pnl": null,
+        "orders_enabled": false
+      }
+    }
   ]
 }

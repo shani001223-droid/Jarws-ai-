@@ -245,3 +245,8 @@ Added `classical_chart_patterns.md` with 2169 substantive words, checked primary
 ## V3 harmonic geometry receipt — 28 October 2026
 
 Added `harmonic_and_geometric_patterns.md` with 2282 substantive words, limited attributed primary-framework definitions and original ratio/confirmation analysis. Three actual five-pivot cases remain negative/unvalidated; one near ratio does not become certified geometry, a fill or calibrated confidence. Conflicting creator-page details and incomplete full-method access remain explicit. Twenty offline evidence regressions passed locally. Curriculum: 11/49 (22.45%), scope revision 2; all runtime/release gates pending. Prior source `9bcbbcd2267e9b9478bd388c4591a161e5d917cf` passed actual CI 40599169629. Existing source-response hashes, main, backup and V2 controls are preserved.
+
+
+## V3 pattern testing and retained failures — 28 October 2026
+
+Added `pattern_testing_and_failures.md` with 2046 substantive words and three genuine dated source-window studies. Preserved all 57 detections, 56 complete endpoints, one missing endpoint and adverse/overlapping results. Baselines and arbitrary cost deductions are explicitly descriptive, not account PnL, measured fees or independent performance; win_probability and strategy_pnl remain null. All 22 offline evidence regressions passed locally, including empty/incomplete outcomes and ledger corruption. Source-checked curriculum: 12/49 (24.49%) of scope revision 2; rare/gap expansion, runtime integration and exact-head release remain pending. Prior `6e3fcdbede26443d333666b2b524c4686a4be2c0` passed actual CI 40599736342. No production or unrelated project state changed.

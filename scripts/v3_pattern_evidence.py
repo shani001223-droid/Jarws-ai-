@@ -9,6 +9,7 @@ from __future__ import annotations
 from hashlib import sha256
 import json
 from pathlib import Path
+from statistics import fmean, median
 
 from v3_structure_evidence import check_window, pivots, utc_day
 
@@ -144,6 +145,46 @@ def harmonic_case(bars, dates):
             "win_probability": None, "orders_enabled": False}
 
 
+def candle_event_study(bars):
+    """Exhaustive descriptive five-bar endpoint study within ONE source window.
+
+    All bullish-body-engulfing events are retained, including incomplete tails
+    and overlapping windows. No context filter, fills, trade sizing, stop/target,
+    strategy PnL or independent holdout is claimed. Cost columns are arithmetic
+    sensitivity to invented fixed deductions, not observed exchange costs.
+    """
+    events, indices = [], []
+    for i in range(1, len(bars)):
+        if "bullish_body_engulfing" not in candle_features(bars, i)["labels"]:
+            continue
+        c = candle_case(bars, utc_day(bars[i]["time"]))
+        events.append({"event_date": c["event_date"], "known_at": c["known_at"],
+                       "observed_close": bars[i]["close"], "outcome_status": c["outcome_status"],
+                       "outcome": {k: c["outcome"][k] for k in ("available_at", "fifth_date", "fifth_close", "forward_close_change_pct")}
+                       if c["outcome"] else None})
+        indices.append(i)
+    values = [x["outcome"]["forward_close_change_pct"] for x in events if x["outcome"]]
+    baseline = [(bars[i+5]["close"]/bars[i]["close"]-1)*100
+                for i in range(1, len(bars)-5)]
+    overlaps = sum(b-a < 5 for n, a in enumerate(indices) for b in indices[n+1:])
+    return {"method": "hoshi-engulfing-endpoints-1", "status": "exploratory_descriptive_not_holdout",
+            "window_start": utc_day(bars[0]["time"]), "window_end": utc_day(bars[-1]["time"]),
+            "bars": len(bars), "signal_comparisons": len(bars)-1, "events": events,
+            "detected_events": len(events), "observed_endpoints": len(values),
+            "incomplete_endpoints": len(events)-len(values), "overlapping_forward_window_pairs": overlaps,
+            "positive_endpoints": sum(x > 0 for x in values),
+            "nonpositive_endpoints": sum(x <= 0 for x in values),
+            "mean_raw_close_change_pct": fmean(values) if values else None,
+            "median_raw_close_change_pct": median(values) if values else None,
+            "all_eligible_bar_baseline": {"observed_endpoints": len(baseline),
+                "mean_raw_close_change_pct": fmean(baseline) if baseline else None,
+                "median_raw_close_change_pct": median(baseline) if baseline else None},
+            "assumed_cost_sensitivity": [{"assumed_fixed_deduction_percentage_points": cost,
+                "mean_raw_change_minus_deduction": fmean(values)-cost if values else None}
+                for cost in (0., .20, .50)],
+            "win_probability": None, "strategy_pnl": None, "orders_enabled": False}
+
+
 def check_receipt(payload, root):
     assert payload["schema_version"] == "hoshi-v3-pattern-evidence-1"
     assert payload["source_receipt"] == SOURCE
@@ -161,4 +202,6 @@ def check_receipt(payload, root):
                              case["first_date"], case["second_date"]) == case
     for entry in payload.get("harmonic_cases", []):
         assert harmonic_case(windows[entry["source_window_sha256"]], entry["case"]["dates"]) == entry["case"]
+    for entry in payload.get("pattern_studies", []):
+        assert candle_event_study(windows[entry["source_window_sha256"]]) == entry["case"]
     return windows

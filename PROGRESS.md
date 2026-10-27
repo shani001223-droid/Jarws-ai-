@@ -9,8 +9,8 @@ entire branch was already deployed. Production V2 remains a separate release.
 
 ## Current measured progress
 
-**Day 1: completed 11 of 49 planned knowledge chapters — 22.45%; 38 chapters,
-77.55% of the declared curriculum, remain.**
+**Day 1: completed 12 of 49 planned knowledge chapters — 24.49%; 37 chapters,
+75.51% of the declared curriculum, remain.**
 
 The denominator is the versioned, expandable file manifest in
 `knowledge_base/manifest.json`. Scope revision 2 explicitly expands the initial
@@ -36,6 +36,7 @@ topics require an explicit manifest/progress revision, never silent omission.
 | `02_CANDLESTICK_AND_CHART_PATTERNS/rare_candlestick_and_gap_variants.md` | Newly declared pending scope expansion; no placeholder counted as complete |
 | `02_CANDLESTICK_AND_CHART_PATTERNS/classical_chart_patterns.md` | Source-checked; three actual two-turn cases, delayed activation, absence and cancellation before a later break; no simulated fills |
 | `02_CANDLESTICK_AND_CHART_PATTERNS/harmonic_and_geometric_patterns.md` | Source-checked; attributed framework distinctions, original leg algebra and three measured negative cases; no complete recognizer or probability claim |
+| `02_CANDLESTICK_AND_CHART_PATTERNS/pattern_testing_and_failures.md` | Source-checked; exhaustive scans within three bounded windows, adverse/overlapping/incomplete outcomes and hypothetical cost sensitivity; not independent holdout or account returns |
 | Remaining curriculum documents | Pending; no empty placeholder chapters counted as complete |
 | Brain loader and runtime knowledge bundle | Pending — new source chapters are not yet consumed by Hoshi |
 | 40/20/20/20 history/liquidity/structure/global-flow engine | Pending — weights will mean evidence coverage, not an invented win probability |
@@ -83,6 +84,8 @@ topics require an explicit manifest/progress revision, never silent omission.
 - **28 October, Day 1:** completed `classical_chart_patterns.md` (2169 substantive words) with conventional families and a precisely versioned original two-turn protocol. Three genuine BTCUSDT cases preserve an eligible later neckline close, a failed candidate without activation, and cancellation before a later crossing. Added two causality/corruption regressions; all eighteen evidence tests passed locally. Prior [931f2104](https://github.com/shani001223-droid/Jarws-ai-/commit/931f2104d558e7d7f8616cdf6a8381889b719e77) passed [actual GitHub content/evidence CI 40598659841](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40598659841). A documented source chapter and an eligible geometric event remain separate from runtime knowledge, fills and strategy performance.
 
 - **28 October, Day 1:** completed `harmonic_and_geometric_patterns.md` (2282 substantive words). Checked public creator definitions without copying proprietary materials or adopting promotional accuracy claims. Three real consecutive-pivot examples include a near single ratio with incompatible geometry; all remain unvalidated with null win probability. Source contradictions are disclosed rather than inventing a discovery year or unified variant. Twenty evidence regressions passed locally, including unconfirmed/substituted-anchor rejection and no false certification. Prior [9bcbbcd2](https://github.com/shani001223-droid/Jarws-ai-/commit/9bcbbcd2267e9b9478bd388c4591a161e5d917cf) passed [actual curriculum/evidence CI 40599169629](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40599169629). Next declared chapter: `pattern_testing_and_failures.md`; integration/release remain pending.
+
+- **28 October, Day 1:** completed `pattern_testing_and_failures.md` (2046 substantive words). Exhaustively measured the fixed bullish-body-engulfing predicate within the existing three source windows: 57 detections, 56 complete five-bar endpoints and one explicitly missing endpoint, with all adverse cases and overlaps retained. The 2022 sample mean is negative; 2020 has a negative median and a near-zero raw mean that turns negative under an explicitly hypothetical deduction. These are descriptive, already inspected samples, not independent holdouts, fills or portfolio PnL. Added zero-event/incomplete-event and exhaustive-ledger regressions: all 22 offline evidence tests passed locally. Prior [6e3fcdbe](https://github.com/shani001223-droid/Jarws-ai-/commit/6e3fcdbede26443d333666b2b524c4686a4be2c0) passed [actual curriculum/evidence CI 40599736342](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40599736342). Next declared chapter is `rare_candlestick_and_gap_variants.md`; runtime retrieval, weighted strategy and release gates remain pending.
 
 ## Completion and release rules
 

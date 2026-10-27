@@ -7,6 +7,7 @@
 <meta name="description" content="HOSHI — your mobile-first AI companion">
 <link rel="stylesheet" href="./trading.css">
 <link rel="manifest" href="./manifest.json">
+<link rel="preconnect" href="https://jarws-ai-2.onrender.com" crossorigin>
 <link rel="icon" type="image/svg+xml" href="./assets/hoshi-app-icon.svg">
 <title>HOSHI — AI Companion</title>
 <style>
@@ -101,9 +102,10 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 #adStudioResult button{width:100%;min-height:43px;margin:5px 0;background:#9b783e;color:#fff8eb;border:1px solid #d3a95d;border-radius:11px;font-weight:650}
 #adStudioResult .ad-caption{white-space:pre-wrap;font-size:12px}
 </style>
+<link rel="stylesheet" href="./hoshi-focus.css">
 </head>
 <body>
-<main id="nightroom" class="nightroom" aria-label="Hoshi nightroom assistant"><header class="night-head"><div class="night-brand">Hoshi ✧ 星<small>Your AI Assistant ♡</small></div><div id="nightConnection"></div></header><div class="night-conversation" id="nightConversation"><div id="nightMood" class="night-mood" aria-live="polite">✧ Caring</div><button type="button" id="nightAudioRetry" hidden>▶ Suno Hoshi</button><div id="voiceTiming" aria-live="polite">Voice timings appear after a command</div></div><div class="night-mic" id="nightMic"></div><nav class="night-tabs" aria-label="Main navigation"><button type="button" data-tab="chat" aria-selected="true"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M3 10L12 3l9 7v11h-6v-7H9v7H3z"/></svg></span>Chat</button><button type="button" data-tab="trading" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M5 3v18M12 3v18M19 3v18M3 7h4v7H3zM10 5h4v5h-4zM17 11h4v6h-4z"/></svg></span>Trading</button><button type="button" data-tab="influencer" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h4l2-3h6l2 3h4v14H3z M16 13a4 4 0 1 1-8 0a4 4 0 0 1 8 0"/></svg></span>AI Influencer</button><button type="button" data-tab="outfit" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M8 3l4 2l4-2l6 5l-4 4l-2-2v11H8V10l-2 2l-4-4z"/></svg></span>Outfit</button><button type="button" data-tab="settings" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8a4 4 0 0 0 0-8 M9 3h6l1 3l3 1l2 5l-2 5l-3 1l-1 3H9l-1-3l-3-1l-2-5l2-5l3-1z"/></svg></span>Settings</button></nav><section class="night-sheet" id="nightSheet" hidden aria-label="Assistant panel"><div class="sheet-head"><h2 id="sheetTitle">Chat</h2><button type="button" class="sheet-close" aria-label="Close panel">×</button></div><div data-panel="chat"><section class="hoshi-tools"><p class="small">App shortcuts do not need Accessibility. Screen controls need Android permission.</p><div class="hoshi-tool-grid">
+<main id="nightroom" class="nightroom" aria-label="Hoshi personal assistant"><header class="night-head"><div class="night-brand">Hoshi ✧ 星<small>Your AI Assistant ♡</small></div><div id="nightConnection"></div></header><div class="focus-core" role="img" aria-label="Animated blue Hoshi AI energy core"><span class="core-halo"></span><span class="core-ring"></span><span class="core-ring ring-two"></span><span class="core-center"></span><span class="core-particles"></span></div><div class="night-conversation" id="nightConversation"><div id="nightMood" class="night-mood" aria-live="polite">✧ Caring</div><button type="button" id="nightAudioRetry" hidden>▶ Suno Hoshi</button><div id="voiceTiming" aria-live="polite">Voice timings appear after a command</div></div><div class="night-mic" id="nightMic"></div><button type="button" id="focusStop" class="focus-stop" aria-label="Stop Hoshi speaking or answering">■ Stop</button><nav class="night-tabs" aria-label="Main navigation"><button type="button" data-tab="chat" aria-selected="true"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M3 10L12 3l9 7v11h-6v-7H9v7H3z"/></svg></span>Chat</button><button type="button" data-tab="trading" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M5 3v18M12 3v18M19 3v18M3 7h4v7H3zM10 5h4v5h-4zM17 11h4v6h-4z"/></svg></span>Trading</button><button type="button" data-tab="influencer" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h4l2-3h6l2 3h4v14H3z M16 13a4 4 0 1 1-8 0a4 4 0 0 1 8 0"/></svg></span>AI Influencer</button><button type="button" data-tab="outfit" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M8 3l4 2l4-2l6 5l-4 4l-2-2v11H8V10l-2 2l-4-4z"/></svg></span>Outfit</button><button type="button" data-tab="settings" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8a4 4 0 0 0 0-8 M9 3h6l1 3l3 1l2 5l-2 5l-3 1l-1 3H9l-1-3l-3-1l-2-5l2-5l3-1z"/></svg></span>Settings</button></nav><section class="night-sheet" id="nightSheet" hidden aria-label="Assistant panel"><div class="sheet-head"><h2 id="sheetTitle">Chat</h2><button type="button" class="sheet-close" aria-label="Close panel">×</button></div><div data-panel="chat"><section class="hoshi-tools"><p class="small">App shortcuts do not need Accessibility. Screen controls need Android permission.</p><div class="hoshi-tool-grid">
 <button type="button" data-hoshi-command="open YouTube">▶ YouTube</button>
 <button type="button" data-hoshi-command="open WhatsApp">◉ WhatsApp</button>
 <button type="button" data-hoshi-command="open Telegram">➤ Telegram</button>
@@ -138,7 +140,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 </section>
 <div class="trade-bottom-grid"><section id="tradeExecution" class="trade-box"><h3>▣ Orders &amp; positions</h3><span class="trade-status-chip">Account not connected</span><p class="trade-muted">No real or demo orders are placed. Positions, profit, leverage and balances are unavailable.</p><button type="button" disabled>Order placement unavailable</button></section><section id="tradeWatchlist" class="trade-box"><div class="trade-card-head"><h3>☆ Watchlist</h3><button type="button" id="tradeWatchToggle">+ Add pair</button></div><div id="tradeWatchRows"></div><p class="trade-muted">Saved on this device. Select a pair to fetch its current spot data.</p></section></div>
 <footer class="trade-footer"><p id="tradeStatus" role="status" aria-live="polite">Open this tab to fetch public market information.</p><span>Keyless public data · Refresh for latest values · provider/network availability applies</span></footer>
-</div></div></div><div data-panel="influencer" hidden><p>AI Influencer tools are not connected yet.</p></div><div data-panel="outfit" hidden><p class="small">Choose a look. It applies to the main screen and is saved on this device.</p><div id="outfitGrid" class="outfit-grid"></div><p id="outfitFeedback" class="small" role="status"></p></div><div data-panel="settings" hidden><button type="button" id="nativeRemindersBtn" hidden>View / cancel reminders</button></div></section></main>
+</div></div></div><div data-panel="influencer" hidden><p>AI Influencer tools are not connected yet.</p></div><div data-panel="outfit" hidden><p class="small">Choose a look. It applies to the main screen and is saved on this device.</p><div id="outfitGrid" class="outfit-grid"></div><p id="outfitFeedback" class="small" role="status"></p></div><div data-panel="settings" hidden><button type="button" id="focusModeToggle" aria-pressed="true">Minimal home screen: ON</button><p class="small">Black animated core by default. Switch OFF to reveal Chat, Trading, Outfit and other existing tabs. No tools are deleted.</p><button type="button" id="nativeRemindersBtn" hidden>View / cancel reminders</button></div></section></main>
 <div class="dashboard-shell">
 <aside class="sidebar" aria-label="HOSHI navigation">
 <div class="brand-mark">H<span>OSHI</span></div>
@@ -247,6 +249,23 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  settingsPanel.append(document.querySelector('.controls'),document.querySelector('.bottom-workspace'));
  if(window.JarvisBridge&&typeof window.JarvisBridge.showReminders==='function'){$('nativeRemindersBtn').hidden=false;$('nativeRemindersBtn').onclick=()=>window.JarvisBridge.showReminders()}
  $('stopBtn').hidden=true;$('testBtn').hidden=true;
+ $('focusStop').onclick=()=>interruptHoshi();
+ // Focus UI defaults ON for a clean private home. Advanced tools remain one tap
+ // away in Settings, and the user's chosen layout is kept on this device only.
+ let focusMode=true;
+ try{focusMode=localStorage.getItem('hoshiFocusModeV1')!=='false'}catch(_){}
+ function updateFocusMode(){
+   shell.classList.toggle('focus-mode',focusMode);
+   $('focusModeToggle').textContent='Minimal home screen: '+(focusMode?'ON':'OFF');
+   $('focusModeToggle').setAttribute('aria-pressed',String(focusMode));
+ }
+ $('focusModeToggle').onclick=()=>{
+   focusMode=!focusMode;
+   try{localStorage.setItem('hoshiFocusModeV1',String(focusMode))}catch(_){}
+   updateFocusMode();
+   if(!focusMode)applyOutfit(savedOutfit,false);
+ };
+ updateFocusMode();
  let activeTab='chat';
  function showTab(tab){activeTab=tab;$('nightSheet').scrollTop=0;shell.classList.toggle('trading-open',tab==='trading');$('nightSheet').classList.toggle('trading-sheet',tab==='trading');$('nightSheet').hidden=false;shell.querySelectorAll('[data-panel]').forEach(p=>p.hidden=p.dataset.panel!==tab);shell.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===tab)));$('sheetTitle').textContent={chat:'Chat',trading:'Trading',influencer:'AI Influencer',outfit:'Outfit',settings:'Settings'}[tab];if(tab==='chat')input.focus();if(tab==='trading')loadTradingData()}
  shell.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
@@ -258,7 +277,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  async function loadOutfitImage(path){if(!outfitImages.has(path))outfitImages.set(path,new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>{outfitImages.delete(path);reject(new Error('Outfit image could not load'))};img.src=path}));return outfitImages.get(path)}
  async function applyOutfit(id,persist=true){const sequence=++outfitRequest;const def=outfitDefinitions.find(d=>d.id===id)||outfitDefinitions[0];$('outfitFeedback').textContent='Applying '+def.name+'…';try{await loadOutfitImage(def.asset);if(sequence!==outfitRequest)return;shell.style.backgroundImage='url("'+def.asset+'")';shell.dataset.outfit=def.id;shell.dataset.outfitName=def.name;document.querySelectorAll('button[data-outfit]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.outfit===def.id)));if(persist){try{localStorage.setItem('hoshiOutfitV1',def.id)}catch(_){}}$('outfitFeedback').textContent=def.name+' applied';if(persist){$('nightSheet').hidden=true;input.blur()}}catch(error){if(sequence===outfitRequest)$('outfitFeedback').textContent='Outfit could not load. Check connection and try again.'}}
  for(const def of outfitDefinitions){const button=document.createElement('button');button.type='button';button.className='outfit-card';button.dataset.outfit=def.id;button.setAttribute('aria-pressed','false');button.setAttribute('aria-label','Wear '+def.name);const preview=document.createElement('img');preview.loading='lazy';preview.decoding='async';preview.src=def.asset;preview.alt='';preview.width=128;preview.height=192;button.append(preview);const label=document.createElement('span');label.textContent=def.name;button.append(label);button.onclick=()=>applyOutfit(def.id);$('outfitGrid').append(button)}
- let savedOutfit='original';try{savedOutfit=localStorage.getItem('hoshiOutfitV1')||'original'}catch(_){}applyOutfit(savedOutfit,false);
+ let savedOutfit='original';try{savedOutfit=localStorage.getItem('hoshiOutfitV1')||'original'}catch(_){}if(!focusMode)applyOutfit(savedOutfit,false);
  const API_BASE='https://jarws-ai-2.onrender.com';
  let cloudOnline=false, cloudRequestSequence=0, activeCloudController=null;
  let recognition=null, listening=false, wakeEnabled=false, awaitingCommand=false, voiceReplies=true, restartTimer=null, lastVoiceError="", commandLanguage="ur-PK", editingMemoryIndex=null;
@@ -379,7 +398,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  async function askCloud(message,fast=false){
   const requestId=++cloudRequestSequence;
   if(activeCloudController){try{activeCloudController.abort()}catch(_){}}
-  const modelStarted=voiceClock();voiceTimes.ai=null;displayVoiceTimes();setStatus('AI THINKING…');setEmotion('thinking');orb.classList.add('active');
+  const modelStarted=voiceClock();voiceTimes.ai=null;displayVoiceTimes();shell.classList.add('responding');setStatus(fast?'QUICK AI REPLY…':'AI THINKING…');setEmotion('thinking');orb.classList.add('active');
   const controller=typeof AbortController==='function'?new AbortController():null;
   activeCloudController=controller;
   const timeout=controller?setTimeout(()=>controller.abort(),32000):null;
@@ -401,6 +420,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
   }finally{
    if(timeout!==null)clearTimeout(timeout);
    if(requestId===cloudRequestSequence){
+    shell.classList.remove('responding');
     if(activeCloudController===controller)activeCloudController=null;
     setTimeout(()=>orb.classList.remove('active'),900);
    }
@@ -417,6 +437,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  function applyVoiceStyle(style,persist=true){const key=voiceStyles[style]?style:'soft';const [pitch,rate]=voiceStyles[key];$('pitchSlider').value=pitch;$('rateSlider').value=rate;document.querySelectorAll('[data-voice-style]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.voiceStyle===key)));if(persist){try{localStorage.setItem('hoshiVoiceStyle',key)}catch(e){}}saveVoiceSettings()}
  function stopSpeaking(){speechSequence++;currentSpeech=null;$('nightAudioRetry').hidden=true;if(speechAudioController){speechAudioController.abort();speechAudioController=null}const audio=$('hoshiAudio');audio.pause();audio.removeAttribute('src');audio.hidden=true;if(speechAudioUrl){URL.revokeObjectURL(speechAudioUrl);speechAudioUrl=null}if(window.JarvisBridge&&typeof window.JarvisBridge.stopNativeSpeech==='function')window.JarvisBridge.stopNativeSpeech();if('speechSynthesis'in window)window.speechSynthesis.cancel();setSpeaking(false)}
  function interruptHoshi(){
+   shell.classList.remove('responding');
    // Explicit user interruption cancels TTS AND a pending model request.
    // Otherwise the late cloud reply may start speaking again.
    cloudRequestSequence++;

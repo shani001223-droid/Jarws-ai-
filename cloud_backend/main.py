@@ -42,11 +42,13 @@ try:
     from .artifact_verifier import verify_ad_pack, ArtifactVerificationError
     from .flora_catalog import catalogue_snapshot, FloraCatalogError
     from .flora_campaign import plan_flora_campaign, FloraCampaignError
+    from .flora_post_planning import preview_flora_post, FloraPostPlanError
 except ImportError:
     from ad_studio import create_ad_pack
     from artifact_verifier import verify_ad_pack, ArtifactVerificationError
     from flora_catalog import catalogue_snapshot, FloraCatalogError
     from flora_campaign import plan_flora_campaign, FloraCampaignError
+    from flora_post_planning import preview_flora_post, FloraPostPlanError
 try:  # Handles either cloud_backend package import or direct uvicorn main:app.
     from .openjarvis_bridge import ask_openjarvis, endpoint as openjarvis_endpoint, wants_agent, OpenJarvisUnavailable
     from .agent_tools import try_calculate
@@ -200,6 +202,23 @@ def agent_milestones(payload: GoalSpecRequest):
     """Return a dependency-ordered verification plan, without running a worker."""
     return plan_milestones(payload.message)
 
+
+
+@app.get("/api/flora/post-preview")
+def flora_post_preview(
+    response: Response,
+    product_id: Literal["gold_kit", "shampoo"] = Query(default="gold_kit"),
+    platform: Literal["instagram_feed", "instagram_story", "facebook_feed", "whatsapp_status"] = Query(default="instagram_feed"),
+    objective: Literal["awareness", "inquiries"] = Query(default="inquiries"),
+    proposed_local_time: Optional[str] = Query(default=None, max_length=32),
+):
+    """Read-only proposed publication slot; never save, schedule or publish."""
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    try:
+        return preview_flora_post(product_id, platform, objective, proposed_local_time)
+    except FloraPostPlanError:
+        raise HTTPException(status_code=422, detail="Flora post preview unavailable.") from None
 
 
 @app.get("/api/flora/campaign-draft")

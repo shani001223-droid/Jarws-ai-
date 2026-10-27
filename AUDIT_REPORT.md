@@ -3,6 +3,17 @@
 Audit date: **27 October 2026 (Asia/Karachi)**. Repository: `shani001223-droid/Jarws-ai-`.
 This extends the existing assistant; it is not a new app, trading account, or model.
 
+## Current delivery — source/test verified
+
+**Completed early on 27 October 2026:** all three requested work packages have been implemented on the existing development branch. All ten modules, history, 30 dated source observations (plus conditional walkthroughs), knowledge loader, final prompt, five-factor Confluence V2 and the three requested API paths are pushed. No new app/repository or paid provider was created.
+
+Verified integrated source: [51f2eaf2b57b](https://github.com/shani001223-droid/Jarws-ai-/commit/51f2eaf2b57bcd546c1c77e2ff818d5beb4eba95).
+**Local: 367 Python tests + 53 Node tests passed. Actual GitHub Python/API/JS/Playwright and Docker checks passed** (links below).
+
+Production Render release, physical Realme Note 50 acceptance, reliable live provider availability and out-of-sample profitability remain pending. The direct HTTP live BTC request observed an upstream 503; it did not invent a score. A 0–100 rule score is not a win probability or 99.999% accuracy.
+
+The missing/outdated findings below are the **fetched baseline**. Later sections document how they were resolved; they do not imply the new modules are still absent.
+
 ## Day 1 — fetched baseline
 
 - Development branch / existing draft PR: `hoshi/dnd-foundation-20261026`, [PR #24](https://github.com/shani001223-droid/Jarws-ai-/pull/24).
@@ -44,7 +55,7 @@ This extends the existing assistant; it is not a new app, trading account, or mo
 | --- | --- | --- |
 | Day 1 | Audit, history, Market Structure, Candlestick Psychology, Order Blocks, SMC, ICT | Complete: audit, history and Modules 1–5 pushed |
 | Day 2 | Liquidity, FVG, Indicators/Order Flow, Global Money Flow, Risk/Psychology; knowledge loader | Complete: Modules 6–10 pushed; integrity-checked loader implemented |
-| Day 3 | Confluence V2, API integration, final system prompt, backend/import checks | Source pushed; final CI verification in progress |
+| Day 3 | Confluence V2, API integration, final system prompt, backend/import checks | Complete at source/test level: all 11 lessons, API, prompts and GitHub CI/Docker verified |
 
 Every curriculum module must include Definition, Application Zone, Failure Zone and three linked live-chart inspection exercises. **Links/conditional exercises must never be described as verified live setups.** Current price examples require a timestamped source snapshot; unavailable data must stay unavailable. ICT/SMC terminology is an operational heuristic, not a demonstrated market law.
 
@@ -120,3 +131,37 @@ Continue on the existing development branch, preserve configured Gemini/Groq/fre
 - While this upgrade was being tested, the existing master-project workflow advanced the same branch through `7f1fece3ca2ed9818768c30afd1428a97bf12318`, adding separate Task 41 paper-risk research and fixing the first-install service-worker reload. Its source changes were fetched and merged before this push; none were overwritten or force-pushed. Our lease rejected a stale write attempt as intended.
 - The Settings failure was a first-install service-worker `controllerchange` reload interrupting the panel interaction. Existing-workflow fix `53211a50f06970d7729afb82e00640f42a7e56d0` refreshes only if a controller was already present. Actual [CI 40506953064](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40506953064) passed on that fix. Our mobile regression keeps all assertions and adds visible-panel state checks.
 - The canonical roadmap now contains independently verified Task 40/41 updates from that existing workflow. Earlier pending statements in this audit describe the fetched baseline, not a rollback of those completed tasks. This V2 upgrade does not maintain a competing 60-task scoreboard.
+
+## Final verification and delivery — 27 October 2026
+
+- **Source/test verified commit:** `51f2eaf2b57bcd546c1c77e2ff818d5beb4eba95` (all our changes plus the preserved concurrent Task 41 and service-worker fix).
+- **Full local Python regression:** **367 tests, OK**, 13.486 s. **Node:** **53 tests, 53 passed**, no skips/failures. Python syntax and generated-bundle parity passed.
+- **Actual GitHub full CI:** [40507510329](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40507510329), all Python/API/security, Node/syntax and real Chromium desktop/mobile Playwright steps **success**. The selected-panel mobile diagnostic and real click assertions passed.
+- **Actual GitHub Docker:** [40507510341](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40507510341), actual image build, direct Uvicorn health, eleven bundled lessons, new HTTP routes, NY summer/winter timezone conversion and existing bounded tool smoke **success**.
+- Both failed intermediate CI runs and their corrections are preserved above; they have not been hidden or counted as successes.
+- Backup `backup-before-v2` preserves the pre-upgrade development head. All work remains on the existing branch / PR #24; **no main merge, Render deployment, paid service, real order or physical-phone test** occurred.
+- The requested Day 2/Day 3 follow-up verification checks are scheduled for **28 and 29 October 2026, mornings in Asia/Karachi**. They are read-only checkpoints to avoid competing with the existing hourly master-project writer. Implementation was completed early; no three-day continuous-coding claim is made.
+- This final report-only commit changes no tested runtime source. Passing runtime evidence is tied to the exact source commit above, not a fabricated self-referential report hash.
+
+## Upgrade commit receipts
+
+| Work | GitHub commit |
+| --- | --- |
+| Repository Audit | [ec1c6992c834](https://github.com/shani001223-droid/Jarws-ai-/commit/ec1c6992c834260042061da59255f6c5cdf11d65) |
+| HOSHI UPGRADE: Added Trading History - Day 1 | [f53a8e0e51d9](https://github.com/shani001223-droid/Jarws-ai-/commit/f53a8e0e51d9010ca5b81f2747b7d87578b6f816) |
+| HOSHI UPGRADE: Added Market Structure - Day 1 | [d63c44d52402](https://github.com/shani001223-droid/Jarws-ai-/commit/d63c44d524022a55696f61116efdc7de69ed8d74) |
+| HOSHI UPGRADE: Added Candlestick Psychology - Day 1 | [4c3b2656eb63](https://github.com/shani001223-droid/Jarws-ai-/commit/4c3b2656eb63db0403319d61616d8e0f2726b258) |
+| HOSHI UPGRADE: Added Order Blocks - Day 1 | [f2b60394f51b](https://github.com/shani001223-droid/Jarws-ai-/commit/f2b60394f51bbe323a1fec8018c0748f884aed8b) |
+| HOSHI UPGRADE: Added SMC - Day 1 | [08e121371e3c](https://github.com/shani001223-droid/Jarws-ai-/commit/08e121371e3c0f6f6776c9f6171065585acdf025) |
+| HOSHI UPGRADE: Added ICT - Day 1 | [89749ca4dfe3](https://github.com/shani001223-droid/Jarws-ai-/commit/89749ca4dfe3a7b89b15d42d4869869547f3abdb) |
+| HOSHI UPGRADE: Added Liquidity - Day 2 | [70f1a97f3891](https://github.com/shani001223-droid/Jarws-ai-/commit/70f1a97f3891750dc381f99c7a14c2ddc3ce34cc) |
+| HOSHI UPGRADE: Added FVG and Imbalances - Day 2 | [7fd3eb201829](https://github.com/shani001223-droid/Jarws-ai-/commit/7fd3eb201829ab19f576a335b9a4b1a159ff976f) |
+| HOSHI UPGRADE: Added Indicators and Order Flow - Day 2 | [6202171b8384](https://github.com/shani001223-droid/Jarws-ai-/commit/6202171b838428602fe30afdb8fd6514c3d3e65d) |
+| HOSHI UPGRADE: Added Global Money Flow - Day 2 | [6a4ce1b8ffe8](https://github.com/shani001223-droid/Jarws-ai-/commit/6a4ce1b8ffe8bdd1417c1b8f50a1f5cef784f2d1) |
+| HOSHI UPGRADE: Added Risk and Psychology - Day 2 | [e3df0fa44a81](https://github.com/shani001223-droid/Jarws-ai-/commit/e3df0fa44a817a1ebf3d78dfac5cf32d0f5203be) |
+| HOSHI UPGRADE: Added Knowledge Brain - Day 2 | [56dd76084f00](https://github.com/shani001223-droid/Jarws-ai-/commit/56dd76084f00a0cdc72867474c539948440ccfd0) |
+| HOSHI UPGRADE: Added Confluence V2 and Backend Integration - Day 3 | [d462610d6aa0](https://github.com/shani001223-droid/Jarws-ai-/commit/d462610d6aa098c05f7b29ff83d74fbad6722334) |
+| HOSHI UPGRADE: Added Clean Runner API Test Dependencies - Day 3 | [4261f9a62074](https://github.com/shani001223-droid/Jarws-ai-/commit/4261f9a6207432db0f3e68da59049d4efa968181) |
+| HOSHI UPGRADE: Added Timestamped Chart Examples and Final Knowledge - Day 3 | [51f2eaf2b57b](https://github.com/shani001223-droid/Jarws-ai-/commit/51f2eaf2b57bcd546c1c77e2ff818d5beb4eba95) |
+
+Final evidence log push: `HOSHI UPGRADE: Added Final Audit and Verification Evidence - Day 3`. Its own hash is available in GitHub history after committing.

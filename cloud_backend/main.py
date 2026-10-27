@@ -21,10 +21,12 @@ try:
     from .trading_research import closed_candles, research, backtest, SimulationConfig
     from .market_data_quality import public_urls, verify_spot_market, MarketDataQualityError
     from .market_structure import analyze_market_structure, MarketStructureError
+    from .market_indicators import analyze_market_indicators, MarketIndicatorsError
 except ImportError:
     from trading_research import closed_candles, research, backtest, SimulationConfig
     from market_data_quality import public_urls, verify_spot_market, MarketDataQualityError
     from market_structure import analyze_market_structure, MarketStructureError
+    from market_indicators import analyze_market_indicators, MarketIndicatorsError
 try:
     from .ad_studio import create_ad_pack
     from .artifact_verifier import verify_ad_pack, ArtifactVerificationError
@@ -1364,6 +1366,42 @@ def trading_market_structure(response: Response, symbol: str = "BTCUSDT"):
                 {tf: bars for tf, (bars, _) in fetched.items()}, pair)
         except MarketStructureError:
             raise HTTPException(status_code=503, detail="Closed-candle structure verification failed.") from None
+        result["source"] = "Binance Spot public closed candles (single venue)"
+        result["fetched_at"] = min(stamps)
+        result["independently_cross_checked"] = False
+        return result
+    finally:
+        _RESEARCH_SLOTS.release()
+
+
+@app.get("/api/trading/indicators")
+def trading_market_indicators(response: Response, symbol: str = "BTCUSDT"):
+    """Reproducible descriptive EMA/RSI/ATR/volume/VWAP on closed spot bars.
+
+    Source is Binance Spot only; Task 37's independent venue gate does not
+    automatically verify these results. No orders, keys or recommendations.
+    """
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    pair = _research_pair(symbol)
+    if not _RESEARCH_SLOTS.acquire(blocking=False):
+        raise HTTPException(status_code=429, detail="Research busy. Retry shortly.")
+    try:
+        with ThreadPoolExecutor(max_workers=3) as pool:
+            jobs = {tf: pool.submit(_research_history, pair, tf)
+                    for tf in ("15m", "1h", "4h")}
+            fetched = {tf: jobs[tf].result() for tf in jobs}
+        now = int(time.time())
+        stamps = [stamp for _, stamp in fetched.values()]
+        if (any(not isinstance(stamp, int) or isinstance(stamp, bool)
+                or stamp > now + 5 or stamp < now - 120 for stamp in stamps)
+                or max(stamps) - min(stamps) > 120):
+            raise HTTPException(status_code=503, detail="Research sources are stale. No current indicator claim.")
+        try:
+            result = analyze_market_indicators(
+                {tf: bars for tf, (bars, _) in fetched.items()}, pair)
+        except MarketIndicatorsError:
+            raise HTTPException(status_code=503, detail="Closed-candle indicator verification failed.") from None
         result["source"] = "Binance Spot public closed candles (single venue)"
         result["fetched_at"] = min(stamps)
         result["independently_cross_checked"] = False

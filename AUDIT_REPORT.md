@@ -210,3 +210,8 @@ Added `all_wars_and_market_impact.md` plus fixed-window, source-digested NASDAQ 
 ## V3 bubbles-history receipt — 28 October 2026
 
 Added `all_bubbles.md`: original detailed valuation/feedback analysis, failure zones, three dated real episodes and an evidence-first paper research procedure. Uses the existing checked NASDAQ observation receipt without asserting a peak-timing strategy or calibrated win rate. Four initial history chapters are source-checked: 4/48 (8.33%) of the declared curriculum. Runtime brain/weighted engine/release gates remain pending; no global task checkboxes changed. Prior war source `17895dd805bfe593c9c9b7bdc33feee05e822262` passed actual CI 40583099221. The 67-day cap is removed, and work continues without artificial delay.
+
+
+## V3 structure and swings receipt — 28 October 2026
+
+Added `structure_and_swings.md` with 2360 substantive words, three actual dated OHLC cases and original causal/invalidation analysis. Companion source evidence contains 611 captured daily BTCUSDT spot candles with exact raw-response hashes, UTC alignment, bounded URLs and non-commercial data attribution. Added offline receipt/causal-prefix regression checks; no runtime trading or UI changes. Observed limitation for later V3 integration: last confirmed swing-pair state may remain rising after current price has breached its latest low (10 November 2022); a continuation gate must handle the contradiction or WAIT. Curriculum: 5/48 (10.42%); all runtime/release gates remain pending. Prior head `e3cdf7549cac975131d74d20f0c42c1a6fffe687` passed actual curriculum CI 40583577055. No production/global-roadmap changes.

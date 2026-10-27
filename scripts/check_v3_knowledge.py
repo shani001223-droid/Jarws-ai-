@@ -12,6 +12,8 @@ from datetime import date
 from pathlib import Path, PurePosixPath
 import re
 
+from v3_structure_evidence import check_window
+
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "knowledge_base/manifest.json"
 FOLDERS = {
@@ -75,7 +77,14 @@ def check():
         assert len(raw) <= 1000000 and hashlib.sha256(raw).hexdigest() == receipt["sha256"], rel
         payload = json.loads(raw)
         kind = receipt.get("kind", "crash_windows")
-        assert kind in ("crash_windows", "event_windows"), kind
+        assert kind in ("crash_windows", "event_windows", "ohlcv_windows"), kind
+        if kind == "ohlcv_windows":
+            assert payload["schema_version"] == "hoshi-v3-ohlcv-evidence-1"
+            assert payload["data_license"] == "CC BY-NC-SA 4.0"
+            assert len(payload["observations"]) == 3
+            for item in payload["observations"]:
+                check_window(item)
+            continue
         for item in payload["observations"]:
             assert item["status"] in ("fetched", "unavailable")
             if item["status"] == "unavailable":

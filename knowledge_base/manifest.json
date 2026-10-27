@@ -38,7 +38,10 @@
     },
     {
       "path": "knowledge_base/01_MARKET_STRUCTURE/structure_and_swings.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2360,
+      "sha256": "1272f9467d828825b404be95ba6cad4a6e35133bcda37842d1514a0147a1d81b"
     },
     {
       "path": "knowledge_base/01_MARKET_STRUCTURE/trends_ranges_and_multitimeframe.md",
@@ -227,6 +230,11 @@
       "path": "knowledge_base/00_HISTORY_OF_EVERYTHING/war_event_observations_20261028.json",
       "kind": "event_windows",
       "sha256": "4856c0f8f312fd6f3410c0d6f06ff580b7211638b08d2185ba915163827bd84a"
+    },
+    {
+      "path": "knowledge_base/01_MARKET_STRUCTURE/structure_observations_20261028.json",
+      "kind": "ohlcv_windows",
+      "sha256": "2dcb969469913d235ce8c5af43f2d0f150e996bfd20acda0dea3890177f80367"
     }
   ]
 }

@@ -24,7 +24,13 @@ class LatencyBudgetTests(unittest.TestCase):
 
     def test_openrouter_can_use_shortened_timeout(self):
         import os
-        from tests.test_backend import FakeResponse
+        import json
+        class FakeResponse:
+            def __init__(self, content):
+                self.content = json.dumps(content).encode("utf-8")
+            def __enter__(self): return self
+            def __exit__(self, *args): return False
+            def read(self): return self.content
         with patch.dict(os.environ, {"OPENROUTER_API_KEY": "test-only"}):
             with patch("cloud_backend.main.urlopen", return_value=FakeResponse({
                 "choices": [{"message": {"content": "Short answer"}}]

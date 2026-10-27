@@ -401,7 +401,10 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
   const modelStarted=voiceClock();voiceTimes.ai=null;displayVoiceTimes();shell.classList.add('responding');setStatus(fast?'QUICK AI REPLY…':'AI THINKING…');setEmotion('thinking');orb.classList.add('active');
   const controller=typeof AbortController==='function'?new AbortController():null;
   activeCloudController=controller;
-  const timeout=controller?setTimeout(()=>controller.abort(),32000):null;
+  // The backend caps brief replies to a shorter provider budget. Give the
+  // network a little extra time, but never let a quick question wait 32s.
+  // Detailed work still keeps its original, longer network timeout.
+  const timeout=controller?setTimeout(()=>controller.abort(),fast?18000:32000):null;
   try{
    const options={method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,locale:commandLanguage,personality:getPersonality(),context:getCloudContextForRequest(message),fast})};
    if(controller)options.signal=controller.signal;

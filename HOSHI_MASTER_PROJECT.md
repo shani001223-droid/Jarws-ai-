@@ -104,6 +104,8 @@
 
 **Confirmed multi-timeframe structure (Task 38, source/test verified):** `cloud_backend/market_structure.py` and read-only `/api/trading/structure` calculate confirmed 2-left/2-right pivot highs/lows, support/resistance and higher/lower swing structure across 15m, 1h and 4h. This is descriptive, lagged, **Binance-only** closed-candle research; missing levels are null, no orders or entry signals, and `independently_cross_checked` is false. Python/Node/Playwright passed at https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40472147810 and Docker backend smoke passed at https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40472147752 for code/test commit `57582853595b`. See `HOSHI_MARKET_STRUCTURE.md`. No live provider, Realme Note 50 or production acceptance.
 
+**Versioned technical indicator research (Task 39, development):** `cloud_backend/market_indicators.py` and read-only `/api/trading/indicators` reuse the existing SMA-seeded EMA20/50 and Wilder RSI14/ATR14 calculations, add EMA9/21, base-volume SMA20/ratio and UTC-session HLC3 VWAP (null when the session opening bar or positive volume is unavailable). Only BTC/ETH Binance Spot closed 15m/1h/4h bars, no orders, leverage, recommendations, live exchange certification or independent Kraken cross-check. See `HOSHI_MARKET_INDICATORS.md`. **Do not mark source/test verified until the final Python/JS/Playwright and Docker CI runs are green.** Physical Realme Note 50, Render and real provider QA remain pending.
+
 ## 5. Feature tracks — one assistant, modular execution
 
 1. **Hoshi chat & voice:** low-latency measured reply, robust Roman Urdu STT, soft Urdu female TTS, natural safe personality, explicit Stop and privacy controls.
@@ -152,6 +154,7 @@ These are **reference filenames**, not files automatically imported from Library
 - [Production release and rollback](DEPLOYMENT_ROLLBACK.md)
 - [Spot research rules, formulas and simulation limits](HOSHI_TRADING_RESEARCH.md)
 - [Multi-timeframe confirmed swing structure and limits](HOSHI_MARKET_STRUCTURE.md)
+- [Reproducible multi-timeframe technical indicator formulas and limits](HOSHI_MARKET_INDICATORS.md)
 - [Independent spot market data quality gate](HOSHI_MARKET_DATA_QUALITY.md)
 
 **Any new feature belongs inside this one project and must be linked back here.**

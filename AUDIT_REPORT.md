@@ -42,8 +42,8 @@ This extends the existing assistant; it is not a new app, trading account, or mo
 
 | Package | Scope | State |
 | --- | --- | --- |
-| Day 1 | Audit, history, Market Structure, Candlestick Psychology, Order Blocks, SMC, ICT | Audit complete; curriculum in progress |
-| Day 2 | Liquidity, FVG, Indicators/Order Flow, Global Money Flow, Risk/Psychology; knowledge loader | Pending |
+| Day 1 | Audit, history, Market Structure, Candlestick Psychology, Order Blocks, SMC, ICT | Complete: audit, history and Modules 1–5 pushed |
+| Day 2 | Liquidity, FVG, Indicators/Order Flow, Global Money Flow, Risk/Psychology; knowledge loader | Curriculum being pushed; loader in progress |
 | Day 3 | Confluence V2, API integration, final system prompt, backend/import checks | Pending |
 
 Every curriculum module must include Definition, Application Zone, Failure Zone and three linked live-chart inspection exercises. **Links/conditional exercises must never be described as verified live setups.** Current price examples require a timestamped source snapshot; unavailable data must stay unavailable. ICT/SMC terminology is an operational heuristic, not a demonstrated market law.
@@ -71,3 +71,5 @@ Continue on the existing development branch, preserve configured Gemini/Groq/fre
 - Day 1: **SMC** completed as a repository curriculum module. Previous push receipt: [f2b60394f51b](https://github.com/shani001223-droid/Jarws-ai-/commit/f2b60394f51bbe323a1fec8018c0748f884aed8b). Linked chart exercises are conditional, not verified current setups.
 
 - Day 1: **ICT** completed as a repository curriculum module. Previous push receipt: [08e121371e3c](https://github.com/shani001223-droid/Jarws-ai-/commit/08e121371e3c0f6f6776c9f6171065585acdf025). Linked chart exercises are conditional, not verified current setups.
+
+- Day 2: **Liquidity** curriculum pushed with definitions, application/failure rules and three conditional chart exercises. Prior receipt: [89749ca4dfe3](https://github.com/shani001223-droid/Jarws-ai-/commit/89749ca4dfe3a7b89b15d42d4869869547f3abdb).

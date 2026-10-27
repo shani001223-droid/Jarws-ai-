@@ -220,3 +220,8 @@ Added `structure_and_swings.md` with 2360 substantive words, three actual dated 
 ## V3 trends and multiple-timeframe receipt — 28 October 2026
 
 Added `trends_ranges_and_multitimeframe.md` with 2398 substantive words and three actual dated daily/weekly comparisons. Defines separate trend/range hypotheses, frame roles, cutoff alignment, complete-week aggregation, inadequate warmup and contradictory stale references. Source-checked curriculum: 6/48 (12.50%); no runtime retrieval, probability, order, production or global-roadmap claim. Prior chapter source `57cc8828623710607ca1449027c82bc733e2fbc7` passed actual CI 40590293132, including all seven evidence regressions.
+
+
+## V3 breakout and retest receipt — 28 October 2026
+
+Added `breakouts_retests_and_regimes.md` with 2329 substantive words and three documented dated BTCUSDT cases. Offline evidence now separates a prior-only close-break from fixed later contact/close outcomes and preserves incomplete outcomes as null. Ten evidence regression tests passed locally; no fill or strategy-return claim. Curriculum: 7/48 (14.58%); loader, weighted engine and exact-head release remain pending. Prior source `2753cce87219310bad9843b3f041038132c89029` passed actual CI 40590603232. Source response bytes and hashes are unchanged; derived fixed-window facts and their receipt digest were updated.

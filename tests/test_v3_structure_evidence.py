@@ -73,6 +73,37 @@ class V3EvidenceTests(unittest.TestCase):
         item["snapshots"][0]["daily"]["last_close"] += 1
         with self.assertRaises(AssertionError): e.check_window(item)
 
+    def test_breakout_uses_prior_window_and_keeps_missing_future_null(self):
+        source = rows([20]*27)
+        source[20][2] = "30"; source[20][4] = "25"
+        bars = e.normalized(source)
+        date = e.utc_day(bars[20]["time"])
+        early = e.breakout_case(bars[:21], date)
+        later = e.breakout_case(bars, date)
+        self.assertEqual(early["frozen_level"], 20)
+        self.assertEqual(early["outcome_status"], "incomplete")
+        self.assertIsNone(early["outcome"])
+        self.assertEqual(early["known_at"], later["known_at"])
+        self.assertEqual(later["outcome"]["available_at"], bars[25]["close_time"])
+
+    def test_breakout_rejects_non_events_and_made_up_forward_outcomes(self):
+        bars = e.normalized(rows([20]*27))
+        with self.assertRaises(AssertionError):
+            e.breakout_case(bars, e.utc_day(bars[20]["time"]))
+        payload = json.loads((ROOT / "knowledge_base/01_MARKET_STRUCTURE/structure_observations_20261028.json").read_text())
+        item = copy.deepcopy(payload["observations"][0])
+        item["breakout_cases"][0]["outcome"]["forward_close_change_pct"] += 1
+        with self.assertRaises(AssertionError): e.check_window(item)
+
+    def test_real_breakout_cases_retain_success_absence_and_failure(self):
+        payload = json.loads((ROOT / "knowledge_base/01_MARKET_STRUCTURE/structure_observations_20261028.json").read_text())
+        cases = [x["breakout_cases"][0] for x in payload["observations"]]
+        self.assertEqual([x["frozen_level"] for x in cases], [7459.69, 35398.0, 21085.0])
+        self.assertEqual(cases[0]["outcome"]["contact_dates"], ["2020-04-24", "2020-04-25"])
+        self.assertEqual(cases[1]["outcome"]["contact_dates"], [])
+        self.assertEqual(cases[2]["outcome"]["close_back_across_dates"][0], "2022-11-06")
+        self.assertAlmostEqual(cases[2]["outcome"]["forward_close_change_pct"], -24.709577786057846)
+
 
 if __name__ == "__main__":
     unittest.main()

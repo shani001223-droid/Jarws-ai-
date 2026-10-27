@@ -105,6 +105,38 @@ def snapshot(bars, as_of_date):
             "daily": day_state, "weekly": summarize(full_weeks(prefix)), "prior_20_day_band": band}
 
 
+def breakout_case(bars, event_date):
+    """Separate a prior-only event from a fixed five-bar retrospective outcome.
+
+    The event is a close beyond the PRECEDING 20 daily wick extremes. A later
+    wick overlap with the frozen boundary is only a geometric contact, never a
+    fill. Forward close change is an unsigned-direction price observation, not
+    short/long PnL. No thresholds are fit to these selected teaching cases.
+    """
+    index = next(i for i, b in enumerate(bars) if utc_day(b["time"]) == event_date)
+    assert index >= 20
+    event, prior = bars[index], bars[index-20:index]
+    upper, lower = max(b["high"] for b in prior), min(b["low"] for b in prior)
+    direction = "above" if event["close"] > upper else "below" if event["close"] < lower else None
+    assert direction is not None, "No qualifying close-break event"
+    level = upper if direction == "above" else lower
+    result = {"event_date": event_date, "known_at": event["close_time"],
+              "direction": direction, "frozen_level": level, "event_close": event["close"],
+              "prior_window_start": utc_day(prior[0]["time"]),
+              "prior_window_end": utc_day(prior[-1]["time"]), "prior_bars": 20}
+    future = bars[index+1:index+6]
+    if len(future) != 5:
+        return {**result, "outcome_status": "incomplete", "outcome": None}
+    contacts = [utc_day(b["time"]) for b in future if b["low"] <= level <= b["high"]]
+    returned = [utc_day(b["time"]) for b in future
+                if (b["close"] <= level if direction == "above" else b["close"] >= level)]
+    return {**result, "outcome_status": "observed", "outcome": {
+        "available_at": future[-1]["close_time"], "future_bars": 5,
+        "contact_dates": contacts, "close_back_across_dates": returned,
+        "fifth_date": utc_day(future[-1]["time"]), "fifth_close": future[-1]["close"],
+        "forward_close_change_pct": (future[-1]["close"]/event["close"]-1)*100}}
+
+
 def check_window(item):
     """Hash-check exact captured response, validate URL bounds and replay facts."""
     assert item["status"] == "fetched" and item["symbol"] == "BTCUSDT"
@@ -130,4 +162,6 @@ def check_window(item):
     assert len({x["as_of_date"] for x in item["snapshots"]}) == len(item["snapshots"])
     for expected in item["snapshots"]:
         assert snapshot(bars, expected["as_of_date"]) == expected
+    for expected in item.get("breakout_cases", []):
+        assert breakout_case(bars, expected["event_date"]) == expected
     return bars

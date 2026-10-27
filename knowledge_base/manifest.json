@@ -52,7 +52,10 @@
     },
     {
       "path": "knowledge_base/01_MARKET_STRUCTURE/breakouts_retests_and_regimes.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2329,
+      "sha256": "1c9ae2a9445db345234b9decd45f99f43e9e77af63a814c1fbf4f83608e4e89b"
     },
     {
       "path": "knowledge_base/01_MARKET_STRUCTURE/auction_theory_and_microstructure.md",
@@ -237,7 +240,7 @@
     {
       "path": "knowledge_base/01_MARKET_STRUCTURE/structure_observations_20261028.json",
       "kind": "ohlcv_windows",
-      "sha256": "2dcb969469913d235ce8c5af43f2d0f150e996bfd20acda0dea3890177f80367"
+      "sha256": "0f119a703c8ee59cd055d13fd0ea58f2f424c84d12d16a4f4479c0de3d01dcae"
     }
   ]
 }

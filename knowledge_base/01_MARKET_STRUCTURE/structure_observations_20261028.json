@@ -353,6 +353,31 @@
             "lower": 6468.27
           }
         }
+      ],
+      "breakout_cases": [
+        {
+          "event_date": "2020-04-23",
+          "known_at": 1587686399999,
+          "direction": "above",
+          "frozen_level": 7459.69,
+          "event_close": 7482.39,
+          "prior_window_start": "2020-04-03",
+          "prior_window_end": "2020-04-22",
+          "prior_bars": 20,
+          "outcome_status": "observed",
+          "outcome": {
+            "available_at": 1588118399999,
+            "future_bars": 5,
+            "contact_dates": [
+              "2020-04-24",
+              "2020-04-25"
+            ],
+            "close_back_across_dates": [],
+            "fifth_date": "2020-04-28",
+            "fifth_close": 7738.98,
+            "forward_close_change_pct": 3.4292518834222685
+          }
+        }
       ]
     },
     {
@@ -807,6 +832,28 @@
             "lookback_bars": 20,
             "upper": 48144.0,
             "lower": 36383.0
+          }
+        }
+      ],
+      "breakout_cases": [
+        {
+          "event_date": "2021-07-26",
+          "known_at": 1627343999999,
+          "direction": "above",
+          "frozen_level": 35398.0,
+          "event_close": 37237.6,
+          "prior_window_start": "2021-07-06",
+          "prior_window_end": "2021-07-25",
+          "prior_bars": 20,
+          "outcome_status": "observed",
+          "outcome": {
+            "available_at": 1627775999999,
+            "future_bars": 5,
+            "contact_dates": [],
+            "close_back_across_dates": [],
+            "fifth_date": "2021-07-31",
+            "fifth_close": 41461.83,
+            "forward_close_change_pct": 11.343991019829435
           }
         }
       ]
@@ -1309,7 +1356,38 @@
             "lower": 15995.27
           }
         }
+      ],
+      "breakout_cases": [
+        {
+          "event_date": "2022-11-04",
+          "known_at": 1667606399999,
+          "direction": "above",
+          "frozen_level": 21085.0,
+          "event_close": 21148.52,
+          "prior_window_start": "2022-10-15",
+          "prior_window_end": "2022-11-03",
+          "prior_bars": 20,
+          "outcome_status": "observed",
+          "outcome": {
+            "available_at": 1668038399999,
+            "future_bars": 5,
+            "contact_dates": [
+              "2022-11-05",
+              "2022-11-06"
+            ],
+            "close_back_across_dates": [
+              "2022-11-06",
+              "2022-11-07",
+              "2022-11-08",
+              "2022-11-09"
+            ],
+            "fifth_date": "2022-11-09",
+            "fifth_close": 15922.81,
+            "forward_close_change_pct": -24.709577786057846
+          }
+        }
       ]
     }
-  ]
+  ],
+  "breakout_protocol": "Every eligible close above/below preceding 20 daily wick extremes; freeze level; inspect exactly next 5 daily bars; contact is low<=level<=high, not a fill; no event-bar retest; forward raw price change is not strategy PnL; selected retrospective teaching cases only."
 }

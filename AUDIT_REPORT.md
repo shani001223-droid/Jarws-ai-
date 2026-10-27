@@ -225,3 +225,8 @@ Added `trends_ranges_and_multitimeframe.md` with 2398 substantive words and thre
 ## V3 breakout and retest receipt — 28 October 2026
 
 Added `breakouts_retests_and_regimes.md` with 2329 substantive words and three documented dated BTCUSDT cases. Offline evidence now separates a prior-only close-break from fixed later contact/close outcomes and preserves incomplete outcomes as null. Ten evidence regression tests passed locally; no fill or strategy-return claim. Curriculum: 7/48 (14.58%); loader, weighted engine and exact-head release remain pending. Prior source `2753cce87219310bad9843b3f041038132c89029` passed actual CI 40590603232. Source response bytes and hashes are unchanged; derived fixed-window facts and their receipt digest were updated.
+
+
+## V3 auction and microstructure receipt — 28 October 2026
+
+Added `auction_theory_and_microstructure.md` with 2371 substantive words, original illustrative execution arithmetic and three real dated institutional cases (2010 equities/E-mini, 2014 Treasury market, 2020 expiring May WTI). Technical sources and event/publication dates are explicit. No historical queue feed or paid auction feed is claimed; the 2014 full PDF was not retrieved due to size, and only its checked official release supports the stated episode facts. All four initial structure-family chapters are source-checked: total curriculum 8/48 (16.67%), with runtime retrieval/weighted engine/release still pending. Prior `37aee72f2ea7b02b733767056c0557822415d6d8` passed actual CI 40591052429 including ten evidence regressions. Existing identity, privacy/Stop/voice controls, V2 runtime, backup and main are unchanged.

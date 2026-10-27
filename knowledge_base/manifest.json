@@ -59,7 +59,10 @@
     },
     {
       "path": "knowledge_base/01_MARKET_STRUCTURE/auction_theory_and_microstructure.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2371,
+      "sha256": "b8018d34eefdca4bc5f54f3a607dbddbe720a6626a9c93b6608d11f8914d7853"
     },
     {
       "path": "knowledge_base/02_CANDLESTICK_AND_CHART_PATTERNS/candlestick_pattern_catalogue.md",

@@ -9,8 +9,8 @@ entire branch was already deployed. Production V2 remains a separate release.
 
 ## Current measured progress
 
-**Day 1: completed 7 of 48 planned knowledge chapters — 14.58%; 41 chapters,
-85.42% of the declared curriculum, remain.**
+**Day 1: completed 8 of 48 planned knowledge chapters — 16.67%; 40 chapters,
+83.33% of the declared curriculum, remain.**
 
 The denominator is the initial, expandable file manifest in
 `knowledge_base/manifest.json`. It is not a percentage of every fact on Earth,
@@ -28,8 +28,9 @@ topics require an explicit manifest/progress revision, never silent omission.
 | `01_MARKET_STRUCTURE/structure_and_swings.md` | Source-checked; actual dated BTCUSDT pivots, confirmation lag and stale-label counterexample; offline source/digest/causality checks |
 | `01_MARKET_STRUCTURE/trends_ranges_and_multitimeframe.md` | Source-checked; three actual daily/weekly comparisons, complete-week boundaries, insufficiency and breached higher-frame states |
 | `01_MARKET_STRUCTURE/breakouts_retests_and_regimes.md` | Source-checked; frozen prior-20-bar boundaries and real contact/no-contact/failure cases; event and later outcome clocks are separate |
+| `01_MARKET_STRUCTURE/auction_theory_and_microstructure.md` | Source-checked; matching/auction/profile distinctions and real 2010/2014/2020 episodes; raw historical queue/feed gaps disclosed |
 | Remaining curriculum documents | Pending; no empty placeholder chapters counted as complete |
-| Brain loader and runtime knowledge bundle | Pending — the new chapter is not yet consumed by Hoshi |
+| Brain loader and runtime knowledge bundle | Pending — new source chapters are not yet consumed by Hoshi |
 | 40/20/20/20 history/liquidity/structure/global-flow engine | Pending — weights will mean evidence coverage, not an invented win probability |
 | Full V3 backend, UI, historical evaluation and release tests | Pending |
 | Merge to main / production V3 | Pending — no early production merge |
@@ -67,6 +68,8 @@ topics require an explicit manifest/progress revision, never silent omission.
 - **28 October, Day 1:** completed `trends_ranges_and_multitimeframe.md` (2398 substantive body words). Three reconstructed cases distinguish insufficient weekly history (30 April 2020), daily/weekly disagreement (16 August 2021), and a breached higher-frame rising label (23 November 2022). Incomplete weeks are excluded, daily/weekly prices have separate observation times, and no profitable range or independent multi-frame confirmation is asserted. Prior chapter [57cc8828](https://github.com/shani001223-droid/Jarws-ai-/commit/57cc8828623710607ca1449027c82bc733e2fbc7) passed [actual GitHub integrity and seven evidence regressions, run 40590293132](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40590293132). Runtime integration remains pending.
 
 - **28 October, Day 1:** completed `breakouts_retests_and_regimes.md` (2329 substantive words). Three actual BTCUSDT cases use one frozen 20-bar boundary and five subsequent bars: positive path with contact, positive path without an eligible retest, and failed continuation. Raw close changes are explicitly not PnL. Expanded offline evidence checks to ten passing tests, including null incomplete outcomes, excluded event-bar retests and corrupted future-result rejection. Prior source [2753cce8](https://github.com/shani001223-droid/Jarws-ai-/commit/2753cce87219310bad9843b3f041038132c89029) passed [actual curriculum CI 40590603232](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40590603232). No runtime strategy or order path changed.
+
+- **28 October, Day 1:** completed `auction_theory_and_microstructure.md` (2371 substantive body words). Checked exchange matching/auction documentation, original 2010 CFTC/SEC and 2020 CFTC reports, and the official announcement of the 2014 Treasury episode. Distinguishes order-book depth from volume, queue uncertainty, profiles, contract units, publication dates and negative futures settlement. The linked 2014 full PDF exceeded the retrieval size limit: the checked announcement supports the stated facts, while exact tick/yield/queue paths remain unmeasured. The four initial market-structure-family chapters are source-checked, not every possible structure topic. Prior source [37aee72f](https://github.com/shani001223-droid/Jarws-ai-/commit/37aee72f2ea7b02b733767056c0557822415d6d8) passed [actual curriculum CI 40591052429](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40591052429), including ten evidence regressions. Current curriculum is 8/48; the next declared chapter is `02_CANDLESTICK_AND_CHART_PATTERNS/candlestick_pattern_catalogue.md`. All three integration/release gates remain pending.
 
 ## Completion and release rules
 

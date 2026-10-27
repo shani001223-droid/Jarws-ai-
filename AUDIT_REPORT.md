@@ -61,3 +61,5 @@ Later commits update this report atomically with each module. A commit cannot co
 Continue on the existing development branch, preserve configured Gemini/Groq/free-provider routing and Android controls, and test package imports **and** direct `uvicorn main:app` from `cloud_backend`. No new paid service/key is needed for deterministic curriculum/confluence work. Keep real orders disabled. A GitHub push is source delivery, not Render release or phone acceptance.
 
 - Day 1: **Trading History** completed as a repository curriculum module. Previous push receipt: [ec1c6992c834](https://github.com/shani001223-droid/Jarws-ai-/commit/ec1c6992c834260042061da59255f6c5cdf11d65). Linked chart exercises are conditional, not verified current setups.
+
+- Day 1: **Market Structure** completed as a repository curriculum module. Previous push receipt: [f53a8e0e51d9](https://github.com/shani001223-droid/Jarws-ai-/commit/f53a8e0e51d9010ca5b81f2747b7d87578b6f816). Linked chart exercises are conditional, not verified current setups.

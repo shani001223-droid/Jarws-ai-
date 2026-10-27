@@ -75,3 +75,5 @@ Continue on the existing development branch, preserve configured Gemini/Groq/fre
 - Day 2: **Liquidity** curriculum pushed with definitions, application/failure rules and three conditional chart exercises. Prior receipt: [89749ca4dfe3](https://github.com/shani001223-droid/Jarws-ai-/commit/89749ca4dfe3a7b89b15d42d4869869547f3abdb).
 
 - Day 2: **FVG and Imbalances** curriculum pushed with definitions, application/failure rules and three conditional chart exercises. Prior receipt: [70f1a97f3891](https://github.com/shani001223-droid/Jarws-ai-/commit/70f1a97f3891750dc381f99c7a14c2ddc3ce34cc).
+
+- Day 2: **Indicators and Order Flow** curriculum pushed with definitions, application/failure rules and three conditional chart exercises. Prior receipt: [7fd3eb201829](https://github.com/shani001223-droid/Jarws-ai-/commit/7fd3eb201829ab19f576a335b9a4b1a159ff976f).

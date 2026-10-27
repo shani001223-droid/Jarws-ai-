@@ -73,3 +73,5 @@ Continue on the existing development branch, preserve configured Gemini/Groq/fre
 - Day 1: **ICT** completed as a repository curriculum module. Previous push receipt: [08e121371e3c](https://github.com/shani001223-droid/Jarws-ai-/commit/08e121371e3c0f6f6776c9f6171065585acdf025). Linked chart exercises are conditional, not verified current setups.
 
 - Day 2: **Liquidity** curriculum pushed with definitions, application/failure rules and three conditional chart exercises. Prior receipt: [89749ca4dfe3](https://github.com/shani001223-droid/Jarws-ai-/commit/89749ca4dfe3a7b89b15d42d4869869547f3abdb).
+
+- Day 2: **FVG and Imbalances** curriculum pushed with definitions, application/failure rules and three conditional chart exercises. Prior receipt: [70f1a97f3891](https://github.com/shani001223-droid/Jarws-ai-/commit/70f1a97f3891750dc381f99c7a14c2ddc3ce34cc).

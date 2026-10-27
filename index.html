@@ -1054,7 +1054,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
      setStatus(button.dataset.screenAction==='screenshot'?(queued?'SCREENSHOT ACTION REQUESTED · CHECK ANDROID SYSTEM UI':'SCREENSHOT ACTION UNAVAILABLE'):(queued?'PHONE ACTION SENT':'SCREEN CONTROL SERVICE NOT CONNECTED'));
    }));
  }
- if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>{let refreshing=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!refreshing){refreshing=true;location.reload()}});navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(reg=>reg.update()).catch(()=>{});});
+ if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>{let refreshing=false;const hadController=!!navigator.serviceWorker.controller;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(hadController&&!refreshing){refreshing=true;location.reload()}});navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(reg=>reg.update()).catch(()=>{});});
  checkCloud();setInterval(checkCloud,60000);
  if(!Recognition&&!(window.JarvisBridge&&window.JarvisBridge.startNativeListening)){setStatus('TEXT MODE · BROWSER MIC UNSUPPORTED')}
 })();

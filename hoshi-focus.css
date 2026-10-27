@@ -1,0 +1,71 @@
+/* Hoshi Focus Home: minimal Iron-Man-inspired CSS core, not an image sprite.
+   Full workspace remains accessible when explicitly enabled in Settings.
+   Animation is CSS-only and reduced automatically for motion-sensitive users. */
+body:has(.nightroom.focus-mode){background:#020409}
+.nightroom.focus-mode{
+  background-color:#020409!important;
+  background-image:radial-gradient(circle at 50% 40%,#08172d 0%,#020409 68%)!important;
+  color:#e8faff;
+}
+.nightroom.focus-mode:before{background:radial-gradient(ellipse at 50% 41%,transparent 18%,#010306c9 79%)}
+.nightroom.focus-mode .night-head{inset:max(22px,env(safe-area-inset-top)) 19px auto;align-items:center}
+.nightroom.focus-mode .night-brand{font:700 19px system-ui,sans-serif;letter-spacing:.25em;text-shadow:0 0 19px #05baff78}
+.nightroom.focus-mode .night-brand small{font:400 10px system-ui,sans-serif;letter-spacing:.07em;margin-top:7px;color:#7ea2b9}
+.nightroom.focus-mode .night-head #connection{padding:7px 9px;max-width:120px;border-color:#23536d;background:#050b16b0;font-size:9px}
+.focus-core{display:none}
+.nightroom.focus-mode .focus-core{
+  display:grid;position:absolute;z-index:1;left:50%;top:39%;transform:translate(-50%,-50%);
+  width:min(57vw,235px,29dvh);height:min(57vw,235px,29dvh);
+  min-width:144px;min-height:144px;border-radius:50%;place-items:center;
+  filter:drop-shadow(0 0 27px #00c8ff5c);pointer-events:none;
+}
+.focus-core .core-halo,.focus-core .core-ring,.focus-core .core-center,.focus-core .core-particles{position:absolute;inset:0;border-radius:50%}
+.focus-core .core-halo{inset:-14%;border:1px solid #4fdfff21;box-shadow:0 0 50px #0ba0e524,inset 0 0 30px #0369c52b}
+.focus-core .core-ring{border:2px solid #43dcff8c;border-left-color:transparent;border-bottom-color:#097dd941;box-shadow:0 0 22px #0ac8ff66,inset 0 0 15px #01bffb51;animation:hoshi-core-spin 9s linear infinite}
+.focus-core .core-ring.ring-two{inset:14%;border-width:3px;border-color:transparent #c2faffbb #30b6fdbb #67dfff82;animation-direction:reverse;animation-duration:6s}
+.focus-core .core-center{
+ inset:29%;border:1px solid #b3f5ffdb;
+ background:radial-gradient(circle at 42% 35%,#b2f4ff 0%,#39dfff 22%,#04528d 58%,#020915 80%);
+ box-shadow:0 0 26px #21c9ffee,0 0 60px #036aeb65,inset 0 0 13px #e0ffffaa;
+ animation:hoshi-core-breathe 2.8s ease-in-out infinite;
+}
+.focus-core .core-particles{
+ background-image:radial-gradient(circle,#b8f7ff 1.2px,transparent 2px),radial-gradient(circle,#39baff 1px,transparent 2px);
+ background-size:43px 45px,55px 51px;background-position:7px 2px,22px 19px;
+ mask-image:radial-gradient(circle,transparent 25%,#000 49%,transparent 75%);
+ animation:hoshi-core-spin 22s linear infinite;opacity:.75
+}
+.nightroom.focus-mode.speaking .core-center{animation-duration:.58s;box-shadow:0 0 40px #79f4ff,0 0 85px #158fe9}
+.nightroom.focus-mode.responding .core-ring{animation-duration:2.6s}
+@keyframes hoshi-core-spin{to{transform:rotate(360deg)}}
+@keyframes hoshi-core-breathe{50%{transform:scale(1.08);filter:brightness(1.22)}}
+.nightroom.focus-mode .night-conversation{
+  z-index:2;bottom:calc(177px + env(safe-area-inset-bottom));left:22px;right:22px;
+}
+.nightroom.focus-mode .night-conversation #reply{max-height:100px;border:1px solid #143348aa;background:#040c19d6;color:#e8faff;font-size:13px;padding:10px 13px}
+.nightroom.focus-mode .night-conversation #status{border:0;background:none;backdrop-filter:none;color:#76cfe9;min-height:19px;padding:5px 4px;font-size:10px}
+.nightroom.focus-mode #nightMood{display:none}
+.nightroom.focus-mode #voiceTiming{color:#456c88;font-size:10px}
+.nightroom.focus-mode .night-mic{z-index:2;bottom:calc(78px + env(safe-area-inset-bottom))}
+.nightroom.focus-mode .night-mic #wakeBtn{width:69px;height:69px;border:1px solid #52d7ff;border-radius:50%;background:radial-gradient(circle,#125b86,#051020);box-shadow:0 0 23px #097fc866;font-size:0}
+.nightroom.focus-mode .night-mic #wakeBtn:before{font-size:27px}
+.nightroom.focus-mode .night-tabs{
+ z-index:3;left:auto;right:9px;bottom:calc(13px + env(safe-area-inset-bottom));width:auto;
+ display:flex;justify-content:center;padding:0;border:0;border-radius:16px;background:transparent;backdrop-filter:none;
+}
+.nightroom.focus-mode .night-tabs button:not([data-tab="settings"]){display:none}
+.nightroom.focus-mode .night-tabs button[data-tab="settings"]{min-width:65px;min-height:58px;padding:5px;color:#a0d8f0;border:1px solid #153951;border-radius:15px;background:#071522d6}
+.nightroom.focus-mode .night-tabs button[data-tab="settings"] span{font-size:21px;margin-bottom:3px}
+.nightroom.focus-mode .night-tabs button[aria-selected=true]:after{display:none}
+.focus-stop{display:none;position:absolute;z-index:3;bottom:calc(19px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);min-height:35px;border-color:#366789;background:#071625;color:#a9eaff;font-size:12px;padding:5px 17px}
+.nightroom.focus-mode.responding .focus-stop,.nightroom.focus-mode.speaking .focus-stop{display:block}
+.nightroom.focus-mode .night-sheet{z-index:6;bottom:calc(86px + env(safe-area-inset-bottom));border-color:#24506b;background:#06111cf7}
+#focusModeToggle{width:100%;margin-bottom:10px}
+@media(max-height:690px){
+ .nightroom.focus-mode .focus-core{top:34%;width:min(49vw,177px,27dvh);height:min(49vw,177px,27dvh)}
+ .nightroom.focus-mode .night-conversation{bottom:calc(166px + env(safe-area-inset-bottom))}
+ .nightroom.focus-mode .night-mic{bottom:calc(68px + env(safe-area-inset-bottom))}
+}
+@media(prefers-reduced-motion:reduce){
+ .focus-core *{animation:none!important}
+}

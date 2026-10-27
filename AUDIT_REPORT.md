@@ -79,3 +79,5 @@ Continue on the existing development branch, preserve configured Gemini/Groq/fre
 - Day 2: **Indicators and Order Flow** curriculum pushed with definitions, application/failure rules and three conditional chart exercises. Prior receipt: [7fd3eb201829](https://github.com/shani001223-droid/Jarws-ai-/commit/7fd3eb201829ab19f576a335b9a4b1a159ff976f).
 
 - Day 2: **Global Money Flow** curriculum pushed with definitions, application/failure rules and three conditional chart exercises. Prior receipt: [6202171b8384](https://github.com/shani001223-droid/Jarws-ai-/commit/6202171b838428602fe30afdb8fd6514c3d3e65d).
+
+- Day 2: **Risk and Psychology** curriculum pushed with definitions, application/failure rules and three conditional chart exercises. Prior receipt: [6a4ce1b8ffe8](https://github.com/shani001223-droid/Jarws-ai-/commit/6a4ce1b8ffe8bdd1417c1b8f50a1f5cef784f2d1).

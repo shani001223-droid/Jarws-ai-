@@ -66,7 +66,7 @@ class IndicatorUnitTests(unittest.TestCase):
     def test_vwap_null_when_session_is_partial_or_zero_volume(self):
         partial_now = DAY * 21000 + 20 * 3_600_000
         data = histories()
-        data["15m"] = history("15m", count=64, now=partial_now)
+        data["15m"] = history("15m", count=65, now=partial_now)
         result = analyze_market_indicators(data, "BTCUSDT")
         self.assertFalse(result["timeframes"]["15m"]["vwap_full_session_from_open"])
         self.assertIsNone(result["timeframes"]["15m"]["values"]["utc_session_vwap"])

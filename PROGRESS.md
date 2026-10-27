@@ -9,8 +9,8 @@ entire branch was already deployed. Production V2 remains a separate release.
 
 ## Current measured progress
 
-**Day 1: completed 9 of 49 planned knowledge chapters — 18.37%; 40 chapters,
-81.63% of the declared curriculum, remain.**
+**Day 1: completed 10 of 49 planned knowledge chapters — 20.41%; 39 chapters,
+79.59% of the declared curriculum, remain.**
 
 The denominator is the versioned, expandable file manifest in
 `knowledge_base/manifest.json`. Scope revision 2 explicitly expands the initial
@@ -34,6 +34,7 @@ topics require an explicit manifest/progress revision, never silent omission.
 | `01_MARKET_STRUCTURE/auction_theory_and_microstructure.md` | Source-checked; matching/auction/profile distinctions and real 2010/2014/2020 episodes; raw historical queue/feed gaps disclosed |
 | `02_CANDLESTICK_AND_CHART_PATTERNS/candlestick_pattern_catalogue.md` | Source-checked; core families, explicit geometric rule versions and three replayed dated examples; no library-output probability claims |
 | `02_CANDLESTICK_AND_CHART_PATTERNS/rare_candlestick_and_gap_variants.md` | Newly declared pending scope expansion; no placeholder counted as complete |
+| `02_CANDLESTICK_AND_CHART_PATTERNS/classical_chart_patterns.md` | Source-checked; three actual two-turn cases, delayed activation, absence and cancellation before a later break; no simulated fills |
 | Remaining curriculum documents | Pending; no empty placeholder chapters counted as complete |
 | Brain loader and runtime knowledge bundle | Pending — new source chapters are not yet consumed by Hoshi |
 | 40/20/20/20 history/liquidity/structure/global-flow engine | Pending — weights will mean evidence coverage, not an invented win probability |
@@ -77,6 +78,8 @@ topics require an explicit manifest/progress revision, never silent omission.
 - **28 October, Day 1:** completed `auction_theory_and_microstructure.md` (2371 substantive body words). Checked exchange matching/auction documentation, original 2010 CFTC/SEC and 2020 CFTC reports, and the official announcement of the 2014 Treasury episode. Distinguishes order-book depth from volume, queue uncertainty, profiles, contract units, publication dates and negative futures settlement. The linked 2014 full PDF exceeded the retrieval size limit: the checked announcement supports the stated facts, while exact tick/yield/queue paths remain unmeasured. The four initial market-structure-family chapters are source-checked, not every possible structure topic. Prior source [37aee72f](https://github.com/shani001223-droid/Jarws-ai-/commit/37aee72f2ea7b02b733767056c0557822415d6d8) passed [actual curriculum CI 40591052429](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40591052429), including ten evidence regressions. Current curriculum is 8/48; the next declared chapter is `02_CANDLESTICK_AND_CHART_PATTERNS/candlestick_pattern_catalogue.md`. All three integration/release gates remain pending.
 
 - **28 October, Day 1 — scope revision 2:** completed `candlestick_pattern_catalogue.md` (2600 substantive words), measured three real 2020/2021/2022 BTCUSDT examples and added six offline pattern regressions. Source examples distinguish shape, context, later confirmation and raw price endpoints from trades. The original 48-file scope now explicitly contains 49 files: rare/gap compound definitions remain a separate pending chapter rather than being falsely counted as covered by core geometry. Nine source-checked chapters therefore mean 18.37% of revision 2; forty remain. Prior source [9eae855b](https://github.com/shani001223-droid/Jarws-ai-/commit/9eae855bd8778fa7f2c6748642fe49ac5b756b20) passed [actual integrity CI 40591570863](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40591570863). Runtime retrieval, weighted strategy and release gates are still pending.
+
+- **28 October, Day 1:** completed `classical_chart_patterns.md` (2169 substantive words) with conventional families and a precisely versioned original two-turn protocol. Three genuine BTCUSDT cases preserve an eligible later neckline close, a failed candidate without activation, and cancellation before a later crossing. Added two causality/corruption regressions; all eighteen evidence tests passed locally. Prior [931f2104](https://github.com/shani001223-droid/Jarws-ai-/commit/931f2104d558e7d7f8616cdf6a8381889b719e77) passed [actual GitHub content/evidence CI 40598659841](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40598659841). A documented source chapter and an eligible geometric event remain separate from runtime knowledge, fills and strategy performance.
 
 ## Completion and release rules
 

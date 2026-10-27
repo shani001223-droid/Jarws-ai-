@@ -149,5 +149,137 @@
         }
       }
     }
+  ],
+  "classical_cases": [
+    {
+      "source_window_sha256": "0a8fd6b6cee125cb5de8a199f86c88a5d9dacd572070a2f0999852154f688fea",
+      "case": {
+        "method": "hoshi-two-turn-1",
+        "kind": "low",
+        "first_date": "2020-03-23",
+        "second_date": "2020-03-30",
+        "turns": [
+          {
+            "kind": "low",
+            "price": 5688.0,
+            "pivot_at": 1585007999999,
+            "confirmed_at": 1585180799999
+          },
+          {
+            "kind": "low",
+            "price": 5857.76,
+            "pivot_at": 1585612799999,
+            "confirmed_at": 1585785599999
+          }
+        ],
+        "known_at": 1585785599999,
+        "relative_difference": 0.02940646609664504,
+        "tolerance": 0.03,
+        "similarity_pass": true,
+        "frozen_neckline": 6957.96,
+        "outer_invalidation_level": 5688.0,
+        "already_beyond_neckline_at_formation": false,
+        "outcome_status": "observed",
+        "outcome": {
+          "available_at": 1586649599999,
+          "future_bars": 10,
+          "first_neckline_beyond_close": {
+            "date": "2020-04-06",
+            "available_at": 1586217599999,
+            "close": 7329.9
+          },
+          "first_outer_invalidation_close": null,
+          "eligible_break_before_cancellation": true
+        }
+      }
+    },
+    {
+      "source_window_sha256": "6d533be481380a79e5ee6ab85436cfa6bac8c5b50ae6ff2080b433901610c1ee",
+      "case": {
+        "method": "hoshi-two-turn-1",
+        "kind": "low",
+        "first_date": "2021-04-29",
+        "second_date": "2021-05-05",
+        "turns": [
+          {
+            "kind": "low",
+            "price": 52330.94,
+            "pivot_at": 1619740799999,
+            "confirmed_at": 1619913599999
+          },
+          {
+            "kind": "low",
+            "price": 52900.0,
+            "pivot_at": 1620259199999,
+            "confirmed_at": 1620431999999
+          }
+        ],
+        "known_at": 1620431999999,
+        "relative_difference": 0.010815450284868645,
+        "tolerance": 0.03,
+        "similarity_pass": true,
+        "frozen_neckline": 58981.44,
+        "outer_invalidation_level": 52330.94,
+        "already_beyond_neckline_at_formation": false,
+        "outcome_status": "observed",
+        "outcome": {
+          "available_at": 1621295999999,
+          "future_bars": 10,
+          "first_neckline_beyond_close": null,
+          "first_outer_invalidation_close": {
+            "date": "2021-05-12",
+            "available_at": 1620863999999,
+            "close": 49631.32
+          },
+          "eligible_break_before_cancellation": false
+        }
+      }
+    },
+    {
+      "source_window_sha256": "5860446413d27c8678d93b80ce791940ad4e06b76a512b6e1230f6b4ab19b74f",
+      "case": {
+        "method": "hoshi-two-turn-1",
+        "kind": "high",
+        "first_date": "2022-10-26",
+        "second_date": "2022-10-29",
+        "turns": [
+          {
+            "kind": "high",
+            "price": 21020.0,
+            "pivot_at": 1666828799999,
+            "confirmed_at": 1667001599999
+          },
+          {
+            "kind": "high",
+            "price": 21085.0,
+            "pivot_at": 1667087999999,
+            "confirmed_at": 1667260799999
+          }
+        ],
+        "known_at": 1667260799999,
+        "relative_difference": 0.0030875192969956064,
+        "tolerance": 0.03,
+        "similarity_pass": true,
+        "frozen_neckline": 20000.09,
+        "outer_invalidation_level": 21085.0,
+        "already_beyond_neckline_at_formation": false,
+        "outcome_status": "observed",
+        "outcome": {
+          "available_at": 1668124799999,
+          "future_bars": 10,
+          "first_neckline_beyond_close": {
+            "date": "2022-11-08",
+            "available_at": 1667951999999,
+            "close": 18547.23
+          },
+          "first_outer_invalidation_close": {
+            "date": "2022-11-04",
+            "available_at": 1667606399999,
+            "close": 21148.52
+          },
+          "eligible_break_before_cancellation": false
+        }
+      }
+    }
   ]
 }

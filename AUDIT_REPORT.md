@@ -235,3 +235,8 @@ Added `auction_theory_and_microstructure.md` with 2371 substantive words, origin
 ## V3 candlestick catalogue and explicit scope expansion — 28 October 2026
 
 Added `candlestick_pattern_catalogue.md` with 2600 substantive words and three actual dated shape/confirmation/path cases. New original offline geometry is explicitly not TA-Lib parity, a probability, a fill model or runtime integration. Six new evidence regressions accompany the ten existing ones. Scope revision 2 adds a genuinely missing rare/gap-variant chapter as pending: 9/49 (18.37%) source-checked, not 9/48 or all patterns on Earth. Source receipts reuse the previously captured 611 candles without altering their raw bytes or source hashes. Prior `9eae855bd8778fa7f2c6748642fe49ac5b756b20` passed actual GitHub integrity CI 40591570863. Main, backup, V2, unrelated roadmap and controls are preserved.
+
+
+## V3 classical-pattern receipt — 28 October 2026
+
+Added `classical_chart_patterns.md` with 2169 substantive words, checked primary education sources and three real dated BTCUSDT cases. The original two-turn measurement retains pivot confirmation delay, frozen neckline, ten-bar horizon and cancellation precedence; no pattern-certified profit or order is asserted. Eighteen offline evidence regressions passed locally. Source-checked curriculum: 10/49 (20.41%), scope revision 2; rare/gap chapter and runtime/release work remain pending. Prior `931f2104d558e7d7f8616cdf6a8381889b719e77` passed actual CI 40598659841. No main, backup, V2 or unrelated project changes.

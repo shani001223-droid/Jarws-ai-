@@ -66,6 +66,27 @@ class V3PatternTests(unittest.TestCase):
         p = receipt(); p["source_receipt"] = "../../elsewhere.json"
         with self.assertRaises(AssertionError): e.check_receipt(p, ROOT)
 
+    def test_classical_candidate_can_cancel_before_later_neckline_break(self):
+        p = receipt(); e.check_receipt(p, ROOT)
+        cases = [x["case"] for x in p["classical_cases"]]
+        self.assertEqual(cases[0]["outcome"]["first_neckline_beyond_close"]["date"], "2020-04-06")
+        self.assertTrue(cases[0]["outcome"]["eligible_break_before_cancellation"])
+        self.assertIsNone(cases[1]["outcome"]["first_neckline_beyond_close"])
+        self.assertEqual(cases[2]["outcome"]["first_outer_invalidation_close"]["date"], "2022-11-04")
+        self.assertFalse(cases[2]["outcome"]["eligible_break_before_cancellation"])
+
+    def test_classical_formation_features_survive_future_append(self):
+        p = receipt(); windows = e.check_receipt(p, ROOT)
+        entry = p["classical_cases"][0]; case = entry["case"]
+        b = windows[entry["source_window_sha256"]]
+        prefix = [x for x in b if x["close_time"] <= case["known_at"]]
+        early = e.two_turn_case(prefix, case["kind"], case["first_date"], case["second_date"])
+        self.assertIsNone(early["outcome"])
+        self.assertEqual({k:v for k,v in early.items() if k not in ("outcome_status", "outcome")},
+                         {k:v for k,v in case.items() if k not in ("outcome_status", "outcome")})
+        p = receipt(); p["classical_cases"][0]["case"]["outcome"]["first_neckline_beyond_close"]["close"] += 1
+        with self.assertRaises(AssertionError): e.check_receipt(p, ROOT)
+
 
 if __name__ == "__main__":
     unittest.main()

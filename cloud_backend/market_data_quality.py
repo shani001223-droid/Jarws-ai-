@@ -123,7 +123,7 @@ def kraken_candles(payload, interval: str, now_ms: int):
         count = _count(row[7])
         if base < 0 or count < 0 or (base > 0 and not low <= vwap <= h):
             raise MarketDataQualityError("invalid_kraken_volume")
-        if base == 0 and count != 0:
+        if (base == 0 and count != 0) or (base > 0 and count == 0):
             raise MarketDataQualityError("invalid_kraken_volume")
         normalized.append([start, o, h, low, close, base, start + step - 1])
     return _validate_candles(normalized, interval, now_ms)

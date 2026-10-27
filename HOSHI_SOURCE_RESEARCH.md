@@ -16,3 +16,9 @@
 **Limitations:** A fixed-feed headline is not the complete article. News feeds can be delayed, incomplete, temporarily unavailable, geo-blocked or removed. No cross-source corroboration, full-text browsing, original fact-checking or user-selected URL fetching is implemented. No live production endpoint, Realme Note 50 UI integration or public-source network availability is claimed by offline tests. The endpoint is a bounded backend primitive for future explicitly scoped research workflows; it does not authorize the assistant to follow arbitrary links.
 
 **Acceptance gate:** tests/test_source_research.py covers fixed URLs, stale/future and missing timestamps, malicious link rejection, XML/entity and size limits, safe errors, source citation fields, query matching and API no-store behavior. Require green GitHub Python/JS/Playwright CI and Docker backend smoke before checking Task 31 in the only canonical roadmap. The live feeds and mobile experience require separate acceptance; do not claim full general browsing from these tests.
+
+## Verified source/test checkpoint — 27 Oct 2026
+
+- Integrated backend Python, frontend Node tests, JavaScript syntax and real Playwright browser smoke passed on commit `7eec2c93e21d`: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40434345168 . This includes malicious article-link rejection, freshness and timestamp checks, safe DOM rendering and source command interception without sending an AI prompt.
+- Docker backend image build, Uvicorn import and health smoke passed for the backend source/API at commit `d90ff7e94850`: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40434119216 .
+- Not a live feed connectivity check or Realme Note 50 acceptance. Keep production deployment and general browsing claims pending.

@@ -105,6 +105,18 @@ jobs:
           assert "detail" in payload and "BTCUSDT" in payload["detail"], payload
           print("Task 41 Docker paper risk route registered; unsupported pair rejected")
           PY
+          # Task 42: the actual Docker/Uvicorn image exposes only read-only
+          # annotated-chart exports and rejects unsupported pairs pre-network.
+          chart_status=$(curl --silent --show-error --max-time 5 -o /tmp/hoshi-chart-invalid.json \
+            -w '%{http_code}' 'http://127.0.0.1:18765/api/trading/annotated-chart?symbol=SOLUSDT')
+          test "$chart_status" = 422 || { echo "Chart route expected 422, got $chart_status"; exit 1; }
+          python3 - <<'PY'
+          import json
+          with open("/tmp/hoshi-chart-invalid.json") as f:
+              payload = json.load(f)
+          assert "detail" in payload and "BTCUSDT" in payload["detail"], payload
+          print("Task 42 Docker chart route registered; unsupported pair rejected")
+          PY
           # Validate knowledge files and timezone data inside the actual image.
           docker exec -i "$container" python - <<'PY'
           import json

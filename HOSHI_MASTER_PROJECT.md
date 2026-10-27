@@ -7,6 +7,8 @@
 
 Production main now includes PR #24, merged as `1a0f532afb34d5f3f1d939b2daef86ec9fd46e29`; the existing Render frontend and primary backend were verified live. See [release evidence](HOSHI_RELEASE_PRECHECK.md). The development branch remains `hoshi/dnd-foundation-20261026`. **PR #24 is merged, not an active draft**: first find the current open PR for this branch; create at most one successor draft PR when new changes require review. Historical PR #24 references below describe prior development evidence. Do not create a second project or reset the roadmap.
 
+Post-release test/document follow-up: [PR #28](https://github.com/shani001223-droid/Jarws-ai-/pull/28). Its corrected live Render browser check [40515342689](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40515342689) and full 390-Python/75-Node regression [40515342724](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40515342724) passed on test head `1a68b754720e94dfcf375c8b51fdee37a218232a`. This follow-up has no runtime changes; a `[skip render]` merge intentionally leaves the deployed application on `1a0f532...`. Check the actual PR state before writing, rather than assuming it is still open. Physical Realme acceptance remains pending.
+
 ## 1. Identity, history and final scope
 
 **One project name:** HOSHI AI. Earlier concepts JARVIS, JARWS, ALTRON and VALTRON inform this project; do **not** start separate competing assistant repositories or duplicate implementations. The Javes trading bot remains a **separate demo-only experiment**, not silently merged into the Hoshi runtime. A future integration must be explicit and tested.

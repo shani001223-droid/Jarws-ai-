@@ -10,13 +10,15 @@ This extends the existing assistant; it is not a new app, trading account, or mo
 Verified integrated source: [51f2eaf2b57b](https://github.com/shani001223-droid/Jarws-ai-/commit/51f2eaf2b57bcd546c1c77e2ff818d5beb4eba95).
 **Local: 367 Python tests + 53 Node tests passed. Actual GitHub Python/API/JS/Playwright and Docker checks passed** (links below).
 
-Production Render release, physical Realme Note 50 acceptance, reliable live provider availability and out-of-sample profitability remain pending. The direct HTTP live BTC request observed an upstream 503; it did not invent a score. A 0–100 rule score is not a win probability or 99.999% accuracy.
+At that source checkpoint, production release and live-provider acceptance were pending, and one direct BTC request returned an upstream 503 without inventing a score. The later production follow-through below supersedes those release statuses. Physical Realme Note 50 acceptance, ongoing provider reliability and out-of-sample profitability remain unverified. A 0–100 rule score is not a win probability or 99.999% accuracy.
 
 The missing/outdated findings below are the **fetched baseline**. Later sections document how they were resolved; they do not imply the new modules are still absent.
 
 ## Production follow-through
 
 PR #24 merged as `1a0f532afb34d5f3f1d939b2daef86ec9fd46e29` and the existing Render frontend/backend both reached live. Eleven-lesson retrieval, history, invalid-pair rejection, actual BTC confluence and a real Urdu Groq reply were checked. See [HOSHI_RELEASE_PRECHECK.md](HOSHI_RELEASE_PRECHECK.md) for deploy IDs, actual response timing, retained failures and device limits. Earlier pending-release statements are historical checkpoints.
+
+**Post-release verification:** [PR #28](https://github.com/shani001223-droid/Jarws-ai-/pull/28) corrects obsolete Outfit assertions for the approved core. On pushed test head `1a68b754720e94dfcf375c8b51fdee37a218232a`, actual [live Render browser run 40515342689](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40515342689) and [full regression 40515342724](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40515342724) both passed: 390 Python / 75 Node tests, browser layouts and V2 routes. This receipt update changes documents only and records the previous commit's results; the earlier live-test failure is preserved. Use `[skip render]` when merging the test/document follow-up so unchanged runtime source is not redeployed.
 
 ## Day 1 — fetched baseline
 

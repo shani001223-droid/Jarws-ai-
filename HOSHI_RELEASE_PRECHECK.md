@@ -38,8 +38,21 @@ are retained as references; no rollback or persistent-data restoration occurred.
 - The old live browser test **40513968778 failed** by attempting to click the
   intentionally hidden Outfit tab. A test-only follow-up replaces the obsolete
   wardrobe assertions with actual core, Settings/tools, V2 route and mobile
-  overflow checks. This failure is retained and the corrected result will be
-  recorded after actual execution; it is not silently labelled passed.
+  overflow checks. **Corrected live run [40515342689](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40515342689)
+  passed** against the released public site using test source `1a68b754720e94dfcf375c8b51fdee37a218232a`.
+  It checked 320/390/768/1440px layouts, Settings, V2 lessons/history, invalid-pair
+  rejection, live market-source loading, zero uncaught browser errors and zero
+  broken same-origin assets. [Screenshot artifact](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40515342689/artifacts/12738891639)
+  records the 390px trading screen. The earlier failed run remains recorded.
+- Full follow-up [40515342724](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40515342724)
+  passed on the same test source: **390 Python / 75 Node tests**, knowledge parity
+  and desktop/mobile Chromium regression. PR #28 changes only tests, workflow
+  and release documents; its merge uses `[skip render]`. Main can therefore have
+  a newer documentation/test commit while the live application correctly stays
+  on release source `1a0f532afb34d5f3f1d939b2daef86ec9fd46e29`.
+- Production Android debug APK: [artifact 12737034849](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40513968761/artifacts/12737034849),
+  22,446,364-byte archive from the released source. Recorded archive digest:
+  `sha256:683364e3ec4cefcbfb2cc56a0fd3b733d1f15c61be63aa7dfdedc6a09f9d085d`.
 - Opera connector reported **Browser not connected**. No Opera or physical
   Realme microphone/TTS interaction is claimed. Actual Chromium live-browser
   testing is performed by the existing GitHub workflow.

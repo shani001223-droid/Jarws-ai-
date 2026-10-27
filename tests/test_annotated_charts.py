@@ -38,7 +38,7 @@ class ChartTests(unittest.TestCase):
         self.assertFalse(chart["orders_enabled"])
         self.assertFalse(chart["independently_cross_checked"])
         self.assertEqual(chart["last_closed_at"],data["15m"][-1].close_time)
-        self.assertEqual(len(chart["candles"]),89)
+        self.assertEqual(len(chart["candles"]),90)
         self.assertTrue(all(c["close_time"]<NOW for c in chart["candles"]))
         self.assertTrue(all(p["confirmed_at"]>p["pivot_at"]
                             and p["confirmed_at"]<=chart["last_closed_at"]

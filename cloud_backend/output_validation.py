@@ -11,6 +11,7 @@ from io import BytesIO
 import json
 import re
 import warnings
+import zlib
 from zipfile import BadZipFile, ZIP_STORED, ZipFile
 
 from PIL import Image, UnidentifiedImageError
@@ -202,7 +203,8 @@ def validate_campaign_zip(source: object) -> dict:
                 if len(payload) != item["bytes"] or _digest(payload) != item["sha256"]:
                     raise OutputFormatError("campaign_digest_mismatch")
                 _verify_inner(payload, item["product_key"])
-    except (BadZipFile, OSError, EOFError, RuntimeError, UnicodeError):
+    except (BadZipFile, OSError, EOFError, RuntimeError, UnicodeError,
+            NotImplementedError, zlib.error):
         raise OutputFormatError("invalid_campaign_archive") from None
     return {"format": "flora_campaign_zip", "bytes": len(data),
             "sha256": _digest(data), "products": keys,

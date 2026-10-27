@@ -73,6 +73,7 @@ Post-release test/document follow-up: [PR #28](https://github.com/shani001223-dr
 | Private verified artifact store (development) | `cloud_backend/verified_artifact_store.py`, `/api/agent/jobs/{job_id}/artifacts` | Operator-authenticated, immutable SHA-256-checked ZIP and sanitized role checkpoints on configured private storage; **no auto-worker** |
 | Private quiet progress reporting (development) | `cloud_backend/job_reporting.py`, `/api/agent/jobs/{job_id}/report` | Authenticated pull-only status, safe blockers and SHA-verified final ZIP reports; no notifications or automatic workers |
 | Real product poster output | `cloud_backend/ad_studio.py`, `artifact_verifier.py` | Flora PNGs, copy and ZIP with verified contents |
+| Flora owner-reported catalogue (Task 43 partial, **unchecked**) | `cloud_backend/flora_catalog.py`, `/api/flora/catalog` | Fixed product/PKR data checked against ad templates; no actual owner-approved photos or current price verification. See `HOSHI_FLORA_CATALOG.md` |
 | Urdu voice quality | `cloud_backend/urdu_tts_text.py` | Pronunciation fixes for common terms |
 | Android APK/bridge | `android/app/src/main/java/com/valtron/jarvis/` | WebView, native mic/TTS, reminders, limited permitted accessibility |
 | Regression and browser tests | `tests/`, `.github/workflows/` | Unit, JS, Playwright and Android build checks |

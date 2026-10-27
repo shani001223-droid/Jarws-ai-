@@ -662,5 +662,742 @@
         }
       }
     }
+  ],
+  "orderblock_cases": [
+    {
+      "source_window_sha256": "0a8fd6b6cee125cb5de8a199f86c88a5d9dacd572070a2f0999852154f688fea",
+      "case": {
+        "features": {
+          "method": "hoshi-v2-orderblock-formation-audit-1",
+          "direction": "long",
+          "kind": "demand",
+          "origin": {
+            "date": "2020-05-04",
+            "close_time": 1588636799999,
+            "open": 8894.15,
+            "high": 8950.0,
+            "low": 8522.0,
+            "close": 8871.96
+          },
+          "displacement": {
+            "date": "2020-05-07",
+            "close_time": 1588895999999,
+            "open": 9143.4,
+            "high": 10067.0,
+            "low": 9021.0,
+            "close": 9986.4
+          },
+          "confirmation": {
+            "date": "2020-05-08",
+            "close_time": 1588982399999,
+            "open": 9986.3,
+            "high": 10035.96,
+            "low": 9705.0,
+            "close": 9800.01
+          },
+          "known_at": 1588982399999,
+          "zone_low": 8522.0,
+          "zone_high": 8950.0,
+          "gap_low": 9395.0,
+          "gap_high": 9705.0,
+          "preceding_20_body_mean": 181.04750000000004,
+          "directional_body": 843.0,
+          "body_multiple": 4.65623662298568,
+          "five_bar_break_reference": 9395.0,
+          "orders_enabled": false,
+          "institutional_intent_known": false,
+          "win_probability": null
+        },
+        "outcome_status": "observed",
+        "outcome": {
+          "horizon_bars": 20,
+          "available_at": 1590710399999,
+          "path": [
+            {
+              "date": "2020-05-09",
+              "close_time": 1589068799999,
+              "open": 9800.02,
+              "high": 9914.25,
+              "low": 9520.0,
+              "close": 9539.4
+            },
+            {
+              "date": "2020-05-10",
+              "close_time": 1589155199999,
+              "open": 9539.1,
+              "high": 9574.83,
+              "low": 8117.0,
+              "close": 8722.77
+            },
+            {
+              "date": "2020-05-11",
+              "close_time": 1589241599999,
+              "open": 8722.77,
+              "high": 9168.0,
+              "low": 8200.0,
+              "close": 8561.52
+            },
+            {
+              "date": "2020-05-12",
+              "close_time": 1589327999999,
+              "open": 8562.04,
+              "high": 8978.26,
+              "low": 8528.78,
+              "close": 8810.79
+            },
+            {
+              "date": "2020-05-13",
+              "close_time": 1589414399999,
+              "open": 8810.99,
+              "high": 9398.0,
+              "low": 8792.99,
+              "close": 9309.37
+            },
+            {
+              "date": "2020-05-14",
+              "close_time": 1589500799999,
+              "open": 9309.35,
+              "high": 9939.0,
+              "low": 9256.76,
+              "close": 9791.98
+            },
+            {
+              "date": "2020-05-15",
+              "close_time": 1589587199999,
+              "open": 9791.97,
+              "high": 9845.62,
+              "low": 9150.0,
+              "close": 9316.42
+            },
+            {
+              "date": "2020-05-16",
+              "close_time": 1589673599999,
+              "open": 9315.96,
+              "high": 9588.0,
+              "low": 9220.0,
+              "close": 9381.27
+            },
+            {
+              "date": "2020-05-17",
+              "close_time": 1589759999999,
+              "open": 9380.81,
+              "high": 9888.0,
+              "low": 9322.1,
+              "close": 9680.04
+            },
+            {
+              "date": "2020-05-18",
+              "close_time": 1589846399999,
+              "open": 9681.11,
+              "high": 9950.0,
+              "low": 9464.23,
+              "close": 9733.93
+            },
+            {
+              "date": "2020-05-19",
+              "close_time": 1589932799999,
+              "open": 9733.93,
+              "high": 9897.21,
+              "low": 9474.0,
+              "close": 9775.53
+            },
+            {
+              "date": "2020-05-20",
+              "close_time": 1590019199999,
+              "open": 9775.13,
+              "high": 9842.0,
+              "low": 9326.0,
+              "close": 9511.43
+            },
+            {
+              "date": "2020-05-21",
+              "close_time": 1590105599999,
+              "open": 9511.43,
+              "high": 9578.47,
+              "low": 8815.0,
+              "close": 9068.65
+            },
+            {
+              "date": "2020-05-22",
+              "close_time": 1590191999999,
+              "open": 9067.51,
+              "high": 9271.0,
+              "low": 8933.52,
+              "close": 9170.0
+            },
+            {
+              "date": "2020-05-23",
+              "close_time": 1590278399999,
+              "open": 9170.0,
+              "high": 9307.85,
+              "low": 9070.0,
+              "close": 9179.15
+            },
+            {
+              "date": "2020-05-24",
+              "close_time": 1590364799999,
+              "open": 9179.01,
+              "high": 9298.0,
+              "low": 8700.0,
+              "close": 8720.34
+            },
+            {
+              "date": "2020-05-25",
+              "close_time": 1590451199999,
+              "open": 8718.14,
+              "high": 8979.66,
+              "low": 8642.72,
+              "close": 8900.35
+            },
+            {
+              "date": "2020-05-26",
+              "close_time": 1590537599999,
+              "open": 8900.35,
+              "high": 9017.67,
+              "low": 8700.0,
+              "close": 8841.18
+            },
+            {
+              "date": "2020-05-27",
+              "close_time": 1590623999999,
+              "open": 8841.0,
+              "high": 9225.0,
+              "low": 8811.73,
+              "close": 9204.07
+            },
+            {
+              "date": "2020-05-28",
+              "close_time": 1590710399999,
+              "open": 9204.07,
+              "high": 9625.47,
+              "low": 9110.0,
+              "close": 9575.89
+            }
+          ],
+          "first_contact": {
+            "date": "2020-05-10",
+            "close_time": 1589155199999,
+            "open": 9539.1,
+            "high": 9574.83,
+            "low": 8117.0,
+            "close": 8722.77
+          },
+          "first_closing_rejection": {
+            "date": "2020-05-13",
+            "close_time": 1589414399999,
+            "open": 8810.99,
+            "high": 9398.0,
+            "low": 8792.99,
+            "close": 9309.37
+          },
+          "first_wick_breach": {
+            "date": "2020-05-10",
+            "close_time": 1589155199999,
+            "open": 9539.1,
+            "high": 9574.83,
+            "low": 8117.0,
+            "close": 8722.77
+          },
+          "first_close_breach": null,
+          "contact_bar_closes_before_or_at_breach": [
+            1589155199999,
+            1589241599999,
+            1589327999999,
+            1589414399999,
+            1590105599999,
+            1590191999999,
+            1590364799999,
+            1590451199999,
+            1590537599999,
+            1590623999999
+          ],
+          "status": "observed_without_close_breach",
+          "strategy_pnl": null,
+          "fill_known": false,
+          "first_full_gap_crossing": {
+            "date": "2020-05-10",
+            "close_time": 1589155199999,
+            "open": 9539.1,
+            "high": 9574.83,
+            "low": 8117.0,
+            "close": 8722.77
+          }
+        }
+      }
+    },
+    {
+      "source_window_sha256": "6d533be481380a79e5ee6ab85436cfa6bac8c5b50ae6ff2080b433901610c1ee",
+      "case": {
+        "features": {
+          "method": "hoshi-v2-orderblock-formation-audit-1",
+          "direction": "long",
+          "kind": "demand",
+          "origin": {
+            "date": "2021-07-20",
+            "close_time": 1626825599999,
+            "open": 30839.65,
+            "high": 31063.07,
+            "low": 29278.0,
+            "close": 29790.35
+          },
+          "displacement": {
+            "date": "2021-07-23",
+            "close_time": 1627084799999,
+            "open": 32287.58,
+            "high": 33650.0,
+            "low": 31924.32,
+            "close": 33634.09
+          },
+          "confirmation": {
+            "date": "2021-07-24",
+            "close_time": 1627171199999,
+            "open": 33634.1,
+            "high": 34500.0,
+            "low": 33401.14,
+            "close": 34258.14
+          },
+          "known_at": 1627171199999,
+          "zone_low": 29278.0,
+          "zone_high": 31063.07,
+          "gap_low": 32591.35,
+          "gap_high": 33401.14,
+          "preceding_20_body_mean": 745.6394999999993,
+          "directional_body": 1346.5099999999948,
+          "body_multiple": 1.805845854464518,
+          "five_bar_break_reference": 32858.0,
+          "orders_enabled": false,
+          "institutional_intent_known": false,
+          "win_probability": null
+        },
+        "outcome_status": "observed",
+        "outcome": {
+          "horizon_bars": 20,
+          "available_at": 1628899199999,
+          "path": [
+            {
+              "date": "2021-07-25",
+              "close_time": 1627257599999,
+              "open": 34261.51,
+              "high": 35398.0,
+              "low": 33851.12,
+              "close": 35381.02
+            },
+            {
+              "date": "2021-07-26",
+              "close_time": 1627343999999,
+              "open": 35381.02,
+              "high": 40550.0,
+              "low": 35205.78,
+              "close": 37237.6
+            },
+            {
+              "date": "2021-07-27",
+              "close_time": 1627430399999,
+              "open": 37241.33,
+              "high": 39542.61,
+              "low": 36383.0,
+              "close": 39457.87
+            },
+            {
+              "date": "2021-07-28",
+              "close_time": 1627516799999,
+              "open": 39456.61,
+              "high": 40900.0,
+              "low": 38772.0,
+              "close": 40019.56
+            },
+            {
+              "date": "2021-07-29",
+              "close_time": 1627603199999,
+              "open": 40019.57,
+              "high": 40640.0,
+              "low": 39200.0,
+              "close": 40016.48
+            },
+            {
+              "date": "2021-07-30",
+              "close_time": 1627689599999,
+              "open": 40018.49,
+              "high": 42316.71,
+              "low": 38313.23,
+              "close": 42206.37
+            },
+            {
+              "date": "2021-07-31",
+              "close_time": 1627775999999,
+              "open": 42206.36,
+              "high": 42448.0,
+              "low": 41000.15,
+              "close": 41461.83
+            },
+            {
+              "date": "2021-08-01",
+              "close_time": 1627862399999,
+              "open": 41461.84,
+              "high": 42599.0,
+              "low": 39422.01,
+              "close": 39845.44
+            },
+            {
+              "date": "2021-08-02",
+              "close_time": 1627948799999,
+              "open": 39850.27,
+              "high": 40480.01,
+              "low": 38690.0,
+              "close": 39147.82
+            },
+            {
+              "date": "2021-08-03",
+              "close_time": 1628035199999,
+              "open": 39146.86,
+              "high": 39780.0,
+              "low": 37642.03,
+              "close": 38207.05
+            },
+            {
+              "date": "2021-08-04",
+              "close_time": 1628121599999,
+              "open": 38207.04,
+              "high": 39969.66,
+              "low": 37508.56,
+              "close": 39723.18
+            },
+            {
+              "date": "2021-08-05",
+              "close_time": 1628207999999,
+              "open": 39723.17,
+              "high": 41350.0,
+              "low": 37332.7,
+              "close": 40862.46
+            },
+            {
+              "date": "2021-08-06",
+              "close_time": 1628294399999,
+              "open": 40862.46,
+              "high": 43392.43,
+              "low": 39853.86,
+              "close": 42836.87
+            },
+            {
+              "date": "2021-08-07",
+              "close_time": 1628380799999,
+              "open": 42836.87,
+              "high": 44700.0,
+              "low": 42446.41,
+              "close": 44572.54
+            },
+            {
+              "date": "2021-08-08",
+              "close_time": 1628467199999,
+              "open": 44572.54,
+              "high": 45310.0,
+              "low": 43261.0,
+              "close": 43794.37
+            },
+            {
+              "date": "2021-08-09",
+              "close_time": 1628553599999,
+              "open": 43794.36,
+              "high": 46454.15,
+              "low": 42779.0,
+              "close": 46253.4
+            },
+            {
+              "date": "2021-08-10",
+              "close_time": 1628639999999,
+              "open": 46248.87,
+              "high": 46700.0,
+              "low": 44589.46,
+              "close": 45584.99
+            },
+            {
+              "date": "2021-08-11",
+              "close_time": 1628726399999,
+              "open": 45585.0,
+              "high": 46743.47,
+              "low": 45341.14,
+              "close": 45511.0
+            },
+            {
+              "date": "2021-08-12",
+              "close_time": 1628812799999,
+              "open": 45510.67,
+              "high": 46218.12,
+              "low": 43770.0,
+              "close": 44399.0
+            },
+            {
+              "date": "2021-08-13",
+              "close_time": 1628899199999,
+              "open": 44400.06,
+              "high": 47886.0,
+              "low": 44217.39,
+              "close": 47800.0
+            }
+          ],
+          "first_contact": null,
+          "first_closing_rejection": null,
+          "first_wick_breach": null,
+          "first_close_breach": null,
+          "contact_bar_closes_before_or_at_breach": [],
+          "status": "observed_without_close_breach",
+          "strategy_pnl": null,
+          "fill_known": false,
+          "first_full_gap_crossing": null
+        }
+      }
+    },
+    {
+      "source_window_sha256": "5860446413d27c8678d93b80ce791940ad4e06b76a512b6e1230f6b4ab19b74f",
+      "case": {
+        "features": {
+          "method": "hoshi-v2-orderblock-formation-audit-1",
+          "direction": "short",
+          "kind": "supply",
+          "origin": {
+            "date": "2022-09-04",
+            "close_time": 1662335999999,
+            "open": 19832.45,
+            "high": 20029.23,
+            "low": 19583.1,
+            "close": 20000.3
+          },
+          "displacement": {
+            "date": "2022-09-06",
+            "close_time": 1662508799999,
+            "open": 19795.34,
+            "high": 20180.0,
+            "low": 18649.51,
+            "close": 18790.61
+          },
+          "confirmation": {
+            "date": "2022-09-07",
+            "close_time": 1662595199999,
+            "open": 18790.61,
+            "high": 19464.06,
+            "low": 18510.77,
+            "close": 19292.84
+          },
+          "known_at": 1662595199999,
+          "zone_low": 19583.1,
+          "zone_high": 20029.23,
+          "gap_low": 19464.06,
+          "gap_high": 19633.83,
+          "preceding_20_body_mean": 424.94249999999994,
+          "directional_body": 1004.7299999999996,
+          "body_multiple": 2.3643904763585653,
+          "five_bar_break_reference": 19565.66,
+          "orders_enabled": false,
+          "institutional_intent_known": false,
+          "win_probability": null
+        },
+        "outcome_status": "observed",
+        "outcome": {
+          "horizon_bars": 20,
+          "available_at": 1664323199999,
+          "path": [
+            {
+              "date": "2022-09-08",
+              "close_time": 1662681599999,
+              "open": 19292.85,
+              "high": 19458.25,
+              "low": 19012.0,
+              "close": 19319.77
+            },
+            {
+              "date": "2022-09-09",
+              "close_time": 1662767999999,
+              "open": 19320.54,
+              "high": 21597.22,
+              "low": 19291.75,
+              "close": 21360.11
+            },
+            {
+              "date": "2022-09-10",
+              "close_time": 1662854399999,
+              "open": 21361.62,
+              "high": 21810.8,
+              "low": 21111.13,
+              "close": 21648.34
+            },
+            {
+              "date": "2022-09-11",
+              "close_time": 1662940799999,
+              "open": 21647.21,
+              "high": 21860.0,
+              "low": 21350.0,
+              "close": 21826.87
+            },
+            {
+              "date": "2022-09-12",
+              "close_time": 1663027199999,
+              "open": 21826.87,
+              "high": 22488.0,
+              "low": 21538.51,
+              "close": 22395.74
+            },
+            {
+              "date": "2022-09-13",
+              "close_time": 1663113599999,
+              "open": 22395.44,
+              "high": 22799.0,
+              "low": 19860.0,
+              "close": 20173.57
+            },
+            {
+              "date": "2022-09-14",
+              "close_time": 1663199999999,
+              "open": 20173.62,
+              "high": 20541.48,
+              "low": 19617.62,
+              "close": 20226.71
+            },
+            {
+              "date": "2022-09-15",
+              "close_time": 1663286399999,
+              "open": 20227.17,
+              "high": 20330.24,
+              "low": 19497.0,
+              "close": 19701.88
+            },
+            {
+              "date": "2022-09-16",
+              "close_time": 1663372799999,
+              "open": 19701.88,
+              "high": 19890.0,
+              "low": 19320.01,
+              "close": 19803.3
+            },
+            {
+              "date": "2022-09-17",
+              "close_time": 1663459199999,
+              "open": 19803.3,
+              "high": 20189.0,
+              "low": 19748.08,
+              "close": 20113.62
+            },
+            {
+              "date": "2022-09-18",
+              "close_time": 1663545599999,
+              "open": 20112.61,
+              "high": 20117.26,
+              "low": 19335.62,
+              "close": 19416.18
+            },
+            {
+              "date": "2022-09-19",
+              "close_time": 1663631999999,
+              "open": 19417.45,
+              "high": 19686.2,
+              "low": 18232.56,
+              "close": 19537.02
+            },
+            {
+              "date": "2022-09-20",
+              "close_time": 1663718399999,
+              "open": 19537.02,
+              "high": 19634.62,
+              "low": 18711.87,
+              "close": 18875.0
+            },
+            {
+              "date": "2022-09-21",
+              "close_time": 1663804799999,
+              "open": 18874.31,
+              "high": 19956.0,
+              "low": 18125.98,
+              "close": 18461.36
+            },
+            {
+              "date": "2022-09-22",
+              "close_time": 1663891199999,
+              "open": 18461.36,
+              "high": 19550.17,
+              "low": 18356.39,
+              "close": 19401.63
+            },
+            {
+              "date": "2022-09-23",
+              "close_time": 1663977599999,
+              "open": 19401.63,
+              "high": 19500.0,
+              "low": 18531.42,
+              "close": 19289.91
+            },
+            {
+              "date": "2022-09-24",
+              "close_time": 1664063999999,
+              "open": 19288.57,
+              "high": 19316.14,
+              "low": 18805.34,
+              "close": 18920.5
+            },
+            {
+              "date": "2022-09-25",
+              "close_time": 1664150399999,
+              "open": 18921.99,
+              "high": 19180.21,
+              "low": 18629.2,
+              "close": 18807.38
+            },
+            {
+              "date": "2022-09-26",
+              "close_time": 1664236799999,
+              "open": 18809.13,
+              "high": 19318.96,
+              "low": 18680.72,
+              "close": 19227.82
+            },
+            {
+              "date": "2022-09-27",
+              "close_time": 1664323199999,
+              "open": 19226.68,
+              "high": 20385.86,
+              "low": 18816.32,
+              "close": 19079.13
+            }
+          ],
+          "first_contact": {
+            "date": "2022-09-09",
+            "close_time": 1662767999999,
+            "open": 19320.54,
+            "high": 21597.22,
+            "low": 19291.75,
+            "close": 21360.11
+          },
+          "first_closing_rejection": null,
+          "first_wick_breach": {
+            "date": "2022-09-09",
+            "close_time": 1662767999999,
+            "open": 19320.54,
+            "high": 21597.22,
+            "low": 19291.75,
+            "close": 21360.11
+          },
+          "first_close_breach": {
+            "date": "2022-09-09",
+            "close_time": 1662767999999,
+            "open": 19320.54,
+            "high": 21597.22,
+            "low": 19291.75,
+            "close": 21360.11
+          },
+          "contact_bar_closes_before_or_at_breach": [
+            1662767999999
+          ],
+          "status": "invalidated",
+          "strategy_pnl": null,
+          "fill_known": false,
+          "first_full_gap_crossing": {
+            "date": "2022-09-09",
+            "close_time": 1662767999999,
+            "open": 19320.54,
+            "high": 21597.22,
+            "low": 19291.75,
+            "close": 21360.11
+          }
+        }
+      }
+    }
   ]
 }

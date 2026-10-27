@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from hashlib import sha256
 import json
+import math
 
 from v3_structure_evidence import check_window, pivots, utc_day
 
@@ -82,6 +83,47 @@ def pivot_zone_case(bars, origin_date, kind):
     return {"features": features, **observe_zone(bars, features)}
 
 
+def orderblock_features(bars, confirmation_date, direction):
+    """Audit V2's formation arithmetic, not all its active-pattern/API gates.
+
+    Frame-agnostic original convention; daily educational captures are not
+    runtime 15m candidates. Availability is C's close, not origin or B's close.
+    """
+    assert direction in ("long", "short")
+    i = next(i for i, b in enumerate(bars) if utc_day(b["time"]) == confirmation_date)
+    assert i >= 21, "twenty bars strictly before displacement required"
+    a, b, c = bars[i-2:i+1]
+    bull = direction == "long"
+    low, high = (a["high"], c["low"]) if bull else (c["high"], a["low"])
+    baseline = math.fsum(abs(x["close"]-x["open"]) for x in bars[i-21:i-1])/20
+    body = b["close"]-b["open"] if bull else b["open"]-b["close"]
+    preceding = bars[i-6:i-1]
+    reference = max(x["high"] for x in preceding) if bull else min(x["low"] for x in preceding)
+    broke = b["close"] > reference if bull else b["close"] < reference
+    opposite = [x for x in preceding if (x["close"] < x["open"] if bull else x["close"] > x["open"])]
+    assert low < high and baseline > 0 and body >= 1.5*baseline and broke and opposite, "formation not qualified"
+    origin = opposite[-1]
+    return {"method": "hoshi-v2-orderblock-formation-audit-1", "direction": direction,
+            "kind": "demand" if bull else "supply", "origin": bar_record(origin),
+            "displacement": bar_record(b), "confirmation": bar_record(c),
+            "known_at": c["close_time"], "zone_low": origin["low"], "zone_high": origin["high"],
+            "gap_low": low, "gap_high": high, "preceding_20_body_mean": baseline,
+            "directional_body": body, "body_multiple": body/baseline,
+            "five_bar_break_reference": reference, "orders_enabled": False,
+            "institutional_intent_known": False, "win_probability": None}
+
+
+def orderblock_case(bars, confirmation_date, direction):
+    f = orderblock_features(bars, confirmation_date, direction)
+    observed = observe_zone(bars, f)
+    if observed["outcome"] is not None:
+        path = observed["outcome"]["path"]
+        fully_crossed = next((b for b in path if (b["low"] <= f["gap_low"] if direction == "long"
+                                                else b["high"] >= f["gap_high"])), None)
+        observed["outcome"]["first_full_gap_crossing"] = fully_crossed
+    return {"features": f, **observed}
+
+
 def check_receipt(payload, root):
     assert payload["schema_version"] == "hoshi-v3-zone-evidence-1"
     assert payload["source_receipt"] == SOURCE
@@ -94,4 +136,8 @@ def check_receipt(payload, root):
         f = entry["case"]["features"]
         assert pivot_zone_case(windows[entry["source_window_sha256"]],
                                f["origin"]["date"], f["kind"]) == entry["case"]
+    for entry in payload.get("orderblock_cases", []):
+        f = entry["case"]["features"]
+        assert orderblock_case(windows[entry["source_window_sha256"]],
+                               f["confirmation"]["date"], f["direction"]) == entry["case"]
     return windows

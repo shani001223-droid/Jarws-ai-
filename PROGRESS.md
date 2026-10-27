@@ -9,8 +9,8 @@ entire branch was already deployed. Production V2 remains a separate release.
 
 ## Current measured progress
 
-**Day 1: completed 14 of 49 planned knowledge chapters — 28.57%; 35 chapters,
-71.43% of the declared curriculum, remain.**
+**Day 1: completed 15 of 49 planned knowledge chapters — 30.61%; 34 chapters,
+69.39% of the declared curriculum, remain.**
 
 The denominator is the versioned, expandable file manifest in
 `knowledge_base/manifest.json`. Scope revision 2 explicitly expands the initial
@@ -38,6 +38,7 @@ topics require an explicit manifest/progress revision, never silent omission.
 | `02_CANDLESTICK_AND_CHART_PATTERNS/harmonic_and_geometric_patterns.md` | Source-checked; attributed framework distinctions, original leg algebra and three measured negative cases; no complete recognizer or probability claim |
 | `02_CANDLESTICK_AND_CHART_PATTERNS/pattern_testing_and_failures.md` | Source-checked; exhaustive scans within three bounded windows, adverse/overlapping/incomplete outcomes and hypothetical cost sensitivity; not independent holdout or account returns |
 | `03_SUPPLY_DEMAND_ORDERBLOCKS/supply_demand_zones.md` | Source-checked; causal pivot-wick geometry and three actual contact/no-contact/invalidation cases; no hidden-order inference or fill claim |
+| `03_SUPPLY_DEMAND_ORDERBLOCKS/orderblock_identification_and_validation.md` | Source-checked; audited existing V2 formation arithmetic on actual daily examples, distinct gap/block invalidation and no-return outcomes; no full runtime or canonical creator-method certification |
 | Remaining curriculum documents | Pending; no empty placeholder chapters counted as complete |
 | Brain loader and runtime knowledge bundle | Pending — new source chapters are not yet consumed by Hoshi |
 | 40/20/20/20 history/liquidity/structure/global-flow engine | Pending — weights will mean evidence coverage, not an invented win probability |
@@ -93,6 +94,9 @@ topics require an explicit manifest/progress revision, never silent omission.
 
 
 - **28 October, Day 1:** completed `supply_demand_zones.md` (2228 substantive words). Added an original causal pivot-wick protocol and hash-linked zone receipt with three genuine BTCUSDT examples: 2020 delayed activation then rejection, 2021 no eligible return, and 2022 first contact also invalidating demand. Closing and wick breaches, confirmation lag and twenty-bar horizons stay separate; no fills, institutional intent or profitable strategy is inferred. Added three zone evidence regressions and CI coverage for the new offline tool; all 27 evidence tests passed locally. Prior [27ce58e3](https://github.com/shani001223-droid/Jarws-ai-/commit/27ce58e34ecfa7ae0618aeda95b2fdeb83756a1b) passed [actual integrity/evidence CI 40604738836](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40604738836). Current curriculum: 14/49 (28.57%); next is `orderblock_identification_and_validation.md`. Runtime and release remain pending.
+
+
+- **28 October, Day 1:** completed `orderblock_identification_and_validation.md` (2148 substantive words). Audited the existing V2 origin/body/break/gap formation convention without changing runtime. Three real daily BTCUSDT cases distinguish a surviving closing boundary with a lower wick and filled gap, an absent return, and a bearish first-contact failure. Anonymous order-level and actual iceberg evidence are distinguished from OHLC labels; original licensed creator-course parity remains an explicit gap. All 30 offline evidence regressions passed locally, including formation-clock and fabricated-origin checks. Prior [bb350300](https://github.com/shani001223-droid/Jarws-ai-/commit/bb35030063e62e0c34d7e867e2286249557613e1) passed [actual curriculum/evidence CI 40605147178](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40605147178). Current curriculum: 15/49 (30.61%); next is `mitigation_breakers_and_retests.md`. Runtime/release gates remain pending.
 
 ## Completion and release rules
 

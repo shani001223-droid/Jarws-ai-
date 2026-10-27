@@ -260,3 +260,8 @@ Added `rare_candlestick_and_gap_variants.md` with 2812 substantive words and che
 ## V3 supply/demand zone receipt — 28 October 2026
 
 Added `supply_demand_zones.md` with 2228 substantive words, checked primary references and three genuine dated BTCUSDT pivot-wick cases. New offline receipt stores delayed feature availability, fixed twenty-bar outcomes, a noncontact case and first-contact invalidation; fills, strategy PnL and institutional intent remain unknown. Three added causal/lifecycle/corruption regressions bring the local passing evidence suite to 27. Curriculum: 14/49 (28.57%); runtime and release gates pending. Prior `27ce58e34ecfa7ae0618aeda95b2fdeb83756a1b` passed actual CI 40604738836. No V2 runtime, main, backup, identity/Stop/privacy/voice or unrelated roadmap changes.
+
+
+## V3 order-block formation audit — 28 October 2026
+
+Added `orderblock_identification_and_validation.md` with 2148 substantive words and three actual dated BTCUSDT formation/lifecycle cases. Existing V2 arithmetic is audited offline, without claiming daily formations satisfy fifteen-minute runtime gates. Source-checked actual iceberg/MBO evidence differs from candle labels; canonical creator-course parity remains unverified. Gap crossing, wrong-side wick, closing invalidation and absent contact are separately retained. All 30 evidence regressions passed locally. Curriculum: 15/49 (30.61%); runtime/release pending. Prior `bb35030063e62e0c34d7e867e2286249557613e1` passed actual CI 40605147178. No main, backup, V2 control or unrelated project changes.

@@ -47,6 +47,35 @@ class V3ZoneTests(unittest.TestCase):
             with self.assertRaises(AssertionError):
                 z.check_receipt(p, ROOT)
 
+    def test_orderblock_origin_is_unavailable_until_c_closes(self):
+        p = receipt(); windows = z.check_receipt(p, ROOT)
+        for entry in p["orderblock_cases"]:
+            f = entry["case"]["features"]; bars = windows[entry["source_window_sha256"]]
+            prefix = [b for b in bars if b["close_time"] <= f["known_at"]]
+            with self.assertRaises(StopIteration):
+                z.orderblock_features(prefix[:-1], f["confirmation"]["date"], f["direction"])
+            self.assertEqual(z.orderblock_features(prefix, f["confirmation"]["date"], f["direction"]), f)
+            self.assertIsNone(z.orderblock_case(prefix, f["confirmation"]["date"], f["direction"])["outcome"])
+            self.assertLess(f["origin"]["close_time"], f["displacement"]["close_time"])
+            self.assertGreaterEqual(f["body_multiple"], 1.5)
+
+    def test_gap_crossing_wick_and_close_invalidation_are_different(self):
+        p = receipt(); z.check_receipt(p, ROOT)
+        cases = [x["case"] for x in p["orderblock_cases"]]
+        first = cases[0]["outcome"]
+        self.assertEqual(first["first_full_gap_crossing"]["date"], "2020-05-10")
+        self.assertEqual(first["first_wick_breach"]["date"], "2020-05-10")
+        self.assertIsNone(first["first_close_breach"])
+        self.assertIsNone(cases[1]["outcome"]["first_contact"])
+        self.assertEqual(cases[2]["outcome"]["first_close_breach"]["date"], "2022-09-09")
+        self.assertTrue(all(c["features"]["win_probability"] is None for c in cases))
+
+    def test_orderblock_receipt_rejects_fabricated_origin(self):
+        p = receipt()
+        p["orderblock_cases"][0]["case"]["features"]["origin"]["date"] = "2020-05-06"
+        with self.assertRaises(AssertionError):
+            z.check_receipt(p, ROOT)
+
 
 if __name__ == "__main__":
     unittest.main()

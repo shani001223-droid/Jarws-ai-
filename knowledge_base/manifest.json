@@ -108,7 +108,10 @@
     },
     {
       "path": "knowledge_base/03_SUPPLY_DEMAND_ORDERBLOCKS/orderblock_identification_and_validation.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2148,
+      "sha256": "c65066e8ffed4bb21482a9823d01761adcfd7824dfcaec8644e52aaec1b998c3"
     },
     {
       "path": "knowledge_base/03_SUPPLY_DEMAND_ORDERBLOCKS/mitigation_breakers_and_retests.md",
@@ -275,7 +278,7 @@
     {
       "path": "knowledge_base/03_SUPPLY_DEMAND_ORDERBLOCKS/zone_observations_20261028.json",
       "kind": "zone_cases",
-      "sha256": "7792ffc995e8783c59288c3bc92dd75c996ecfcbccd4861b1f73b73bed431598"
+      "sha256": "867441176635c9c8ff132f4d63ccc225825d181e12ab21ce7ddaa3ac6301cd0a"
     }
   ],
   "scope_history": [

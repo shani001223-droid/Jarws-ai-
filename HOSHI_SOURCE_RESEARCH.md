@@ -19,6 +19,6 @@
 
 ## Verified source/test checkpoint — 27 Oct 2026
 
-- Integrated backend Python, frontend Node tests, JavaScript syntax and real Playwright browser smoke passed on commit `7eec2c93e21d`: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40434345168 . This includes malicious article-link rejection, freshness and timestamp checks, safe DOM rendering and source command interception without sending an AI prompt.
-- Docker backend image build, Uvicorn import and health smoke passed for the backend source/API at commit `d90ff7e94850`: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40434119216 .
+- Integrated backend Python, frontend Node tests, JavaScript syntax and real Playwright browser smoke passed on commit `e334ed3d43e7`: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40434572256 . This includes malicious article-link rejection, freshness and timestamp checks, safe DOM rendering and source command interception without sending an AI prompt.
+- Docker backend image build, Uvicorn import and health smoke passed for the backend source/API at commit `fa5f1add78ef`: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40434553204 .
 - Not a live feed connectivity check or Realme Note 50 acceptance. Keep production deployment and general browsing claims pending.

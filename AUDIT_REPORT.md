@@ -99,3 +99,9 @@ Continue on the existing development branch, preserve configured Gemini/Groq/fre
 - Local Playwright attempt was blocked by a missing Chromium binary; browser download failed with a truncated archive. Do not report that local browser test as passed. No local Docker daemon is installed.
 - **Actual GitHub CI for Knowledge Brain commit [56dd76084f00](https://github.com/shani001223-droid/Jarws-ai-/commit/56dd76084f00a0cdc72867474c539948440ccfd0) passed:** [Python/Node/Playwright run 40505584726](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40505584726) and [Docker run 40505584700](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40505584700). This verifies that commit, not the later V2 integration until its own checks finish.
 - Integration push: `HOSHI UPGRADE: Added Confluence V2 and Backend Integration - Day 3`. Final-head CI, live market availability, out-of-sample results, Render release and phone QA remain separate.
+
+## Clean-runner dependency correction
+
+- Integration commit [d462610d6aa0](https://github.com/shani001223-droid/Jarws-ai-/commit/d462610d6aa098c05f7b29ff83d74fbad6722334) passed the **actual Docker V2 HTTP / knowledge / DST smoke**, [run 40506228434](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40506228434).
+- Its full CI [run 40506228456](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40506228456) failed because the newly added FastAPI TestClient tests require `httpx2` on a clean Starlette runner. The local environment had an older `httpx` fallback, masking the undeclared test dependency. This failed run is not counted as passed.
+- Added root `requirements-dev.txt` (existing runtime requirements + explicit `httpx2`) and made CI install it. The production Docker runtime does not acquire a test-only HTTP client. Re-run final CI after this fix; do not skip API tests.

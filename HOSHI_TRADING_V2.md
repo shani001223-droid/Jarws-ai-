@@ -21,6 +21,7 @@ paid model, exchange account or real order capability is introduced.
 After editing canonical Markdown or the final prompt, run:
 
 ```bash
+python -m pip install -r requirements-dev.txt
 python scripts/build_trading_knowledge.py
 python scripts/build_trading_knowledge.py --check
 python -m unittest discover -s tests -p 'test_*.py'

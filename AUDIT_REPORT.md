@@ -63,3 +63,5 @@ Continue on the existing development branch, preserve configured Gemini/Groq/fre
 - Day 1: **Trading History** completed as a repository curriculum module. Previous push receipt: [ec1c6992c834](https://github.com/shani001223-droid/Jarws-ai-/commit/ec1c6992c834260042061da59255f6c5cdf11d65). Linked chart exercises are conditional, not verified current setups.
 
 - Day 1: **Market Structure** completed as a repository curriculum module. Previous push receipt: [f53a8e0e51d9](https://github.com/shani001223-droid/Jarws-ai-/commit/f53a8e0e51d9010ca5b81f2747b7d87578b6f816). Linked chart exercises are conditional, not verified current setups.
+
+- Day 1: **Candlestick Psychology** completed as a repository curriculum module. Previous push receipt: [d63c44d52402](https://github.com/shani001223-droid/Jarws-ai-/commit/d63c44d524022a55696f61116efdc7de69ed8d74). Linked chart exercises are conditional, not verified current setups.

@@ -164,7 +164,7 @@ class FrontendContractTests(unittest.TestCase):
 
     def test_online_urdu_starts_first_clip_before_remaining_clips(self):
         self.assertIn("function splitUrduSpeech(text)", HTML)
-        self.assertIn("const files=segments.map(part=>fetch(", HTML)
+        self.assertIn("const files=window.HoshiSpeechPipeline.queue(segments", HTML)
         self.assertIn("void playPart(0)", HTML)
         self.assertIn("if(index+1<segments.length)", HTML)
         self.assertIn("voiceTimes.audio===null", HTML)
@@ -189,7 +189,7 @@ class FrontendContractTests(unittest.TestCase):
 
     def test_voice_speaking_state_and_network_timeouts_are_wired(self):
         self.assertIn("window.hoshiSetSpeaking=setSpeaking", HTML)
-        self.assertIn("u.onstart=()=>{if(speechId===speechSequence)setSpeaking(true)}", HTML)
+        self.assertIn("u.onstart=()=>{if(speechId===speechSequence){setSpeaking(true);", HTML)
         self.assertIn("u.onerror=e=>", HTML)
         self.assertIn("AbortController", HTML)
         self.assertIn("32000", HTML)
@@ -211,4 +211,5 @@ class FrontendContractTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
 

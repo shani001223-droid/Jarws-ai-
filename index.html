@@ -102,10 +102,26 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 #adStudioResult button{width:100%;min-height:43px;margin:5px 0;background:#9b783e;color:#fff8eb;border:1px solid #d3a95d;border-radius:11px;font-weight:650}
 #adStudioResult .ad-caption{white-space:pre-wrap;font-size:12px}
 </style>
+<link rel="stylesheet" href="./hoshi-core.css">
 <link rel="stylesheet" href="./hoshi-focus.css">
+<script type="module" src="./hoshi-core-ui.mjs"></script>
 </head>
 <body>
-<main id="nightroom" class="nightroom focus-mode" aria-label="Hoshi personal assistant"><header class="night-head"><div class="night-brand">Hoshi ✧ 星<small>Your AI Assistant ♡</small></div><div id="nightConnection"></div></header><div class="focus-core" role="img" aria-label="Animated blue Hoshi AI energy core"><span class="core-halo"></span><span class="core-ring"></span><span class="core-ring ring-two"></span><span class="core-center"></span><span class="core-particles"></span></div><div class="night-conversation" id="nightConversation"><div id="nightMood" class="night-mood" aria-live="polite">✧ Caring</div><button type="button" id="nightAudioRetry" hidden>▶ Suno Hoshi</button><div id="voiceTiming" aria-live="polite">Voice timings appear after a command</div></div><div class="night-mic" id="nightMic"></div><button type="button" id="focusStop" class="focus-stop" aria-label="Stop Hoshi speaking or answering">■ Stop</button><nav class="night-tabs" aria-label="Main navigation"><button type="button" data-tab="chat" aria-selected="true"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M3 10L12 3l9 7v11h-6v-7H9v7H3z"/></svg></span>Chat</button><button type="button" data-tab="trading" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M5 3v18M12 3v18M19 3v18M3 7h4v7H3zM10 5h4v5h-4zM17 11h4v6h-4z"/></svg></span>Trading</button><button type="button" data-tab="influencer" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h4l2-3h6l2 3h4v14H3z M16 13a4 4 0 1 1-8 0a4 4 0 0 1 8 0"/></svg></span>AI Influencer</button><button type="button" data-tab="outfit" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M8 3l4 2l4-2l6 5l-4 4l-2-2v11H8V10l-2 2l-4-4z"/></svg></span>Outfit</button><button type="button" data-tab="settings" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8a4 4 0 0 0 0-8 M9 3h6l1 3l3 1l2 5l-2 5l-3 1l-1 3H9l-1-3l-3-1l-2-5l2-5l3-1z"/></svg></span>Settings</button></nav><section class="night-sheet" id="nightSheet" hidden aria-label="Assistant panel"><div class="sheet-head"><h2 id="sheetTitle">Chat</h2><button type="button" class="sheet-close" aria-label="Close panel">×</button></div><div data-panel="chat"><section class="hoshi-tools"><p class="small">App shortcuts do not need Accessibility. Screen controls need Android permission.</p><div class="hoshi-tool-grid">
+<main id="nightroom" class="nightroom focus-mode" aria-label="Hoshi personal assistant"><header class="night-head"><div class="night-brand">Hoshi ✧ 星<small>Your AI Assistant ♡</small></div><div id="nightConnection"></div></header><div class="night-conversation" id="nightConversation"><div id="nightMood" class="night-mood" aria-live="polite">✧ Caring</div><button type="button" id="nightAudioRetry" hidden>▶ Suno Hoshi</button><div id="voiceTiming" aria-live="polite">Voice timings appear after a command</div></div>        <div id="hoshiEnergy" class="core focus-core" data-state="idle" role="img" aria-label="Animated holographic AI energy core">
+          <div class="core-glow"></div>
+          <div class="orbit orbit-outer"></div><div class="orbit orbit-middle"></div><div class="orbit orbit-inner"></div>
+          <svg class="core-grid" viewBox="0 0 400 400" aria-hidden="true">
+            <circle cx="200" cy="200" r="183" stroke-dasharray="1 10"/><circle cx="200" cy="200" r="165" stroke-dasharray="50 150 7 20 45 260"/>
+            <path d="M200 5v15m0 360v15M5 200h15m360 0h15M61 61l10 10m258 258 10 10M61 339l10-10M329 71l10-10"/>
+            <ellipse cx="200" cy="200" rx="189" ry="74" transform="rotate(-28 200 200)"/>
+          </svg>
+          <canvas id="core-canvas" class="core-canvas" aria-hidden="true"></canvas>
+          <div class="reactor-heart" aria-hidden="true"></div>
+          <div class="core-readout" aria-hidden="true"><strong>HOSHI</strong><span>VOICE CORE</span></div>
+          <div class="spark spark-one"></div><div class="spark spark-two"></div><div class="spark spark-three"></div>
+          <span class="core-mark" aria-hidden="true">◇</span>
+        </div>
+<div class="night-mic" id="nightMic"></div><button type="button" id="focusStop" class="focus-stop" aria-label="Stop Hoshi speaking or answering">■ Stop</button><nav class="night-tabs" aria-label="Main navigation"><button type="button" data-tab="chat" aria-selected="true"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M3 10L12 3l9 7v11h-6v-7H9v7H3z"/></svg></span>Chat</button><button type="button" data-tab="trading" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M5 3v18M12 3v18M19 3v18M3 7h4v7H3zM10 5h4v5h-4zM17 11h4v6h-4z"/></svg></span>Trading</button><button type="button" data-tab="influencer" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h4l2-3h6l2 3h4v14H3z M16 13a4 4 0 1 1-8 0a4 4 0 0 1 8 0"/></svg></span>AI Influencer</button><button type="button" data-tab="outfit" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M8 3l4 2l4-2l6 5l-4 4l-2-2v11H8V10l-2 2l-4-4z"/></svg></span>Outfit</button><button type="button" data-tab="settings" aria-selected="false"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8a4 4 0 0 0 0-8 M9 3h6l1 3l3 1l2 5l-2 5l-3 1l-1 3H9l-1-3l-3-1l-2-5l2-5l3-1z"/></svg></span>Settings</button></nav><section class="night-sheet" id="nightSheet" hidden aria-label="Assistant panel"><div class="sheet-head"><h2 id="sheetTitle">Chat</h2><button type="button" class="sheet-close" aria-label="Close panel">×</button></div><div data-panel="chat"><section class="hoshi-tools"><p class="small">Actions · allowed phone controls need Android Accessibility permission.</p><div class="hoshi-tool-grid">
 <button type="button" data-hoshi-command="open YouTube">▶ YouTube</button>
 <button type="button" data-hoshi-command="open WhatsApp">◉ WhatsApp</button>
 <button type="button" data-hoshi-command="open Telegram">➤ Telegram</button>
@@ -140,7 +156,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 </section>
 <div class="trade-bottom-grid"><section id="tradeExecution" class="trade-box"><h3>▣ Orders &amp; positions</h3><span class="trade-status-chip">Account not connected</span><p class="trade-muted">No real or demo orders are placed. Positions, profit, leverage and balances are unavailable.</p><button type="button" disabled>Order placement unavailable</button></section><section id="tradeWatchlist" class="trade-box"><div class="trade-card-head"><h3>☆ Watchlist</h3><button type="button" id="tradeWatchToggle">+ Add pair</button></div><div id="tradeWatchRows"></div><p class="trade-muted">Saved on this device. Select a pair to fetch its current spot data.</p></section></div>
 <footer class="trade-footer"><p id="tradeStatus" role="status" aria-live="polite">Open this tab to fetch public market information.</p><span>Keyless public data · Refresh for latest values · provider/network availability applies</span></footer>
-</div></div></div><div data-panel="influencer" hidden><p>AI Influencer tools are not connected yet.</p></div><div data-panel="outfit" hidden><p class="small">Choose a look. It applies to the main screen and is saved on this device.</p><div id="outfitGrid" class="outfit-grid"></div><p id="outfitFeedback" class="small" role="status"></p></div><div data-panel="settings" hidden><button type="button" id="focusModeToggle" aria-pressed="true">Minimal home screen: ON</button><p class="small">Black animated core by default. Switch OFF to reveal Chat, Trading, Outfit and other existing tabs. No tools are deleted.</p><button type="button" id="nativeRemindersBtn" hidden>View / cancel reminders</button></div></section></main>
+</div></div></div><div data-panel="influencer" hidden><p>AI Influencer tools are not connected yet.</p></div><div data-panel="outfit" hidden><p class="small">Choose a look. It applies to the main screen and is saved on this device.</p><div id="outfitGrid" class="outfit-grid"></div><p id="outfitFeedback" class="small" role="status"></p></div><div data-panel="settings" hidden><button type="button" id="focusModeToggle" aria-pressed="true">Minimal home screen: ON</button><p class="small">Black animated core by default. Switch OFF to reveal Chat, Trading, Outfit and other existing tabs. No tools are deleted.</p><p><a href="./profile-memory.html">Import / manage private memory</a></p><details id="clientDiagnostics" class="section"><summary>Safe error report</summary><p class="small">Sirf request IDs aur error counts. Chat, keys aur error messages record nahi hote. Report isi page ki memory mein hai; automatically upload nahi hoti.</p><pre id="clientDiagnosticReport" style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:10px;max-height:220px;overflow:auto"></pre><div class="hoshi-tool-grid"><button type="button" id="copyDiagnosticReport">Copy safe report</button><button type="button" id="clearDiagnosticReport">Clear report</button></div><p id="clientDiagnosticStatus" class="small" role="status"></p></details><button type="button" id="nativeRemindersBtn" hidden>View / cancel reminders</button></div></section></main>
 <div class="dashboard-shell">
 <aside class="sidebar" aria-label="HOSHI navigation">
 <div class="brand-mark">H<span>OSHI</span></div>
@@ -195,7 +211,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 <button type="button" id="fastVoiceToggle" aria-pressed="true">⚡ Fast phone voice: ON</button><p class="small">Fast mode uses installed Pakistani Urdu voice immediately when available; otherwise natural online Urdu voice. Turn off for natural online voice only.</p>
 <div class="voice-actions"><button type="button" class="primary" id="previewVoiceBtn">▶ Hear Hoshi</button><button type="button" id="stopSpeakingBtn">■ Stop speaking</button></div>
 <audio id="hoshiAudio" controls hidden preload="none" aria-label="Hoshi Urdu voice playback" style="width:100%;max-width:100%"></audio>
-<p class="small">Urdu uses the online Hoshi voice so the phone does not substitute a different speaker. Spoken replies are sent to Microsoft. Turn voice replies off to disable it. If automatic playback is blocked, tap Play above.</p>
+<p class="small">Fast mode uses an available Urdu device or browser voice. Online fallback sends spoken reply text to Microsoft. Turn voice replies off to disable speech. If automatic playback is blocked, tap Play above.</p>
 <details class="voice-fine-tune"><summary>Fine tune delivery</summary>
 <div class="voice-setting"><label for="pitchSlider">Softness / pitch</label><output id="pitchValue">1.04×</output><input id="pitchSlider" type="range" min="0.8" max="1.4" step="0.01" value="1.04" aria-label="Voice pitch"></div>
 <div class="voice-setting"><label for="rateSlider">Speaking speed</label><output id="rateValue">0.94×</output><input id="rateSlider" type="range" min="0.75" max="1.15" step="0.01" value="0.94" aria-label="Speaking speed"></div>
@@ -225,10 +241,13 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 </div><footer>Basic commands, time/date, Google and YouTube are available. Urdu/Roman Urdu and English commands supported where browser speech recognition permits.<br>AI keys may be configured while provider quota or permissions still prevent replies. Live AI access is checked when you send a message. Advanced phone control requires native Android permissions.</footer>
 </main>
 </div>
+<script src="./hoshi-diagnostics.js"></script>
 <script src="./assistant-commands.js"></script>
 <script src="./reminder-parser.js"></script>
 <script src="./memory-privacy.js"></script>
 <script src="./hoshi-memory-store.js"></script>
+<script src="./speech-pipeline.js"></script>
+<script src="./profile-store.js"></script>
 <script src="./hoshi-product-ads.js"></script>
 <script src="./hoshi-task-router.js"></script>
 <script src="./hoshi-trading-research.js"></script>
@@ -247,6 +266,11 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  $('nightAudioRetry').onclick=()=>{$('hoshiAudio').play().then(()=>{$('nightAudioRetry').hidden=true}).catch(()=>setStatus('AUDIO BLOCKED · CHECK MEDIA SETTINGS'))};
  chatPanel.append($('commandForm'),$('adStudioResult'),$('sourceResearchResult'),$('memoryPanel'));
  settingsPanel.append(document.querySelector('.controls'),document.querySelector('.bottom-workspace'));
+ function updateDiagnosticReport(){const d=window.HoshiDiagnostics;$('clientDiagnosticReport').textContent=d?JSON.stringify(d.snapshot(),null,2):'Diagnostics unavailable; reload to retry.'}
+ $('clientDiagnostics').addEventListener('toggle',()=>{if($('clientDiagnostics').open)updateDiagnosticReport()});
+ $('clearDiagnosticReport').onclick=()=>{if(window.HoshiDiagnostics)window.HoshiDiagnostics.clear();updateDiagnosticReport();$('clientDiagnosticStatus').textContent='Report clear ho gayi.'};
+ $('copyDiagnosticReport').onclick=async()=>{updateDiagnosticReport();const text=window.HoshiDiagnostics?JSON.stringify(window.HoshiDiagnostics.snapshot()):$('clientDiagnosticReport').textContent;try{const b=window.JarvisBridge;if(b&&typeof b.copyUserText==='function'&&b.copyUserText(text)){$('clientDiagnosticStatus').textContent='Safe report copy ho gayi.';return}if(!navigator.clipboard||typeof navigator.clipboard.writeText!=='function')throw new Error('Clipboard unavailable');await navigator.clipboard.writeText(text);$('clientDiagnosticStatus').textContent='Safe report copy ho gayi.'}catch(_){$('clientDiagnosticStatus').textContent='Copy available nahi. Upar wali report manually select kar sakte ho.'}};
+
  if(window.JarvisBridge&&typeof window.JarvisBridge.showReminders==='function'){$('nativeRemindersBtn').hidden=false;$('nativeRemindersBtn').onclick=()=>window.JarvisBridge.showReminders()}
  $('stopBtn').hidden=true;$('testBtn').hidden=true;
  $('focusStop').onclick=()=>interruptHoshi();
@@ -279,6 +303,8 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  for(const def of outfitDefinitions){const button=document.createElement('button');button.type='button';button.className='outfit-card';button.dataset.outfit=def.id;button.setAttribute('aria-pressed','false');button.setAttribute('aria-label','Wear '+def.name);const preview=document.createElement('img');preview.loading='lazy';preview.decoding='async';preview.src=def.asset;preview.alt='';preview.width=128;preview.height=192;button.append(preview);const label=document.createElement('span');label.textContent=def.name;button.append(label);button.onclick=()=>applyOutfit(def.id);$('outfitGrid').append(button)}
  let savedOutfit='original';try{savedOutfit=localStorage.getItem('hoshiOutfitV1')||'original'}catch(_){}if(!focusMode)applyOutfit(savedOutfit,false);
  const API_BASE='https://jarws-ai-2.onrender.com';
+ const tracedFetch=(...args)=>fetch(...args).then(response=>{if(window.HoshiDiagnostics)window.HoshiDiagnostics.noteResponse(response);return response},error=>{if(window.HoshiDiagnostics)window.HoshiDiagnostics.record(error&&error.name==='AbortError'?'request_cancelled':'request_failed');throw error});
+
  let cloudOnline=false, cloudRequestSequence=0, activeCloudController=null;
  let recognition=null, listening=false, wakeEnabled=false, awaitingCommand=false, voiceReplies=true, restartTimer=null, lastVoiceError="", commandLanguage="ur-PK", editingMemoryIndex=null;
  try{const savedLanguage=localStorage.getItem("hoshiLanguage");if(savedLanguage==="ur-PK"||savedLanguage==="en-US")commandLanguage=savedLanguage;voiceReplies=localStorage.getItem("hoshiVoiceReplies")!=="false";wakeEnabled=localStorage.getItem("hoshiWakeWord")==="true"}catch(e){}
@@ -286,7 +312,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  let tradeRequestId=0;
  async function tradeFetch(path){
   const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),18000);
-  try{const res=await fetch(API_BASE+path,{signal:controller.signal,cache:'no-store'});
+  try{const res=await tracedFetch(API_BASE+path,{signal:controller.signal,cache:'no-store'});
    if(!res.ok)throw new Error('Provider or network unavailable ('+res.status+')');
    return await res.json();
   }finally{clearTimeout(timeout)}
@@ -356,7 +382,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  let voiceListenStartedAt=0,voiceTimes={listen:null,ai:null,audio:null};
  const voiceClock=()=>performance.now();
  function displayVoiceTimes(){const val=n=>n===null?'—':(n/1000).toFixed(2)+'s';
-  $('voiceTiming').textContent='Mic '+val(voiceTimes.listen)+' · AI '+val(voiceTimes.ai)+' · Awaaz '+val(voiceTimes.audio);
+  $('voiceTiming').textContent='Mic '+val(voiceTimes.listen)+' · AI '+val(voiceTimes.ai)+' · Awaaz '+val(voiceTimes.audio)+' · AI + audio '+val(voiceTimes.ai===null||voiceTimes.audio===null?null:voiceTimes.ai+voiceTimes.audio);
  }
  function startVoiceTimer(){voiceListenStartedAt=voiceClock();voiceTimes={listen:null,ai:null,audio:null};displayVoiceTimes()}
  function markVoiceHeard(){if(voiceListenStartedAt>0){voiceTimes.listen=Math.max(0,voiceClock()-voiceListenStartedAt);voiceListenStartedAt=0;displayVoiceTimes()}}
@@ -383,7 +409,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
   const timeout=controller?setTimeout(()=>controller.abort(),7000):null;
   try{
    const options={method:'GET',cache:'no-store'};if(controller)options.signal=controller.signal;
-   const r=await fetch(API_BASE+'/health',options);if(!r.ok)throw new Error('HTTP '+r.status);
+   const r=await tracedFetch(API_BASE+'/health',options);if(!r.ok)throw new Error('HTTP '+r.status);
    const data=await r.json();cloudOnline=!!data.ok;const aiReady=!!data.ai_connected;
    badge.textContent=aiReady?'AI KEYS CONFIGURED':(cloudOnline?'API ONLINE · AI NOT CONFIGURED':'CLOUD ERROR');
    badge.style.color=aiReady?'#5de1ff':(cloudOnline?'#ffd27d':'#ff9b9b');
@@ -398,7 +424,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  async function askCloud(message,fast=false){
   const requestId=++cloudRequestSequence;
   if(activeCloudController){try{activeCloudController.abort()}catch(_){}}
-  const modelStarted=voiceClock();voiceTimes.ai=null;displayVoiceTimes();shell.classList.add('responding');setStatus(fast?'QUICK AI REPLY…':'AI THINKING…');setEmotion('thinking');orb.classList.add('active');
+  const modelStarted=voiceClock();voiceTimes.ai=null;voiceTimes.audio=null;displayVoiceTimes();shell.classList.add('responding');setStatus(fast?'QUICK AI REPLY…':'AI THINKING…');setEmotion('thinking');orb.classList.add('active');
   const controller=typeof AbortController==='function'?new AbortController():null;
   activeCloudController=controller;
   // The backend caps brief replies to a shorter provider budget. Give the
@@ -408,7 +434,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
   try{
    const options={method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,locale:commandLanguage,personality:getPersonality(),context:getCloudContextForRequest(message),fast})};
    if(controller)options.signal=controller.signal;
-   const r=await fetch(API_BASE+'/api/assistant',options);if(requestId!==cloudRequestSequence)return;let data={};try{data=await r.json()}catch(_){}if(requestId!==cloudRequestSequence)return;
+   const r=await tracedFetch(API_BASE+'/api/assistant',options);if(requestId!==cloudRequestSequence)return;let data={};try{data=await r.json()}catch(_){}if(requestId!==cloudRequestSequence)return;
    if(!r.ok){let detail=data.detail||'';if(r.status===502)detail=detail||'Gemini ne request reject ki. Render environment mein API key aur Google AI Studio access check karna hoga.';else if(r.status===504)detail=detail||'Gemini response time par nahi aaya. Yeh AI server timeout hai, zaroori nahi ke aapka internet kharab ho.';else if(r.status===429)detail=detail||'Gemini ki free quota ya rate limit poori ho gayi hai.';else if(r.status===503)detail=detail||'Render par GEMINI_API_KEY configured nahi hai.';else detail=detail||('Cloud API error: HTTP '+r.status);throw new Error(detail)}
    voiceTimes.ai=Math.max(0,voiceClock()-modelStarted);displayVoiceTimes();
     setStatus('AI REPLIED IN '+(voiceTimes.ai/1000).toFixed(1)+'s · '+(data.mode||'API'));say(data.reply||'Cloud received the message but returned no reply.',data.emotion,false,data.speech_text);
@@ -452,49 +478,38 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  }
  // Prefer first audible phrase over waiting for a long full MP3.
  // Future clauses are synthesized while the first clip plays.
- function splitUrduSpeech(text){
-  let remaining=String(text||'').trim();
-  if(remaining.length<=140)return remaining?[remaining]:[];
-  const segments=[];
-  while(remaining.length>155&&segments.length<5){
-   const part=remaining.slice(0,150);let cut=-1;
-   for(const marker of ['۔','؟','!','?','،']){
-    const found=part.lastIndexOf(marker);if(found>=55)cut=Math.max(cut,found+1);
-   }
-   if(cut<55)cut=part.lastIndexOf(' ',135)+1;
-   if(cut<55)cut=150;
-   segments.push(remaining.slice(0,cut).trim());
-   remaining=remaining.slice(cut).trim();
-  }
-  if(remaining)segments.push(remaining);
-  return segments;
- }
+ function splitUrduSpeech(text){return window.HoshiSpeechPipeline.split(text)}
  async function playOnlineUrdu(request){
   if(!request||request.id!==speechSequence||cloudSpeechAttempt===request.id)return;
   cloudSpeechAttempt=request.id;
   const audioStarted=voiceClock();voiceTimes.audio=null;displayVoiceTimes();
   const controller=new AbortController();speechAudioController=controller;
-  const timeout=setTimeout(()=>controller.abort(),22000);
+
   setStatus('PREPARING FIRST URDU PHRASE…');
   let style='soft';try{style=localStorage.getItem('hoshiVoiceStyle')||'soft'}catch(_){}
   if(['happy','excited','playful'].includes(request.emotion))style='playful';
   else if(['sad','shy','concerned','affectionate','caring'].includes(request.emotion))style='warm';
   const segments=splitUrduSpeech(request.text);
-  if(!segments.length){clearTimeout(timeout);return}
-  const files=segments.map(part=>fetch(API_BASE+'/api/speech',{
-   method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:part,style}),signal:controller.signal
-  }).then(async response=>{
-   if(!response.ok)throw new Error('Urdu voice provider unavailable');
-   const blob=await response.blob();if(!blob.size)throw new Error('Empty Urdu audio');
-   return blob;
-  }).catch(()=>null));
+  if(!segments.length){if(speechAudioController===controller)speechAudioController=null;return}
+  async function requestPart(part){
+   const clipTimer=setTimeout(()=>controller.abort(),22000);
+   try{
+    const response=await tracedFetch(API_BASE+'/api/speech',{
+     method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:part,style}),signal:controller.signal
+    });
+    if(!response.ok)throw new Error('Urdu voice provider unavailable');
+    const blob=await response.blob();if(!blob.size)throw new Error('Empty Urdu audio');return blob;
+   }finally{clearTimeout(clipTimer)}
+  }
+  const files=window.HoshiSpeechPipeline.queue(segments,requestPart,()=>request.id===speechSequence&&!controller.signal.aborted);
   const audio=$('hoshiAudio');
-  const stopLoading=()=>{clearTimeout(timeout);if(speechAudioController===controller)speechAudioController=null};
+  const stopLoading=()=>{controller.abort();if(speechAudioController===controller)speechAudioController=null};
   async function playPart(index){
    if(request.id!==speechSequence){stopLoading();return}
-   const blob=await files[index];
+   const blob=await files.get(index);
    if(request.id!==speechSequence){stopLoading();return}
    if(!blob){setSpeaking(false);setStatus('URDU AUDIO UNAVAILABLE · REPLY IS SHOWN IN CHAT');stopLoading();return}
+   if(index+1<segments.length)void files.get(index+1);
    if(speechAudioUrl){URL.revokeObjectURL(speechAudioUrl);speechAudioUrl=null}
    speechAudioUrl=URL.createObjectURL(blob);audio.src=speechAudioUrl;audio.hidden=false;
    audio.onplaying=()=>{
@@ -525,7 +540,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  if(memoryEnabled)memoryStore.save(localStorage,getConversationContext(),looksSensitive);
  function renderRecentActivity(){const box=$('recentActivity');if(!box)return;box.replaceChildren();if(!memoryEnabled){const empty=document.createElement('div');empty.className='activity-line';empty.textContent='Local memory is off.';box.appendChild(empty);return}const history=getConversationContext().slice(-3).reverse();if(!history.length){const empty=document.createElement('div');empty.className='activity-line';empty.textContent='Start a conversation to see recent activity.';box.appendChild(empty);return}history.forEach(item=>{const row=document.createElement('div');row.className='activity-line '+(item.role==='user'?'user':'assistant');const content=String(item.content).replace(/\s+/g,' ');row.textContent=(item.role==='user'?'YOU · ':'HOSHI · ')+content.slice(0,92)+(content.length>92?'…':'');box.appendChild(row)})}
  function updateClock(){const now=new Date();const timeParts=new Intl.DateTimeFormat(undefined,{hour:'2-digit',minute:'2-digit',hour12:true}).formatToParts(now);const hour=timeParts.filter(part=>part.type==='hour'||part.type==='minute').map(part=>part.value).join(':');const meridiem=timeParts.find(part=>part.type==='dayPeriod');const h=$('clockHour'),m=$('clockMeridiem'),d=$('clockDate');if(h)h.textContent=hour;if(m)m.textContent=meridiem?meridiem.value.toUpperCase():'';if(d)d.textContent=new Intl.DateTimeFormat(undefined,{weekday:'long',month:'short',day:'numeric'}).format(now)}
- function getCloudContextForRequest(currentMessage){const history=getConversationContext();const last=history[history.length-1];if(last&&last.role==='user'&&last.content===String(currentMessage||'').slice(0,500))history.pop();return history.slice(-8).map(item=>item.role+': '+item.content)}
+ function getCloudContextForRequest(currentMessage){const history=getConversationContext();const last=history[history.length-1];if(last&&last.role==='user'&&last.content===String(currentMessage||'').slice(0,500))history.pop();let profile=[];try{if(memoryEnabled&&window.HoshiProfile)profile=window.HoshiProfile.context(localStorage,currentMessage)}catch(_){}return [...profile,...history.slice(-(8-profile.length)).map(item=>item.role+': '+item.content)]}
  function makeHistoryButton(label,ariaLabel,onClick){const button=document.createElement('button');button.type='button';button.className='history-action';button.textContent=label;button.setAttribute('aria-label',ariaLabel);button.addEventListener('click',onClick);return button}
  function persistHistory(history){if(!memoryStore.save(localStorage,history,looksSensitive))throw new Error("Local memory unavailable")}
  function renderHistory(){const box=$('chatHistory');if(!box)return;const history=getConversationContext();box.replaceChildren();if(!memoryEnabled){editingMemoryIndex=null;box.textContent='Local memory is off.';return}if(!history.length){editingMemoryIndex=null;box.textContent='No saved conversation yet.';return}const start=Math.max(0,history.length-8);history.slice(-8).forEach((item,offset)=>{const index=start+offset;const row=document.createElement('div');row.className='history-item '+(item.role==='user'?'user':'assistant');if(editingMemoryIndex===index){const editor=document.createElement('textarea');editor.className='history-editor';editor.maxLength=500;editor.setAttribute('aria-label','Edit saved '+(item.role==='user'?'user':'HOSHI')+' message');editor.value=item.content;row.appendChild(editor);const actions=document.createElement('div');actions.className='history-actions';actions.appendChild(makeHistoryButton('Save','Save edited memory entry',()=>{const revised=editor.value.trim();if(!revised){setStatus('MEMORY ENTRY NOT SAVED · TEXT IS EMPTY');return}if(looksSensitive(revised)){setStatus('MEMORY ENTRY NOT SAVED · REMOVE SECRET OR SENSITIVE DETAILS');return}const latest=getConversationContext();if(!latest[index]){editingMemoryIndex=null;renderHistory();return}latest[index].content=revised.slice(0,500);try{persistHistory(latest);editingMemoryIndex=null;renderHistory();setStatus('MEMORY ENTRY UPDATED')}catch(e){setStatus('MEMORY UPDATE FAILED · STORAGE UNAVAILABLE')}}));actions.appendChild(makeHistoryButton('Cancel','Cancel editing memory entry',()=>{editingMemoryIndex=null;renderHistory()}));row.appendChild(actions)}else{const content=document.createElement('div');content.className='history-content';content.textContent=(item.role==='user'?'You: ':'HOSHI: ')+item.content;row.appendChild(content);const actions=document.createElement('div');actions.className='history-actions';actions.appendChild(makeHistoryButton('Edit','Edit saved '+(item.role==='user'?'user':'HOSHI')+' message',()=>{editingMemoryIndex=index;renderHistory()}));actions.appendChild(makeHistoryButton('Delete','Delete saved '+(item.role==='user'?'user':'HOSHI')+' message',()=>{const latest=getConversationContext();if(!latest[index])return;latest.splice(index,1);try{persistHistory(latest);editingMemoryIndex=null;renderHistory();setStatus('MEMORY ENTRY DELETED')}catch(e){setStatus('MEMORY DELETE FAILED · STORAGE UNAVAILABLE')}}));row.appendChild(actions)}box.appendChild(row)})}
@@ -562,7 +577,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
        speechBeganAt=voiceClock();voiceTimes.audio=null;displayVoiceTimes();
        try{if(window.JarvisBridge.speakNative(spokenMessage,commandLanguage,pitch,rate)){setStatus('FAST DEVICE VOICE STARTING…');return}}catch(_){}
      }
-     playOnlineUrdu(currentSpeech);return
+     if(!(fastPhoneVoice&&chooseVoice()&&typeof SpeechSynthesisUtterance!=='undefined')){playOnlineUrdu(currentSpeech);return}
    }
    // One Hoshi delivery: online Urdu first; device speech handles other languages.
    if(window.JarvisBridge&&typeof window.JarvisBridge.speakNative==='function'&&(!urduMode||(typeof window.JarvisBridge.supportsUrduSpeech==='function'&&window.JarvisBridge.supportsUrduSpeech()))){
@@ -576,11 +591,11 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
    const u=new SpeechSynthesisUtterance(spokenMessage);
    const voice=chooseVoice();if(voice)u.voice=voice;
    u.lang=voice?voice.lang:commandLanguage;u.rate=rate;u.pitch=pitch;u.volume=1;
-    u.onstart=()=>{if(speechId===speechSequence)setSpeaking(true)};
+    u.onstart=()=>{if(speechId===speechSequence){setSpeaking(true);voiceTimes.audio=Math.max(0,voiceClock()-speechBeganAt);displayVoiceTimes()}};
     u.onend=()=>{if(speechId!==speechSequence)return;setSpeaking(false);};
     u.onerror=e=>{if(speechId!==speechSequence)return;setSpeaking(false);if(e&&e.error!=='canceled'&&e.error!=='interrupted'){if(urduMode)playOnlineUrdu(currentSpeech);else setStatus('VOICE OUTPUT FAILED · CHECK DEVICE TEXT-TO-SPEECH')}};
    let spoken=false;
-   const speak=()=>{if(spoken||speechId!==speechSequence)return;spoken=true;const current=chooseVoice();if(urduMode&&!current){$('voiceEngineStatus').textContent='Online Urdu voice · preparing audio';playOnlineUrdu(currentSpeech);return}if(current){u.voice=current;u.lang=current.lang}synth.speak(u)};
+   const speak=()=>{if(spoken||speechId!==speechSequence)return;spoken=true;const current=chooseVoice();if(urduMode&&!current){$('voiceEngineStatus').textContent='Online Urdu voice · preparing audio';playOnlineUrdu(currentSpeech);return}if(current){u.voice=current;u.lang=current.lang}speechBeganAt=voiceClock();voiceTimes.audio=null;synth.speak(u)};
    if(!synth.getVoices().length){
      const onVoices=()=>{synth.removeEventListener('voiceschanged',onVoices);refreshVoices();speak()};
      synth.addEventListener('voiceschanged',onVoices);setTimeout(speak,900);
@@ -1061,4 +1076,5 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 </script>
 </body>
 </html>
+
 

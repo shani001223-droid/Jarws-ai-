@@ -84,6 +84,11 @@ except ImportError:
         InvalidConnectorPath, ScopedConnectorError,
     )
 
+try:
+    from .observability import install_observability
+except ImportError:
+    from observability import install_observability
+
 app = FastAPI(title="HOSHI AI Cloud API", version="0.9.1")
 
 _LOGGER = logging.getLogger("hoshi.backend")
@@ -100,7 +105,11 @@ app.add_middleware(
     allow_credentials=False,
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type", "Authorization"],
+    expose_headers=["X-Request-ID"],
 )
+
+# Observe all API responses, including CORS/error responses, without reading bodies.
+install_observability(app)
 
 # Override these in Render Environment if you want to use different model IDs.
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash").strip()
@@ -785,6 +794,9 @@ def _groq_reply(message: str, language_hint: str, *, quick: bool = False) -> str
         "temperature": 0.4 if quick else 0.7,
         "max_tokens": 240 if quick else 1024,
     }
+    # Simple dialogue uses less GPT-OSS reasoning; detailed tasks are unchanged.
+    if quick and GROQ_MODEL in {"openai/gpt-oss-20b", "openai/gpt-oss-120b"}:
+        body["reasoning_effort"] = "low"
     req = Request(
         "https://api.groq.com/openai/v1/chat/completions",
         data=json.dumps(body).encode("utf-8"),
@@ -1703,3 +1715,4 @@ def public_weather(latitude: float = Query(default=24.86, ge=-90, le=90),
                 "note": "Free non-commercial API; do not call continuously."}
     except (KeyError, ValueError, TypeError) as exc:
         raise HTTPException(status_code=503, detail="Weather data is unavailable.") from exc
+

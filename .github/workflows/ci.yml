@@ -9,6 +9,12 @@ on:
       - "HOSHI_SYSTEM_PROMPT_FINAL.txt"
       - "scripts/build_trading_knowledge.py"
       - "requirements-dev.txt"
+      - "requirements-test.txt"
+      - "speech-pipeline.js"
+      - "profile-*.js"
+      - "profile-memory.html"
+      - "hoshi-*.mjs"
+      - "hoshi-*.css"
       - "android/**"
       - "tests/**"
       - "index.html"
@@ -44,6 +50,10 @@ jobs:
         run: python -m pip install -r requirements-dev.txt
       - name: Run backend unit tests
         run: python -m unittest discover -s tests -p "test_*.py"
+      - name: Test private profile storage and consent
+        run: node --test tests/profile-store.test.cjs
+      - name: Test first-audio synthesis priority and cancellation
+        run: node --test tests/speech-pipeline.test.cjs
       - name: Test natural-language reminder parser
         run: node --test tests/reminder-parser.test.cjs
       - name: Test local time/date command parser
@@ -78,6 +88,10 @@ jobs:
         run: node --test tests/hoshi-memory-store.test.cjs
       - name: Check local memory store JavaScript syntax
         run: node --check hoshi-memory-store.js
+      - name: Test payload-free client diagnostics
+        run: node --test tests/hoshi-diagnostics.test.cjs
+      - name: Check client diagnostics JavaScript syntax
+        run: node --check hoshi-diagnostics.js
       - name: Check memory privacy JavaScript syntax
         run: node --check memory-privacy.js
       - name: Check service worker JavaScript syntax
@@ -91,3 +105,4 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Run real-browser dashboard smoke tests
         run: node tests/dashboard.e2e.cjs
+

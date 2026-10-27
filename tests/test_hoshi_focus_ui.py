@@ -20,7 +20,9 @@ class FocusUITests(unittest.TestCase):
 
     def test_core_and_interrupt_have_real_handlers(self):
         html = (ROOT / "index.html").read_text("utf-8")
-        self.assertIn('class="focus-core"', html)
+        self.assertIn('id="hoshiEnergy" class="core focus-core"', html)
+        self.assertEqual(html.count('id="hoshiEnergy"'), 1)
+        self.assertIn('<script type="module" src="./hoshi-core-ui.mjs"></script>', html)
         self.assertIn('id="focusStop"', html)
         self.assertIn("$('focusStop').onclick=()=>interruptHoshi()", html)
         self.assertIn("shell.classList.add('responding')", html)

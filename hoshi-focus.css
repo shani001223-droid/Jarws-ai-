@@ -69,3 +69,9 @@ body:has(.nightroom.focus-mode){background:#020409}
 @media(prefers-reduced-motion:reduce){
  .focus-core *{animation:none!important}
 }
+
+/* Preserve the approved canvas core in both layouts; focus mode changes only
+   layout/tool visibility. There is one visual core, not two overlapping orbs. */
+.nightroom:not(.focus-mode) #hoshiEnergy.focus-core{display:block}
+.nightroom.focus-mode #hoshiEnergy{display:block;top:39%;width:min(57vw,235px,29dvh);height:auto;transform:translate(-50%,-50%)}
+@media(max-height:690px){.nightroom.focus-mode #hoshiEnergy{top:34%;width:min(49vw,177px,27dvh)}}

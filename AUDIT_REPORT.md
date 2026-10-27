@@ -165,3 +165,7 @@ Continue on the existing development branch, preserve configured Gemini/Groq/fre
 | HOSHI UPGRADE: Added Timestamped Chart Examples and Final Knowledge - Day 3 | [51f2eaf2b57b](https://github.com/shani001223-droid/Jarws-ai-/commit/51f2eaf2b57bcd546c1c77e2ff818d5beb4eba95) |
 
 Final evidence log push: `HOSHI UPGRADE: Added Final Audit and Verification Evidence - Day 3`. Its own hash is available in GitHub history after committing.
+
+## Release preparation started — 27 October 2026
+
+The user asked to proceed after V2 source verification. [HOSHI_RELEASE_PRECHECK.md](HOSHI_RELEASE_PRECHECK.md) records the actual public endpoint observations, preservation of newer main changes, conflict resolution and pending Render workspace identification. Local merged-source verification passed 390 Python and 75 Node tests. Production has not been merged/deployed by this preparation; no live result is invented.

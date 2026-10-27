@@ -31,6 +31,7 @@ CACHE_SECONDS = 120
 _FETCH_SLOTS = BoundedSemaphore(2)
 _CACHE_LOCK = Lock()
 _CACHE = {}
+_FAILURE_UNTIL = {}  # 30s fail-closed negative cache for unreachable public feeds.
 _ATOM = "{http://www.w3.org/2005/Atom}"
 
 
@@ -194,6 +195,8 @@ def browse_sources(topic, query="", limit=5, *, now=None):
     now = now.astimezone(timezone.utc)
     publisher, feed_url, _hosts, max_age_hours = SOURCES[topic]
     with _CACHE_LOCK:
+        if _FAILURE_UNTIL.get(topic, 0) > time.monotonic():
+            raise SourceUnavailable("source_cooling_down")
         cached = _CACHE.get(topic)
         data = cached[1] if cached and time.monotonic() - cached[0] < CACHE_SECONDS else None
     if data is None:
@@ -205,6 +208,12 @@ def browse_sources(topic, query="", limit=5, *, now=None):
             _parse_items(data, topic, "", now)
             with _CACHE_LOCK:
                 _CACHE[topic] = (time.monotonic(), data)
+                _FAILURE_UNTIL.pop(topic, None)
+        except SourceUnavailable:
+            # Repeated public feed outages must not tie up free-tier workers.
+            with _CACHE_LOCK:
+                _FAILURE_UNTIL[topic] = time.monotonic() + 30
+            raise
         finally:
             _FETCH_SLOTS.release()
     items = _parse_items(data, topic, query.strip(), now)[:limit]

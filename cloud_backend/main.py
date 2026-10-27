@@ -8,7 +8,7 @@ import json
 import os
 import re
 import logging
-from typing import Optional
+from typing import Optional, Literal
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -42,6 +42,7 @@ try:  # Handles either cloud_backend package import or direct uvicorn main:app.
     from .job_queue import ScheduledJobQueue, QueueCapacityError
     from .verified_artifact_store import VerifiedArtifactStore, ArtifactStorageError
     from .job_reporting import build_job_report
+    from .source_research import browse_sources, SourceUnavailable
 except ImportError:
     from openjarvis_bridge import ask_openjarvis, endpoint as openjarvis_endpoint, wants_agent, OpenJarvisUnavailable
     from agent_tools import try_calculate
@@ -57,6 +58,7 @@ except ImportError:
     from job_queue import ScheduledJobQueue, QueueCapacityError
     from verified_artifact_store import VerifiedArtifactStore, ArtifactStorageError
     from job_reporting import build_job_report
+    from source_research import browse_sources, SourceUnavailable
 
 app = FastAPI(title="HOSHI AI Cloud API", version="0.9.1")
 
@@ -120,6 +122,32 @@ def agent_spec(payload: GoalSpecRequest):
 def agent_milestones(payload: GoalSpecRequest):
     """Return a dependency-ordered verification plan, without running a worker."""
     return plan_milestones(payload.message)
+
+
+
+@app.get("/api/research/sources")
+def research_sources(
+    response: Response,
+    topic: Literal["world", "technology", "science", "space"] = Query(...),
+    q: str = Query(default="", max_length=80),
+    limit: int = Query(default=5, ge=1, le=5),
+):
+    """Read-only, fixed trusted RSS sources with explicit article citations.
+
+    No arbitrary URL fetching, web-page execution, model-generated claims,
+    private keys, cross-app actions or automatic publishing.
+    """
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    try:
+        return browse_sources(topic, q, limit)
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Invalid source research request.") from None
+    except SourceUnavailable:
+        raise HTTPException(status_code=503, detail="Trusted public source temporarily unavailable.") from None
+    except Exception as exc:
+        _safe_log_failure("research.sources", exc)
+        raise HTTPException(status_code=503, detail="Source research unavailable.") from None
 
 
 class JobRecordRequest(BaseModel):

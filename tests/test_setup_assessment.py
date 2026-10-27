@@ -64,7 +64,8 @@ class AssessmentUnitTests(unittest.TestCase):
 
     def test_each_family_can_veto_watchlist(self):
         cases = (
-            lambda s, m: s["timeframes"]["1h"].update(structure="mixed_structure"),
+            lambda s, m: (s["timeframes"]["1h"].update(structure="mixed_structure"),
+                          s.update(alignment="mixed_timeframes")),
             lambda s, m: m["timeframes"]["1h"]["values"].update(ema9=99),
             lambda s, m: m["timeframes"]["15m"]["values"].update(rsi14=75),
             lambda s, m: m["timeframes"]["15m"]["values"].update(volume_ratio20=1),

@@ -14,7 +14,6 @@ class FocusUITests(unittest.TestCase):
         self.assertIn("localStorage.getItem('hoshiFocusModeV1')!=='false'", html)
         self.assertIn("localStorage.setItem('hoshiFocusModeV1',String(focusMode))", html)
         self.assertIn("background-image:radial-gradient", css)
-        self.assertIn("background-image:none", css.replace(" ", "") if False else css.lower() if False else "background-image:none") if False else None
         self.assertIn("background-image:radial-gradient", css)
         self.assertIn("!important", css)
         self.assertIn("@media(prefers-reduced-motion:reduce)", css)

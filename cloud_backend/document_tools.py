@@ -124,7 +124,7 @@ def inspect_document(name: str, data: bytes) -> dict:
             previews.append((page.extract_text() or "")[:_PREVIEW])
     except Exception:
         raise DocumentSafetyError("PDF text could not be extracted.") from None
-    combined = "\n".join(previews)[:_PREVIEW]
+    combined = "\n".join(part for part in previews if part).strip()[:_PREVIEW]
     return {**base, "kind": "pdf", "pages": len(reader.pages),
             "preview": combined, "partial_preview": len(reader.pages) > 3
             or sum(len(x) for x in previews) >= _PREVIEW}

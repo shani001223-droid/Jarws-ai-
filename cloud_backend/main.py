@@ -44,6 +44,7 @@ try:  # Handles either cloud_backend package import or direct uvicorn main:app.
     from .free_llm_providers import available_free_providers, ask_free_provider, OptionalProviderError
     from .urdu_tts_text import normalize_urdu_speech
     from .persona_policy import personality_guardrails
+    from .latency_budget import provider_timeout
     from .job_records import JobRecordStore, JobCapacityError, JobStateError
     from .job_queue import ScheduledJobQueue, QueueCapacityError
     from .verified_artifact_store import VerifiedArtifactStore, ArtifactStorageError
@@ -64,6 +65,7 @@ except ImportError:
     from free_llm_providers import available_free_providers, ask_free_provider, OptionalProviderError
     from urdu_tts_text import normalize_urdu_speech
     from persona_policy import personality_guardrails
+    from latency_budget import provider_timeout
     from job_records import JobRecordStore, JobCapacityError, JobStateError
     from job_queue import ScheduledJobQueue, QueueCapacityError
     from verified_artifact_store import VerifiedArtifactStore, ArtifactStorageError
@@ -669,7 +671,7 @@ def normalize_context_entries(context: Optional[list[str]]) -> list[str]:
     return normalized[-8:]
 
 
-def _openrouter_reply(message: str, language_hint: str) -> str:
+def _openrouter_reply(message: str, language_hint: str, *, timeout: float = 7) -> str:
     """Use only the free router or an explicitly free model; never auto-upgrade."""
     key = os.getenv("OPENROUTER_API_KEY", "").strip()
     if not key:
@@ -688,7 +690,7 @@ def _openrouter_reply(message: str, language_hint: str) -> str:
         method="POST",
     )
     try:
-        with urlopen(req, timeout=7) as response:
+        with urlopen(req, timeout=timeout) as response:
             data = json.loads(response.read().decode("utf-8"))
     except HTTPError as exc:
         explanations = {
@@ -959,6 +961,14 @@ def assistant(payload: AssistantRequest):
         mistral="mistral" in extra_providers,
         nvidia="nvidia" in extra_providers,
     )
+    def network_budget(cap: float = 7.0) -> float:
+        # Short casual/voice answers get a bounded total serial wait. Rich
+        # writing/research keeps the existing larger provider deadline.
+        return provider_timeout(
+            request_started_at, time.monotonic(),
+            fast=brief_spoken, cap=cap,
+        )
+
     def try_directory_fallback():
         """Try only configured free-tier providers and never expose secret error bodies."""
         for provider in provider_plan.order:
@@ -967,13 +977,13 @@ def assistant(payload: AssistantRequest):
             # The client times out around 32 seconds. Do not launch a slow
             # optional call if the cumulative provider chain already consumed
             # the budget. Keep at least 1s for encoding/transferring the reply.
-            remaining = 29.0 - (time.monotonic() - request_started_at)
-            if remaining < 2.0:
+            remaining = network_budget(cap=5.0)
+            if remaining < 1.0:
                 break
             try:
                 reply = ask_free_provider(
                     provider, request_input, language_hint,
-                    timeout=min(5.0, remaining - 1.0),
+                    timeout=remaining,
                 )
                 answer = make_assistant_response(reply, provider, message, payload.locale)
                 if str(payload.locale or "").lower().startswith("ur") and not answer.speech_text:
@@ -1032,9 +1042,11 @@ def assistant(payload: AssistantRequest):
     # to independently configured providers for invalid/incomplete replies or
     # temporary errors. Never retry endlessly or switch to paid models.
     openrouter_problem = None
-    if "openrouter" in provider_plan.order:
+    if "openrouter" in provider_plan.order and network_budget() >= 1.0:
         try:
-            reply = _openrouter_reply(request_input, language_hint)
+            reply = _openrouter_reply(
+                request_input, language_hint, timeout=network_budget(),
+            )
             response = make_assistant_response(reply, "openrouter", message, payload.locale)
             if str(payload.locale or "").lower().startswith("ur") and not response.speech_text:
                 raise RuntimeError("OpenRouter omitted valid Urdu pronunciation text.")
@@ -1051,7 +1063,7 @@ def assistant(payload: AssistantRequest):
     # Gemini is primary when OpenRouter is missing or failed. Temporary overload
     # and incomplete/malformed Urdu formatting can use the Groq backup.
     # error, timeout, or malformed response triggers Groq when its key is set.
-    if gemini_key:
+    if gemini_key and network_budget() >= 1.0:
         body = {
             "model": GEMINI_MODEL,
             "input": request_input,
@@ -1072,7 +1084,7 @@ def assistant(payload: AssistantRequest):
         gemini_problem = "Gemini Interactions API did not return a usable response."
         should_fallback = False
         try:
-            with urlopen(req, timeout=7) as response:
+            with urlopen(req, timeout=network_budget()) as response:
                 data = json.loads(response.read().decode("utf-8"))
             steps = data.get("steps") or []
             reply = "\n".join(
@@ -1143,7 +1155,7 @@ def assistant(payload: AssistantRequest):
         raise HTTPException(status_code=502, detail=gemini_problem) from None
 
     # If Gemini is not configured, Groq can serve requests on its own.
-    if groq_key and quick_groq_problem is None:
+    if groq_key and quick_groq_problem is None and network_budget() >= 1.0:
         try:
             reply = _groq_reply(request_input, language_hint)
             return make_assistant_response(reply, "groq", message, payload.locale)
@@ -1157,6 +1169,11 @@ def assistant(payload: AssistantRequest):
     if extra_result is not None:
         return extra_result
 
+    if brief_spoken and network_budget() < 1.0:
+        raise HTTPException(
+            status_code=504,
+            detail="Quick reply exceeded the free-provider time budget. Retry or turn off fast mode.",
+        ) from None
     if openrouter_problem:
         raise HTTPException(status_code=502, detail=openrouter_problem) from None
     if openjarvis_problem:

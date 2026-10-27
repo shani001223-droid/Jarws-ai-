@@ -82,6 +82,18 @@ jobs:
           assert any(t.get("id")=="create_product_ads" for t in payload["tools"])
           print("Backend /api/agent/capabilities OK")
           PY
+          # Task 40: the real Uvicorn image must expose the read-only
+          # assessment route and reject unsupported symbols before network.
+          setup_status=$(curl --silent --show-error --max-time 5 -o /tmp/hoshi-setup-invalid.json \
+            -w '%{http_code}' 'http://127.0.0.1:18765/api/trading/setup-assessment?symbol=SOLUSDT')
+          test "$setup_status" = 422 || { echo "Setup route expected 422, got $setup_status"; exit 1; }
+          python3 - <<'PY'
+          import json
+          with open("/tmp/hoshi-setup-invalid.json") as f:
+              payload = json.load(f)
+          assert "detail" in payload and "BTCUSDT" in payload["detail"], payload
+          print("Task 40 Docker API route registered; unsupported pair rejected")
+          PY
           # Task 34: verify the actual built image can import and execute
           # a scoped offline specialist without a model key or external service.
           docker exec -i "$container" python - <<'PY'

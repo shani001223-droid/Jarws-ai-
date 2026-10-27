@@ -82,3 +82,19 @@ jobs:
           assert any(t.get("id")=="create_product_ads" for t in payload["tools"])
           print("Backend /api/agent/capabilities OK")
           PY
+          # Task 34: verify the actual built image can import and execute
+          # a scoped offline specialist without a model key or external service.
+          docker exec -i "$container" python - <<'PY'
+          import base64, hashlib, io, json, zipfile
+          from specialist_orchestrator import orchestrate_flora_campaign
+          result = orchestrate_flora_campaign(("shampoo",))
+          assert result["ok"] is True, result.get("error_code")
+          assert result["persisted"] is False and result["published"] is False
+          payload = base64.b64decode(result["artifact"]["zip_base64"], validate=True)
+          assert hashlib.sha256(payload).hexdigest() == result["artifact"]["sha256"]
+          with zipfile.ZipFile(io.BytesIO(payload)) as archive:
+              assert set(archive.namelist()) == {"manifest.json", "shampoo.zip"}
+              manifest = json.loads(archive.read("manifest.json"))
+              assert manifest["products"][0]["product_key"] == "shampoo"
+          print("Scoped specialist Docker runtime + verified offline ZIP OK")
+          PY

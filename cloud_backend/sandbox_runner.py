@@ -67,6 +67,8 @@ def _preflight() -> str:
             timeout=4, check=False)
         if image.returncode:
             raise SandboxSafetyError("Sandbox unavailable: trusted image not installed.")
+    except SandboxSafetyError:
+        raise
     except (OSError, subprocess.TimeoutExpired, ValueError, TypeError):
         raise SandboxSafetyError("Sandbox unavailable: Docker preflight failed.") from None
     return docker

@@ -36,6 +36,13 @@ class QualityUnitTests(unittest.TestCase):
                 self.assertEqual(result["last_closed_at"], b[-2][6])
                 self.assertFalse(result["orders_enabled"])
 
+    def test_numeric_string_close_time_does_not_break_quote_volume_selection(self):
+        b, k = fixtures()
+        b[-1][6] = str(b[-1][6])
+        result = mq.verify_spot_market("BTCUSDT", "15m", b, k, NOW,
+                                       NOW//1000, NOW//1000)
+        self.assertEqual(result["binance_last_quote_volume_usdt"], 1000)
+
     def test_fixed_host_allowlist_and_no_user_url(self):
         b, k = mq.public_urls("ETHUSDT", "1h")
         self.assertIn("data-api.binance.vision", b)

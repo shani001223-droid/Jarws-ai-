@@ -423,6 +423,15 @@ async function main() {
         assert.ok(!JSON.parse(await page.evaluate(()=>localStorage.getItem('hoshiTradeWatchV1'))).includes('SOLUSDT'));
         for(const width of [320,390,768,1440]){
           await page.setViewportSize({width,height:900});
+          const over=await page.evaluate(()=>{
+            const sheet=document.querySelector('#nightSheet'),edge=sheet.getBoundingClientRect().right;
+            return sheet.scrollWidth>sheet.clientWidth+1?
+              Array.from(sheet.querySelectorAll('*')).filter(el=>{
+                const r=el.getBoundingClientRect();return r.right>edge+1&&r.width>0;
+              }).slice(0,8).map(el=>({tag:el.tagName,id:el.id,cls:String(el.className).slice(0,50),
+                                    right:Math.round(el.getBoundingClientRect().right)})):[];
+          });
+          if(over.length)console.log('Trading mobile overflow diagnostics',width,over);
           assert.equal(await page.evaluate(()=>document.querySelector('#nightSheet').scrollWidth>document.querySelector('#nightSheet').clientWidth+1),false,'Trading workspace must fit '+width+'px');
           assert.equal(await page.locator('#tradePair').isVisible(),true);
         }

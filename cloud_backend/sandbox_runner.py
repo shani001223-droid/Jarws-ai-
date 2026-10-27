@@ -56,7 +56,7 @@ def _preflight() -> str:
         security = subprocess.run(
             [docker, "info", "--format", "{{json .SecurityOptions}}"],
             capture_output=True, text=True, timeout=4, check=False)
-        if security.returncode or "seccomp" not in json.loads(security.stdout):
+        if security.returncode or not any("seccomp" in str(option)\n                                          for option in json.loads(security.stdout)):
             # Docker security options contain e.g. name=seccomp,profile=builtin.
             # Explicitly refuse daemons without the default seccomp boundary.
             raise SandboxSafetyError("Sandbox unavailable: seccomp required.")

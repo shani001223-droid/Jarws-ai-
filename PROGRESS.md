@@ -9,11 +9,14 @@ entire branch was already deployed. Production V2 remains a separate release.
 
 ## Current measured progress
 
-**Day 1: completed 8 of 48 planned knowledge chapters — 16.67%; 40 chapters,
-83.33% of the declared curriculum, remain.**
+**Day 1: completed 9 of 49 planned knowledge chapters — 18.37%; 40 chapters,
+81.63% of the declared curriculum, remain.**
 
-The denominator is the initial, expandable file manifest in
-`knowledge_base/manifest.json`. It is not a percentage of every fact on Earth,
+The denominator is the versioned, expandable file manifest in
+`knowledge_base/manifest.json`. Scope revision 2 explicitly expands the initial
+48 documents to 49 by adding `rare_candlestick_and_gap_variants.md`; core candle
+geometry must not be presented as every rare compound rule. Earlier 48-file
+percentages in this historical log retain their original denominator. It is not a percentage of every fact on Earth,
 all possible trading concepts, the separate 60-task Hoshi project, runtime
 integration, profitability or completion of the entire V3 release. Additional
 topics require an explicit manifest/progress revision, never silent omission.
@@ -29,6 +32,8 @@ topics require an explicit manifest/progress revision, never silent omission.
 | `01_MARKET_STRUCTURE/trends_ranges_and_multitimeframe.md` | Source-checked; three actual daily/weekly comparisons, complete-week boundaries, insufficiency and breached higher-frame states |
 | `01_MARKET_STRUCTURE/breakouts_retests_and_regimes.md` | Source-checked; frozen prior-20-bar boundaries and real contact/no-contact/failure cases; event and later outcome clocks are separate |
 | `01_MARKET_STRUCTURE/auction_theory_and_microstructure.md` | Source-checked; matching/auction/profile distinctions and real 2010/2014/2020 episodes; raw historical queue/feed gaps disclosed |
+| `02_CANDLESTICK_AND_CHART_PATTERNS/candlestick_pattern_catalogue.md` | Source-checked; core families, explicit geometric rule versions and three replayed dated examples; no library-output probability claims |
+| `02_CANDLESTICK_AND_CHART_PATTERNS/rare_candlestick_and_gap_variants.md` | Newly declared pending scope expansion; no placeholder counted as complete |
 | Remaining curriculum documents | Pending; no empty placeholder chapters counted as complete |
 | Brain loader and runtime knowledge bundle | Pending — new source chapters are not yet consumed by Hoshi |
 | 40/20/20/20 history/liquidity/structure/global-flow engine | Pending — weights will mean evidence coverage, not an invented win probability |
@@ -70,6 +75,8 @@ topics require an explicit manifest/progress revision, never silent omission.
 - **28 October, Day 1:** completed `breakouts_retests_and_regimes.md` (2329 substantive words). Three actual BTCUSDT cases use one frozen 20-bar boundary and five subsequent bars: positive path with contact, positive path without an eligible retest, and failed continuation. Raw close changes are explicitly not PnL. Expanded offline evidence checks to ten passing tests, including null incomplete outcomes, excluded event-bar retests and corrupted future-result rejection. Prior source [2753cce8](https://github.com/shani001223-droid/Jarws-ai-/commit/2753cce87219310bad9843b3f041038132c89029) passed [actual curriculum CI 40590603232](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40590603232). No runtime strategy or order path changed.
 
 - **28 October, Day 1:** completed `auction_theory_and_microstructure.md` (2371 substantive body words). Checked exchange matching/auction documentation, original 2010 CFTC/SEC and 2020 CFTC reports, and the official announcement of the 2014 Treasury episode. Distinguishes order-book depth from volume, queue uncertainty, profiles, contract units, publication dates and negative futures settlement. The linked 2014 full PDF exceeded the retrieval size limit: the checked announcement supports the stated facts, while exact tick/yield/queue paths remain unmeasured. The four initial market-structure-family chapters are source-checked, not every possible structure topic. Prior source [37aee72f](https://github.com/shani001223-droid/Jarws-ai-/commit/37aee72f2ea7b02b733767056c0557822415d6d8) passed [actual curriculum CI 40591052429](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40591052429), including ten evidence regressions. Current curriculum is 8/48; the next declared chapter is `02_CANDLESTICK_AND_CHART_PATTERNS/candlestick_pattern_catalogue.md`. All three integration/release gates remain pending.
+
+- **28 October, Day 1 — scope revision 2:** completed `candlestick_pattern_catalogue.md` (2600 substantive words), measured three real 2020/2021/2022 BTCUSDT examples and added six offline pattern regressions. Source examples distinguish shape, context, later confirmation and raw price endpoints from trades. The original 48-file scope now explicitly contains 49 files: rare/gap compound definitions remain a separate pending chapter rather than being falsely counted as covered by core geometry. Nine source-checked chapters therefore mean 18.37% of revision 2; forty remain. Prior source [9eae855b](https://github.com/shani001223-droid/Jarws-ai-/commit/9eae855bd8778fa7f2c6748642fe49ac5b756b20) passed [actual integrity CI 40591570863](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40591570863). Runtime retrieval, weighted strategy and release gates are still pending.
 
 ## Completion and release rules
 

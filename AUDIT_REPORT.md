@@ -230,3 +230,8 @@ Added `breakouts_retests_and_regimes.md` with 2329 substantive words and three d
 ## V3 auction and microstructure receipt — 28 October 2026
 
 Added `auction_theory_and_microstructure.md` with 2371 substantive words, original illustrative execution arithmetic and three real dated institutional cases (2010 equities/E-mini, 2014 Treasury market, 2020 expiring May WTI). Technical sources and event/publication dates are explicit. No historical queue feed or paid auction feed is claimed; the 2014 full PDF was not retrieved due to size, and only its checked official release supports the stated episode facts. All four initial structure-family chapters are source-checked: total curriculum 8/48 (16.67%), with runtime retrieval/weighted engine/release still pending. Prior `37aee72f2ea7b02b733767056c0557822415d6d8` passed actual CI 40591052429 including ten evidence regressions. Existing identity, privacy/Stop/voice controls, V2 runtime, backup and main are unchanged.
+
+
+## V3 candlestick catalogue and explicit scope expansion — 28 October 2026
+
+Added `candlestick_pattern_catalogue.md` with 2600 substantive words and three actual dated shape/confirmation/path cases. New original offline geometry is explicitly not TA-Lib parity, a probability, a fill model or runtime integration. Six new evidence regressions accompany the ten existing ones. Scope revision 2 adds a genuinely missing rare/gap-variant chapter as pending: 9/49 (18.37%) source-checked, not 9/48 or all patterns on Earth. Source receipts reuse the previously captured 611 candles without altering their raw bytes or source hashes. Prior `9eae855bd8778fa7f2c6748642fe49ac5b756b20` passed actual GitHub integrity CI 40591570863. Main, backup, V2, unrelated roadmap and controls are preserved.

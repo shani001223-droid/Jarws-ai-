@@ -13,6 +13,7 @@ from pathlib import Path, PurePosixPath
 import re
 
 from v3_structure_evidence import check_window
+from v3_pattern_evidence import check_receipt as check_pattern_receipt
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "knowledge_base/manifest.json"
@@ -77,7 +78,10 @@ def check():
         assert len(raw) <= 1000000 and hashlib.sha256(raw).hexdigest() == receipt["sha256"], rel
         payload = json.loads(raw)
         kind = receipt.get("kind", "crash_windows")
-        assert kind in ("crash_windows", "event_windows", "ohlcv_windows"), kind
+        assert kind in ("crash_windows", "event_windows", "ohlcv_windows", "pattern_cases"), kind
+        if kind == "pattern_cases":
+            check_pattern_receipt(payload, ROOT)
+            continue
         if kind == "ohlcv_windows":
             assert payload["schema_version"] == "hoshi-v3-ohlcv-evidence-1"
             assert payload["data_license"] == "CC BY-NC-SA 4.0"

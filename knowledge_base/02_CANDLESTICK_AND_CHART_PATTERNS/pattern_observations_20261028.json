@@ -1,0 +1,153 @@
+{
+  "schema_version": "hoshi-v3-pattern-evidence-1",
+  "reviewed_on": "2026-10-28",
+  "review_timezone": "Asia/Karachi",
+  "source_receipt": "knowledge_base/01_MARKET_STRUCTURE/structure_observations_20261028.json",
+  "source_receipt_sha256": "0f119a703c8ee59cd055d13fd0ea58f2f424c84d12d16a4f4479c0de3d01dcae",
+  "attribution": "Binance Vision / Binance Spot public OHLC data; original HOSHI analytical transformations. No provider endorsement.",
+  "data_license": "CC BY-NC-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "scope": "Non-commercial education/personal non-production paper research; selected retrospective historical examples, not current data, orders or independent evaluation.",
+  "candle_protocol": "hoshi-candle-geometry-1: doji body/range<=0.10; lower/upper-wick geometry body/range<=0.35, long wick>=2*body, opposite wick/range<=0.15, body>0; opposite-color body engulfing contains previous body with at least one strictly extended end; strict inside/outside wick comparisons; labels are not TA-Lib parity, trend context or probabilities.",
+  "candle_cases": [
+    {
+      "source_window_sha256": "0a8fd6b6cee125cb5de8a199f86c88a5d9dacd572070a2f0999852154f688fea",
+      "case": {
+        "event_date": "2020-03-11",
+        "known_at": 1583971199999,
+        "ohlc": {
+          "open": 7894.57,
+          "high": 7980.0,
+          "low": 7590.0,
+          "close": 7934.52
+        },
+        "features": {
+          "method": "hoshi-candle-geometry-1",
+          "measurements": {
+            "range": 390.0,
+            "body": 39.95000000000073,
+            "upper_wick": 45.47999999999956,
+            "lower_wick": 304.5699999999997,
+            "body_fraction": 0.1024358974358993,
+            "upper_fraction": 0.1166153846153835,
+            "lower_fraction": 0.7809487179487172,
+            "close_location": 0.8833846153846165
+          },
+          "labels": [
+            "lower_wick_geometry"
+          ]
+        },
+        "previous_ohlc": {
+          "open": 7929.87,
+          "high": 8149.0,
+          "low": 7728.01,
+          "close": 7894.56
+        },
+        "outcome_status": "observed",
+        "outcome": {
+          "available_at": 1584403199999,
+          "next_date": "2020-03-12",
+          "next_close": 4800.0,
+          "next_close_above_event_high": false,
+          "next_close_below_event_low": true,
+          "fifth_date": "2020-03-16",
+          "fifth_close": 5028.97,
+          "forward_close_change_pct": -36.61910235275732
+        }
+      }
+    },
+    {
+      "source_window_sha256": "6d533be481380a79e5ee6ab85436cfa6bac8c5b50ae6ff2080b433901610c1ee",
+      "case": {
+        "event_date": "2021-06-09",
+        "known_at": 1623283199999,
+        "ohlc": {
+          "open": 33380.8,
+          "high": 37534.79,
+          "low": 32396.82,
+          "close": 37388.05
+        },
+        "features": {
+          "method": "hoshi-candle-geometry-1",
+          "measurements": {
+            "range": 5137.970000000001,
+            "body": 4007.25,
+            "upper_wick": 146.73999999999796,
+            "lower_wick": 983.9800000000032,
+            "body_fraction": 0.7799286488632668,
+            "upper_fraction": 0.028559917632839025,
+            "lower_fraction": 0.19151143350389413,
+            "close_location": 0.971440082367161
+          },
+          "labels": [
+            "bullish_body_engulfing"
+          ]
+        },
+        "previous_ohlc": {
+          "open": 33556.96,
+          "high": 34068.01,
+          "low": 31000.0,
+          "close": 33380.81
+        },
+        "outcome_status": "observed",
+        "outcome": {
+          "available_at": 1623715199999,
+          "next_date": "2021-06-10",
+          "next_close": 36675.72,
+          "next_close_above_event_high": false,
+          "next_close_below_event_low": false,
+          "fifth_date": "2021-06-14",
+          "fifth_close": 40516.29,
+          "forward_close_change_pct": 8.366951472462446
+        }
+      }
+    },
+    {
+      "source_window_sha256": "5860446413d27c8678d93b80ce791940ad4e06b76a512b6e1230f6b4ab19b74f",
+      "case": {
+        "event_date": "2022-11-01",
+        "known_at": 1667347199999,
+        "ohlc": {
+          "open": 20490.74,
+          "high": 20700.0,
+          "low": 20330.74,
+          "close": 20483.62
+        },
+        "features": {
+          "method": "hoshi-candle-geometry-1",
+          "measurements": {
+            "range": 369.2599999999984,
+            "body": 7.120000000002619,
+            "upper_wick": 209.2599999999984,
+            "lower_wick": 152.87999999999738,
+            "body_fraction": 0.019281806856964335,
+            "upper_fraction": 0.5667009695065789,
+            "lower_fraction": 0.4140172236364568,
+            "close_location": 0.4140172236364568
+          },
+          "labels": [
+            "doji_geometry",
+            "strict_inside_bar"
+          ]
+        },
+        "previous_ohlc": {
+          "open": 20627.48,
+          "high": 20845.92,
+          "low": 20237.95,
+          "close": 20490.74
+        },
+        "outcome_status": "observed",
+        "outcome": {
+          "available_at": 1667779199999,
+          "next_date": "2022-11-02",
+          "next_close": 20151.84,
+          "next_close_above_event_high": false,
+          "next_close_below_event_low": true,
+          "fifth_date": "2022-11-06",
+          "fifth_close": 20905.58,
+          "forward_close_change_pct": 2.0599874436256993
+        }
+      }
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 {
   "schema_version": "hoshi-v3-curriculum-1",
-  "scope_revision": 1,
-  "scope": "Initial expandable 48-chapter research curriculum, not every fact on Earth or a runtime completion percentage.",
+  "scope_revision": 2,
+  "scope": "Expandable 49-chapter release curriculum (initial 48 plus explicit rare/gap candlestick expansion), not every fact on Earth or a runtime completion percentage.",
   "minimum_body_words": 1000,
   "start_date": "2026-10-28",
   "branch": "hoshi-v3-god-mode",
@@ -66,7 +66,10 @@
     },
     {
       "path": "knowledge_base/02_CANDLESTICK_AND_CHART_PATTERNS/candlestick_pattern_catalogue.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2600,
+      "sha256": "9214f387e3dd55a852dba53b69851a799a025381d86cd2506d241d41249f7ac2"
     },
     {
       "path": "knowledge_base/02_CANDLESTICK_AND_CHART_PATTERNS/classical_chart_patterns.md",
@@ -78,6 +81,10 @@
     },
     {
       "path": "knowledge_base/02_CANDLESTICK_AND_CHART_PATTERNS/pattern_testing_and_failures.md",
+      "status": "pending"
+    },
+    {
+      "path": "knowledge_base/02_CANDLESTICK_AND_CHART_PATTERNS/rare_candlestick_and_gap_variants.md",
       "status": "pending"
     },
     {
@@ -244,6 +251,28 @@
       "path": "knowledge_base/01_MARKET_STRUCTURE/structure_observations_20261028.json",
       "kind": "ohlcv_windows",
       "sha256": "0f119a703c8ee59cd055d13fd0ea58f2f424c84d12d16a4f4479c0de3d01dcae"
+    },
+    {
+      "path": "knowledge_base/02_CANDLESTICK_AND_CHART_PATTERNS/pattern_observations_20261028.json",
+      "kind": "pattern_cases",
+      "sha256": "a18dcd9cf1e7a3916a0434c3b8e530822c6ca82dee6550566e1804d6d7ee7677"
+    }
+  ],
+  "scope_history": [
+    {
+      "revision": 1,
+      "reviewed_on": "2026-10-28",
+      "planned_documents": 48,
+      "reason": "Initial declared curriculum across all twelve requested families."
+    },
+    {
+      "revision": 2,
+      "reviewed_on": "2026-10-28",
+      "planned_documents": 49,
+      "added": [
+        "knowledge_base/02_CANDLESTICK_AND_CHART_PATTERNS/rare_candlestick_and_gap_variants.md"
+      ],
+      "reason": "Core candle geometry cannot stand in for detailed rare/gap compound rules; preserve that genuinely missing material as an explicit pending chapter, not a false all-patterns claim."
     }
   ]
 }

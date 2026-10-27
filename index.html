@@ -150,6 +150,10 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 <label>Fee per side (bps)<input id="paper_fee_bps" type="number" min="1" max="100" step="any" value="10"></label>
 <label>Slippage per side (bps)<input id="paper_slippage_bps" type="number" min="1" max="100" step="any" value="5"></label>
 </div><p class="trade-muted">10 bps = 0.1%. Defaults are simulation assumptions, not your account fees. No leverage.</p></details>
+<div class="trade-research-actions"><label>Annotated timeframe <select id="tradeAnnotatedInterval"><option value="15m">15m</option><option value="1h">1h</option><option value="4h">4h</option></select></label><button type="button" id="tradeAnnotatedRun">Load annotated chart</button><button type="button" id="tradeAnnotatedPng" disabled>Export PNG</button><button type="button" id="tradeAnnotatedJson" disabled>Export chart JSON</button></div>
+<p id="tradeAnnotatedStatus" role="status" aria-live="polite">Closed-candle chart not loaded.</p>
+<canvas id="tradeAnnotatedCanvas" width="900" height="540" hidden style="max-width:100%;height:auto" role="img" aria-label="Confirmed BTC ETH spot candles, support resistance and hypothetical paper levels"></canvas>
+<p class="trade-muted">Confirmed pivots need two later closed bars. Paper levels only if validated; single Binance venue, no orders or guaranteed fills.</p>
 <div class="trade-research-actions"><button type="button" id="tradeResearchRun">Research BTC / ETH</button><button type="button" id="tradeBacktestRun">Test strategy</button><button type="button" id="tradeResearchExport" disabled>Export JSON</button></div>
 <p id="tradeResearchStatus" role="status" aria-live="polite"></p><div id="tradeResearchOutput" aria-live="polite"></div>
 <label class="trade-consent"><input id="tradeJournalConsent" type="checkbox"> Save last 10 simulation summaries on this device</label><div id="tradeJournal"></div><button type="button" id="tradeJournalClear">Clear saved summaries</button>
@@ -251,6 +255,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 <script src="./hoshi-product-ads.js"></script>
 <script src="./hoshi-task-router.js"></script>
 <script src="./hoshi-trading-research.js"></script>
+<script src="./hoshi-annotated-chart.js"></script>
 <script src="./hoshi-source-research.js"></script>
 <script src="./hoshi-speech-input.js"></script>
 <script src="./hoshi-local-ui-actions.js"></script>
@@ -378,6 +383,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  $('tradeAsk').onclick=()=>{const text=$('tradePair').value+' '+$('tradeInterval').value+' spot market. Price: '+$('tradePrice').textContent+'. '+$('tradeIndicators').textContent+'. In indicators ka matlab samjhao; yeh sirf public market information hai.';showTab('chat');input.value=text;input.focus()};
  renderTradeWatch();
  const tradingLab=window.HoshiTradingResearch.mount({backend:API_BASE});
+ const annotatedChart=window.HoshiAnnotatedChart.mount({backend:API_BASE});
 
  let voiceListenStartedAt=0,voiceTimes={listen:null,ai:null,audio:null};
  const voiceClock=()=>performance.now();

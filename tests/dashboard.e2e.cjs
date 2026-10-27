@@ -96,6 +96,30 @@ async function main() {
         return;
       }
       const endpoint = new URL(request.url()).pathname;
+      if(endpoint==='/api/trading/annotated-chart'){
+        const params=new URL(request.url()).searchParams;
+        const symbol=params.get('symbol'),tf=params.get('interval');
+        assert.equal(params.get('output'),'json');
+        const step={'15m':900000,'1h':3600000,'4h':14400000}[tf];
+        assert.ok(step);assert.ok(['BTCUSDT','ETHUSDT'].includes(symbol));
+        const start=Math.floor(1793000000000/step)*step-64*step;
+        const candles=Array.from({length:64},(_,i)=>{
+          const time=start+i*step,p=100+i*.12;
+          return {time,close_time:time+step-1,open:p,high:p+1,low:p-1,
+                  close:p+.3,volume_base:10+i%4};
+        });
+        await route.fulfill({status:200,headers,body:JSON.stringify({
+          version:'spot-annotated-chart-v1',symbol,interval:tf,market:'spot',
+          mode:'annotated-spot-chart-research-only',orders_enabled:false,
+          independently_cross_checked:false,source:'Binance Spot single venue',
+          fetched_at:1793000000,last_closed_at:candles.at(-1).close_time,
+          candles,levels:[{kind:'support',price:101,paper_only:false}],
+          confirmed_pivots:[{side:'high',price:candles[5].high,
+            pivot_at:candles[5].close_time,confirmed_at:candles[7].close_time}],
+          paper_decision:'wait',paper_reason_code:'setup_not_confirmed'
+        })});
+        return;
+      }
       if(endpoint==='/api/trading/research'){
         const symbol=new URL(request.url()).searchParams.get('symbol');
         if(researchDelay)await new Promise(resolve=>setTimeout(resolve,researchDelay));
@@ -687,6 +711,28 @@ async function main() {
     assert.equal(await page.locator('#sourceResearchResult a').innerText(),
       '<img src=x onerror=alert(1)>');
     assert.equal(apiMessages.length,beforeSourceNews,'Fixed-source news must not call LLM');
+    // Task 42: a real Chromium canvas must draw and export the SAME JSON snapshot.
+    await page.locator('[data-tab="trading"]').click();
+    await page.locator('#tradePair').selectOption('BTCUSDT');
+    await page.locator('#tradeAnnotatedInterval').selectOption('15m');
+    await page.locator('#tradeAnnotatedRun').click();
+    await page.locator('#tradeAnnotatedCanvas').waitFor({state:'visible'});
+    assert.equal(await page.locator('#tradeAnnotatedPng').isEnabled(),true);
+    assert.equal(await page.locator('#tradeAnnotatedJson').isEnabled(),true);
+    const drawn=await page.locator('#tradeAnnotatedCanvas').evaluate(c=>{
+      const data=c.getContext('2d').getImageData(60,65,1,1).data;
+      return data[3]===255;
+    });
+    assert.equal(drawn,true,'Canvas must contain rendered pixels');
+    const jsonDownload=page.waitForEvent('download');
+    await page.locator('#tradeAnnotatedJson').click();
+    assert.match((await jsonDownload).suggestedFilename(),/BTCUSDT_15m_closed_candles\.json/);
+    const pngDownload=page.waitForEvent('download');
+    await page.locator('#tradeAnnotatedPng').click();
+    assert.match((await pngDownload).suggestedFilename(),/BTCUSDT_15m_paper_chart\.png/);
+    await page.locator('#tradePair').selectOption('SOLUSDT');
+    assert.equal(await page.locator('#tradeAnnotatedRun').isDisabled(),true);
+    assert.equal(await page.locator('#tradeAnnotatedCanvas').isVisible(),false);
     // Focus Home must work on an actual narrow mobile browser independently
     // of existing full-workspace tests. No external assets are required to
     // render the CSS orb; existing tools are preserved behind Settings.

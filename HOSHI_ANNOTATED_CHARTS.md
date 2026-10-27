@@ -7,4 +7,6 @@ This implementation adds **actual 1000×620 PNG chart rendering** and JSON analy
 - BTCUSDT and ETHUSDT only; 15m, 1h, 4h only. Invalid pair: HTTP 422 before network. Stale/missing/invalid provider history: HTTP 503, no chart. Both formats are read-only and no-store. Separate JSON and PNG requests can have different source timestamps; compare them before treating them as the same snapshot.
 - No real trades, accounts, leverage, paid APIs, image uploads or extra model. Uses the existing Pillow dependency. This is single Binance venue, not independent Kraken certification.
 
-**Acceptance pending:** Full GitHub Python/Node/Playwright and Docker checks, mobile UI preview/download integration and physical Realme Note 50 testing. Keep canonical Task 42 unchecked until relevant verification is complete.
+**Mobile UI integration (development):** The existing Trading research lab now loads one strict JSON snapshot into an in-browser canvas, with PNG and JSON downloads from that **same** snapshot. It fails closed on mismatched symbols, timestamps, malformed candles, forged paper levels and unsupported pairs. No automatic local storage. This does not replace the approved minimal black core or resurrect Room Life.
+
+**Acceptance pending:** Full GitHub Python/Node/Playwright and Docker checks and physical Realme Note 50 testing. Keep canonical Task 42 unchecked until relevant verification is complete.

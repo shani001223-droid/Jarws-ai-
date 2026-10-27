@@ -43,8 +43,8 @@ This extends the existing assistant; it is not a new app, trading account, or mo
 | Package | Scope | State |
 | --- | --- | --- |
 | Day 1 | Audit, history, Market Structure, Candlestick Psychology, Order Blocks, SMC, ICT | Complete: audit, history and Modules 1–5 pushed |
-| Day 2 | Liquidity, FVG, Indicators/Order Flow, Global Money Flow, Risk/Psychology; knowledge loader | Curriculum being pushed; loader in progress |
-| Day 3 | Confluence V2, API integration, final system prompt, backend/import checks | Pending |
+| Day 2 | Liquidity, FVG, Indicators/Order Flow, Global Money Flow, Risk/Psychology; knowledge loader | Complete: Modules 6–10 pushed; integrity-checked loader implemented |
+| Day 3 | Confluence V2, API integration, final system prompt, backend/import checks | Implemented locally; integration checks in progress |
 
 Every curriculum module must include Definition, Application Zone, Failure Zone and three linked live-chart inspection exercises. **Links/conditional exercises must never be described as verified live setups.** Current price examples require a timestamped source snapshot; unavailable data must stay unavailable. ICT/SMC terminology is an operational heuristic, not a demonstrated market law.
 
@@ -81,3 +81,11 @@ Continue on the existing development branch, preserve configured Gemini/Groq/fre
 - Day 2: **Global Money Flow** curriculum pushed with definitions, application/failure rules and three conditional chart exercises. Prior receipt: [6202171b8384](https://github.com/shani001223-droid/Jarws-ai-/commit/6202171b838428602fe30afdb8fd6514c3d3e65d).
 
 - Day 2: **Risk and Psychology** curriculum pushed with definitions, application/failure rules and three conditional chart exercises. Prior receipt: [6a4ce1b8ffe8](https://github.com/shani001223-droid/Jarws-ai-/commit/6a4ce1b8ffe8bdd1417c1b8f50a1f5cef784f2d1).
+
+## Knowledge loader checkpoint (27 Oct 2026)
+
+- All ten lessons plus `modules/trading_history_complete.md` have individual GitHub commits and report updates.
+- `cloud_backend/brain.py` loads all 11 lessons, verifies bounded bundle structure and SHA-256, and retrieves at most two relevant definition/application/failure excerpts. Normal non-trading chat receives no lesson excerpts. This is retrieval, not fine-tuning or user-memory storage.
+- Canonical root Markdown and `HOSHI_SYSTEM_PROMPT_FINAL.txt` generate `cloud_backend/knowledge_bundle.json` using `python scripts/build_trading_knowledge.py`. `--check` and regression tests detect drift. Docker now explicitly includes that bundle in the existing backend-only build context.
+- Eight dedicated knowledge tests pass locally (full parity, conditional exercise labels, tamper/missing-file rejection and retrieval bounds). The in-progress integrated working tree also passed **357 Python tests** in 13.452 s; remote GitHub CI and production/device acceptance remain separate.
+- Day 2 commit: `HOSHI UPGRADE: Added Knowledge Brain - Day 2`. Previous module receipt: `e3df0fa44a817a1ebf3d78dfac5cf32d0f5203be`.

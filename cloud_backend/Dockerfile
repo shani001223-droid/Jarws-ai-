@@ -9,6 +9,9 @@ WORKDIR /app
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 COPY *.py ./
+# Canonical root modules and final prompt are bundled with SHA-256 checks.
+# The build context is cloud_backend/, so ../modules cannot be copied here.
+COPY knowledge_bundle.json ./
 
 # An explicit container health probe checks the actual loaded FastAPI app,
 # not just that the image built. No secrets or external providers required.

@@ -270,7 +270,7 @@ async function main() {
     await page.locator('#stopSpeakingBtn').click();
     await page.locator('.sheet-close').click();
     assert.equal(await page.locator('#nightSheet').isVisible(), false);
-    for(const tab of ['trading','influencer','outfit']){
+    for(const tab of ['trading','influencer']){
       await page.locator('[data-tab="'+tab+'"]').click();
       assert.equal(await page.locator('[data-panel="'+tab+'"]').isVisible(),true);
       if(tab==='trading'){

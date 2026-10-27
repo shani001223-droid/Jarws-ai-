@@ -27,6 +27,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Install backend dependencies for API route contract test
+        run: python -m pip install -r cloud_backend/requirements.txt
       - name: Compile sandbox and run no-Docker safety tests
         run: |
           python -m py_compile cloud_backend/sandbox_runner.py

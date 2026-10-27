@@ -19,8 +19,10 @@ from threading import BoundedSemaphore, Lock
 from concurrent.futures import ThreadPoolExecutor
 try:
     from .trading_research import closed_candles, research, backtest, SimulationConfig
+    from .market_data_quality import public_urls, verify_spot_market, MarketDataQualityError
 except ImportError:
     from trading_research import closed_candles, research, backtest, SimulationConfig
+    from market_data_quality import public_urls, verify_spot_market, MarketDataQualityError
 try:
     from .ad_studio import create_ad_pack
     from .artifact_verifier import verify_ad_pack, ArtifactVerificationError
@@ -1279,6 +1281,40 @@ def public_candles(symbol: str = "BTCUSDT", interval: str = "5m"):
 
 
 _RESEARCH_SLOTS = BoundedSemaphore(2)
+
+
+@app.get("/api/trading/data-quality")
+def trading_data_quality(
+    response: Response,
+    symbol: str = "BTCUSDT",
+    interval: Literal["15m", "1h", "4h"] = "15m",
+):
+    """Two independent public spot venues; no orders or trading credentials.
+
+    This strict endpoint fails closed on missing/stale/mismatched candles and
+    inconsistent base/quote volumes. It does not certify strategy profitability.
+    """
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    pair = _research_pair(symbol)
+    try:
+        binance_url, kraken_url = public_urls(pair, interval)
+    except MarketDataQualityError:
+        raise HTTPException(status_code=422, detail="Unsupported market data request.") from None
+    if not _RESEARCH_SLOTS.acquire(blocking=False):
+        raise HTTPException(status_code=429, detail="Research busy. Retry shortly.")
+    try:
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            binance_future = pool.submit(_public_data, "quality-v1:binance:" + pair + ":" + interval, binance_url, 30)
+            kraken_future = pool.submit(_public_data, "quality-v1:kraken:" + pair + ":" + interval, kraken_url, 30)
+            first, first_at = binance_future.result()
+            second, second_at = kraken_future.result()
+        try:
+            return verify_spot_market(pair, interval, first, second, int(time.time()*1000), first_at, second_at)
+        except MarketDataQualityError:
+            raise HTTPException(status_code=503, detail="Independent spot candle/volume verification failed. No current-market claim.") from None
+    finally:
+        _RESEARCH_SLOTS.release()
 
 
 def _research_pair(symbol):

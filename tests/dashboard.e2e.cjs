@@ -156,6 +156,17 @@ async function main() {
         })});
         return;
       }
+      if (endpoint === "/api/research/sources") {
+        assert.equal(request.method(), "GET");
+        assert.equal(new URL(request.url()).searchParams.get("topic"), "world");
+        await route.fulfill({status:200,headers,body:JSON.stringify({
+          topic:"world",publisher:"BBC News",retrieved_at:"2026-10-27T00:00:00+00:00",
+          items:[{title:"<img src=x onerror=alert(1)>",summary:"Source headline only",
+            publisher:"BBC News",published_at:"2026-10-26T23:00:00+00:00",
+            citation_url:"https://www.bbc.com/news/articles/grounded?tracking=1"}]
+        })});
+        return;
+      }
       if (endpoint !== "/api/assistant") {
         await route.fulfill({ status: 404, headers, body: JSON.stringify({ detail: "Unknown test route" }) });
         return;
@@ -662,6 +673,20 @@ async function main() {
     await page.locator('#actionResumeBtn').click();
     await page.locator('#actionHistoryClearBtn').click();
     assert.equal(await page.locator('#actionHistory li').count(),0);
+    // Task 31: news commands render source citations as inert links, never as HTML
+    // or an uncited model reply, and do not call the assistant model.
+    await page.locator('[data-tab="chat"]').click();
+    const beforeSourceNews=apiMessages.length;
+    await page.locator('#commandInput').fill('world news');
+    await page.locator('#commandForm button').click();
+    await page.locator('#sourceResearchResult a').waitFor();
+    assert.equal(await page.locator('#sourceResearchResult a').count(),1);
+    assert.equal(await page.locator('#sourceResearchResult img').count(),0);
+    assert.equal(await page.locator('#sourceResearchResult a').getAttribute('href'),
+      'https://www.bbc.com/news/articles/grounded');
+    assert.equal(await page.locator('#sourceResearchResult a').innerText(),
+      '<img src=x onerror=alert(1)>');
+    assert.equal(apiMessages.length,beforeSourceNews,'Fixed-source news must not call LLM');
     assert.deepEqual(pageErrors,[]);
     console.log('PASS — nightroom layout, chat, voice settings, tabs and narrow phone widths');
   } finally {

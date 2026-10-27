@@ -135,6 +135,24 @@ class SourceResearchTests(unittest.TestCase):
         self.assertEqual(result["count"], 1)
         self.assertEqual(result["freshness_hours"], 336)
 
+    def test_redirects_are_blocked_before_following_any_new_host(self):
+        handler = sr._NoRedirect()
+        with self.assertRaises(sr.SourceUnavailable):
+            handler.redirect_request(None, None, 302, "Moved", {},
+                                     "http://169.254.169.254/latest/meta-data")
+
+    def test_atom_feed_has_direct_nasa_citation_and_iso_publication(self):
+        atom = (b'<feed xmlns="http://www.w3.org/2005/Atom"><entry>'
+                b'<title>NASA research update</title><summary>Moon exploration</summary>'
+                b'<published>2026-10-26T23:00:00Z</published>'
+                b'<link rel="alternate" href="https://science.nasa.gov/mission/real"/>'
+                b'</entry></feed>')
+        with patch.object(sr, "_download", return_value=atom):
+            result = sr.browse_sources("space", "Moon", now=NOW)
+        self.assertEqual(result["count"], 1)
+        self.assertEqual(result["items"][0]["url"],
+                         "https://science.nasa.gov/mission/real")
+
     def test_api_is_get_only_read_only_no_store_and_safe_failure(self):
         paths = {(route.path, method) for route in main.app.routes
                  for method in getattr(route, "methods", set())}

@@ -113,7 +113,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 <button type="button" data-hoshi-command="swipe up">↑ Swipe</button>
 <button type="button" data-hoshi-command="take screenshot">▣ Screenshot</button>
 </div><button type="button" id="enablePhoneAccess" class="primary">Enable phone Accessibility permission</button>
-<div class="hoshi-draft"><label for="hoshiDraft">Writing pad · local to this device</label><textarea id="hoshiDraft" rows="3" maxlength="2000" placeholder="Hoshi, note likho…"></textarea><div class="hoshi-tool-grid"><button type="button" id="useHoshiReply">Use AI reply</button><button type="button" id="copyHoshiDraft">Copy text</button><button type="button" id="shareHoshiDraft">Share draft</button></div><p id="draftStatus" class="small" role="status">Draft is not automatically sent.</p></div></section><section id="adStudioResult" hidden aria-live="polite"></section></div><div data-panel="trading" hidden>
+<div class="hoshi-draft"><label for="hoshiDraft">Writing pad · local to this device</label><textarea id="hoshiDraft" rows="3" maxlength="2000" placeholder="Hoshi, note likho…"></textarea><div class="hoshi-tool-grid"><button type="button" id="useHoshiReply">Use AI reply</button><button type="button" id="copyHoshiDraft">Copy text</button><button type="button" id="shareHoshiDraft">Share draft</button></div><p id="draftStatus" class="small" role="status">Draft is not automatically sent.</p></div></section><section id="adStudioResult" hidden aria-live="polite"></section><section id="sourceResearchResult" hidden aria-live="polite" class="section" aria-label="Fresh source citations"></section></div><div data-panel="trading" hidden>
 <div id="tradeDashboard" class="trade-dashboard">
 <aside class="trade-rail"><div class="trade-logo"><img src="./assets/hoshi-app-icon.svg" width="36" height="36" alt=""><div>Hoshi AI<small>Trading Assistant</small></div></div><nav aria-label="Trading workspace"><button type="button" data-trade-target="tradeOverview" aria-pressed="true">↗ Trading</button><button type="button" data-trade-target="tradeAnalysis">◈ Analysis</button><button type="button" data-trade-target="tradeNews">▤ News</button><button type="button" data-trade-target="tradeWatchlist">☆ Watchlist</button><button type="button" data-trade-target="tradeExecution">▣ Positions</button></nav><div class="trade-rail-note">Trade smart.<br>Understand the chart.<span>✧ With Hoshi</span></div></aside>
 <div class="trade-content">
@@ -230,6 +230,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
 <script src="./hoshi-product-ads.js"></script>
 <script src="./hoshi-task-router.js"></script>
 <script src="./hoshi-trading-research.js"></script>
+<script src="./hoshi-source-research.js"></script>
 <script src="./hoshi-speech-input.js"></script>
 <script src="./hoshi-local-ui-actions.js"></script>
 <script>
@@ -242,7 +243,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
  $('nightMic').append($('wakeBtn'));$('wakeBtn').setAttribute('aria-label','Start or stop microphone');
  const chatPanel=shell.querySelector('[data-panel="chat"]'),settingsPanel=shell.querySelector('[data-panel="settings"]');
  $('nightAudioRetry').onclick=()=>{$('hoshiAudio').play().then(()=>{$('nightAudioRetry').hidden=true}).catch(()=>setStatus('AUDIO BLOCKED · CHECK MEDIA SETTINGS'))};
- chatPanel.append($('commandForm'),$('adStudioResult'),$('memoryPanel'));
+ chatPanel.append($('commandForm'),$('adStudioResult'),$('sourceResearchResult'),$('memoryPanel'));
  settingsPanel.append(document.querySelector('.controls'),document.querySelector('.bottom-workspace'));
  if(window.JarvisBridge&&typeof window.JarvisBridge.showReminders==='function'){$('nativeRemindersBtn').hidden=false;$('nativeRemindersBtn').onclick=()=>window.JarvisBridge.showReminders()}
  $('stopBtn').hidden=true;$('testBtn').hidden=true;
@@ -421,6 +422,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
    cloudRequestSequence++;
    if(activeCloudController){try{activeCloudController.abort()}catch(_){}}
    activeCloudController=null;
+   if(window.HoshiSourceResearch)window.HoshiSourceResearch.cancel();
    stopSpeaking();
    orb.classList.remove('active');
  }
@@ -709,6 +711,13 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
   }
  function processCommand(raw,source='text'){const text=String(raw||'').trim(),c=window.JarvisCommandUtils?window.JarvisCommandUtils.normalize(text):text.toLowerCase().replace(/[!?.,،۔]/g,' ').replace(/\s+/g,' ').trim();if(!c)return;
  if(actionSafety.snapshot().state==='halted'){setStatus('EMERGENCY STOP ACTIVE · TAP RESUME IN SETTINGS');return;}
+ if(window.HoshiSourceResearch&&!window.HoshiSourceResearch.isIntent(text))window.HoshiSourceResearch.cancel();
+ if(window.HoshiSourceResearch&&window.HoshiSourceResearch.isIntent(text)){
+   rememberTurn('user',text);showTab('chat');
+   reply.textContent='Fresh public source headlines neeche links ke saath hain. Original article check karein; khabrein independently verify nahi ki gayi.';
+   window.HoshiSourceResearch.execute({text,backend:API_BASE,container:$('sourceResearchResult'),onStatus:setStatus});
+   return;
+ }
  if(window.HoshiAdStudio&&window.HoshiAdStudio.isIntent(text)){
   rememberTurn('user',text);showTab('chat');
   window.HoshiAdStudio.execute({

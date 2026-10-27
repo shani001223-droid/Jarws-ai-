@@ -87,6 +87,10 @@ class QualityUnitTests(unittest.TestCase):
         with self.assertRaises(mq.MarketDataQualityError):
             mq.verify_spot_market("BTCUSDT", "15m", b, k, NOW, NOW//1000, NOW//1000)
         b, k = fixtures()
+        k["result"]["XXBTZUSD"][-2][7] = 0
+        with self.assertRaises(mq.MarketDataQualityError):
+            mq.verify_spot_market("BTCUSDT", "15m", b, k, NOW, NOW//1000, NOW//1000)
+        b, k = fixtures()
         b[-2][5] = "0"
         b[-2][7] = "0"
         b[-2][8] = 0

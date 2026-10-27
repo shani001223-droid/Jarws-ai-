@@ -1,7 +1,7 @@
 # HOSHI — 60-Task Autonomous Development Roadmap
 
 **Status:** tasks are not presumed implemented. Checkmarks only for verified artifacts.
-**Date:** 26 Oct 2026. **Active implementation:** draft PR #24.
+**Updated:** 27 Oct 2026. **Release:** PR #24 is merged and V2 is live. Use the single current open successor on `hoshi/dnd-foundation-20261026`; check its actual state in GitHub. Post-release verification is recorded in PR #28 and `HOSHI_RELEASE_PRECHECK.md`. Task checkboxes below are unchanged by the release.
 **Rules:** work serially; after each task run relevant unit/E2E/security tests; repair failures before advancing; make no purchases; never execute live trades; ask for explicit approval on destructive or account-affecting changes.
 **Limitation:** third-party models, GPU render, background workers and persistent free storage depend on actual reachable infrastructure; do not claim a placeholder is functional.
 

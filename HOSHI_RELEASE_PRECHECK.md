@@ -1,6 +1,69 @@
 # HOSHI release precheck — 27 October 2026
 
-The release candidate is now source/test verified; production deployment is pending required Render workspace identification.
+Production is live; current status and actual checks appear first.
+
+## Production release — 27 October 2026
+
+**PR #24 is merged and HOSHI V2 is live** at https://jarws-ai-1.onrender.com.
+Released application source: `1a0f532afb34d5f3f1d939b2daef86ec9fd46e29`.
+User follow-up authorized proceeding with the previously identified My Workspace;
+the actual existing services were then verified before the production merge.
+The backend plan is Free and the frontend is the existing static site. No new
+resource, subscription, secret or real-money order capability was added.
+
+| Service | Verified new deploy | Status / completed time (PKT) | Previous good deploy / commit |
+| --- | --- | --- | --- |
+| Existing frontend, jarws-ai-1.onrender.com | `dep-dbgaj3vf3r2c73bemuu0` | live, 27 Oct 18:39:41 | `dep-dbg9au29lscs73947rh0` / `081370ba23acbb7a9f9a6efab1978e39f4efe05e` |
+| Existing primary Python backend, jarws-ai-2.onrender.com | `dep-dbgaj3vf3r2c73bemup0` | live, 27 Oct 18:40:23 | `dep-dbg9au29lscs73947rk0` / same previous commit |
+| Pre-existing auxiliary Docker backend, jarws-ai.onrender.com | `dep-dbgaj3vf3r2c73bemv1g` | live, 27 Oct 18:40:17 | Prior recent deploys had already failed; this is not the frontend's API target |
+
+All three deploys were automatically triggered by the verified main merge.
+No redundant manual deploy or paid upgrade was triggered. Rollback IDs above
+are retained as references; no rollback or persistent-data restoration occurred.
+
+### Actual live checks
+
+- `/health`: 200; `/learn`: 200 with all **11** lessons; `/learn?module=ict`
+  and `/history`: 200 with version `hoshi-trading-knowledge-v2`.
+- Unsupported SOLUSDT confluence: **422**. Real BTCUSDT confluence: **200**,
+  score **60**, decision **wait**, orders disabled and win probability null.
+  This is one dated rule-coverage observation, not a trade recommendation.
+- One real short Urdu request returned **200 via Groq**, Roman Urdu reply
+  `Mera naam Hoshi hai.` and an Urdu-script speech field. Total request time
+  from this test environment was **8.777 s**, including network; it is not a
+  model-only latency, first-audio measurement or Realme benchmark.
+- Production merge CI: full checks **40513968698**, APK **40513968761**,
+  live backend **40513968687**, trace/private-boundary **40513968822** and
+  real offline ad rendering **40513968515** passed.
+- The old live browser test **40513968778 failed** by attempting to click the
+  intentionally hidden Outfit tab. A test-only follow-up replaces the obsolete
+  wardrobe assertions with actual core, Settings/tools, V2 route and mobile
+  overflow checks. **Corrected live run [40515342689](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40515342689)
+  passed** against the released public site using test source `1a68b754720e94dfcf375c8b51fdee37a218232a`.
+  It checked 320/390/768/1440px layouts, Settings, V2 lessons/history, invalid-pair
+  rejection, live market-source loading, zero uncaught browser errors and zero
+  broken same-origin assets. [Screenshot artifact](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40515342689/artifacts/12738891639)
+  records the 390px trading screen. The earlier failed run remains recorded.
+- Full follow-up [40515342724](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40515342724)
+  passed on the same test source: **390 Python / 75 Node tests**, knowledge parity
+  and desktop/mobile Chromium regression. PR #28 changes only tests, workflow
+  and release documents; its merge uses `[skip render]`. Main can therefore have
+  a newer documentation/test commit while the live application correctly stays
+  on release source `1a0f532afb34d5f3f1d939b2daef86ec9fd46e29`.
+- Production Android debug APK: [artifact 12737034849](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40513968761/artifacts/12737034849),
+  22,446,364-byte archive from the released source. Recorded archive digest:
+  `sha256:683364e3ec4cefcbfb2cc56a0fd3b733d1f15c61be63aa7dfdedc6a09f9d085d`.
+- Opera connector reported **Browser not connected**. No Opera or physical
+  Realme microphone/TTS interaction is claimed. Actual Chromium live-browser
+  testing is performed by the existing GitHub workflow.
+
+**Historical pre-release notes below describe earlier states, not a current
+workspace blocker.** Task 06 physical-device acceptance and a real OpenJarvis
+server remain separate; no unrelated roadmap checkbox is checked by this release.
+
+## Archived pre-release checkpoints
+
+The following records are chronological evidence retained from preparation.
 
 ## Exact sources
 

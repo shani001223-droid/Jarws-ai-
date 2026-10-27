@@ -9,6 +9,13 @@ on:
       - "sw.js"
       - "tests/live_render_smoke.cjs"
       - ".github/workflows/render-live-smoke.yml"
+  # Test-only follow-ups can validate the already deployed public app before
+  # merging, without claiming their branch is deployed or requiring secrets.
+  pull_request:
+    branches: [main]
+    paths:
+      - "tests/live_render_smoke.cjs"
+      - ".github/workflows/render-live-smoke.yml"
   workflow_dispatch:
 
 permissions:

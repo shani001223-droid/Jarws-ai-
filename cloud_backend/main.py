@@ -387,6 +387,9 @@ def _groq_reply(message: str, language_hint: str, *, quick: bool = False) -> str
         "temperature": 0.4 if quick else 0.7,
         "max_tokens": 240 if quick else 1024,
     }
+    # Simple dialogue uses less GPT-OSS reasoning; detailed tasks are unchanged.
+    if quick and GROQ_MODEL in {"openai/gpt-oss-20b", "openai/gpt-oss-120b"}:
+        body["reasoning_effort"] = "low"
     req = Request(
         "https://api.groq.com/openai/v1/chat/completions",
         data=json.dumps(body).encode("utf-8"),

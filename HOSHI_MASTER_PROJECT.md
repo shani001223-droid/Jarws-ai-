@@ -3,6 +3,10 @@
 
 > Updated: 26 October 2026. This is a unified project map, **not** a declaration that unfinished features work. Keep every future Hoshi/JARVIS discussion, decision, code change, test, build and issue linked to this one repository and this one project file.
 
+## Current release / review routing (27 October 2026)
+
+Production main now includes PR #24, merged as `1a0f532afb34d5f3f1d939b2daef86ec9fd46e29`; the existing Render frontend and primary backend were verified live. See [release evidence](HOSHI_RELEASE_PRECHECK.md). The development branch remains `hoshi/dnd-foundation-20261026`. **PR #24 is merged, not an active draft**: first find the current open PR for this branch; create at most one successor draft when new changes require review. Historical PR #24 references below describe prior development evidence. Do not create a second project or reset the roadmap.
+
 ## 1. Identity, history and final scope
 
 **One project name:** HOSHI AI. Earlier concepts JARVIS, JARWS, ALTRON and VALTRON inform this project; do **not** start separate competing assistant repositories or duplicate implementations. The Javes trading bot remains a **separate demo-only experiment**, not silently merged into the Hoshi runtime. A future integration must be explicit and tested.
@@ -27,7 +31,7 @@
 | Code (only canonical repo) | https://github.com/shani001223-droid/Jarws-ai- | Existing combined Android + web + Python backend source |
 | Stable production branch | `main` | Do not silently merge or auto-deploy unverified changes |
 | Work-in-progress branch | `hoshi/dnd-foundation-20261026` | Development-only changes |
-| Development review | https://github.com/shani001223-droid/Jarws-ai-/pull/24 | Draft PR; not proof of production deployment |
+| Development review | https://github.com/shani001223-droid/Jarws-ai-/pulls | PR #24 released; use the single current open successor for the development branch |
 | **Project entry point** | `HOSHI_MASTER_PROJECT.md` (this file) | Authority for vision, module map and handoff |
 | **Only task-status scoreboard** | `HOSHI_60_TASK_MASTER_ROADMAP.md` | Update checkboxes only after relevant verification |
 | Implementation history | `HOSHI_TASK_LIST.md`, `README.md`, `HOSHI_PHASE1_AUDIT.md` | Older notes may contain outdated status/URLs/wording |
@@ -147,7 +151,7 @@ These are **reference filenames**, not files automatically imported from Library
 
 ## 8. Handoff text for a new ChatGPT conversation / Project
 
-> Continue the **same HOSHI AI project**, NOT a new app. Canonical GitHub repo: `shani001223-droid/Jarws-ai-`; current development branch: `hoshi/dnd-foundation-20261026`; draft PR #24. Read `HOSHI_MASTER_PROJECT.md` and `HOSHI_60_TASK_MASTER_ROADMAP.md` first, then inspect current CI and code. Keep free-first, Realme Note 50, Pakistani Roman Urdu, soft Urdu voice, no fake Room Life, no secret commits, no real trading, no unauthorized phone/account actions. Work on the next feasible unchecked task; test, fix, and only then mark it verified. Do not merge/deploy to main without a separate release validation. Preserve previous Hoshi designs and actual Flora product assets. Never imply an unprovisioned OpenJarvis endpoint is running.
+> Continue the **same HOSHI AI project**, NOT a new app. Canonical GitHub repo: `shani001223-droid/Jarws-ai-`; current development branch: `hoshi/dnd-foundation-20261026`; PR #24 has been released, so locate the current open successor before writing. Read `HOSHI_MASTER_PROJECT.md` and `HOSHI_60_TASK_MASTER_ROADMAP.md` first, then inspect current CI and code. Keep free-first, Realme Note 50, Pakistani Roman Urdu, soft Urdu voice, no fake Room Life, no secret commits, no real trading, no unauthorized phone/account actions. Work on the next feasible unchecked task; test, fix, and only then mark it verified. Do not merge/deploy to main without a separate release validation. Preserve previous Hoshi designs and actual Flora product assets. Never imply an unprovisioned OpenJarvis endpoint is running.
 
 ## 9. Supporting documents (not parallel projects)
 - [60-task roadmap](HOSHI_60_TASK_MASTER_ROADMAP.md)

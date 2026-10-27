@@ -3,7 +3,7 @@
 Audit date: **27 October 2026 (Asia/Karachi)**. Repository: `shani001223-droid/Jarws-ai-`.
 This extends the existing assistant; it is not a new app, trading account, or model.
 
-## Current delivery — source/test verified
+## Current delivery — source/test verified; subsequently released
 
 **Completed early on 27 October 2026:** all three requested work packages have been implemented on the existing development branch. All ten modules, history, 30 dated source observations (plus conditional walkthroughs), knowledge loader, final prompt, five-factor Confluence V2 and the three requested API paths are pushed. No new app/repository or paid provider was created.
 
@@ -13,6 +13,10 @@ Verified integrated source: [51f2eaf2b57b](https://github.com/shani001223-droid/
 Production Render release, physical Realme Note 50 acceptance, reliable live provider availability and out-of-sample profitability remain pending. The direct HTTP live BTC request observed an upstream 503; it did not invent a score. A 0–100 rule score is not a win probability or 99.999% accuracy.
 
 The missing/outdated findings below are the **fetched baseline**. Later sections document how they were resolved; they do not imply the new modules are still absent.
+
+## Production follow-through
+
+PR #24 merged as `1a0f532afb34d5f3f1d939b2daef86ec9fd46e29` and the existing Render frontend/backend both reached live. Eleven-lesson retrieval, history, invalid-pair rejection, actual BTC confluence and a real Urdu Groq reply were checked. See [HOSHI_RELEASE_PRECHECK.md](HOSHI_RELEASE_PRECHECK.md) for deploy IDs, actual response timing, retained failures and device limits. Earlier pending-release statements are historical checkpoints.
 
 ## Day 1 — fetched baseline
 

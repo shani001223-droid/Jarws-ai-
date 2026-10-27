@@ -13,9 +13,14 @@ async function waitForPublicEndpoints() {
       const health = await fetch(HEALTH_URL, { signal: AbortSignal.timeout(10000) });
       const data = await health.json();
       if (health.ok && data.service === "hoshi-cloud-api" && data.version === "0.9.1") {
+        const knowledge = await fetch("https://jarws-ai-2.onrender.com/learn", { signal: AbortSignal.timeout(15000) });
+        const index = await knowledge.json();
+        if (!knowledge.ok || index.version !== "hoshi-trading-knowledge-v2" || index.lessons?.length !== 11) {
+          throw new Error("Trading V2 knowledge is not yet deployed");
+        }
         const response = await fetch(DASHBOARD_URL, { signal: AbortSignal.timeout(15000) });
         const html = await response.text();
-        if (response.ok && /HOSHI — AI Companion/.test(html) && html.includes('id="nightroom"') && html.includes('assets/outfits/') && html.includes('id="tradeDashboard"') && html.includes('id="clientDiagnostics"')) return;
+        if (response.ok && /HOSHI — AI Companion/.test(html) && html.includes('id="hoshiEnergy"') && html.includes('id="focusModeToggle"') && html.includes('id="tradeDashboard"') && html.includes('id="clientDiagnostics"')) return;
         lastError = "Dashboard returned HTTP " + response.status + " or has not published the client diagnostics revision yet";
       } else {
         lastError = "Backend health check did not match expected HOSHI API: HTTP " + health.status;
@@ -30,6 +35,14 @@ async function waitForPublicEndpoints() {
 
 async function main() {
   await waitForPublicEndpoints();
+  const history = await fetch("https://jarws-ai-2.onrender.com/history", { signal: AbortSignal.timeout(15000) });
+  const timeline = await history.json();
+  assert.equal(history.status, 200);
+  assert.equal(timeline.id, "history");
+  assert.equal(timeline.orders_enabled, false);
+  assert.match(timeline.content, /1602/);
+  const unsupported = await fetch("https://jarws-ai-2.onrender.com/confluence_score?symbol=SOLUSDT", { signal: AbortSignal.timeout(15000) });
+  assert.equal(unsupported.status, 422, "V2 rejects unsupported pairs before source access");
   const browser = await chromium.launch({ headless: true });
   const pageErrors = [];
   const badResponses = [];
@@ -57,6 +70,11 @@ async function main() {
     assert.equal(await page.locator('.night-tabs button').count(),5);
     assert.equal(await page.locator('#wakeBtn').isVisible(),true);
     assert.equal(await page.locator('.sidebar').isVisible(),false);
+    assert.equal(await page.locator('#hoshiEnergy').isVisible(),true);
+    assert.equal(await page.locator('[data-tab="chat"]').isVisible(),false);
+    assert.equal(await page.locator('[data-tab="outfit"]').isVisible(),false);
+    await page.waitForFunction(()=>document.querySelector('#core-canvas').width>0);
+    assert.equal((await page.locator('#nightroom').evaluate(n=>getComputedStyle(n).backgroundImage)).includes('url('),false);
     await page.locator('[data-tab="settings"]').click();
     assert.equal(await page.locator('#voicePanel').isVisible(),true);
     await page.waitForFunction(()=>Boolean(window.HoshiDiagnostics&&window.HoshiDiagnostics.snapshot().last_api_response),{},{timeout:20000});
@@ -70,13 +88,13 @@ async function main() {
     assert.deepEqual(await page.evaluate(()=>window.HoshiDiagnostics.snapshot().events),[]);
     await page.locator('#clientDiagnostics summary').click();
 
+    // Existing tools are available through Settings; keep the approved core
+    // and never restore the removed wardrobe as a default-screen assertion.
+    await page.locator('#focusModeToggle').click();
+    assert.equal(await page.locator('.nightroom.focus-mode').count(),0);
     await page.locator('.sheet-close').click();
-    await page.locator('[data-tab="outfit"]').click();
-    await page.locator('button[data-outfit="winter"]').click();
-    await page.waitForFunction(()=>document.querySelector('#nightroom').dataset.outfit==='winter');
-    assert.match(await page.locator('#nightroom').evaluate(n=>n.style.backgroundImage),/assets\/outfits\/winter\.webp/);
-    const portraitSize=await page.locator('button[data-outfit="winter"] img').evaluate(async img=>{await img.decode();return [img.naturalWidth,img.naturalHeight]});
-    assert.deepEqual(portraitSize,[1024,1536]);
+    assert.equal(await page.locator('[data-tab="chat"]').isVisible(),true);
+    assert.equal(await page.locator('#hoshiEnergy').isVisible(),true);
     for(const width of [320,390,768]){
       await page.setViewportSize({width,height:844});
       assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
@@ -102,7 +120,7 @@ async function main() {
     await page.screenshot({ path: "/tmp/hoshi-live-dashboard.png", fullPage: false, animations: "disabled", timeout: 45000 });
     assert.deepEqual(badResponses, [], "The live dashboard should not return broken same-origin assets");
     assert.deepEqual(pageErrors, [], "The live dashboard should not throw uncaught browser errors");
-    console.log("PASS — live Render trading dashboard layout, wardrobe selection, core controls, responsive widths, and browser console.");
+    console.log("PASS — live Render V2 lessons/history, approved core, Settings tools, trading layout, responsive widths and browser console.");
   } finally {
     await browser.close();
   }

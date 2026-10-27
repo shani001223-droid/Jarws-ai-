@@ -125,6 +125,9 @@ class DocumentToolsTests(unittest.TestCase):
                     doc.replace_project_text("catalog.json", original, old, new,
                                              expected)
         with self.assertRaises(doc.DocumentSafetyError):
+            doc.replace_project_text("catalog.json", b'{"a":1}', "1", "NaN",
+                                     sha256(b'{"a":1}').hexdigest())
+        with self.assertRaises(doc.DocumentSafetyError):
             doc.inspect_document("broken.json", b'{"a":NaN}')
         with self.assertRaises(doc.DocumentSafetyError):
             doc.inspect_document("invalid.txt", b"abc\x00def")

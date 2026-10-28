@@ -101,6 +101,10 @@ jobs:
         run: node --test tests/hoshi-game-engine.test.cjs
       - name: Test Task 52 playable game rules and opt-in saves
         run: node --test tests/hoshi-gameplay.test.cjs
+      - name: Test Task 53 randomized game state and crash invariants
+        run: node --test tests/hoshi-game-qa.test.cjs
+      - name: Check Task 53 browser QA syntax
+        run: node --check tests/game-studio-qa.e2e.cjs
       - name: Check offline Game Studio gameplay syntax
         run: node --check game-studio/gameplay.mjs
       - name: Check offline Game Studio engine JavaScript syntax
@@ -132,4 +136,6 @@ jobs:
         run: node --check tests/game-studio.e2e.cjs
       - name: Run real-browser Game Studio template smoke tests
         run: node tests/game-studio.e2e.cjs
+      - name: Run Task 53 real-browser full-game and failure-path QA
+        run: node tests/game-studio-qa.e2e.cjs
 

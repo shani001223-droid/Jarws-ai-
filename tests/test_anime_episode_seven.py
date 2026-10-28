@@ -67,7 +67,7 @@ class EpisodeSevenTests(unittest.TestCase):
             "prior_digest": lambda x: x.update(previous_episode_sha256="0" * 64),
             "outline": lambda x: x.update(source_outline_sha256="0" * 64),
             "story_day": lambda x: x.update(story_day=2),
-            "beat": lambda x: x.update(episode_beat=2),
+            "beat": lambda x: x.update(episode_beat=1),
             "false_review": lambda x: x.update(human_reviewed=True),
             "false_duration": lambda x: x.update(spoken_duration_verified=True),
             "false_render": lambda x: x.update(rendered=True),

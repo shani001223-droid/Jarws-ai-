@@ -32,7 +32,7 @@ async function main() {
       await page.locator("#level").waitFor({state:"visible"});
       assert.equal(await page.locator("#level").isEnabled(),true);
       assert.match(await page.locator("#status").innerText(),/Level 1: 1 stars baqi/);
-      assert.equal(await page.locator("#level option[value="6"]").isDisabled(),true,"locked levels cannot be selected");
+      assert.equal(await page.locator('#level option[value="6"]').isDisabled(),true,"locked levels cannot be selected");
       const animate=page.locator("#animate");
       assert.equal(await animate.isEnabled(),true,"animation is available only by opt-in");
       const before=await page.locator("#board").evaluate(canvas=>canvas.toDataURL());
@@ -65,7 +65,7 @@ async function main() {
       await tap("up",2);
       await tap("right",2);
       assert.match(await page.locator("#status").innerText(),/Shabash! Level 1 complete/);
-      assert.equal(await page.locator("#level option[value="2"]").isEnabled(),true);
+      assert.equal(await page.locator('#level option[value="2"]').isEnabled(),true);
       assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem("hoshi-star-trail-progress-v1")).highest_unlocked),2);
       await page.locator("#level").selectOption("2");
       await page.locator("#board").click();

@@ -78,5 +78,26 @@ class EpisodeTwoTests(unittest.TestCase):
                          {"laila", "rayan", "meher", "aman", "zoya"})
 
 
+
+    def test_export_non_overwrite_and_json_revision(self):
+        import subprocess
+        import sys
+        import tempfile
+        from pathlib import Path
+        root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as folder:
+            target = Path(folder) / "ep002.json"
+            cmd = [sys.executable, "-m", "scripts.export_hoshi_anime_episode_two",
+                   "--out", str(target)]
+            first = subprocess.run(cmd, cwd=root, capture_output=True, text=True, timeout=12)
+            self.assertEqual(first.returncode, 0, first.stderr)
+            exported = json.loads(target.read_text(encoding="utf-8"))
+            self.assertEqual(exported["sha256"], episode_two_script()["sha256"])
+            self.assertFalse(exported["human_reviewed"])
+            before = target.read_bytes()
+            second = subprocess.run(cmd, cwd=root, capture_output=True, text=True, timeout=12)
+            self.assertNotEqual(second.returncode, 0)
+            self.assertEqual(target.read_bytes(), before)
+
 if __name__ == "__main__":
     unittest.main()

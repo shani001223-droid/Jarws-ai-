@@ -5,6 +5,15 @@
 **Rules:** work serially; after each task run relevant unit/E2E/security tests; repair failures before advancing; make no purchases; never execute live trades; ask for explicit approval on destructive or account-affecting changes.
 **Limitation:** third-party models, GPU render, background workers and persistent free storage depend on actual reachable infrastructure; do not claim a placeholder is functional.
 
+
+## Owner-corrected scope and verification boundary — 29 October 2026
+
+**ONE existing roadmap, no reset or duplicate task list.** Current checked count is **48/60 (80% of scoped code/test milestones)**, **not** 80% of real-world readiness. A checked item means its recorded *narrow implementation and tests* passed, not that all phone, external model, media quality, production or user acceptance was demonstrated. Report separately: (1) source implementation, (2) automated CI evidence tied to a commit, (3) independent real-world/device/production evidence; absent evidence = **unverified**, never inferred.
+
+**Corrected Anime Studio interpretation:** Tasks 55–60 must support a **reusable multi-agent Hindi/Urdu production workflow**, not just 300 individual screenplay drafts. Specialist stages: manager, script, character consistency, backgrounds, storyboard, action/animation/VFX, voice and lip-sync, original sound, edit, subtitles, thumbnail, SEO, render/probe, quality and owner-gated uploader. First implement and independently probe a private 30–60 second original/rightful-source animatic with timed captions and explicit draft status; it does not prove fluid Solo Leveling/Black Clover-level animation or a finished 30-minute episode. Do not write EP013 simply to advance Task 56. Preserve EP001–EP012 as unapproved editorial source material.
+
+**Unresolved acceptance examples:** 06 physical Realme Note 50 QA and rollback; 11 live OpenJarvis model/server; 13–16 natural phone STT/TTS and measured latency; 19–24 external-app screen-control scope remains deliberately limited; 25–36 actual production worker/storage credentials and persistence; 37–42 independent live-market/device verification; 43/45–48 Flora owner photos, rights, actual publication/report data; 49–54 device-playable build QA; 55–60 anime human reviews, consistent assets, full animation, synced original audio/video and approved export. Continue safe development without claiming these are done. No production merge/deploy, auto-post, real trading or payment.
+
 ## Phase 1 — Foundation & Reliability
 - [x] **01** Audit current code and capabilities. Acceptance: implementation or evidence, passing tests, limitations recorded.
 - [x] **02** Remove only demonstrably obsolete or duplicate code. Acceptance: implementation or evidence, passing tests, limitations recorded.

@@ -19,8 +19,8 @@ class AnimeReadinessTests(unittest.TestCase):
     def test_all_authored_drafts_and_actual_word_counts(self):
         report = build_readiness_report()
         self.assertEqual([x["episode_id"] for x in report["episodes"]],
-                         ["EP001", "EP002", "EP003"])
-        self.assertEqual(report["remaining_individual_scripts"], 297)
+                         ["EP001", "EP002", "EP003", "EP004"])
+        self.assertEqual(report["remaining_individual_scripts"], 296)
         self.assertEqual(report["reviewed_scripts"], 0)
         self.assertEqual(report["production_ready_scripts"], 0)
         self.assertFalse(report["reference_is_measured"])

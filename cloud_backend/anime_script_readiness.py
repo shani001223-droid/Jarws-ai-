@@ -1,7 +1,7 @@
 """Offline Task 56 script-readiness audit; no approvals, voices or media.
 
 Counts are estimates from written dialogue, never measured speech duration.
-Only the three immutable, locally authored editorial drafts are accepted.
+Only the four immutable, locally authored editorial drafts are accepted.
 """
 from __future__ import annotations
 
@@ -13,9 +13,10 @@ from cloud_backend.anime_series import series_manifest
 from cloud_backend.anime_scripts import pilot_script, validate_pilot
 from cloud_backend.anime_episode_two import episode_two_script, validate_episode_two
 from cloud_backend.anime_episode_three import episode_three_script, validate_episode_three
+from cloud_backend.anime_episode_four import episode_four_script, validate_episode_four
 
-DRAFT_FACTORIES = (pilot_script, episode_two_script, episode_three_script)
-DRAFT_VALIDATORS = (validate_pilot, validate_episode_two, validate_episode_three)
+DRAFT_FACTORIES = (pilot_script, episode_two_script, episode_three_script, episode_four_script)
+DRAFT_VALIDATORS = (validate_pilot, validate_episode_two, validate_episode_three, validate_episode_four)
 BLOCKERS = (
     "human_roman_urdu_editorial_review",
     "measured_table_read_and_action_pacing",
@@ -85,7 +86,7 @@ def _payload() -> dict:
         "schema_version": 1,
         "title": manifest["title"],
         "source_outline_sha256": manifest["sha256"],
-        "scope": "EP001-EP003 locally authored editorial drafts only",
+        "scope": "EP001-EP004 locally authored editorial drafts only",
         "target_episode_seconds": 1800,
         "reference_wpm": WORDS_PER_MINUTE_REFERENCE,
         "reference_is_measured": False,

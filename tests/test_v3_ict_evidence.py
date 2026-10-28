@@ -76,5 +76,24 @@ class V3ICTTests(unittest.TestCase):
         self.assertEqual(f["eligible_windows"],[])
         self.assertIsNone(f["win_probability"])
 
+    def test_context_is_frozen_before_hour_and_not_a_futures_opening_gap(self):
+        p=receipt()
+        for item,bars in zip(p["observations"],i.check_receipt(p)):
+            f=item["context_case"]["features"]
+            self.assertEqual(i.context_features(bars[:30]),f)
+            self.assertIsNone(i.context_case(bars[:30])["outcome"])
+            self.assertFalse(f["is_day_or_week_opening_gap"])
+            self.assertIsNone(f["directional_bias"])
+            self.assertEqual(f["earliest_after_close"],bars[30]["time"])
+
+    def test_context_outcomes_preserve_absent_boundary_excursions(self):
+        p=receipt();i.check_receipt(p)
+        cases=[x["context_case"] for x in p["observations"]]
+        self.assertIsNone(cases[0]["outcome"]["first_above_bar"])
+        self.assertIsNone(cases[1]["outcome"]["first_below_bar"])
+        self.assertIsNone(cases[2]["outcome"]["first_above_bar"])
+        p["observations"][0]["context_case"]["features"]["low"]-=1
+        with self.assertRaises(AssertionError):i.check_receipt(p)
+
 
 if __name__ == "__main__": unittest.main()

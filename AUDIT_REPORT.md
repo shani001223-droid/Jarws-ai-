@@ -300,3 +300,8 @@ Added `mitigation_breakers_and_retests.md` with 2086 substantive words. Original
 ## V3 bounded 2022 ICT source and minute evidence — 28 October 2026
 
 Added `ict_core_and_2022_models.md` with 1956 substantive body words. Original English captions/public creator metadata are checked and hashed without track republication; exact ICT parity and unviewed charts remain unclaimed. New fixed 360-bar native minute receipt retains earliest possible post-close times, unknown provider arrival, DST/hour-end filters and three actual failed/absent-entry outcomes. All 51 offline evidence tests passed locally. Curriculum 22/49 (44.90%); runtime/evaluation/release gates pending. Prior `693e56b763b3f97d594a52cc467557c8ddcf8f15` passed actual CI 40617684956. No orders, main/backup/identity/privacy/voice/Stop or unrelated work changed.
+
+
+## V3 2023/2024 source comparison and frozen context — 28 October 2026
+
+Added `ict_mentorship_2023_2024.md` with 1934 substantive body words. Original creator metadata/captions support bounded edition comparison; full editions, visuals, historical viewer access times and missing futures opening-gap endpoints remain unclaimed. Offline pre-hour envelopes freeze before the outcome hour and do not invent directional bias, stop inventory or causal intent. Three genuine dated paths explicitly reuse prior captures. All 53 evidence regressions passed locally. Curriculum 23/49 (46.94%); runtime/evaluation/release pending. Prior `65c1cbc4cdd932a68d4eb46972ac35032c9c97cf` passed actual CI 40619156102. No runtime, orders, main/backup or unrelated controls changed.

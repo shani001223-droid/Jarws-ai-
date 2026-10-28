@@ -112,6 +112,38 @@ def gap_scan(bars):
             "independent_holdout":False}
 
 
+def context_features(bars):
+    """Frozen thirty-minute envelope, not a day/week/session opening gap."""
+    assert len(bars)>=30
+    prior=bars[:30]
+    earliest=prior[-1]["close_time"]+1
+    timing=clock(earliest)
+    assert len(timing["active_windows"])==1
+    window=timing["active_windows"][0]
+    assert timing["local_time"][11:16] in ("03:00","10:00","14:00")
+    low=min(b["low"] for b in prior);high=max(b["high"] for b in prior)
+    return {"method":"hoshi-prior-thirty-minute-envelope-1","prior_bars":30,
+            "prior_start":prior[0]["time"],"prior_end":prior[-1]["close_time"],
+            "earliest_after_close":earliest,"provider_arrival_time":None,
+            "clock":timing,"window":window,"low":low,"high":high,
+            "midpoint":(low+high)/2,"last_prior_close":prior[-1]["close"],
+            "is_day_or_week_opening_gap":False,"directional_bias":None}
+
+
+def context_case(bars):
+    f=context_features(bars)
+    active=bars[30:90]
+    if len(active)!=60:return {"features":f,"outcome":None}
+    return {"features":f,"outcome":{
+        "horizon_bars":60,"available_at":active[-1]["close_time"]+1,
+        "window_open":active[0]["open"],"window_low":min(b["low"] for b in active),
+        "window_high":max(b["high"] for b in active),"window_close":active[-1]["close"],
+        "first_above_bar":next((record(b) for b in active if b["high"]>f["high"]),None),
+        "first_below_bar":next((record(b) for b in active if b["low"]<f["low"]),None),
+        "intrabar_crossing_time_known":False,"bias_selected_from_outcome":False,
+        "strategy_pnl":None,"orders_enabled":False}}
+
+
 def check_observation(item):
     assert item["symbol"]=="BTCUSDT" and item["interval"]=="1m" and item["venue"]=="Binance Spot"
     raw=item["response_body"]
@@ -129,6 +161,7 @@ def check_observation(item):
     fetched=datetime.fromisoformat(item["retrieved_at_utc"])
     assert fetched.utcoffset().total_seconds()==0 and fetched.timestamp()*1000>bars[-1]["close_time"]
     assert gap_scan(bars)==item["gap_scan"]
+    if "context_case" in item:assert context_case(bars)==item["context_case"]
     return bars
 
 

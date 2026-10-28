@@ -164,6 +164,52 @@
         "strategy_pnl": null,
         "win_probability": null,
         "independent_holdout": false
+      },
+      "context_case": {
+        "features": {
+          "method": "hoshi-prior-thirty-minute-envelope-1",
+          "prior_bars": 30,
+          "prior_start": 1684132200000,
+          "prior_end": 1684133999999,
+          "earliest_after_close": 1684134000000,
+          "provider_arrival_time": null,
+          "clock": {
+            "local_time": "2023-05-15T03:00:00-04:00",
+            "timezone": "America/New_York",
+            "active_windows": [
+              "silver_london"
+            ],
+            "weekday": 0
+          },
+          "window": "silver_london",
+          "low": 27405.0,
+          "high": 27544.1,
+          "midpoint": 27474.55,
+          "last_prior_close": 27475.63,
+          "is_day_or_week_opening_gap": false,
+          "directional_bias": null
+        },
+        "outcome": {
+          "horizon_bars": 60,
+          "available_at": 1684137600000,
+          "window_open": 27475.64,
+          "window_low": 27387.53,
+          "window_high": 27498.02,
+          "window_close": 27407.48,
+          "first_above_bar": null,
+          "first_below_bar": {
+            "time": 1684135440000,
+            "close_time": 1684135499999,
+            "open": 27432.29,
+            "high": 27433.34,
+            "low": 27400.01,
+            "close": 27421.86
+          },
+          "intrabar_crossing_time_known": false,
+          "bias_selected_from_outcome": false,
+          "strategy_pnl": null,
+          "orders_enabled": false
+        }
       }
     },
     {
@@ -306,6 +352,52 @@
         "strategy_pnl": null,
         "win_probability": null,
         "independent_holdout": false
+      },
+      "context_case": {
+        "features": {
+          "method": "hoshi-prior-thirty-minute-envelope-1",
+          "prior_bars": 30,
+          "prior_start": 1704465000000,
+          "prior_end": 1704466799999,
+          "earliest_after_close": 1704466800000,
+          "provider_arrival_time": null,
+          "clock": {
+            "local_time": "2024-01-05T10:00:00-05:00",
+            "timezone": "America/New_York",
+            "active_windows": [
+              "silver_am"
+            ],
+            "weekday": 4
+          },
+          "window": "silver_am",
+          "low": 43100.0,
+          "high": 43800.0,
+          "midpoint": 43450.0,
+          "last_prior_close": 43486.04,
+          "is_day_or_week_opening_gap": false,
+          "directional_bias": null
+        },
+        "outcome": {
+          "horizon_bars": 60,
+          "available_at": 1704470400000,
+          "window_open": 43488.21,
+          "window_low": 43355.54,
+          "window_high": 43801.1,
+          "window_close": 43500.01,
+          "first_above_bar": {
+            "time": 1704467460000,
+            "close_time": 1704467519999,
+            "open": 43726.0,
+            "high": 43801.0,
+            "low": 43725.49,
+            "close": 43800.99
+          },
+          "first_below_bar": null,
+          "intrabar_crossing_time_known": false,
+          "bias_selected_from_outcome": false,
+          "strategy_pnl": null,
+          "orders_enabled": false
+        }
       }
     },
     {
@@ -459,6 +551,52 @@
         "strategy_pnl": null,
         "win_probability": null,
         "independent_holdout": false
+      },
+      "context_case": {
+        "features": {
+          "method": "hoshi-prior-thirty-minute-envelope-1",
+          "prior_bars": 30,
+          "prior_start": 1723138200000,
+          "prior_end": 1723139999999,
+          "earliest_after_close": 1723140000000,
+          "provider_arrival_time": null,
+          "clock": {
+            "local_time": "2024-08-08T14:00:00-04:00",
+            "timezone": "America/New_York",
+            "active_windows": [
+              "silver_pm"
+            ],
+            "weekday": 3
+          },
+          "window": "silver_pm",
+          "low": 59437.77,
+          "high": 59821.12,
+          "midpoint": 59629.445,
+          "last_prior_close": 59469.88,
+          "is_day_or_week_opening_gap": false,
+          "directional_bias": null
+        },
+        "outcome": {
+          "horizon_bars": 60,
+          "available_at": 1723143600000,
+          "window_open": 59469.89,
+          "window_low": 59317.89,
+          "window_high": 59696.44,
+          "window_close": 59328.09,
+          "first_above_bar": null,
+          "first_below_bar": {
+            "time": 1723140000000,
+            "close_time": 1723140059999,
+            "open": 59469.89,
+            "high": 59488.89,
+            "low": 59414.07,
+            "close": 59414.08
+          },
+          "intrabar_crossing_time_known": false,
+          "bias_selected_from_outcome": false,
+          "strategy_pnl": null,
+          "orders_enabled": false
+        }
       }
     }
   ]

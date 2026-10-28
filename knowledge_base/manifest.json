@@ -223,7 +223,39 @@
     },
     {
       "path": "knowledge_base/05_ICT_COMPLETE/ict_mentorship_2023_2024.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 1934,
+      "sha256": "bbc909435c7d1beb3d2325ea91dcc44f0392e69e8fcbf38753c46b85149c62d5",
+      "source_review": {
+        "status": "bounded_original_caption_passages_and_public_creator_metadata_checked",
+        "reviewed_on": "2026-10-28",
+        "primary_sources": [
+          {
+            "url": "https://www.youtube.com/watch?v=tRq1hyGGtl4",
+            "title": "2023 ICT Mentorship - ICT Silver Bullet Time Based Trading Model",
+            "channel_id": "UCtjxa77NqamhVC8atV85Rog",
+            "published_at_utc": "2023-05-14T21:00:19Z",
+            "duration": "PT19M16S",
+            "caption_language": "en",
+            "caption_sha256": "a46eba381696c6b67d7706ed9740b1fa393d4d8577a99130106927bc7d2e5cfd",
+            "caption_lines": 70,
+            "retrieval": "Original YouTube captions via vidIQ; full copyrighted track not republished."
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=hdSscxZgE58",
+            "title": "ICT 2024 Mentorship \\ Lecture #4    August 8, 2024",
+            "channel_id": "UCtjxa77NqamhVC8atV85Rog",
+            "published_at_utc": "2024-08-08T14:34:48Z",
+            "duration": "PT2H16M59S",
+            "caption_language": "en",
+            "caption_sha256": "08f9a65787563119b3ee69ed772a22c6ddb85ebe834b7862bd6b0bad4ff3045f",
+            "caption_lines": 497,
+            "retrieval": "Original YouTube captions via vidIQ; full copyrighted track not republished."
+          }
+        ],
+        "limitations": "Selected Silver Bullet and 2024 Lecture 4 opening-gap/calendar passages only; not all 2023/2024 lessons or chart visuals. Source publication is distinct from market-event and historical viewer access times. Reused minute windows are not new independent trials."
+      }
     },
     {
       "path": "knowledge_base/05_ICT_COMPLETE/killzones_silver_bullet_power_of_three.md",
@@ -368,7 +400,7 @@
     {
       "path": "knowledge_base/05_ICT_COMPLETE/ict_intraday_observations_20261028.json",
       "kind": "ict_intraday",
-      "sha256": "cd4c7a638333c91779512e0a995289c23b4c3f4d26ad68ce8f747450b7435c63"
+      "sha256": "1168785d444db6b9a05868e4268bd5f48fb1dadbdf2616f0e56756ac7e1c0fd5"
     }
   ],
   "scope_history": [

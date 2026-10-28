@@ -13,6 +13,7 @@ from cloud_backend.anime_script_readiness import (
 )
 from cloud_backend.anime_series import series_manifest
 from cloud_backend.anime_episode_three import episode_three_script
+from cloud_backend.anime_episode_six import episode_six_script
 
 
 class AnimeReadinessTests(unittest.TestCase):
@@ -74,6 +75,16 @@ class AnimeReadinessTests(unittest.TestCase):
             separators=(",", ":")).encode("utf-8")).hexdigest()
         with self.assertRaises(ValueError):
             _episode_row(draft, 3, series_manifest()["sha256"])
+
+    def test_reject_modified_sixth_draft_even_if_rehashed(self):
+        draft = episode_six_script()
+        draft["scenes"][2]["dialogue"][0]["text"] = "Fabricated register page content"
+        data = {k: v for k, v in draft.items() if k != "sha256"}
+        draft["sha256"] = hashlib.sha256(json.dumps(
+            data, ensure_ascii=False, sort_keys=True,
+            separators=(",", ":")).encode("utf-8")).hexdigest()
+        with self.assertRaises(ValueError):
+            _episode_row(draft, 6, series_manifest()["sha256"])
 
     def test_private_create_only_export(self):
         root = Path(__file__).resolve().parents[1]

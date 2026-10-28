@@ -20,11 +20,15 @@ def main() -> int:
     parser.add_argument("--caption", action="append", required=True,
                         help="Hindi/Urdu/Roman Urdu single-line subtitle (exactly 3)")
     parser.add_argument("--out", required=True, help="New local directory; must not exist")
+    parser.add_argument("--camera-move", action="append", choices=("static", "push_in", "pan_left", "pan_right"),
+                        help="Optional 2D still camera move, once per shot (exactly 3)")
     parser.add_argument("--image-rights-attested", action="store_true",
                         help="Operator confirms rights to all supplied stills")
     args = parser.parse_args()
     if len(args.shot) != 3 or len(args.caption) != 3:
         parser.error("Exactly three --shot and three --caption values are required.")
+    if args.camera_move is not None and len(args.camera_move) != 3:
+        parser.error("Provide exactly three --camera-move values, or none.")
     if not args.image_rights_attested:
         parser.error("Explicit --image-rights-attested is required.")
 
@@ -36,7 +40,8 @@ def main() -> int:
                 raise AnimePilotError("Local still missing or too large.")
             images.append(path.read_bytes())
         output = render_private_animatic(
-            images, args.caption, image_rights_attested=True)
+            images, args.caption, image_rights_attested=True,
+            camera_moves=args.camera_move)
         destination = Path(args.out)
         destination.mkdir(parents=False, exist_ok=False)
         try:

@@ -767,7 +767,7 @@ async function main() {
       'Old holographic core must not overlap the approved anime Hoshi');
     assert.equal(await focusPage.locator('.hoshi-animated-avatar').getAttribute('data-emotion'),'caring');
     const portrait=await focusPage.locator('.avatar-face').evaluate(el=>getComputedStyle(el).backgroundImage);
-    assert.match(portrait,/hoshi-expressions\\.webp/);
+    assert.ok(portrait.includes('hoshi-expressions.webp'),'Approved Hoshi expression asset must render');
     await focusPage.evaluate(()=>window.hoshiSetSpeaking(true));
     assert.equal(await focusPage.locator('.hoshi-animated-avatar').getAttribute('data-state'),'speaking');
     await focusPage.evaluate(()=>window.hoshiSetSpeaking(false));

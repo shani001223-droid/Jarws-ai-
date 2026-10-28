@@ -1,6 +1,6 @@
 {
   "version": "gdd-v1",
-  "status": "design_only_not_playable",
+  "status": "playable_local_mvp",
   "levels": [
     {
       "id": 1,

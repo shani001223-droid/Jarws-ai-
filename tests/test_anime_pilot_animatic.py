@@ -13,7 +13,7 @@ import shutil
 import unittest
 from unittest.mock import patch
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageChops
 
 from cloud_backend import anime_pilot_animatic as pilot
 
@@ -75,6 +75,43 @@ class AnimePilotAnimaticTests(unittest.TestCase):
                 pilot.render_private_animatic(images, [bad, *CAPTIONS[1:]],
                                               image_rights_attested=True)
 
+    def test_camera_moves_are_strictly_allowlisted(self):
+        originals = original_stills()
+        for moves in ([], ["push_in"], ["static", "pan_left", "shell;rm"],
+                      ["static", "pan_left", 1], "push_in",
+                      ["static", "pan_left", "pan_right", "static"]):
+            with self.subTest(moves=moves), self.assertRaisesRegex(
+                    pilot.AnimePilotError, "Camera moves"):
+                pilot.render_private_animatic(
+                    originals, CAPTIONS, image_rights_attested=True,
+                    camera_moves=moves)
+
+    @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"),
+                         "Real moving-camera MP4 requires offline FFmpeg")
+    def test_real_2d_camera_motion_changes_encoded_frames(self):
+        moves = ["push_in", "pan_left", "pan_right"]
+        result = pilot.render_private_animatic(
+            original_stills(), CAPTIONS, image_rights_attested=True,
+            camera_moves=moves)
+        self.assertEqual(result["camera_moves"], moves)
+        self.assertTrue(result["camera_motion_is_2d_still_reframing"])
+        self.assertFalse(result["full_character_animation"])
+        with tempfile.TemporaryDirectory() as tmp:
+            movie = Path(tmp) / "preview.mp4"
+            movie.write_bytes(result["video_mp4"])
+            samples = []
+            for second in ("1.0", "9.0"):
+                frame = subprocess.run(
+                    ["ffmpeg", "-hide_banner", "-loglevel", "error",
+                     "-ss", second, "-i", str(movie), "-frames:v", "1",
+                     "-f", "image2pipe", "-vcodec", "png", "-"],
+                    capture_output=True, timeout=15, check=True)
+                with Image.open(BytesIO(frame.stdout)) as img:
+                    samples.append(img.convert("RGB"))
+            difference = ImageChops.difference(*samples)
+            self.assertIsNotNone(difference.getbbox(),
+                                 "push-in must produce visibly different frames")
+
     def test_missing_ffmpeg_fails_closed(self):
         with patch.object(pilot.shutil, "which", return_value=None):
             with self.assertRaisesRegex(pilot.AnimePilotError, "FFmpeg"):
@@ -123,11 +160,14 @@ class AnimePilotAnimaticTests(unittest.TestCase):
             for caption in CAPTIONS:
                 cmd += ["--caption", caption]
             cmd += ["--image-rights-attested", "--out", str(out)]
+            for move in ("push_in", "pan_left", "pan_right"):
+                cmd += ["--camera-move", move]
             first = subprocess.run(cmd, text=True, capture_output=True, timeout=110)
             self.assertEqual(first.returncode, 0, first.stderr)
             manifest = json.loads((out / "manifest.json").read_text(encoding="utf-8"))
             self.assertFalse(manifest["owner_approved"])
             self.assertTrue(manifest["actual_mp4_rendered"])
+            self.assertEqual(manifest["camera_moves"], ["push_in", "pan_left", "pan_right"])
             mp4 = (out / manifest["filename"]).read_bytes()
             self.assertEqual(hashlib.sha256(mp4).hexdigest(), manifest["video_sha256"])
             self.assertEqual((out / "hoshi_anime_animatic_DRAFT.srt").read_bytes(),

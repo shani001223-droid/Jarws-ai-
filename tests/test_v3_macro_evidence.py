@@ -84,5 +84,43 @@ class V3MacroTests(unittest.TestCase):
                 e['captures']['DTWEXBGS']=changed(c,''.join(lines))
             with self.assertRaises(AssertionError):f.check_receipt(p)
 
+    def test_rate_units_negative_real_yields_and_price_returns_are_separate(self):
+        p=receipt();f.check_receipt(p)
+        jan=p['rate_cases'][1]['diagnostic']
+        self.assertEqual(jan['rates']['DFF']['change_basis_points'],25)
+        self.assertEqual(jan['rates']['DFII10']['start_percent'],'-0.69')
+        self.assertEqual(jan['rates']['DFII10']['change_basis_points'],-3)
+        for e in p['rate_cases']:
+            for r in e['diagnostic']['rates'].values():
+                self.assertIsNone(r['bond_price_return'])
+                self.assertIsNone(r['original_publication_and_arrival_times'])
+
+    def test_policy_cut_and_observed_long_yield_need_not_share_direction(self):
+        p=receipt();f.check_receipt(p)
+        d=p['rate_cases'][2]['diagnostic']
+        self.assertEqual(d['rates']['DFF']['change_basis_points'],-50)
+        self.assertEqual(d['rates']['DGS10']['change_basis_points'],8)
+        self.assertEqual(d['spreads']['ten_minus_two_bp'],{'start':6.0,'end':18.0,'change_bp':12.0})
+        self.assertFalse(d['causal_policy_effect_estimated'])
+        self.assertFalse(d['nominal_real_spread_is_pure_inflation_expectation'])
+
+    def test_rate_missing_observation_never_fills_an_inflation_spread(self):
+        e=deepcopy(receipt()['rate_cases'][0]);c=e['captures']['DFII10']
+        lines=c['response_body'].splitlines();lines[-1]=lines[-1].split(',')[0]+','
+        e['captures']['DFII10']=changed(c,'\n'.join(lines)+'\n')
+        d=f.rate_case(e['captures'],e['announcement'])
+        self.assertIsNone(d['rates']['DFII10']['change_basis_points'])
+        self.assertIsNone(d['spreads']['nominal_minus_real_ten_bp']['end'])
+        self.assertEqual(d['decision'],'WAIT')
+
+    def test_release_clock_target_and_series_alias_tampering_rejected(self):
+        for kind in ('time','target','series','omitted'):
+            p=receipt();e=p['rate_cases'][0]
+            if kind=='time':e['announcement']['release_time']='2020-03-15T17:00:00+00:00'
+            elif kind=='target':e['announcement']['target_range_percent']=[0.25,0.50]
+            elif kind=='series':e['captures']['DGS2']=deepcopy(e['captures']['DGS10'])
+            else:p['rate_cases'].pop()
+            with self.assertRaises(AssertionError):f.check_receipt(p)
+
 
 if __name__=='__main__':unittest.main()

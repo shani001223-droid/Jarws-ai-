@@ -851,7 +851,66 @@
     },
     {
       "path": "knowledge_base/09_GLOBAL_MONEY_FLOW/bonds_yields_fed_and_interest_rates.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2018,
+      "sha256": "a25424ec2d6183e88452f4ec5cab1a3ab3748d553acf6818b78a3c097c8d8f10",
+      "source_review": {
+        "status": "primary_policy_statements_public_statistical_series_and_rate_interpretation_checked",
+        "primary_sources": [
+          {
+            "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20200315a.htm",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20220316a.htm",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20240918a.htm",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.federalreserve.gov/releases/h15/",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://fred.stlouisfed.org/series/DFF",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://fred.stlouisfed.org/series/DGS2",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://fred.stlouisfed.org/series/DGS10",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://fred.stlouisfed.org/series/DFII10",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.newyorkfed.org/markets/reference-rates/effr",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.treasurydirect.gov/marketable-securities/tips/",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.federalreserve.gov/data/tips-yield-curve-and-inflation-compensation.htm",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.frbsf.org/research-and-insights/publications/economic-letter/2011/06/tips-liquidity-breakeven-inflation-expectations/",
+            "checked": "2026-10-28"
+          }
+        ],
+        "limitations": "Three fixed FOMC windows 2020-03-13/20, 2022-03-15/18 and 2024-09-17/20. Statement release times/targets separately frozen from later captured daily rates. Only public-domain-tagged Board H.15 DFF/DGS2/DGS10/DFII10 raw series retained; separate copyrighted EFFR feed not relabelled or republished. DFF includes provider-supplied weekend labels. Rates expressed as percent and changes as basis points; negative real yields preserved; no CUSIP prices, actual bond returns or causal policy estimates. Nominal-real subtraction is a proxy with risk/liquidity components, not pure expected CPI or a replica of fitted research curves. Historical original vintage/arrival remain unknown.",
+        "reviewed_on": "2026-10-28",
+        "resolved_at_asia_karachi": "2026-10-28T11:09:02.509655+05:00"
+      }
     },
     {
       "path": "knowledge_base/09_GLOBAL_MONEY_FLOW/cot_positioning_and_reporting_lags.md",
@@ -953,7 +1012,7 @@
     {
       "path": "knowledge_base/09_GLOBAL_MONEY_FLOW/macro_observations_20261028.json",
       "kind": "macro_cases",
-      "sha256": "15e003544f7b16e4a345f5e4783669f57f7ed7178ac147dc57ea77aa0d5b6dd7"
+      "sha256": "e321a01a3abe8e2d9e51db74936c89d97ae89fd06b4652b648e404810742cb8f"
     }
   ],
   "scope_history": [

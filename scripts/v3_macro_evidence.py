@@ -10,7 +10,12 @@ from hashlib import sha256
 import io
 import math
 
-PUBLIC_SERIES={'DTWEXBGS','DCOILWTICO','DGS2','DGS10','DFII10','EFFR'}
+PUBLIC_SERIES={'DTWEXBGS','DCOILWTICO','DGS2','DGS10','DFII10','DFF'}
+POLICY_RELEASES={
+    'emergency_cut_2020':('2020-03-15T17:00:00-04:00',[0,0.25],'20200315'),
+    'liftoff_2022':('2022-03-16T14:00:00-04:00',[0.25,0.5],'20220316'),
+    'large_cut_2024':('2024-09-18T14:00:00-04:00',[4.75,5.0],'20240918'),
+}
 
 
 def check_capture(c):
@@ -69,6 +74,7 @@ def paired_intervals(first,second):
 
 def money_flow_case(captures):
     assert set(captures)=={'DTWEXBGS','DCOILWTICO'}
+    assert all(c['series']==key for key,c in captures.items())
     return {'method':'hoshi-bounded-public-dollar-oil-context-1',
             'broad_fed_dollar':endpoint_change(captures['DTWEXBGS']),
             'cushing_wti_spot':endpoint_change(captures['DCOILWTICO']),
@@ -78,10 +84,47 @@ def money_flow_case(captures):
             'decision':'WAIT','win_probability':None,'orders_enabled':False}
 
 
+def rate_endpoint(c):
+    values=check_capture(c);a=values.get(c['requested_start']);b=values.get(c['requested_end'])
+    return {'start_date':c['requested_start'],'end_date':c['requested_end'],
+            'start_percent':str(a) if a is not None else None,'end_percent':str(b) if b is not None else None,
+            'change_basis_points':float((b-a)*100) if a is not None and b is not None else None,
+            'bond_price_return':None,'original_publication_and_arrival_times':None}
+
+
+def rate_case(captures,announcement):
+    assert set(captures)=={'DGS2','DGS10','DFII10','DFF'}
+    assert all(c['series']==key for key,c in captures.items())
+    starts={c['requested_start'] for c in captures.values()};ends={c['requested_end'] for c in captures.values()}
+    assert len(starts)==len(ends)==1
+    dt=datetime.fromisoformat(announcement['release_time']);assert dt.utcoffset() is not None
+    assert next(iter(starts))<dt.date().isoformat()<next(iter(ends))
+    levels={k:rate_endpoint(c) for k,c in captures.items()}
+    spreads={}
+    for key,a,b in (('ten_minus_two_bp','DGS10','DGS2'),('nominal_minus_real_ten_bp','DGS10','DFII10')):
+        av=check_capture(captures[a]);bv=check_capture(captures[b])
+        spread=lambda d:float((av[d]-bv[d])*100) if av.get(d) is not None and bv.get(d) is not None else None
+        start=spread(next(iter(starts)));end=spread(next(iter(ends)))
+        spreads[key]={'start':start,'end':end,'change_bp':end-start if start is not None and end is not None else None}
+    return {'method':'hoshi-rate-level-and-spread-changes-1','announcement':announcement,
+            'rates':levels,'spreads':spreads,'same_instant_intraday_observations':False,
+            'nominal_real_spread_is_pure_inflation_expectation':False,'original_vintage_verified':False,
+            'causal_policy_effect_estimated':False,'decision':'WAIT','win_probability':None,'orders_enabled':False}
+
+
 def check_receipt(payload,root=None):
     assert payload['schema_version']=='hoshi-v3-macro-evidence-1'
     assert payload['use']=='bounded-retrospective-source-research-not-runtime-or-training'
     cases=payload['money_flow_cases'];assert len(cases)==3
     assert {c['id'] for c in cases}=={'covid_2020','ukraine_2022','august_2024'}
     for c in cases:assert money_flow_case(c['captures'])==c['diagnostic']
+    if 'rate_cases' in payload:
+        entries=payload['rate_cases'];assert len(entries)==3
+        assert {e['id'] for e in entries}==set(POLICY_RELEASES)
+        for e in entries:
+            stamp,target,suffix=POLICY_RELEASES[e['id']];a=e['announcement']
+            assert a['release_time']==stamp and a['target_range_percent']==target
+            assert a['timezone']=='America/New_York'
+            assert a['source_url']==f'https://www.federalreserve.gov/newsevents/pressreleases/monetary{suffix}a.htm'
+            assert rate_case(e['captures'],a)==e['diagnostic']
     return cases

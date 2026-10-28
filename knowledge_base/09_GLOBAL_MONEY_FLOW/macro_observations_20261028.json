@@ -16,6 +16,34 @@
       "rights": "Public Domain: Citation Requested, as tagged on checked FRED series page",
       "source_url": "https://fred.stlouisfed.org/series/DCOILWTICO",
       "publication_clock": "Daily price observation label; exact historical intraday fixing/arrival not obtained"
+    },
+    "DGS2": {
+      "provider": "Board of Governors H.15 via FRED",
+      "units": "Percent, daily, not seasonally adjusted",
+      "source_url": "https://fred.stlouisfed.org/series/DGS2",
+      "rights": "Public Domain: Citation Requested, checked series metadata",
+      "publication_clock": "Daily H.15 constant-maturity yield observation; exact historical source arrival and original vintage not reconstructed"
+    },
+    "DGS10": {
+      "provider": "Board of Governors H.15 via FRED",
+      "units": "Percent, daily, not seasonally adjusted",
+      "source_url": "https://fred.stlouisfed.org/series/DGS10",
+      "rights": "Public Domain: Citation Requested, checked series metadata",
+      "publication_clock": "Daily H.15 constant-maturity yield observation; exact historical source arrival and original vintage not reconstructed"
+    },
+    "DFII10": {
+      "provider": "Board of Governors H.15 via FRED",
+      "units": "Percent, daily, not seasonally adjusted",
+      "source_url": "https://fred.stlouisfed.org/series/DFII10",
+      "rights": "Public Domain: Citation Requested, checked series metadata",
+      "publication_clock": "Daily H.15 constant-maturity yield observation; exact historical source arrival and original vintage not reconstructed"
+    },
+    "DFF": {
+      "provider": "Board of Governors H.15 via FRED",
+      "units": "Percent, daily 7-day source series, not seasonally adjusted",
+      "source_url": "https://fred.stlouisfed.org/series/DFF",
+      "rights": "Public Domain: Citation Requested, checked series metadata",
+      "publication_clock": "H.15 source dates are observation labels, not actual receipt times. Separate NY Fed EFFR publication process is described in the chapter but its raw series is not republished."
     }
   },
   "excluded_series": {
@@ -416,6 +444,395 @@
         "equity_benchmark_price_series": null,
         "measured_capital_flows": null,
         "original_vintage_verified": false,
+        "decision": "WAIT",
+        "win_probability": null,
+        "orders_enabled": false
+      }
+    }
+  ],
+  "rate_cases": [
+    {
+      "id": "emergency_cut_2020",
+      "captures": {
+        "DGS2": {
+          "id": "emergency_cut_2020_DGS2",
+          "series": "DGS2",
+          "requested_start": "2020-03-13",
+          "requested_end": "2020-03-20",
+          "request_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2020-03-13&coed=2020-03-20",
+          "captured_at_utc": "2026-10-28T06:00:47.355470+00:00",
+          "http_status": 200,
+          "source_sha256": "10925584798cb17379029d49611b56aaa0b5b99deac650dc7f32ab5e6a0ddca5",
+          "response_body": "observation_date,DGS2\n2020-03-13,0.49\n2020-03-16,0.36\n2020-03-17,0.47\n2020-03-18,0.54\n2020-03-19,0.44\n2020-03-20,0.37\n"
+        },
+        "DGS10": {
+          "id": "emergency_cut_2020_DGS10",
+          "series": "DGS10",
+          "requested_start": "2020-03-13",
+          "requested_end": "2020-03-20",
+          "request_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10&cosd=2020-03-13&coed=2020-03-20",
+          "captured_at_utc": "2026-10-28T06:00:47.282037+00:00",
+          "http_status": 200,
+          "source_sha256": "512bcf2cbac37c46d2fd81ff80c276225f6339865b004e031aa4d0107a2d3726",
+          "response_body": "observation_date,DGS10\n2020-03-13,0.94\n2020-03-16,0.73\n2020-03-17,1.02\n2020-03-18,1.18\n2020-03-19,1.12\n2020-03-20,0.92\n"
+        },
+        "DFII10": {
+          "id": "emergency_cut_2020_DFII10",
+          "series": "DFII10",
+          "requested_start": "2020-03-13",
+          "requested_end": "2020-03-20",
+          "request_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DFII10&cosd=2020-03-13&coed=2020-03-20",
+          "captured_at_utc": "2026-10-28T06:00:47.431665+00:00",
+          "http_status": 200,
+          "source_sha256": "c418e40b4fa15584a9ea758102f1fd0c9d48e5c466a44573facb285b3412960b",
+          "response_body": "observation_date,DFII10\n2020-03-13,0.04\n2020-03-16,0.00\n2020-03-17,0.39\n2020-03-18,0.55\n2020-03-19,0.62\n2020-03-20,0.17\n"
+        },
+        "DFF": {
+          "id": "emergency_cut_2020_DFF",
+          "series": "DFF",
+          "requested_start": "2020-03-13",
+          "requested_end": "2020-03-20",
+          "request_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DFF&cosd=2020-03-13&coed=2020-03-20",
+          "captured_at_utc": "2026-10-28T06:03:31.465467+00:00",
+          "http_status": 200,
+          "source_sha256": "b366dd39b716bde93a6f6a7269675b144f0ad6583196dba4edf241a793ffd85d",
+          "response_body": "observation_date,DFF\n2020-03-13,1.10\n2020-03-14,1.10\n2020-03-15,1.10\n2020-03-16,0.25\n2020-03-17,0.25\n2020-03-18,0.25\n2020-03-19,0.20\n2020-03-20,0.15\n"
+        }
+      },
+      "announcement": {
+        "release_time": "2020-03-15T17:00:00-04:00",
+        "timezone": "America/New_York",
+        "target_range_percent": [
+          0,
+          0.25
+        ],
+        "source_url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20200315a.htm",
+        "primary_page_checked_on": "2026-10-28"
+      },
+      "diagnostic": {
+        "method": "hoshi-rate-level-and-spread-changes-1",
+        "announcement": {
+          "release_time": "2020-03-15T17:00:00-04:00",
+          "timezone": "America/New_York",
+          "target_range_percent": [
+            0,
+            0.25
+          ],
+          "source_url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20200315a.htm",
+          "primary_page_checked_on": "2026-10-28"
+        },
+        "rates": {
+          "DGS2": {
+            "start_date": "2020-03-13",
+            "end_date": "2020-03-20",
+            "start_percent": "0.49",
+            "end_percent": "0.37",
+            "change_basis_points": -12.0,
+            "bond_price_return": null,
+            "original_publication_and_arrival_times": null
+          },
+          "DGS10": {
+            "start_date": "2020-03-13",
+            "end_date": "2020-03-20",
+            "start_percent": "0.94",
+            "end_percent": "0.92",
+            "change_basis_points": -2.0,
+            "bond_price_return": null,
+            "original_publication_and_arrival_times": null
+          },
+          "DFII10": {
+            "start_date": "2020-03-13",
+            "end_date": "2020-03-20",
+            "start_percent": "0.04",
+            "end_percent": "0.17",
+            "change_basis_points": 13.0,
+            "bond_price_return": null,
+            "original_publication_and_arrival_times": null
+          },
+          "DFF": {
+            "start_date": "2020-03-13",
+            "end_date": "2020-03-20",
+            "start_percent": "1.10",
+            "end_percent": "0.15",
+            "change_basis_points": -95.0,
+            "bond_price_return": null,
+            "original_publication_and_arrival_times": null
+          }
+        },
+        "spreads": {
+          "ten_minus_two_bp": {
+            "start": 45.0,
+            "end": 55.0,
+            "change_bp": 10.0
+          },
+          "nominal_minus_real_ten_bp": {
+            "start": 90.0,
+            "end": 75.0,
+            "change_bp": -15.0
+          }
+        },
+        "same_instant_intraday_observations": false,
+        "nominal_real_spread_is_pure_inflation_expectation": false,
+        "original_vintage_verified": false,
+        "causal_policy_effect_estimated": false,
+        "decision": "WAIT",
+        "win_probability": null,
+        "orders_enabled": false
+      }
+    },
+    {
+      "id": "liftoff_2022",
+      "captures": {
+        "DGS2": {
+          "id": "liftoff_2022_DGS2",
+          "series": "DGS2",
+          "requested_start": "2022-03-15",
+          "requested_end": "2022-03-18",
+          "request_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2022-03-15&coed=2022-03-18",
+          "captured_at_utc": "2026-10-28T06:00:51.185341+00:00",
+          "http_status": 200,
+          "source_sha256": "c8f52d266b64ec743b119c69a1e07a34011d16da940a015f88b9b7ffbf3c3c1d",
+          "response_body": "observation_date,DGS2\n2022-03-15,1.85\n2022-03-16,1.95\n2022-03-17,1.94\n2022-03-18,1.97\n"
+        },
+        "DGS10": {
+          "id": "liftoff_2022_DGS10",
+          "series": "DGS10",
+          "requested_start": "2022-03-15",
+          "requested_end": "2022-03-18",
+          "request_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10&cosd=2022-03-15&coed=2022-03-18",
+          "captured_at_utc": "2026-10-28T06:00:50.850474+00:00",
+          "http_status": 200,
+          "source_sha256": "3695c82d3931fa48a11bac87c3840e2e374c700b5820889219a21e7cac3a8e1f",
+          "response_body": "observation_date,DGS10\n2022-03-15,2.15\n2022-03-16,2.19\n2022-03-17,2.20\n2022-03-18,2.14\n"
+        },
+        "DFII10": {
+          "id": "liftoff_2022_DFII10",
+          "series": "DFII10",
+          "requested_start": "2022-03-15",
+          "requested_end": "2022-03-18",
+          "request_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DFII10&cosd=2022-03-15&coed=2022-03-18",
+          "captured_at_utc": "2026-10-28T06:00:54.317508+00:00",
+          "http_status": 200,
+          "source_sha256": "ade6966df4b023296509bb3d20a07eaa1f3321f69cbc6cde43a6ab26460b33f2",
+          "response_body": "observation_date,DFII10\n2022-03-15,-0.69\n2022-03-16,-0.61\n2022-03-17,-0.71\n2022-03-18,-0.72\n"
+        },
+        "DFF": {
+          "id": "liftoff_2022_DFF",
+          "series": "DFF",
+          "requested_start": "2022-03-15",
+          "requested_end": "2022-03-18",
+          "request_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DFF&cosd=2022-03-15&coed=2022-03-18",
+          "captured_at_utc": "2026-10-28T06:03:32.039207+00:00",
+          "http_status": 200,
+          "source_sha256": "79a9db7363d63170f64b37c2effb6d5fe7181863c8c9811046536455df49eac4",
+          "response_body": "observation_date,DFF\n2022-03-15,0.08\n2022-03-16,0.08\n2022-03-17,0.33\n2022-03-18,0.33\n"
+        }
+      },
+      "announcement": {
+        "release_time": "2022-03-16T14:00:00-04:00",
+        "timezone": "America/New_York",
+        "target_range_percent": [
+          0.25,
+          0.5
+        ],
+        "source_url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20220316a.htm",
+        "primary_page_checked_on": "2026-10-28"
+      },
+      "diagnostic": {
+        "method": "hoshi-rate-level-and-spread-changes-1",
+        "announcement": {
+          "release_time": "2022-03-16T14:00:00-04:00",
+          "timezone": "America/New_York",
+          "target_range_percent": [
+            0.25,
+            0.5
+          ],
+          "source_url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20220316a.htm",
+          "primary_page_checked_on": "2026-10-28"
+        },
+        "rates": {
+          "DGS2": {
+            "start_date": "2022-03-15",
+            "end_date": "2022-03-18",
+            "start_percent": "1.85",
+            "end_percent": "1.97",
+            "change_basis_points": 12.0,
+            "bond_price_return": null,
+            "original_publication_and_arrival_times": null
+          },
+          "DGS10": {
+            "start_date": "2022-03-15",
+            "end_date": "2022-03-18",
+            "start_percent": "2.15",
+            "end_percent": "2.14",
+            "change_basis_points": -1.0,
+            "bond_price_return": null,
+            "original_publication_and_arrival_times": null
+          },
+          "DFII10": {
+            "start_date": "2022-03-15",
+            "end_date": "2022-03-18",
+            "start_percent": "-0.69",
+            "end_percent": "-0.72",
+            "change_basis_points": -3.0,
+            "bond_price_return": null,
+            "original_publication_and_arrival_times": null
+          },
+          "DFF": {
+            "start_date": "2022-03-15",
+            "end_date": "2022-03-18",
+            "start_percent": "0.08",
+            "end_percent": "0.33",
+            "change_basis_points": 25.0,
+            "bond_price_return": null,
+            "original_publication_and_arrival_times": null
+          }
+        },
+        "spreads": {
+          "ten_minus_two_bp": {
+            "start": 30.0,
+            "end": 17.0,
+            "change_bp": -13.0
+          },
+          "nominal_minus_real_ten_bp": {
+            "start": 284.0,
+            "end": 286.0,
+            "change_bp": 2.0
+          }
+        },
+        "same_instant_intraday_observations": false,
+        "nominal_real_spread_is_pure_inflation_expectation": false,
+        "original_vintage_verified": false,
+        "causal_policy_effect_estimated": false,
+        "decision": "WAIT",
+        "win_probability": null,
+        "orders_enabled": false
+      }
+    },
+    {
+      "id": "large_cut_2024",
+      "captures": {
+        "DGS2": {
+          "id": "large_cut_2024_DGS2",
+          "series": "DGS2",
+          "requested_start": "2024-09-17",
+          "requested_end": "2024-09-20",
+          "request_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2024-09-17&coed=2024-09-20",
+          "captured_at_utc": "2026-10-28T06:00:54.455345+00:00",
+          "http_status": 200,
+          "source_sha256": "87104bd04c35d019bb42558e6b4d0c78f5f969bc78719235864fc5cc6d91c489",
+          "response_body": "observation_date,DGS2\n2024-09-17,3.59\n2024-09-18,3.61\n2024-09-19,3.59\n2024-09-20,3.55\n"
+        },
+        "DGS10": {
+          "id": "large_cut_2024_DGS10",
+          "series": "DGS10",
+          "requested_start": "2024-09-17",
+          "requested_end": "2024-09-20",
+          "request_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10&cosd=2024-09-17&coed=2024-09-20",
+          "captured_at_utc": "2026-10-28T06:00:57.779236+00:00",
+          "http_status": 200,
+          "source_sha256": "21cc5991ca6e3a59870387c77f1cd7e2cb50e32c873d45e68ad083d4600eca6a",
+          "response_body": "observation_date,DGS10\n2024-09-17,3.65\n2024-09-18,3.70\n2024-09-19,3.73\n2024-09-20,3.73\n"
+        },
+        "DFII10": {
+          "id": "large_cut_2024_DFII10",
+          "series": "DFII10",
+          "requested_start": "2024-09-17",
+          "requested_end": "2024-09-20",
+          "request_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DFII10&cosd=2024-09-17&coed=2024-09-20",
+          "captured_at_utc": "2026-10-28T06:00:57.757128+00:00",
+          "http_status": 200,
+          "source_sha256": "1124c1549f1f37f9d58b51efc0c2948b03e205827c804d24fc93e1b1d32a70a7",
+          "response_body": "observation_date,DFII10\n2024-09-17,1.53\n2024-09-18,1.58\n2024-09-19,1.56\n2024-09-20,1.58\n"
+        },
+        "DFF": {
+          "id": "large_cut_2024_DFF",
+          "series": "DFF",
+          "requested_start": "2024-09-17",
+          "requested_end": "2024-09-20",
+          "request_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DFF&cosd=2024-09-17&coed=2024-09-20",
+          "captured_at_utc": "2026-10-28T06:03:31.502948+00:00",
+          "http_status": 200,
+          "source_sha256": "dad06dee1831e5ebf5435160b6990c78d24ca32a0bb309bc65a6094b3f486720",
+          "response_body": "observation_date,DFF\n2024-09-17,5.33\n2024-09-18,5.33\n2024-09-19,4.83\n2024-09-20,4.83\n"
+        }
+      },
+      "announcement": {
+        "release_time": "2024-09-18T14:00:00-04:00",
+        "timezone": "America/New_York",
+        "target_range_percent": [
+          4.75,
+          5.0
+        ],
+        "source_url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20240918a.htm",
+        "primary_page_checked_on": "2026-10-28"
+      },
+      "diagnostic": {
+        "method": "hoshi-rate-level-and-spread-changes-1",
+        "announcement": {
+          "release_time": "2024-09-18T14:00:00-04:00",
+          "timezone": "America/New_York",
+          "target_range_percent": [
+            4.75,
+            5.0
+          ],
+          "source_url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20240918a.htm",
+          "primary_page_checked_on": "2026-10-28"
+        },
+        "rates": {
+          "DGS2": {
+            "start_date": "2024-09-17",
+            "end_date": "2024-09-20",
+            "start_percent": "3.59",
+            "end_percent": "3.55",
+            "change_basis_points": -4.0,
+            "bond_price_return": null,
+            "original_publication_and_arrival_times": null
+          },
+          "DGS10": {
+            "start_date": "2024-09-17",
+            "end_date": "2024-09-20",
+            "start_percent": "3.65",
+            "end_percent": "3.73",
+            "change_basis_points": 8.0,
+            "bond_price_return": null,
+            "original_publication_and_arrival_times": null
+          },
+          "DFII10": {
+            "start_date": "2024-09-17",
+            "end_date": "2024-09-20",
+            "start_percent": "1.53",
+            "end_percent": "1.58",
+            "change_basis_points": 5.0,
+            "bond_price_return": null,
+            "original_publication_and_arrival_times": null
+          },
+          "DFF": {
+            "start_date": "2024-09-17",
+            "end_date": "2024-09-20",
+            "start_percent": "5.33",
+            "end_percent": "4.83",
+            "change_basis_points": -50.0,
+            "bond_price_return": null,
+            "original_publication_and_arrival_times": null
+          }
+        },
+        "spreads": {
+          "ten_minus_two_bp": {
+            "start": 6.0,
+            "end": 18.0,
+            "change_bp": 12.0
+          },
+          "nominal_minus_real_ten_bp": {
+            "start": 212.0,
+            "end": 215.0,
+            "change_bp": 3.0
+          }
+        },
+        "same_instant_intraday_observations": false,
+        "nominal_real_spread_is_pure_inflation_expectation": false,
+        "original_vintage_verified": false,
+        "causal_policy_effect_estimated": false,
         "decision": "WAIT",
         "win_probability": null,
         "orders_enabled": false

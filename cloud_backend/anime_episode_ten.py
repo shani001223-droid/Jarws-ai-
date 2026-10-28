@@ -250,7 +250,7 @@ def validate_episode_ten(script: dict) -> None:
     episode = manifest["episodes"][9]
     expected = {
         "episode_id": EPISODE_ID,
-        "previous_episode_id": "EP010",
+        "previous_episode_id": "EP009",
         "previous_episode_sha256": _previous_episode_sha256(),
         "source_outline_sha256": manifest["sha256"],
         "story_day": episode["story_day"],
@@ -300,7 +300,7 @@ def episode_ten_script() -> dict:
     episode = manifest["episodes"][9]
     draft = {
         "episode_id": EPISODE_ID,
-        "previous_episode_id": "EP010",
+        "previous_episode_id": "EP009",
         "previous_episode_sha256": _previous_episode_sha256(),
         "source_outline_sha256": manifest["sha256"],
         "story_day": episode["story_day"],

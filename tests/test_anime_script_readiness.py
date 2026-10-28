@@ -19,14 +19,15 @@ from cloud_backend.anime_episode_eight import episode_eight_script
 from cloud_backend.anime_episode_nine import episode_nine_script
 from cloud_backend.anime_episode_ten import episode_ten_script
 from cloud_backend.anime_episode_eleven import episode_eleven_script
+from cloud_backend.anime_episode_twelve import episode_twelve_script
 
 
 class AnimeReadinessTests(unittest.TestCase):
     def test_all_authored_drafts_and_actual_word_counts(self):
         report = build_readiness_report()
         self.assertEqual([x["episode_id"] for x in report["episodes"]],
-                         ["EP001", "EP002", "EP003", "EP004", "EP005", "EP006", "EP007", "EP008", "EP009", "EP010", "EP011"])
-        self.assertEqual(report["remaining_individual_scripts"], 289)
+                         ["EP001", "EP002", "EP003", "EP004", "EP005", "EP006", "EP007", "EP008", "EP009", "EP010", "EP011", "EP012"])
+        self.assertEqual(report["remaining_individual_scripts"], 288)
         self.assertEqual(report["reviewed_scripts"], 0)
         self.assertEqual(report["production_ready_scripts"], 0)
         self.assertFalse(report["reference_is_measured"])
@@ -141,6 +142,16 @@ class AnimeReadinessTests(unittest.TestCase):
             separators=(",", ":")).encode("utf-8")).hexdigest()
         with self.assertRaises(ValueError):
             _episode_row(draft, 11, series_manifest()["sha256"])
+
+    def test_reject_modified_twelfth_draft_even_if_rehashed(self):
+        draft = episode_twelve_script()
+        draft["carried_forward"]["safety_review"] = "authorized"
+        data = {k: v for k, v in draft.items() if k != "sha256"}
+        draft["sha256"] = hashlib.sha256(json.dumps(
+            data, ensure_ascii=False, sort_keys=True,
+            separators=(",", ":")).encode("utf-8")).hexdigest()
+        with self.assertRaises(ValueError):
+            _episode_row(draft, 12, series_manifest()["sha256"])
 
     def test_private_create_only_export(self):
         root = Path(__file__).resolve().parents[1]

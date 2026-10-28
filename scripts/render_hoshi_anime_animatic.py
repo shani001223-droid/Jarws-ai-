@@ -24,6 +24,7 @@ def main() -> int:
     parser.add_argument("--camera-move", action="append", choices=("static", "push_in", "pan_left", "pan_right"),
                         help="Optional 2D still camera move, once per shot (exactly 3)")
     parser.add_argument("--audio-wav", help="Optional local 30s mono 16-bit PCM WAV, 16/24kHz")
+    parser.add_argument("--voice-cues-json", help="Optional operator-supplied v1 per-shot voice timing; requires storyboard and WAV")
     parser.add_argument("--audio-rights-attested", action="store_true",
                         help="Operator confirms rights to the supplied WAV; does not verify dubbing")
     parser.add_argument("--image-rights-attested", action="store_true",
@@ -60,10 +61,22 @@ def main() -> int:
                 storyboard = json.loads(plan_path.read_text(encoding="utf-8"))
             except (UnicodeError, json.JSONDecodeError):
                 raise AnimePilotError("Invalid UTF-8 storyboard JSON.") from None
+        voice_cues = None
+        if args.voice_cues_json:
+            cue_path = Path(args.voice_cues_json)
+            if not args.storyboard_json or not args.audio_wav:
+                raise AnimePilotError("Voice cues require both --storyboard-json and --audio-wav.")
+            if not cue_path.is_file() or not 1 <= cue_path.stat().st_size <= 5000:
+                raise AnimePilotError("Local voice cues JSON missing or too large.")
+            try:
+                voice_cues = json.loads(cue_path.read_text(encoding="utf-8"))
+            except (UnicodeError, json.JSONDecodeError):
+                raise AnimePilotError("Invalid UTF-8 voice cues JSON.") from None
         output = render_private_animatic(
             images, args.caption, image_rights_attested=True,
             camera_moves=args.camera_move, storyboard_handoff=storyboard,
-            audio_wav=audio, audio_rights_attested=args.audio_rights_attested)
+            audio_wav=audio, audio_rights_attested=args.audio_rights_attested,
+            voice_timing_plan=voice_cues)
         destination = Path(args.out)
         destination.mkdir(parents=False, exist_ok=False)
         try:

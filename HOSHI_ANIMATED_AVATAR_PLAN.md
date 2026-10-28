@@ -1,6 +1,6 @@
 # HOSHI Animated Anime Avatar — implementation plan (Task 57 sub-plan)
 
-**Status:** IMPLEMENTATION STARTED on 28 October 2026; acceptance remains gated on green browser/Node CI and Android device QA. Subtasks are checked only after evidence. This is a subordinate breakdown of **canonical Task 57** ("Build consistent original character/voice system") in `HOSHI_60_TASK_MASTER_ROADMAP.md`; it does **not** create a second 60-task scoreboard or increase the completed-task count.
+**Status:** 4/28 avatar subtasks VERIFIED AT CODE/BROWSER LEVEL as of 28 October 2026; 24 pending. Android physical-device QA, layered rig and release remain separate unfinished acceptance. This is a subordinate breakdown of **canonical Task 57** ("Build consistent original character/voice system") in `HOSHI_60_TASK_MASTER_ROADMAP.md`; it does **not** create a second 60-task scoreboard or increase the completed-task count.
 
 ## User-approved direction
 
@@ -31,7 +31,7 @@
 
 ### Phase C — expressions and transitions (09–12)
 - [ ] **09.** Make a consistent **10-state expression pack**: neutral, happy, soft-smile/caring, listening, thinking, surprised, sad, annoyed, shy, excited.
-- [ ] **10.** Create a central explicit emotion-state controller; existing backend moods and voice/mic state should map into supported states with safe fallbacks.
+- [x] **10.** Create a central explicit emotion-state controller; existing backend moods and voice/mic state should map into supported states with safe fallbacks.
 - [ ] **11.** Blend/transition eyes, brows, mouth and head poses smoothly rather than hard-switching complete portraits; prevent race conditions from late replies.
 - [ ] **12.** Set priorities for states (speaking/listening/stop/error overrides ordinary moods); validate that expressions suit the actual message and do not imply real human feelings.
 
@@ -39,16 +39,16 @@
 
 ### Phase D — speech reaction and lip-sync (13–16)
 - [ ] **13.** Wire native Android TTS + web audio lifecycle callbacks to avatar start, pause, resume, finish, error, cancellation and Stop control.
-- [ ] **14.** Provide clearly labeled **speaking-reactive mouth animation** as the minimum fallback when native Android TTS supplies speaking state but no phoneme or audio samples.
+- [x] **14.** Provide clearly labeled **speaking-reactive mouth animation** as the minimum fallback when native Android TTS supplies speaking state but no phoneme or audio samples.
 - [ ] **15.** For decoded in-web audio actually available to Web Audio, use an `AnalyserNode` envelope/energy threshold with smoothing to animate mouth openness. Respect browser gesture/permission restrictions.
 - [ ] **16.** Optionally add timed Urdu-script/phonetic viseme cues only when true timing data is available; test silence, interruptions, quick replies, multiple segments and no lingering mouth loop.
 
 **Gate:** mouth reacts as Hoshi speaks, closes immediately when stopped, and does not falsely claim phoneme-perfect sync.
 
 ### Phase E — mobile UI and interaction (17–20)
-- [ ] **17.** Make the anime avatar the **default home** with a black futuristic setting (not room art or image-only static screen), clean framing and readable reply bubble.
+- [x] **17.** Make the anime avatar the **default home** with a black futuristic setting (not room art or image-only static screen), clean framing and readable reply bubble.
 - [ ] **18.** Implement distinct real listening, hearing, thinking, speaking and failed/offline cues, including subtle glow and progress that never implies a task succeeded before confirmation.
-- [ ] **19.** Keep home controls minimal: microphone, optional text composer and **Settings**; move advanced options to Settings without removing existing functionality.
+- [x] **19.** Keep home controls minimal: microphone, optional text composer and **Settings**; move advanced options to Settings without removing existing functionality.
 - [ ] **20.** Include reduced-motion, low-motion/battery mode, pause avatar animation, text fallback and accessible touch targets.
 
 **Gate:** first-time user can ask a question and hear/read a reply without hunting through cards and buttons.
@@ -98,3 +98,13 @@ The approved image board establishes a **silver-white-haired, blue-eyed, fox-ear
 6. Physical Realme Note 50 performance and voice QA, then approved staged release and rollback.
 
 This is an updated sub-plan of canonical Task 57, not a separate project or another completion scoreboard.
+
+## V1 verification checkpoint (28 October 2026)
+
+- **First source/test head:** `6af573d08886d69b2e3b8e535020fb6806e83bfa`. Full Python/backend tests, Node avatar emotion/blink tests, mobile Playwright/Chromium dashboard and Game Studio regression tests **passed**: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40649425847 . Docker backend build/startup passed for the same source head: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40649433743 .
+- **Subtask 10 (state controller)** checked: `hoshi-anime-avatar.js` maps backend emotion aliases and listening/thinking/speaking states deterministically; Node tests assert priority, stop and disposal.
+- **Subtask 14 (speaking fallback)** checked: portrait mouth loops while the browser/native speech lifecycle declares "speaking", and closes when stopped. This **does not mean** phoneme-level lip-sync, audio amplitude tracking or native-device verification.
+- **Subtask 17 (anime home)** checked at **browser code level** only: existing expressive Hoshi sprite is visible on black minimal home, not the old orb/room; 390×844 Playwright verifies sprite, state changes, tool visibility and the older core hidden. This is not yet the final concept-board character rig; physical color/alignment still requires review.
+- **Subtask 19 (minimal controls)** checked at **browser code level**: microphone, one Settings entry and Stop are maintained. Advanced tabs remain available through the existing explicit Settings toggle; no phone control permissions are changed.
+- **Not yet done:** independent animated eyelid layer registration, face landmarks and fitting, 10 fully distinct moods, per-ear/hair/body rig, actual audio-driven visemes, outfit garment swaps, full synthetic asset validation and real Realme Note 50 tests. The existing 4×2 sprite means only a limited distinct-expression set; aliases are not new artwork.
+- GitHub CI regression temporarily failed because old smoke tests still expected the retired holographic core and because a new sprite URL matcher was over-escaped; both assertions were corrected and the cited final run is green. No production merge, release, payment or user-account change.

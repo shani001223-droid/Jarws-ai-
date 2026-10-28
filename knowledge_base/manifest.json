@@ -129,7 +129,8 @@
             "result": "Primary title retrieved, but body contains navigation only; original lesson/captions unavailable."
           }
         ],
-        "remaining_requirement": "Check original creator definitions and distinguish mitigation/breaker construction before writing and counting this chapter. Third-party ASR summaries are not accepted as primary technical evidence. No placeholder or canonical recognizer is counted as delivered."
+        "remaining_requirement": "Check original creator definitions and distinguish mitigation/breaker construction before writing and counting this chapter. Third-party ASR summaries are not accepted as primary technical evidence. No placeholder or canonical recognizer is counted as delivered.",
+        "last_rechecked_at_asia_karachi": "2026-10-28T05:51:16.091356+05:00"
       }
     },
     {
@@ -141,7 +142,10 @@
     },
     {
       "path": "knowledge_base/04_SMC_COMPLETE/bos_choch_and_displacement.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2057,
+      "sha256": "dc9c107d521b546cf246987b8be646f819eaf834270ebe8c1f0d56f803a97f01"
     },
     {
       "path": "knowledge_base/04_SMC_COMPLETE/premium_discount_and_dealing_ranges.md",
@@ -297,6 +301,11 @@
       "path": "knowledge_base/03_SUPPLY_DEMAND_ORDERBLOCKS/zone_observations_20261028.json",
       "kind": "zone_cases",
       "sha256": "867441176635c9c8ff132f4d63ccc225825d181e12ab21ce7ddaa3ac6301cd0a"
+    },
+    {
+      "path": "knowledge_base/04_SMC_COMPLETE/smc_observations_20261028.json",
+      "kind": "smc_cases",
+      "sha256": "9f33e948323d5860c71e24a925391b87ceb611476f1b6a4c0bded1c54c91d38a"
     }
   ],
   "scope_history": [

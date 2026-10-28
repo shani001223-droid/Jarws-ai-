@@ -1,0 +1,318 @@
+{
+  "schema_version": "hoshi-v3-smc-evidence-1",
+  "source_receipt": "knowledge_base/01_MARKET_STRUCTURE/structure_observations_20261028.json",
+  "source_receipt_sha256": "0f119a703c8ee59cd055d13fd0ea58f2f424c84d12d16a4f4479c0de3d01dcae",
+  "data_license": "CC BY-NC-SA 4.0",
+  "use": "Non-commercial original offline price diagnostics, not indicator parity, independent evaluation, fills or runtime integration.",
+  "structure_cases": [
+    {
+      "source_window_sha256": "0a8fd6b6cee125cb5de8a199f86c88a5d9dacd572070a2f0999852154f688fea",
+      "case": {
+        "features": {
+          "method": "hoshi-prior-confirmed-close-break-1",
+          "event": {
+            "date": "2020-04-06",
+            "close_time": 1586217599999,
+            "open": 6772.78,
+            "high": 7355.14,
+            "low": 6765.0,
+            "close": 7329.9
+          },
+          "known_at": 1586217599999,
+          "prior_state": "higher_highs_higher_lows",
+          "prior_close": 6772.78,
+          "latest_known_high": {
+            "kind": "high",
+            "price": 7198.0,
+            "pivot_at": 1585871999999,
+            "confirmed_at": 1586044799999
+          },
+          "latest_known_low": {
+            "kind": "low",
+            "price": 5857.76,
+            "pivot_at": 1585612799999,
+            "confirmed_at": 1585785599999
+          },
+          "up_close_crossing": true,
+          "down_close_crossing": false,
+          "raw_up_close_crossing": true,
+          "raw_down_close_crossing": false,
+          "high_reference_previously_broken": false,
+          "low_reference_previously_broken": false,
+          "up_wick_beyond_reference": true,
+          "down_wick_beyond_reference": false,
+          "label": "bos_up",
+          "displacement": {
+            "status": "observed",
+            "preceding_20_body_mean": 233.08049999999994,
+            "absolute_body": 557.1199999999999,
+            "body_multiple": 2.390247146372176,
+            "prior_five_high": 7198.0,
+            "prior_five_low": 6150.11,
+            "up_qualified": true,
+            "down_qualified": false
+          },
+          "orders_enabled": false,
+          "institutional_intent_known": false,
+          "win_probability": null
+        },
+        "outcome_status": "observed",
+        "outcome": {
+          "available_at": 1586649599999,
+          "horizon_bars": 5,
+          "path": [
+            {
+              "date": "2020-04-07",
+              "close_time": 1586303999999,
+              "open": 7329.9,
+              "high": 7459.69,
+              "low": 7077.0,
+              "close": 7197.32
+            },
+            {
+              "date": "2020-04-08",
+              "close_time": 1586390399999,
+              "open": 7197.32,
+              "high": 7420.0,
+              "low": 7150.0,
+              "close": 7361.28
+            },
+            {
+              "date": "2020-04-09",
+              "close_time": 1586476799999,
+              "open": 7360.26,
+              "high": 7371.92,
+              "low": 7108.08,
+              "close": 7283.54
+            },
+            {
+              "date": "2020-04-10",
+              "close_time": 1586563199999,
+              "open": 7283.54,
+              "high": 7295.75,
+              "low": 6739.98,
+              "close": 6858.92
+            },
+            {
+              "date": "2020-04-11",
+              "close_time": 1586649599999,
+              "open": 6858.92,
+              "high": 6944.3,
+              "low": 6760.0,
+              "close": 6876.83
+            }
+          ],
+          "raw_close_change_pct": -6.181121161270953,
+          "strategy_pnl": null,
+          "fill_known": false
+        }
+      }
+    },
+    {
+      "source_window_sha256": "6d533be481380a79e5ee6ab85436cfa6bac8c5b50ae6ff2080b433901610c1ee",
+      "case": {
+        "features": {
+          "method": "hoshi-prior-confirmed-close-break-1",
+          "event": {
+            "date": "2021-06-21",
+            "close_time": 1624319999999,
+            "open": 35600.17,
+            "high": 35750.0,
+            "low": 31251.23,
+            "close": 31608.93
+          },
+          "known_at": 1624319999999,
+          "prior_state": "higher_highs_higher_lows",
+          "prior_close": 35600.16,
+          "latest_known_high": {
+            "kind": "high",
+            "price": 41330.0,
+            "pivot_at": 1623801599999,
+            "confirmed_at": 1623974399999
+          },
+          "latest_known_low": {
+            "kind": "low",
+            "price": 34600.36,
+            "pivot_at": 1623542399999,
+            "confirmed_at": 1623715199999
+          },
+          "up_close_crossing": false,
+          "down_close_crossing": true,
+          "raw_up_close_crossing": false,
+          "raw_down_close_crossing": true,
+          "high_reference_previously_broken": false,
+          "low_reference_previously_broken": false,
+          "up_wick_beyond_reference": false,
+          "down_wick_beyond_reference": true,
+          "label": "choch_down",
+          "displacement": {
+            "status": "observed",
+            "preceding_20_body_mean": 1341.2740000000008,
+            "absolute_body": 3991.239999999998,
+            "body_multiple": 2.9757081699935997,
+            "prior_five_high": 40527.14,
+            "prior_five_low": 33336.0,
+            "up_qualified": false,
+            "down_qualified": true
+          },
+          "orders_enabled": false,
+          "institutional_intent_known": false,
+          "win_probability": null
+        },
+        "outcome_status": "observed",
+        "outcome": {
+          "available_at": 1624751999999,
+          "horizon_bars": 5,
+          "path": [
+            {
+              "date": "2021-06-22",
+              "close_time": 1624406399999,
+              "open": 31614.12,
+              "high": 33298.78,
+              "low": 28805.0,
+              "close": 32509.56
+            },
+            {
+              "date": "2021-06-23",
+              "close_time": 1624492799999,
+              "open": 32509.56,
+              "high": 34881.0,
+              "low": 31683.0,
+              "close": 33678.07
+            },
+            {
+              "date": "2021-06-24",
+              "close_time": 1624579199999,
+              "open": 33675.07,
+              "high": 35298.0,
+              "low": 32286.57,
+              "close": 34663.09
+            },
+            {
+              "date": "2021-06-25",
+              "close_time": 1624665599999,
+              "open": 34663.08,
+              "high": 35500.0,
+              "low": 31275.0,
+              "close": 31584.45
+            },
+            {
+              "date": "2021-06-26",
+              "close_time": 1624751999999,
+              "open": 31576.09,
+              "high": 32730.0,
+              "low": 30151.0,
+              "close": 32283.65
+            }
+          ],
+          "raw_close_change_pct": 2.1345866500384503,
+          "strategy_pnl": null,
+          "fill_known": false
+        }
+      }
+    },
+    {
+      "source_window_sha256": "5860446413d27c8678d93b80ce791940ad4e06b76a512b6e1230f6b4ab19b74f",
+      "case": {
+        "features": {
+          "method": "hoshi-prior-confirmed-close-break-1",
+          "event": {
+            "date": "2022-11-04",
+            "close_time": 1667606399999,
+            "open": 20207.12,
+            "high": 21302.05,
+            "low": 20180.96,
+            "close": 21148.52
+          },
+          "known_at": 1667606399999,
+          "prior_state": "higher_highs_higher_lows",
+          "prior_close": 20207.82,
+          "latest_known_high": {
+            "kind": "high",
+            "price": 21085.0,
+            "pivot_at": 1667087999999,
+            "confirmed_at": 1667260799999
+          },
+          "latest_known_low": {
+            "kind": "low",
+            "price": 20000.09,
+            "pivot_at": 1667001599999,
+            "confirmed_at": 1667174399999
+          },
+          "up_close_crossing": true,
+          "down_close_crossing": false,
+          "raw_up_close_crossing": true,
+          "raw_down_close_crossing": false,
+          "high_reference_previously_broken": false,
+          "low_reference_previously_broken": false,
+          "up_wick_beyond_reference": true,
+          "down_wick_beyond_reference": false,
+          "label": "bos_up",
+          "displacement": {
+            "status": "observed",
+            "preceding_20_body_mean": 250.51350000000002,
+            "absolute_body": 941.4000000000015,
+            "body_multiple": 3.757881311785598,
+            "prior_five_high": 20931.21,
+            "prior_five_low": 20031.24,
+            "up_qualified": true,
+            "down_qualified": false
+          },
+          "orders_enabled": false,
+          "institutional_intent_known": false,
+          "win_probability": null
+        },
+        "outcome_status": "observed",
+        "outcome": {
+          "available_at": 1668038399999,
+          "horizon_bars": 5,
+          "path": [
+            {
+              "date": "2022-11-05",
+              "close_time": 1667692799999,
+              "open": 21148.52,
+              "high": 21480.65,
+              "low": 21080.65,
+              "close": 21299.37
+            },
+            {
+              "date": "2022-11-06",
+              "close_time": 1667779199999,
+              "open": 21299.37,
+              "high": 21365.27,
+              "low": 20886.13,
+              "close": 20905.58
+            },
+            {
+              "date": "2022-11-07",
+              "close_time": 1667865599999,
+              "open": 20905.58,
+              "high": 21069.77,
+              "low": 20384.89,
+              "close": 20591.13
+            },
+            {
+              "date": "2022-11-08",
+              "close_time": 1667951999999,
+              "open": 20590.67,
+              "high": 20700.88,
+              "low": 17166.83,
+              "close": 18547.23
+            },
+            {
+              "date": "2022-11-09",
+              "close_time": 1668038399999,
+              "open": 18545.38,
+              "high": 18587.76,
+              "low": 15588.0,
+              "close": 15922.81
+            }
+          ],
+          "raw_close_change_pct": -24.709577786057846,
+          "strategy_pnl": null,
+          "fill_known": false
+        }
+      }
+    }
+  ]
+}

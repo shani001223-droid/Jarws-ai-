@@ -13,6 +13,8 @@ on:
       - "tests/test_v3_pattern_evidence.py"
       - "scripts/v3_zone_evidence.py"
       - "tests/test_v3_zone_evidence.py"
+      - "scripts/v3_smc_evidence.py"
+      - "tests/test_v3_smc_evidence.py"
       - ".github/workflows/trading-v3-knowledge.yml"
   pull_request:
     branches: [main]
@@ -25,6 +27,8 @@ on:
       - "tests/test_v3_pattern_evidence.py"
       - "scripts/v3_zone_evidence.py"
       - "tests/test_v3_zone_evidence.py"
+      - "scripts/v3_smc_evidence.py"
+      - "tests/test_v3_smc_evidence.py"
       - ".github/workflows/trading-v3-knowledge.yml"
   workflow_dispatch:
 

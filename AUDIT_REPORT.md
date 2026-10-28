@@ -270,3 +270,8 @@ Added `orderblock_identification_and_validation.md` with 2148 substantive words 
 ## V3 execution and explicit source gap — 28 October 2026
 
 Added `execution_and_zone_failure_cases.md` with 2212 substantive words and three real dated path/absence/failure cases. Historical observations remain separate from hypothetical order instructions, assumed sizing costs, unknown fills, missing historical filters and fees. All 30 offline evidence regressions passed locally. Curriculum: 16/49 (32.65%); 33 pending. The intervening mitigation/breaker chapter remains pending, without a placeholder: primary `FOUzW0QmsfI` retrieval failed and `UrS-mtGHtAA` returned title/navigation without lesson body. Exact URLs/results are in the manifest; secondary ASR descriptions are not promoted to primary technical proof. Prior `fcafafe2a39e8526f8b38a4d302ecc81cbd68691` passed actual CI 40605486533. Runtime, replay/evaluation and release gates remain pending. Main, backup, V2 controls and unrelated project work are preserved.
+
+
+## V3 BOS/CHoCH and displacement receipt — 28 October 2026
+
+Added `bos_choch_and_displacement.md` with 2057 substantive words and three actual dated BTCUSDT events whose later endpoints oppose the event direction. Original offline rules preserve prior-confirmed anchors, separate displacement, first-cross lifecycle, negative outcomes, unknown fills and null probability. Four added regressions bring passing local evidence tests to 34. Curriculum: 17/49 (34.69%); exact mitigation/breaker source gaps were rechecked and remain pending. Prior `cc582d291a1636a23a2cdec336d792e0a3385376` passed actual CI 40605872022. No runtime, main, backup, unrelated roadmap or identity/voice/privacy/Stop changes.

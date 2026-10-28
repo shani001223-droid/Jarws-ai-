@@ -15,6 +15,7 @@ import re
 from v3_structure_evidence import check_window
 from v3_pattern_evidence import check_receipt as check_pattern_receipt
 from v3_zone_evidence import check_receipt as check_zone_receipt
+from v3_smc_evidence import check_receipt as check_smc_receipt
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "knowledge_base/manifest.json"
@@ -79,7 +80,10 @@ def check():
         assert len(raw) <= 1000000 and hashlib.sha256(raw).hexdigest() == receipt["sha256"], rel
         payload = json.loads(raw)
         kind = receipt.get("kind", "crash_windows")
-        assert kind in ("crash_windows", "event_windows", "ohlcv_windows", "pattern_cases", "zone_cases"), kind
+        assert kind in ("crash_windows", "event_windows", "ohlcv_windows", "pattern_cases", "zone_cases", "smc_cases"), kind
+        if kind == "smc_cases":
+            check_smc_receipt(payload, ROOT)
+            continue
         if kind == "zone_cases":
             check_zone_receipt(payload, ROOT)
             continue

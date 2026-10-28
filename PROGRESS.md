@@ -9,8 +9,8 @@ entire branch was already deployed. Production V2 remains a separate release.
 
 ## Current measured progress
 
-**Day 1: completed 16 of 49 planned knowledge chapters — 32.65%; 33 chapters,
-67.35% of the declared curriculum, remain.**
+**Day 1: completed 17 of 49 planned knowledge chapters — 34.69%; 32 chapters,
+65.31% of the declared curriculum, remain.**
 
 The denominator is the versioned, expandable file manifest in
 `knowledge_base/manifest.json`. Scope revision 2 explicitly expands the initial
@@ -41,6 +41,7 @@ topics require an explicit manifest/progress revision, never silent omission.
 | `03_SUPPLY_DEMAND_ORDERBLOCKS/orderblock_identification_and_validation.md` | Source-checked; audited existing V2 formation arithmetic on actual daily examples, distinct gap/block invalidation and no-return outcomes; no full runtime or canonical creator-method certification |
 | `03_SUPPLY_DEMAND_ORDERBLOCKS/mitigation_breakers_and_retests.md` | Pending: original lesson body/captions unavailable at two exact URLs recorded in manifest; third-party ASR summaries are not substituted as primary proof |
 | `03_SUPPLY_DEMAND_ORDERBLOCKS/execution_and_zone_failure_cases.md` | Source-checked; three real dated path/absence/failure cases, hypothetical sizing, same-bar ambiguity, source-time and execution limitations; no fills or runtime replay claimed |
+| `04_SMC_COMPLETE/bos_choch_and_displacement.md` | Source-checked; prior-confirmed first close-crosses, distinct displacement, consumed-reference recross suppression and three adverse historical paths; no probability or runtime detector claim |
 | Remaining curriculum documents | Pending; no empty placeholder chapters counted as complete |
 | Brain loader and runtime knowledge bundle | Pending — new source chapters are not yet consumed by Hoshi |
 | 40/20/20/20 history/liquidity/structure/global-flow engine | Pending — weights will mean evidence coverage, not an invented win probability |
@@ -103,6 +104,9 @@ topics require an explicit manifest/progress revision, never silent omission.
 
 - **28 October, Day 1:** completed independent `execution_and_zone_failure_cases.md` (2212 substantive words) with three genuine dated BTCUSDT cases. Historical OHLC facts are distinct from explicitly hypothetical order instructions; same-bar entry/stop/target coverage, absent return and first-contact invalidation retain unknown fills and null PnL. Checked current primary order/filter documentation, without inventing historical symbol filters or fee tiers. All 30 offline evidence regressions passed locally. Prior [fcafafe2](https://github.com/shani001223-droid/Jarws-ai-/commit/fcafafe2a39e8526f8b38a4d302ecc81cbd68691) passed [actual curriculum/evidence CI 40605486533](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40605486533). Curriculum: 16/49 (32.65%); 33 chapters remain.
 - **Exact source gap, retained pending:** `mitigation_breakers_and_retests.md` has not been written or counted. Primary lesson `https://www.youtube.com/watch?v=FOUzW0QmsfI` repeatedly failed retrieval; `https://www.youtube.com/watch?v=UrS-mtGHtAA` returned its title and navigation without lesson body/captions. Third-party ASR pages were used only to discover original URLs, not as primary proof of technical definitions. These exact gaps are recorded in the manifest; do not call a generic support/resistance flip a certified creator breaker. Recheck accessible original material in a later run while continuing independent pending work, next `04_SMC_COMPLETE/bos_choch_and_displacement.md` if the lesson gap persists. Scope remains 49, including this uncompleted chapter. Runtime/release integration remains pending; main is unmerged and backup preserved.
+
+
+- **28 October, Day 1:** completed `bos_choch_and_displacement.md` (2057 substantive words). Added original offline first-close-cross and displacement diagnostics with three genuine dated BTCUSDT cases. Reference confirmation predates event open; consumed-reference recrosses and wicks cannot become fresh BOS, and all three later adverse-to-break endpoints remain visible. First-party terminology differences are disclosed rather than claiming indicator parity. Four new causal/missing-baseline/recross/corruption regressions bring local evidence checks to 34 passing tests. Rechecked both exact mitigation/breaker primary URLs: original bodies remain unavailable, so that chapter stays pending; independent SMC work proceeds. Prior [cc582d29](https://github.com/shani001223-droid/Jarws-ai-/commit/cc582d291a1636a23a2cdec336d792e0a3385376) passed [actual curriculum/evidence CI 40605872022](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40605872022). Curriculum: 17/49 (34.69%); next independent chapter is `premium_discount_and_dealing_ranges.md`. Runtime, model training and final release are not claimed.
 
 ## Completion and release rules
 

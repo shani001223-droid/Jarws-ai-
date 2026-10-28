@@ -1,7 +1,7 @@
 """Offline Task 56 script-readiness audit; no approvals, voices or media.
 
 Counts are estimates from written dialogue, never measured speech duration.
-Only the ten immutable, locally authored editorial drafts are accepted.
+Only the eleven immutable, locally authored editorial drafts are accepted.
 """
 from __future__ import annotations
 
@@ -20,9 +20,10 @@ from cloud_backend.anime_episode_seven import episode_seven_script, validate_epi
 from cloud_backend.anime_episode_eight import episode_eight_script, validate_episode_eight
 from cloud_backend.anime_episode_nine import episode_nine_script, validate_episode_nine
 from cloud_backend.anime_episode_ten import episode_ten_script, validate_episode_ten
+from cloud_backend.anime_episode_eleven import episode_eleven_script, validate_episode_eleven
 
-DRAFT_FACTORIES = (pilot_script, episode_two_script, episode_three_script, episode_four_script, episode_five_script, episode_six_script, episode_seven_script, episode_eight_script, episode_nine_script, episode_ten_script)
-DRAFT_VALIDATORS = (validate_pilot, validate_episode_two, validate_episode_three, validate_episode_four, validate_episode_five, validate_episode_six, validate_episode_seven, validate_episode_eight, validate_episode_nine, validate_episode_ten)
+DRAFT_FACTORIES = (pilot_script, episode_two_script, episode_three_script, episode_four_script, episode_five_script, episode_six_script, episode_seven_script, episode_eight_script, episode_nine_script, episode_ten_script, episode_eleven_script)
+DRAFT_VALIDATORS = (validate_pilot, validate_episode_two, validate_episode_three, validate_episode_four, validate_episode_five, validate_episode_six, validate_episode_seven, validate_episode_eight, validate_episode_nine, validate_episode_ten, validate_episode_eleven)
 BLOCKERS = (
     "human_roman_urdu_editorial_review",
     "measured_table_read_and_action_pacing",
@@ -92,7 +93,7 @@ def _payload() -> dict:
         "schema_version": 1,
         "title": manifest["title"],
         "source_outline_sha256": manifest["sha256"],
-        "scope": "EP001-EP010 locally authored editorial drafts only",
+        "scope": "EP001-EP011 locally authored editorial drafts only",
         "target_episode_seconds": 1800,
         "reference_wpm": WORDS_PER_MINUTE_REFERENCE,
         "reference_is_measured": False,

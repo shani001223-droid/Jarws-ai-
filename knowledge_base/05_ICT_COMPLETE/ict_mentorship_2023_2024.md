@@ -100,7 +100,9 @@ The chapter's release scope is the source comparison and evidence discipline
 described here. Remaining lectures, visual chart details and any original
 licensed study materials are not claimed obtained. Future additions must name
 their sources and expand the manifest when they add a genuinely missing topic;
-they cannot silently redefine an edition as fully ingested.
+they cannot silently redefine an edition as fully ingested. Detailed day/week
+session-opening-gap rules and actual session endpoints are a separate pending
+chapter explicitly added in manifest scope revision 3.
 
 **False cross-market equivalence:** BTCUSDT spot, an E-mini contract, an equity
 index and a broker's NAS100 CFD have different sessions, units, financing and

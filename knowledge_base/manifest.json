@@ -1,7 +1,7 @@
 {
   "schema_version": "hoshi-v3-curriculum-1",
-  "scope_revision": 2,
-  "scope": "Expandable 49-chapter release curriculum (initial 48 plus explicit rare/gap candlestick expansion), not every fact on Earth or a runtime completion percentage.",
+  "scope_revision": 3,
+  "scope": "Expandable 50-chapter release curriculum (initial 48 plus explicit rare/gap candle and session-opening-gap expansions), not every fact on Earth or a runtime completion percentage.",
   "minimum_body_words": 1000,
   "start_date": "2026-10-28",
   "branch": "hoshi-v3-god-mode",
@@ -225,8 +225,8 @@
       "path": "knowledge_base/05_ICT_COMPLETE/ict_mentorship_2023_2024.md",
       "status": "source_checked",
       "reviewed_on": "2026-10-28",
-      "body_word_count": 1934,
-      "sha256": "bbc909435c7d1beb3d2325ea91dcc44f0392e69e8fcbf38753c46b85149c62d5",
+      "body_word_count": 1955,
+      "sha256": "766e52af68c4cf9c5d9f4a72bdc3d8a2e60d9c4e189c4b6b5e8cab0683cb3165",
       "source_review": {
         "status": "bounded_original_caption_passages_and_public_creator_metadata_checked",
         "reviewed_on": "2026-10-28",
@@ -254,16 +254,76 @@
             "retrieval": "Original YouTube captions via vidIQ; full copyrighted track not republished."
           }
         ],
-        "limitations": "Selected Silver Bullet and 2024 Lecture 4 opening-gap/calendar passages only; not all 2023/2024 lessons or chart visuals. Source publication is distinct from market-event and historical viewer access times. Reused minute windows are not new independent trials."
+        "limitations": "Selected Silver Bullet and 2024 Lecture 4 opening-gap/calendar passages only; not all 2023/2024 lessons or chart visuals. Source publication is distinct from market-event and historical viewer access times. Reused minute windows are not new independent trials.",
+        "remaining_requirement": "Detailed day/week session-opening-gap topic is explicitly pending as knowledge_base/05_ICT_COMPLETE/session_opening_gaps_ndog_nwog_and_2024_context.md; complete annual lesson ingestion and unviewed chart parity remain unclaimed."
       }
     },
     {
       "path": "knowledge_base/05_ICT_COMPLETE/killzones_silver_bullet_power_of_three.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2065,
+      "sha256": "f3ccd33c1fcb9dd375b4d7bb86fa82f2435d46566140bbc0c64708b855346568",
+      "source_review": {
+        "status": "bounded_original_caption_passages_and_creator_metadata_checked",
+        "reviewed_on": "2026-10-28",
+        "primary_sources": [
+          {
+            "url": "https://www.youtube.com/watch?v=iZLXnNiZm_s",
+            "title": "2022 ICT Mentorship Episode 9",
+            "channel_id": "UCtjxa77NqamhVC8atV85Rog",
+            "published_at_utc": "2022-02-16T01:30:28Z",
+            "duration": "PT27M50S",
+            "caption_language": "en",
+            "caption_sha256": "e29494d9be1bfcb7ed6e49be9284c36a1118c6dfcc7da079a343dab708f97a07",
+            "caption_lines": 101,
+            "retrieval": "Original YouTube captions via vidIQ; full copyrighted track not republished."
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=plNN9n7nrxc",
+            "title": "ICT Forex - The ICT New York Killzone",
+            "channel_id": "UCtjxa77NqamhVC8atV85Rog",
+            "published_at_utc": "2017-12-09T17:36:43Z",
+            "duration": "PT15M51S",
+            "caption_language": "en",
+            "caption_sha256": "543e99a7b4b46593ddefb94f88036a237e16557f80d852a0a667998e7346678f",
+            "caption_lines": 57,
+            "retrieval": "Original YouTube captions via vidIQ; full copyrighted track not republished."
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=G8OEsUAoIWE",
+            "title": "ICT Forex - The ICT London Killzone",
+            "channel_id": "UCtjxa77NqamhVC8atV85Rog",
+            "published_at_utc": "2017-12-09T17:37:01Z",
+            "duration": "PT21M35S",
+            "caption_language": "en",
+            "caption_sha256": "4653940f9411726da1f71dd8e49ad07ad93c0eafc3b661931d20c21f86980c98",
+            "caption_lines": 77,
+            "retrieval": "Original YouTube captions via vidIQ; full copyrighted track not republished."
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=tRq1hyGGtl4",
+            "title": "2023 ICT Mentorship - ICT Silver Bullet Time Based Trading Model",
+            "channel_id": "UCtjxa77NqamhVC8atV85Rog",
+            "published_at_utc": "2023-05-14T21:00:19Z",
+            "duration": "PT19M16S",
+            "caption_language": "en",
+            "caption_sha256": "a46eba381696c6b67d7706ed9740b1fa393d4d8577a99130106927bc7d2e5cfd",
+            "caption_lines": 70,
+            "retrieval": "Original YouTube captions via vidIQ; full copyrighted track not republished."
+          }
+        ],
+        "limitations": "Source-specific classic Forex hours differ from Silver Bullet. No complete creator recognizer, full-day Power of Three, universal tick conversion, chart visual or probability claim."
+      }
     },
     {
       "path": "knowledge_base/05_ICT_COMPLETE/ote_entries_and_failure_models.md",
       "status": "pending"
+    },
+    {
+      "path": "knowledge_base/05_ICT_COMPLETE/session_opening_gaps_ndog_nwog_and_2024_context.md",
+      "status": "pending",
+      "scope_note": "Explicit expansion: original 2024 source introduces day/week session opening gaps distinct from three-candle FVG and arbitrary spot clock envelopes; requires checked original session boundaries, actual dated endpoints and failures, with unsupported data gaps retained."
     },
     {
       "path": "knowledge_base/06_LIQUIDITY_GOD/bsl_ssl_equal_highs_lows.md",
@@ -418,6 +478,15 @@
         "knowledge_base/02_CANDLESTICK_AND_CHART_PATTERNS/rare_candlestick_and_gap_variants.md"
       ],
       "reason": "Core candle geometry cannot stand in for detailed rare/gap compound rules; preserve that genuinely missing material as an explicit pending chapter, not a false all-patterns claim."
+    },
+    {
+      "revision": 3,
+      "reviewed_on": "2026-10-28",
+      "planned_documents": 50,
+      "added": [
+        "knowledge_base/05_ICT_COMPLETE/session_opening_gaps_ndog_nwog_and_2024_context.md"
+      ],
+      "reason": "Checked original 2024 captions reveal day/week session opening-gap context that cannot be substituted by existing three-candle FVG or thirty-minute spot envelopes. Preserve this genuinely missing detailed topic explicitly; do not count a bounded annual source comparison as that full treatment."
     }
   ]
 }

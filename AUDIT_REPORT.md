@@ -305,3 +305,8 @@ Added `ict_core_and_2022_models.md` with 1956 substantive body words. Original E
 ## V3 2023/2024 source comparison and frozen context — 28 October 2026
 
 Added `ict_mentorship_2023_2024.md` with 1934 substantive body words. Original creator metadata/captions support bounded edition comparison; full editions, visuals, historical viewer access times and missing futures opening-gap endpoints remain unclaimed. Offline pre-hour envelopes freeze before the outcome hour and do not invent directional bias, stop inventory or causal intent. Three genuine dated paths explicitly reuse prior captures. All 53 evidence regressions passed locally. Curriculum 23/49 (46.94%); runtime/evaluation/release pending. Prior `65c1cbc4cdd932a68d4eb46972ac35032c9c97cf` passed actual CI 40619156102. No runtime, orders, main/backup or unrelated controls changed.
+
+
+## V3 source-specific clocks and explicit scope expansion — 28 October 2026
+
+Added `killzones_silver_bullet_power_of_three.md` (2065 substantive words), checked original primary captions/metadata and retained hashes without track republication. Distinct Forex versus Silver Bullet intervals, DST, closed-bar hour boundaries, first-candidate failures and overlap counts remain explicit. All 53 evidence regressions passed locally. Scope revision 3 adds pending detailed day/week session-opening-gap work: 24/50 (48.00%), not silently omitted or counted by the annual comparison. That existing chapter now names the pending topic and has refreshed word/hash receipts. Prior `2d773e9f04602f13c8a2066b4631a228731e0b2c` passed actual CI 40619595186. No runtime/orders/main/backup/identity/privacy/voice/Stop or unrelated task changes.

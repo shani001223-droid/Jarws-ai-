@@ -9,14 +9,16 @@ entire branch was already deployed. Production V2 remains a separate release.
 
 ## Current measured progress
 
-**Day 1: completed 23 of 49 planned knowledge chapters — 46.94%; 26 chapters,
-53.06% of the declared curriculum, remain.**
+**Day 1: completed 24 of 50 planned knowledge chapters — 48.00%; 26 chapters,
+52.00% of the declared curriculum, remain.**
 
 The denominator is the versioned, expandable file manifest in
-`knowledge_base/manifest.json`. Scope revision 2 explicitly expands the initial
-48 documents to 49 by adding `rare_candlestick_and_gap_variants.md`; core candle
-geometry must not be presented as every rare compound rule. Earlier 48-file
-percentages in this historical log retain their original denominator. It is not a percentage of every fact on Earth,
+`knowledge_base/manifest.json`. Scope revision 2 expanded the initial 48
+chapters to 49 with rare/gap candle variants. Scope revision 3 expands to **50**
+by explicitly adding `session_opening_gaps_ndog_nwog_and_2024_context.md`:
+checked 2024 source material introduces a distinct detailed topic that neither
+three-candle FVG nor arbitrary spot envelopes cover. It remains pending.
+Earlier 48/49-file percentages retain their original denominators. It is not a percentage of every fact on Earth,
 all possible trading concepts, the separate 60-task Hoshi project, runtime
 integration, profitability or completion of the entire V3 release. Additional
 topics require an explicit manifest/progress revision, never silent omission.
@@ -47,6 +49,8 @@ topics require an explicit manifest/progress revision, never silent omission.
 | `04_SMC_COMPLETE/smc_evidence_and_counterexamples.md` | Source-checked; exhaustive bounded ledger with 1,096 directional decisions, 44 formations, eight price chains, two geometric retests and retained no-return/invalidation/adverse paths; not performance calibration |
 | `05_ICT_COMPLETE/ict_core_and_2022_models.md` | Source-checked; bounded original 2022 source distinctions, 360 native minute candles, causal clock/gap evidence and three genuine no-contact/invalidation cases; no creator-parity or full-signal claim |
 | `05_ICT_COMPLETE/ict_mentorship_2023_2024.md` | Source-checked; bounded original 2023/2024 source comparison, publication/event separation and three frozen pre-hour references; complete editions, futures opening gaps and independent new trials unclaimed |
+| `05_ICT_COMPLETE/killzones_silver_bullet_power_of_three.md` | Source-checked; exact original classic/Silver Bullet hour distinctions, DST and boundary rules, bounded Power of Three attribution and three real dated timing/failure cases |
+| `05_ICT_COMPLETE/session_opening_gaps_ndog_nwog_and_2024_context.md` | Pending explicit scope revision 3 addition; detailed session boundaries and genuine opening endpoints cannot be inferred from current spot envelopes |
 | Remaining curriculum documents | Pending; no empty placeholder chapters counted as complete |
 | Brain loader and runtime knowledge bundle | Pending — new source chapters are not yet consumed by Hoshi |
 | 40/20/20/20 history/liquidity/structure/global-flow engine | Pending — weights will mean evidence coverage, not an invented win probability |
@@ -128,6 +132,8 @@ topics require an explicit manifest/progress revision, never silent omission.
 - **28 October, Day 1 (07:07 PKT):** completed `ict_core_and_2022_models.md` (1956 substantive words). Original creator-channel Episode 3 captions and metadata distinguish native wick-cross permission/multiple-candle references from Hoshi's original stricter rules. Captured 360 native BTCUSDT one-minute bars over three fixed 2023/2024 windows, with exact HTTP bodies/digests, New York daylight-saving conversion and first-chronological gap selection. Three actual cases retain first-contact invalidation, no retest, and a rejection-looking close after a full crossing; all decisions WAIT, fills/PnL/probability unknown. Five added clock/prefix/corruption regressions bring passing offline evidence tests to 51. Prior [693e56b7](https://github.com/shani001223-droid/Jarws-ai-/commit/693e56b763b3f97d594a52cc467557c8ddcf8f15) passed [actual CI 40617684956](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40617684956). Curriculum: 22/49 (44.90%); next declared chapter `ict_mentorship_2023_2024.md`. These are source/diagnostic receipts, not runtime integration or model training.
 
 - **28 October, Day 1 (07:11 PKT):** completed `ict_mentorship_2023_2024.md` (1934 substantive words). Checked original 2023 Silver Bullet and selected 2024 Lecture 4 captions/creator metadata, with language and track digests retained. Separates publication from event/access time, source description from original hypotheses, and spot envelopes from unavailable futures opening-gap endpoints. Three replayed frozen pre-hour envelopes retain missing excursions, small boundary excess and adverse first-gap paths; reuse of the same 360 minute bars is explicit, not three new independent trials. Two added context/prefix/corruption regressions bring local passing evidence tests to 53. Prior [65c1cbc4](https://github.com/shani001223-droid/Jarws-ai-/commit/65c1cbc4cdd932a68d4eb46972ac35032c9c97cf) passed [actual CI 40619156102](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40619156102). Curriculum 23/49 (46.94%); next `killzones_silver_bullet_power_of_three.md`. This bounded chapter does not claim all annual mentorship content obtained, model training, runtime delivery or release.
+
+- **28 October, Day 1 (07:15 PKT):** completed `killzones_silver_bullet_power_of_three.md` (2065 substantive words). Original 2017 London/New York, 2022 Episode 9 and 2023 Silver Bullet captions/creator metadata establish source-specific hours and a bounded Power of Three comparison. Distinguishes 07:00–09:00 classic New York from 10:00–11:00 Silver Bullet, entry from later exit, half-open post-close windows, summer/winter offsets and absence/invalidations. The same three actual captures contain 22/15/12 eligible overlapping gaps, not trades or independent probability observations. All 53 local evidence tests passed. Prior [2d773e9f](https://github.com/shani001223-droid/Jarws-ai-/commit/2d773e9f04602f13c8a2066b4631a228731e0b2c) passed [actual CI 40619595186](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40619595186). **Scope revision 3 adds the genuinely missing detailed day/week session-opening-gap topic: 50 declared chapters, 24 source-checked (48.00%), 26 pending (52.00%).** The prior bounded annual comparison explicitly links this pending work; its corrected word/digest receipts are updated. Next `ote_entries_and_failure_models.md`, then the added session-gap chapter. Runtime, independent evaluation and final release remain pending.
 
 ## Completion and release rules
 

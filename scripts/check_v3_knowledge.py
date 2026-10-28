@@ -1,7 +1,7 @@
 """Check the V3 curriculum's declared scope, content floor and file receipts.
 
 Mechanical checks cannot certify historical truth or runtime integration.
-Run this before each chapter commit; never count pending files as delivered.
+Run this before each chapter commit; pending and draft files are not delivered.
 """
 from __future__ import annotations
 
@@ -42,11 +42,33 @@ def content_words(text):
     return len(re.findall(r"\b\w+(?:['’\-]\w+)*\b", body))
 
 
+def document_state(doc, path):
+    """A written draft may be reviewed, but cannot become completion by relabelling."""
+    state = doc["status"]
+    if state == "pending":
+        assert not path.exists(), f"Existing incomplete files must be explicitly declared draft: {path.name}"
+        return state
+    assert state in ("draft", "source_checked"), state
+    assert path.is_file() and not path.is_symlink(), path.name
+    if state == "draft":
+        blockers = doc.get("completion_blockers")
+        assert (isinstance(blockers, list) and blockers
+                and all(isinstance(x, str) and 1 <= len(x) <= 2000 for x in blockers)), path.name
+        assert doc.get("runtime_eligible") is False, path.name
+    else:
+        assert not doc.get("completion_blockers"), f"Unresolved completion blockers: {path.name}"
+        assert "runtime_eligible" not in doc or doc["runtime_eligible"] is True, path.name
+    return state
+
+
 def check():
     manifest = json.loads(MANIFEST.read_text())
-    assert manifest["schema_version"] == "hoshi-v3-curriculum-1"
+    assert manifest["schema_version"] == "hoshi-v3-curriculum-2"
+    policy = manifest["document_status_policy"]
+    assert (policy["version"] == 2 and policy["drafts_count_as_complete"] is False
+            and policy["drafts_runtime_eligible"] is False)
     assert manifest["minimum_body_words"] >= 1000
-    seen, folders, done = set(), set(), []
+    seen, folders, done, drafts = set(), set(), [], []
     for doc in manifest["documents"]:
         rel = PurePosixPath(doc["path"])
         assert (not rel.is_absolute() and ".." not in rel.parts and len(rel.parts) == 3
@@ -55,13 +77,16 @@ def check():
         assert str(rel) not in seen, rel
         seen.add(str(rel)); folders.add(rel.parts[1])
         path = ROOT / str(rel)
-        if doc["status"] == "pending":
-            assert not path.exists(), f"Unreviewed chapter must not be counted/pushed as complete: {rel}"
+        state = document_state(doc, path)
+        if state == "pending":
             continue
-        assert doc["status"] == "source_checked", (rel, doc["status"])
         raw = path.read_bytes()
         assert len(raw) <= 1000000, rel
         text = raw.decode("utf-8")
+        if state == "draft":
+            assert "INCOMPLETE DRAFT" in text[:1500], (rel, "missing visible draft warning")
+        else:
+            assert "INCOMPLETE DRAFT" not in text[:1500], (rel, "visible draft cannot be completed")
         count = content_words(text)
         assert count >= manifest["minimum_body_words"], (rel, count)
         assert count == doc["body_word_count"], (rel, "word-count receipt drift")
@@ -75,7 +100,11 @@ def check():
         examples = re.findall(r"^### Example [123] .+$", text, re.MULTILINE)
         assert len(examples) == 3 and all(re.search(r"\b\d{4}\b", x) for x in examples), rel
         assert len(re.findall(r"\]\(https://[^)]+\)", text)) >= 3, (rel, "missing source links")
-        done.append({"path": str(rel), "body_words": count})
+        record = {"path": str(rel), "body_words": count}
+        if state == "draft":
+            drafts.append(record)
+        else:
+            done.append(record)
     assert folders == FOLDERS, "Every requested folder family must remain in the declared scope"
     actual = {str(p.relative_to(ROOT)) for p in (ROOT / "knowledge_base").rglob("*.md")}
     assert actual <= seen, "Unmanifested curriculum files: " + str(actual-seen)
@@ -165,6 +194,8 @@ def check():
     total = len(manifest["documents"])
     assert total and len(done) <= total
     return {"completed_documents": len(done), "planned_documents": total,
+            "draft_documents": len(drafts), "drafts": drafts,
+            "curriculum_source_complete": len(done) == total,
             "curriculum_percent": round(len(done)/total*100, 2),
             "scope": "declared curriculum files only; not all trading knowledge or runtime completion",
             "documents": done, "integration_gates": manifest["integration_gates"]}

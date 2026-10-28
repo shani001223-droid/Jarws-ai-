@@ -7,6 +7,7 @@ on:
       - "knowledge_base/**"
       - "PROGRESS.md"
       - "scripts/check_v3_knowledge.py"
+      - "tests/test_v3_curriculum_evidence.py"
       - "scripts/v3_structure_evidence.py"
       - "tests/test_v3_structure_evidence.py"
       - "scripts/v3_pattern_evidence.py"
@@ -37,6 +38,7 @@ on:
     paths:
       - "knowledge_base/**"
       - "scripts/check_v3_knowledge.py"
+      - "tests/test_v3_curriculum_evidence.py"
       - "scripts/v3_structure_evidence.py"
       - "tests/test_v3_structure_evidence.py"
       - "scripts/v3_pattern_evidence.py"

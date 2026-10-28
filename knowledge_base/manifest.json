@@ -1,5 +1,5 @@
 {
-  "schema_version": "hoshi-v3-curriculum-1",
+  "schema_version": "hoshi-v3-curriculum-2",
   "scope_revision": 3,
   "scope": "Expandable 50-chapter release curriculum (initial 48 plus explicit rare/gap candle and session-opening-gap expansions), not every fact on Earth or a runtime completion percentage.",
   "minimum_body_words": 1000,
@@ -343,11 +343,11 @@
     },
     {
       "path": "knowledge_base/05_ICT_COMPLETE/session_opening_gaps_ndog_nwog_and_2024_context.md",
-      "status": "pending",
+      "status": "draft",
       "scope_note": "Explicit expansion: original 2024 source introduces day/week session opening gaps distinct from three-candle FVG and arbitrary spot clock envelopes; requires checked original session boundaries, actual dated endpoints and failures, with unsupported data gaps retained.",
       "source_review": {
-        "status": "partial_offline_sample_audit_delivered_calendar_endpoint_and_permission_gaps_remain",
-        "last_rechecked_at_asia_karachi": "2026-10-28T13:18:24.224493+05:00",
+        "status": "draft_incomplete_priced_examples_calendars_availability_and_rights",
+        "last_rechecked_at_asia_karachi": "2026-10-28T14:03:32.490504+05:00",
         "checked_sources": [
           {
             "url": "https://www.youtube.com/watch?v=hdSscxZgE58",
@@ -435,6 +435,26 @@
             "url": "https://historicalfuturesdata.com/docs",
             "checked_on": "2026-10-28",
             "result": "Opened primary documentation: unauthenticated latest-year samples are 10-second OHLCV bars; tick access is a paid path. Those bars omit exact first/last trade instants and are not used as a substitute. No account, credits or purchase activated."
+          },
+          {
+            "url": "https://www.cmegroup.com/rulebook/files/ser-6465_Equity_Index_Futures_Options_on_Equity_Index_Futures_20121114.pdf",
+            "checked_on": "2026-10-28",
+            "result": "Actually opened primary two-page S-6465, notice 14 November 2012, effective 18 November for trade date 19 November. Distinct settlement, afternoon pause and 16:15-17:00 CT closure are documented. Date-specific UTC conversions checked with America/Chicago; no actual transaction endpoints or full exception calendar inferred."
+          },
+          {
+            "url": "https://www.cmegroup.com/tools-information/lookups/advisories/market-regulation/SER-6465.html",
+            "checked_on": "2026-10-28",
+            "result": "Primary notice/effective-date index opened and reconciled with S-6465 PDF."
+          },
+          {
+            "url": "https://www.cmegroup.com/tools-information/lookups/advisories/electronic-trading/20150914.html",
+            "checked_on": "2026-10-28",
+            "result": "Actually opened 14 September 2015 notice and maintenance section: effective 21 September 16:00-16:45 CT maintenance for listed markets, with earlier 16:00 closes and unchanged normal product openings. Maintenance end is not silently treated as an executed trade or the product trading open; this is not a complete 2015 or 2025 calendar."
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=hdSscxZgE58",
+            "checked_on": "2026-10-28",
+            "result": "Fresh direct web open failed. Draft reuses only the previously recorded bounded caption/creator-metadata review and digest from ict_mentorship_2023_2024.md; no new transcript, full chart inspection or original feed/execution validation claimed."
           }
         ],
         "remaining_requirement": "Still need verified permitted exact-contract historical session/holiday calendars and actual pre-break last/post-break first trades across three genuinely dated cases, complete adjacent-session/correction coverage, source availability evidence and applicable use/redistribution rights. Complete HTTP download of one sample part-file and three maturity identities do not satisfy those requirements. Portara one-date snippets do not certify complete tape coverage or sample-use rights. Continue only genuinely permitted independent source investigation; do not use settlement, adjusted continuous series, broker quotes or arbitrary 24/7 spot envelopes to manufacture completion. No all-free-data-unavailable claim.",
@@ -447,8 +467,18 @@
           "new_synthetic_decoder_and_metadata_tests": 17,
           "raw_market_file_or_price_series_published": false,
           "runtime_integration": false
-        }
-      }
+        },
+        "draft_note": "Original substantive conceptual draft with three documented schedule/source-quality context cases; explicitly not the three required priced opening-gap examples. It is integrity checked but not source-complete, runtime eligible, loaded knowledge or training."
+      },
+      "body_word_count": 2235,
+      "sha256": "ab543ad362b6a33ae7a56e40cb9968fed1a209b28d3be013ce54708bb4fd8716",
+      "reviewed_on": "2026-10-28",
+      "runtime_eligible": false,
+      "completion_blockers": [
+        "Three genuinely dated priced NDOG/NWOG cases still need verified same-contract last pre-break and first post-break executed trades; the three schedule/source context cases in this draft do not satisfy that requirement.",
+        "Applicable exact-contract historical session and holiday calendars plus complete adjacent-session/correction coverage remain uncertified; two historical schedule notices are useful source facts, not a full calendar.",
+        "Original historical source availability/arrival and applicable use or redistribution rights remain unresolved; public sample access and source hashes are not a publishing grant."
+      ]
     },
     {
       "path": "knowledge_base/06_LIQUIDITY_GOD/bsl_ssl_equal_highs_lows.md",
@@ -1549,6 +1579,26 @@
         "knowledge_base/05_ICT_COMPLETE/session_opening_gaps_ndog_nwog_and_2024_context.md"
       ],
       "reason": "Checked original 2024 captions reveal day/week session opening-gap context that cannot be substituted by existing three-candle FVG or thirty-minute spot envelopes. Preserve this genuinely missing detailed topic explicitly; do not count a bounded annual source comparison as that full treatment."
+    }
+  ],
+  "document_status_policy": {
+    "version": 2,
+    "drafts_count_as_complete": false,
+    "drafts_runtime_eligible": false,
+    "pending": "No chapter file exists; not completed.",
+    "draft": "Written, integrity-checked partial source content with visible warning and explicit completion blockers; excluded from source-checked count and runtime use.",
+    "source_checked": "All chapter completion criteria met by source review; source content is not model training or proof of runtime integration."
+  },
+  "schema_history": [
+    {
+      "schema_version": "hoshi-v3-curriculum-1",
+      "introduced_on": "2026-10-28",
+      "meaning": "Pending chapters were absent; only source_checked documents counted as completed."
+    },
+    {
+      "schema_version": "hoshi-v3-curriculum-2",
+      "introduced_at_asia_karachi": "2026-10-28T14:03:32.490504+05:00",
+      "meaning": "Explicit incomplete drafts may retain useful verified prose without being counted complete or runtime eligible. Scope remains 50; priced examples, source quality and release criteria are unchanged."
     }
   ]
 }

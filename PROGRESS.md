@@ -17,7 +17,11 @@ The denominator is the versioned, expandable file manifest in
 chapters to 49 with rare/gap candle variants. Scope revision 3 expands to **50**
 by explicitly adding `session_opening_gaps_ndog_nwog_and_2024_context.md`:
 checked 2024 source material introduces a distinct detailed topic that neither
-three-candle FVG nor arbitrary spot envelopes cover. It remains pending.
+three-candle FVG nor arbitrary spot envelopes cover. It now has an explicit
+incomplete draft, excluded from the 49 source-checked chapters and runtime use.
+Manifest schema 2 introduces that visible draft state, completion blockers and
+separate draft counts; the 50-document scope and all completion requirements
+are unchanged. Draft prose does not replace the three required priced gap cases.
 Earlier 48/49-file percentages retain their original denominators. It is not a percentage of every fact on Earth,
 all possible trading concepts, the separate 60-task Hoshi project, runtime
 integration, profitability or completion of the entire V3 release. Additional
@@ -50,7 +54,7 @@ topics require an explicit manifest/progress revision, never silent omission.
 | `05_ICT_COMPLETE/ict_core_and_2022_models.md` | Source-checked; bounded original 2022 source distinctions, 360 native minute candles, causal clock/gap evidence and three genuine no-contact/invalidation cases; no creator-parity or full-signal claim |
 | `05_ICT_COMPLETE/ict_mentorship_2023_2024.md` | Source-checked; bounded original 2023/2024 source comparison, publication/event separation and three frozen pre-hour references; complete editions, futures opening gaps and independent new trials unclaimed |
 | `05_ICT_COMPLETE/killzones_silver_bullet_power_of_three.md` | Source-checked; exact original classic/Silver Bullet hour distinctions, DST and boundary rules, bounded Power of Three attribution and three real dated timing/failure cases |
-| `05_ICT_COMPLETE/session_opening_gaps_ndog_nwog_and_2024_context.md` | Pending; actual 839,644-row ES sample audit delivered, but three contract identities are not three verified session gaps; calendars, adjacent endpoints and permissions remain missing |
+| `05_ICT_COMPLETE/session_opening_gaps_ndog_nwog_and_2024_context.md` | Incomplete draft, 2,235 body words; checked 2012/2015 notices and 2025 source-audit context; three priced gap cases, complete calendars, adjacent endpoints and permissions still missing; excluded from completion/runtime |
 | `05_ICT_COMPLETE/ote_entries_and_failure_models.md` | Source-checked; original ratio attribution, explicit frozen-wick adaptation and three real dated missing-entry cases; arithmetic, contact, execution and probability remain distinct |
 | `06_LIQUIDITY_GOD/bsl_ssl_equal_highs_lows.md` | Source-checked; primary stop-order distinctions, explicit original near-equal threshold, causal pivots and real delayed/absent/continuation cases; actual stop inventory remains unknown |
 | `06_LIQUIDITY_GOD/liquidity_voids_and_stop_events.md` | Source-checked; three primary official 2010/2014/2016 cases, explicit venue/price/clock/publication distinctions and depth-versus-candle failures; raw order-book replay remains unavailable |
@@ -76,7 +80,7 @@ topics require an explicit manifest/progress revision, never silent omission.
 | `11_NEWS_TRADING/war_elections_and_policy_shocks.md` | Source-checked; actual 2022 Ukraine, 2016 US election and 2025 tariff-document dates with daily Treasury paths; later-source leakage and missing first-news clocks explicit |
 | `11_NEWS_TRADING/event_study_historical_reactions.md` | Source-checked; six reused daily event paths with explicit horizons, calendar gaps, decomposition and range; three dated detailed cases, null causal/abnormal/strategy returns |
 | `11_NEWS_TRADING/news_execution_and_data_provenance.md` | Source-checked; three primary-documented delayed/unauthorized/early publication cases; event, release, receipt and correction clocks separated; execution/provenance/security design limits, no invented returns or live adapter |
-| Remaining curriculum documents | Pending; no empty placeholder chapters counted as complete |
+| Remaining curriculum documents | One incomplete draft; no incomplete source content counted as complete |
 | Benchmark data rights / point-in-time availability | Pending — new raw NASDAQCOM, ICE DXY and gold benchmark histories are not licensed by public page access; review earlier limited observations before data/runtime bundling |
 | Brain loader and runtime knowledge bundle | Pending — new source chapters are not yet consumed by Hoshi |
 | 40/20/20/20 history/liquidity/structure/global-flow engine | Pending — weights will mean evidence coverage, not an invented win probability |
@@ -215,15 +219,24 @@ topics require an explicit manifest/progress revision, never silent omission.
 
 - **28 October, Day 1 (13:19 PKT):** made bounded progress on the pending NDOG/NWOG chapter without counting it complete. Captured and independently profiled the actual complete HTTP ES v2 part-file (**96,281,850 bytes; 839,644 rows; source SHA c62b5527f57079ee28c1a05184adf03f6cafea41bf3ed48c85c59f1b45a2fe51**). Added a bounded offline decoder and metadata-only receipt: 825,930 TRD/13,714 VOL, six empty-quantity opening records quarantined, 6,943 non-outright usable records separated, and 818,981 usable outright records grouped by exact contract/security/delivery. The three maturity groups are **zero certified opening-gap cases**, not three examples or simulated trades. Parser source-origin checks, historical calendar, adjacent-session coverage, original arrival and redistribution permission remain explicitly uncertified; all decisions WAIT, levels/probability null. No raw prices/CSV bundled. Seventeen new synthetic decoder/metadata regressions cover nanoseconds, spread separation, missing fields, identity conflicts, malformed/future inputs, resource bounds and forged permission/probability/case claims; all **152 evidence tests pass**. Corpus validator and diff checks pass. Checked alternative primary vendor samples/terms; Portara snippets and 10-second bars are not silently treated as complete licensed endpoint tapes, and no contact/account/purchase occurred. Exact checked URLs, file metadata and residual requirements recorded in the manifest. Prior [2f09f37e](https://github.com/shani001223-droid/Jarws-ai-/commit/2f09f37e6fb9a84d865f0bb316571799ac0fb6fe) passed [actual CI 40651838413](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40651838413). Curriculum remains **49/50 (98.00%)**, one chapter pending; runtime/evaluation/release gates remain pending, branch unmerged.
 
+- **28 October, Day 1 (14:06 PKT):** wrote the **incomplete** `session_opening_gaps_ndog_nwog_and_2024_context.md` draft (**2,235 substantive body words**). Primary S-6465 (notice 14 November 2012; effective 18 November for 19 November trade date) and the 14 September 2015 CME notice (effective 21 September) establish distinct historical closure/maintenance clocks; date-specific Chicago/UTC conversions were checked. The third context case reuses the actual 2025 sample audit with its 2026 capture time and unchanged retained-source digest. These are **not** the three verified priced gap examples still required. No new price, return, filled trade or full historical calendar is invented. Schema 2 explicitly permits integrity-checked drafts with visible warnings, nonempty completion blockers and `runtime_eligible=false`; source-checked completion remains **49/50 (98.00%)**, one incomplete draft (2.00%). Six new state/evidence tests reject missing blockers, unsafe eligibility, existing-file/pending disguise, unsupported states and false status/banner promotion. All **158 V3 evidence tests**, corpus content/hash/section checks and diff checks pass locally. Draft word/hash/source receipts and exact residual requirements are in the manifest. Original 2024 bounded caption review is explicitly reused; fresh direct YouTube fetch failed, with no new transcript/chart/full-edition claim. Prior [0acb3373](https://github.com/shani001223-droid/Jarws-ai-/commit/0acb3373c07a5ed4444ec3a5ef95ca8efcac2c9c) passed [actual CI 40656160524](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40656160524). Runtime retrieval, weighted engine, independent evaluation and exact-head release remain pending; no merge/deploy.
+
 ## Completion and release rules
 
-Every curriculum Markdown chapter requires at least 1,000 substantive body
+Every completed curriculum Markdown chapter requires at least 1,000 substantive body
 words, the required what/why/application/failure sections, three genuinely
 documented dated examples and original source-attributed prose. Bibliographies
 do not count toward the body-word minimum. Use primary technical sources and
 verify current or uncertain facts. A historical statement and a measured asset
 reaction are different kinds of evidence. Missing event prices, durations,
 unsupported markets and uncertain chronology must stay explicitly missing.
+
+An incomplete draft may preserve useful original prose, but must retain its
+visible warning, explicit completion blockers and `runtime_eligible=false`.
+It still passes structural word/hash/section/source-link checks. Its context
+cases do not replace missing priced examples, and it is excluded from the
+source-checked count and every runtime/release completion claim. Clearing
+metadata alone cannot promote a file that still declares itself a draft.
 
 When the curriculum is source-checked, integrate integrity-checked bounded
 retrieval into the existing brain and backend build context. Concise trading

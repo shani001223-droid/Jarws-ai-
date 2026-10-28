@@ -10,7 +10,7 @@ from pathlib import Path
 import sys
 
 from cloud_backend.anime_pilot_animatic import (
-    AnimePilotError, MAX_IMAGE_BYTES, render_private_animatic,
+    AnimePilotError, MAX_IMAGE_BYTES, MAX_AUDIO_BYTES, render_private_animatic,
 )
 
 
@@ -23,6 +23,9 @@ def main() -> int:
     parser.add_argument("--storyboard-json", help="Optional local 3-shot v1 plan; must match images, captions and moves")
     parser.add_argument("--camera-move", action="append", choices=("static", "push_in", "pan_left", "pan_right"),
                         help="Optional 2D still camera move, once per shot (exactly 3)")
+    parser.add_argument("--audio-wav", help="Optional local 30s mono 16-bit PCM WAV, 16/24kHz")
+    parser.add_argument("--audio-rights-attested", action="store_true",
+                        help="Operator confirms rights to the supplied WAV; does not verify dubbing")
     parser.add_argument("--image-rights-attested", action="store_true",
                         help="Operator confirms rights to all supplied stills")
     args = parser.parse_args()
@@ -32,6 +35,8 @@ def main() -> int:
         parser.error("Provide exactly three --camera-move values, or none.")
     if not args.image_rights_attested:
         parser.error("Explicit --image-rights-attested is required.")
+    if bool(args.audio_wav) != args.audio_rights_attested:
+        parser.error("--audio-wav and --audio-rights-attested must be supplied together.")
 
     try:
         images = []
@@ -40,6 +45,12 @@ def main() -> int:
             if not path.is_file() or not 100 <= path.stat().st_size <= MAX_IMAGE_BYTES:
                 raise AnimePilotError("Local still missing or too large.")
             images.append(path.read_bytes())
+        audio = None
+        if args.audio_wav:
+            audio_path = Path(args.audio_wav)
+            if not audio_path.is_file() or not 44 <= audio_path.stat().st_size <= MAX_AUDIO_BYTES:
+                raise AnimePilotError("Local audio WAV missing or too large.")
+            audio = audio_path.read_bytes()
         storyboard = None
         if args.storyboard_json:
             plan_path = Path(args.storyboard_json)
@@ -51,7 +62,8 @@ def main() -> int:
                 raise AnimePilotError("Invalid UTF-8 storyboard JSON.") from None
         output = render_private_animatic(
             images, args.caption, image_rights_attested=True,
-            camera_moves=args.camera_move, storyboard_handoff=storyboard)
+            camera_moves=args.camera_move, storyboard_handoff=storyboard,
+            audio_wav=audio, audio_rights_attested=args.audio_rights_attested)
         destination = Path(args.out)
         destination.mkdir(parents=False, exist_ok=False)
         try:

@@ -65,12 +65,12 @@ def _captions_to_srt(captions: tuple[str, ...] | list[str]) -> bytes:
     for index, caption in enumerate(captions):
         if (type(caption) is not str or not 1 <= len(caption) <= 180
                 or caption != caption.strip() or any(
-                    ord(ch) < 32 or ch in "<>\\u202e\\u202d\\u2066\\u2067\\u2068\\u2069"
+                    ord(ch) < 32 or ch in "<>\u202e\u202d\u2066\u2067\u2068\u2069"
                     for ch in caption)):
             raise AnimePilotError("Caption must be a safe single line.")
         start, end = index * SHOT_SECONDS, (index + 1) * SHOT_SECONDS
-        blocks.append(f"{index + 1}\\n00:00:{start:02d},000 --> 00:00:{end:02d},000\\n{caption}\\n")
-    return ("\\n".join(blocks) + "\\n").encode("utf-8")
+        blocks.append(f"{index + 1}\n00:00:{start:02d},000 --> 00:00:{end:02d},000\n{caption}\n")
+    return ("\n".join(blocks) + "\n").encode("utf-8")
 
 
 def _validate_audio(audio: bytes) -> None:

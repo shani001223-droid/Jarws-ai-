@@ -691,5 +691,618 @@
         }
       }
     }
+  ],
+  "sequence_cases": [
+    {
+      "source_window_sha256": "0a8fd6b6cee125cb5de8a199f86c88a5d9dacd572070a2f0999852154f688fea",
+      "case": {
+        "features": {
+          "method": "hoshi-sweep-break-gap-audit-1",
+          "direction": "long",
+          "confirmation": {
+            "date": "2020-01-28",
+            "close_time": 1580255999999,
+            "open": 8907.57,
+            "high": 9400.0,
+            "low": 8862.4,
+            "close": 9374.21
+          },
+          "known_at": 1580255999999,
+          "sweep": {
+            "event": {
+              "date": "2020-01-26",
+              "close_time": 1580083199999,
+              "open": 8340.01,
+              "high": 8618.13,
+              "low": 8293.66,
+              "close": 8615.0
+            },
+            "reference": {
+              "kind": "low",
+              "price": 8466.0,
+              "pivot_at": 1579478399999,
+              "confirmed_at": 1579651199999
+            },
+            "known_at": 1580083199999
+          },
+          "break": {
+            "method": "hoshi-prior-confirmed-close-break-1",
+            "event": {
+              "date": "2020-01-27",
+              "close_time": 1580169599999,
+              "open": 8614.39,
+              "high": 9000.0,
+              "low": 8535.0,
+              "close": 8907.57
+            },
+            "known_at": 1580169599999,
+            "prior_state": "lower_highs_lower_lows",
+            "prior_close": 8615.0,
+            "latest_known_high": {
+              "kind": "high",
+              "price": 8818.0,
+              "pivot_at": 1579737599999,
+              "confirmed_at": 1579910399999
+            },
+            "latest_known_low": {
+              "kind": "low",
+              "price": 8238.0,
+              "pivot_at": 1579910399999,
+              "confirmed_at": 1580083199999
+            },
+            "up_close_crossing": true,
+            "down_close_crossing": false,
+            "raw_up_close_crossing": true,
+            "raw_down_close_crossing": false,
+            "high_reference_previously_broken": false,
+            "low_reference_previously_broken": false,
+            "up_wick_beyond_reference": true,
+            "down_wick_beyond_reference": false,
+            "label": "choch_up",
+            "displacement": {
+              "status": "observed",
+              "preceding_20_body_mean": 180.97599999999997,
+              "absolute_body": 293.1800000000003,
+              "body_multiple": 1.6199938113341015,
+              "prior_five_high": 8818.0,
+              "prior_five_low": 8238.0,
+              "up_qualified": true,
+              "down_qualified": false
+            },
+            "orders_enabled": false,
+            "institutional_intent_known": false,
+            "win_probability": null
+          },
+          "formation": {
+            "method": "hoshi-v2-orderblock-formation-audit-1",
+            "direction": "long",
+            "kind": "demand",
+            "origin": {
+              "date": "2020-01-25",
+              "close_time": 1579996799999,
+              "open": 8438.99,
+              "high": 8451.26,
+              "low": 8254.9,
+              "close": 8340.58
+            },
+            "displacement": {
+              "date": "2020-01-27",
+              "close_time": 1580169599999,
+              "open": 8614.39,
+              "high": 9000.0,
+              "low": 8535.0,
+              "close": 8907.57
+            },
+            "confirmation": {
+              "date": "2020-01-28",
+              "close_time": 1580255999999,
+              "open": 8907.57,
+              "high": 9400.0,
+              "low": 8862.4,
+              "close": 9374.21
+            },
+            "known_at": 1580255999999,
+            "zone_low": 8254.9,
+            "zone_high": 8451.26,
+            "gap_low": 8618.13,
+            "gap_high": 8862.4,
+            "preceding_20_body_mean": 180.97599999999997,
+            "directional_body": 293.1800000000003,
+            "body_multiple": 1.6199938113341015,
+            "five_bar_break_reference": 8818.0,
+            "orders_enabled": false,
+            "institutional_intent_known": false,
+            "win_probability": null
+          },
+          "price_sequence_qualified": true,
+          "missing_price_conditions": [],
+          "decision": "WAIT",
+          "runtime_integrated": false,
+          "orders_enabled": false,
+          "win_probability": null,
+          "missing_full_strategy_inputs": [
+            "higher_timeframe_alignment",
+            "liquidity_target",
+            "joint_orderblock_overlap",
+            "global_flow",
+            "session_and_news_context",
+            "current_source_freshness_and_crosscheck",
+            "actual_execution_inputs",
+            "independent_calibration"
+          ]
+        },
+        "outcome_status": "observed",
+        "outcome": {
+          "available_at": 1580687999999,
+          "horizon_bars": 5,
+          "path": [
+            {
+              "date": "2020-01-29",
+              "close_time": 1580342399999,
+              "open": 9375.34,
+              "high": 9449.24,
+              "low": 9216.0,
+              "close": 9301.53
+            },
+            {
+              "date": "2020-01-30",
+              "close_time": 1580428799999,
+              "open": 9301.57,
+              "high": 9578.0,
+              "low": 9204.44,
+              "close": 9513.21
+            },
+            {
+              "date": "2020-01-31",
+              "close_time": 1580515199999,
+              "open": 9511.52,
+              "high": 9530.22,
+              "low": 9210.01,
+              "close": 9352.89
+            },
+            {
+              "date": "2020-02-01",
+              "close_time": 1580601599999,
+              "open": 9351.71,
+              "high": 9464.53,
+              "low": 9281.0,
+              "close": 9384.61
+            },
+            {
+              "date": "2020-02-02",
+              "close_time": 1580687999999,
+              "open": 9384.41,
+              "high": 9477.03,
+              "low": 9120.0,
+              "close": 9331.51
+            }
+          ],
+          "first_gap_contact": null,
+          "first_eligible_geometric_retest": null,
+          "first_invalidation": null,
+          "retest_status": "no_eligible_retest_in_window",
+          "strategy_pnl": null,
+          "fill_known": false
+        }
+      }
+    },
+    {
+      "source_window_sha256": "6d533be481380a79e5ee6ab85436cfa6bac8c5b50ae6ff2080b433901610c1ee",
+      "case": {
+        "features": {
+          "method": "hoshi-sweep-break-gap-audit-1",
+          "direction": "short",
+          "confirmation": {
+            "date": "2021-05-13",
+            "close_time": 1620950399999,
+            "open": 49537.15,
+            "high": 51367.19,
+            "low": 46000.0,
+            "close": 49670.97
+          },
+          "known_at": 1620950399999,
+          "sweep": {
+            "event": {
+              "date": "2021-05-10",
+              "close_time": 1620691199999,
+              "open": 58240.83,
+              "high": 59500.0,
+              "low": 53400.0,
+              "close": 55816.14
+            },
+            "reference": {
+              "kind": "high",
+              "price": 58981.44,
+              "pivot_at": 1620086399999,
+              "confirmed_at": 1620259199999
+            },
+            "known_at": 1620691199999
+          },
+          "break": {
+            "method": "hoshi-prior-confirmed-close-break-1",
+            "event": {
+              "date": "2021-05-12",
+              "close_time": 1620863999999,
+              "open": 56670.02,
+              "high": 58000.01,
+              "low": 48600.0,
+              "close": 49631.32
+            },
+            "known_at": 1620863999999,
+            "prior_state": "mixed_structure",
+            "prior_close": 56670.02,
+            "latest_known_high": {
+              "kind": "high",
+              "price": 58981.44,
+              "pivot_at": 1620086399999,
+              "confirmed_at": 1620259199999
+            },
+            "latest_known_low": {
+              "kind": "low",
+              "price": 52900.0,
+              "pivot_at": 1620259199999,
+              "confirmed_at": 1620431999999
+            },
+            "up_close_crossing": false,
+            "down_close_crossing": true,
+            "raw_up_close_crossing": false,
+            "raw_down_close_crossing": true,
+            "high_reference_previously_broken": false,
+            "low_reference_previously_broken": false,
+            "up_wick_beyond_reference": false,
+            "down_wick_beyond_reference": true,
+            "label": "unclassified_down_break",
+            "displacement": {
+              "status": "observed",
+              "preceding_20_body_mean": 1688.7965000000004,
+              "absolute_body": 7038.699999999997,
+              "body_multiple": 4.16787931524017,
+              "prior_five_high": 59500.0,
+              "prior_five_low": 53400.0,
+              "up_qualified": false,
+              "down_qualified": true
+            },
+            "orders_enabled": false,
+            "institutional_intent_known": false,
+            "win_probability": null
+          },
+          "formation": {
+            "method": "hoshi-v2-orderblock-formation-audit-1",
+            "direction": "short",
+            "kind": "supply",
+            "origin": {
+              "date": "2021-05-11",
+              "close_time": 1620777599999,
+              "open": 55816.14,
+              "high": 56862.43,
+              "low": 54370.0,
+              "close": 56670.02
+            },
+            "displacement": {
+              "date": "2021-05-12",
+              "close_time": 1620863999999,
+              "open": 56670.02,
+              "high": 58000.01,
+              "low": 48600.0,
+              "close": 49631.32
+            },
+            "confirmation": {
+              "date": "2021-05-13",
+              "close_time": 1620950399999,
+              "open": 49537.15,
+              "high": 51367.19,
+              "low": 46000.0,
+              "close": 49670.97
+            },
+            "known_at": 1620950399999,
+            "zone_low": 54370.0,
+            "zone_high": 56862.43,
+            "gap_low": 51367.19,
+            "gap_high": 54370.0,
+            "preceding_20_body_mean": 1688.7965000000004,
+            "directional_body": 7038.699999999997,
+            "body_multiple": 4.16787931524017,
+            "five_bar_break_reference": 53400.0,
+            "orders_enabled": false,
+            "institutional_intent_known": false,
+            "win_probability": null
+          },
+          "price_sequence_qualified": true,
+          "missing_price_conditions": [],
+          "decision": "WAIT",
+          "runtime_integrated": false,
+          "orders_enabled": false,
+          "win_probability": null,
+          "missing_full_strategy_inputs": [
+            "higher_timeframe_alignment",
+            "liquidity_target",
+            "joint_orderblock_overlap",
+            "global_flow",
+            "session_and_news_context",
+            "current_source_freshness_and_crosscheck",
+            "actual_execution_inputs",
+            "independent_calibration"
+          ]
+        },
+        "outcome_status": "observed",
+        "outcome": {
+          "available_at": 1621382399999,
+          "horizon_bars": 5,
+          "path": [
+            {
+              "date": "2021-05-14",
+              "close_time": 1621036799999,
+              "open": 49671.92,
+              "high": 51483.0,
+              "low": 48799.75,
+              "close": 49841.45
+            },
+            {
+              "date": "2021-05-15",
+              "close_time": 1621123199999,
+              "open": 49844.16,
+              "high": 50700.0,
+              "low": 46555.0,
+              "close": 46762.99
+            },
+            {
+              "date": "2021-05-16",
+              "close_time": 1621209599999,
+              "open": 46762.99,
+              "high": 49795.89,
+              "low": 43825.39,
+              "close": 46431.5
+            },
+            {
+              "date": "2021-05-17",
+              "close_time": 1621295999999,
+              "open": 46426.83,
+              "high": 46686.0,
+              "low": 42001.0,
+              "close": 43538.04
+            },
+            {
+              "date": "2021-05-18",
+              "close_time": 1621382399999,
+              "open": 43538.02,
+              "high": 45799.29,
+              "low": 42250.02,
+              "close": 42849.78
+            }
+          ],
+          "first_gap_contact": {
+            "date": "2021-05-14",
+            "close_time": 1621036799999,
+            "open": 49671.92,
+            "high": 51483.0,
+            "low": 48799.75,
+            "close": 49841.45
+          },
+          "first_eligible_geometric_retest": {
+            "date": "2021-05-14",
+            "close_time": 1621036799999,
+            "open": 49671.92,
+            "high": 51483.0,
+            "low": 48799.75,
+            "close": 49841.45
+          },
+          "first_invalidation": null,
+          "retest_status": "eligible_geometric_event_not_trade",
+          "strategy_pnl": null,
+          "fill_known": false
+        }
+      }
+    },
+    {
+      "source_window_sha256": "5860446413d27c8678d93b80ce791940ad4e06b76a512b6e1230f6b4ab19b74f",
+      "case": {
+        "features": {
+          "method": "hoshi-sweep-break-gap-audit-1",
+          "direction": "long",
+          "confirmation": {
+            "date": "2022-05-31",
+            "close_time": 1654041599999,
+            "open": 31734.23,
+            "high": 32399.0,
+            "low": 31200.01,
+            "close": 31801.04
+          },
+          "known_at": 1654041599999,
+          "sweep": {
+            "event": {
+              "date": "2022-05-28",
+              "close_time": 1653782399999,
+              "open": 28629.81,
+              "high": 29266.0,
+              "low": 28450.0,
+              "close": 29031.33
+            },
+            "reference": {
+              "kind": "low",
+              "price": 28654.47,
+              "pivot_at": 1652918399999,
+              "confirmed_at": 1653091199999
+            },
+            "known_at": 1653782399999
+          },
+          "break": {
+            "method": "hoshi-prior-confirmed-close-break-1",
+            "event": {
+              "date": "2022-05-30",
+              "close_time": 1653955199999,
+              "open": 29468.1,
+              "high": 32222.0,
+              "low": 29299.62,
+              "close": 31734.22
+            },
+            "known_at": 1653955199999,
+            "prior_state": "lower_highs_lower_lows",
+            "prior_close": 29468.1,
+            "latest_known_high": {
+              "kind": "high",
+              "price": 30670.51,
+              "pivot_at": 1653350399999,
+              "confirmed_at": 1653523199999
+            },
+            "latest_known_low": {
+              "kind": "low",
+              "price": 28019.56,
+              "pivot_at": 1653609599999,
+              "confirmed_at": 1653782399999
+            },
+            "up_close_crossing": true,
+            "down_close_crossing": false,
+            "raw_up_close_crossing": true,
+            "raw_down_close_crossing": false,
+            "high_reference_previously_broken": false,
+            "low_reference_previously_broken": false,
+            "up_wick_beyond_reference": true,
+            "down_wick_beyond_reference": false,
+            "label": "choch_up",
+            "displacement": {
+              "status": "observed",
+              "preceding_20_body_mean": 819.6550000000001,
+              "absolute_body": 2266.1200000000026,
+              "body_multiple": 2.764724182735422,
+              "prior_five_high": 30223.74,
+              "prior_five_low": 28019.56,
+              "up_qualified": true,
+              "down_qualified": false
+            },
+            "orders_enabled": false,
+            "institutional_intent_known": false,
+            "win_probability": null
+          },
+          "formation": {
+            "method": "hoshi-v2-orderblock-formation-audit-1",
+            "direction": "long",
+            "kind": "demand",
+            "origin": {
+              "date": "2022-05-27",
+              "close_time": 1653695999999,
+              "open": 29201.35,
+              "high": 29397.66,
+              "low": 28282.9,
+              "close": 28629.8
+            },
+            "displacement": {
+              "date": "2022-05-30",
+              "close_time": 1653955199999,
+              "open": 29468.1,
+              "high": 32222.0,
+              "low": 29299.62,
+              "close": 31734.22
+            },
+            "confirmation": {
+              "date": "2022-05-31",
+              "close_time": 1654041599999,
+              "open": 31734.23,
+              "high": 32399.0,
+              "low": 31200.01,
+              "close": 31801.04
+            },
+            "known_at": 1654041599999,
+            "zone_low": 28282.9,
+            "zone_high": 29397.66,
+            "gap_low": 29587.78,
+            "gap_high": 31200.01,
+            "preceding_20_body_mean": 819.6550000000001,
+            "directional_body": 2266.1200000000026,
+            "body_multiple": 2.764724182735422,
+            "five_bar_break_reference": 30223.74,
+            "orders_enabled": false,
+            "institutional_intent_known": false,
+            "win_probability": null
+          },
+          "price_sequence_qualified": true,
+          "missing_price_conditions": [],
+          "decision": "WAIT",
+          "runtime_integrated": false,
+          "orders_enabled": false,
+          "win_probability": null,
+          "missing_full_strategy_inputs": [
+            "higher_timeframe_alignment",
+            "liquidity_target",
+            "joint_orderblock_overlap",
+            "global_flow",
+            "session_and_news_context",
+            "current_source_freshness_and_crosscheck",
+            "actual_execution_inputs",
+            "independent_calibration"
+          ]
+        },
+        "outcome_status": "observed",
+        "outcome": {
+          "available_at": 1654473599999,
+          "horizon_bars": 5,
+          "path": [
+            {
+              "date": "2022-06-01",
+              "close_time": 1654127999999,
+              "open": 31801.05,
+              "high": 31982.97,
+              "low": 29301.0,
+              "close": 29805.83
+            },
+            {
+              "date": "2022-06-02",
+              "close_time": 1654214399999,
+              "open": 29805.84,
+              "high": 30689.0,
+              "low": 29594.55,
+              "close": 30452.62
+            },
+            {
+              "date": "2022-06-03",
+              "close_time": 1654300799999,
+              "open": 30452.63,
+              "high": 30699.0,
+              "low": 29282.36,
+              "close": 29700.21
+            },
+            {
+              "date": "2022-06-04",
+              "close_time": 1654387199999,
+              "open": 29700.21,
+              "high": 29988.88,
+              "low": 29485.0,
+              "close": 29864.04
+            },
+            {
+              "date": "2022-06-05",
+              "close_time": 1654473599999,
+              "open": 29864.03,
+              "high": 30189.0,
+              "low": 29531.42,
+              "close": 29919.21
+            }
+          ],
+          "first_gap_contact": {
+            "date": "2022-06-01",
+            "close_time": 1654127999999,
+            "open": 31801.05,
+            "high": 31982.97,
+            "low": 29301.0,
+            "close": 29805.83
+          },
+          "first_eligible_geometric_retest": null,
+          "first_invalidation": {
+            "bar": {
+              "date": "2022-06-01",
+              "close_time": 1654127999999,
+              "open": 31801.05,
+              "high": 31982.97,
+              "low": 29301.0,
+              "close": 29805.83
+            },
+            "full_gap_crossing": true,
+            "block_close_breach": false
+          },
+          "retest_status": "invalidated_before_eligible_retest",
+          "strategy_pnl": null,
+          "fill_known": false
+        }
+      }
+    }
   ]
 }

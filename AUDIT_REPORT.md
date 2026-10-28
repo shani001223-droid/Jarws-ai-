@@ -280,3 +280,8 @@ Added `bos_choch_and_displacement.md` with 2057 substantive words and three actu
 ## V3 premium/discount range receipt — 28 October 2026
 
 Added `premium_discount_and_dealing_ranges.md` with 2111 substantive words and three genuine dated BTCUSDT anchor comparisons. Outside/invalid coordinates, frozen bounds, alternative twenty-bar references and newly confirmed at-close anchors are distinct; discount is not intrinsic value or safety. All 37 offline evidence regressions passed locally. Curriculum: 18/49 (36.73%), with mitigation/breaker primary-source gap and runtime/release work pending. Prior `e25858195a46a0ef98ab803b2ef8f6da9c4edc1e` passed actual CI 40611483251. No source-response bytes, V2 runtime, main, backup or unrelated controls/roadmap changed.
+
+
+## V3 SMC sequence and invalidation receipt — 28 October 2026
+
+Added `smc_entry_models_and_invalidation.md` with 2182 substantive words and three real dated no-return/partial-evidence/invalidation cases. Offline chain requires prior-confirmed sweep reference, subsequent fresh break/displacement and C formation, then strictly later observations; same-bar gap invalidation defeats retest eligibility. All decisions remain WAIT with full-strategy inputs absent, unknown fills and null probability. All 40 evidence regressions passed locally. Curriculum: 19/49 (38.78%); canonical mitigation/breaker source and runtime/release gaps remain pending. Prior `297eca2bcf4990b5caf727f6234d6337444cc616` passed actual CI 40611884065. Existing runtime/controls, main, backup and unrelated work are unchanged.

@@ -90,6 +90,38 @@ class V3SMCTests(unittest.TestCase):
         with self.assertRaises(AssertionError):
             s.check_receipt(p, ROOT)
 
+    def test_sequence_has_strict_event_order_and_no_future_features(self):
+        p = receipt(); windows = s.check_receipt(p, ROOT)
+        for entry in p["sequence_cases"]:
+            f = entry["case"]["features"]; bars = windows[entry["source_window_sha256"]]
+            prefix = [b for b in bars if b["close_time"] <= f["known_at"]]
+            self.assertEqual(s.sequence_features(prefix, f["confirmation"]["date"], f["direction"]), f)
+            self.assertIsNone(s.sequence_case(prefix, f["confirmation"]["date"], f["direction"])["outcome"])
+            self.assertLess(f["sweep"]["known_at"], f["break"]["known_at"])
+            self.assertLess(f["break"]["known_at"], f["known_at"])
+            self.assertLess(f["sweep"]["reference"]["confirmed_at"], f["sweep"]["known_at"]-86_400_000+1)
+            self.assertEqual(f["decision"], "WAIT")
+            self.assertFalse(f["orders_enabled"])
+
+    def test_missing_retest_or_same_bar_invalidation_cannot_be_filled_signal(self):
+        p = receipt(); windows = s.check_receipt(p, ROOT)
+        cases = [e["case"] for e in p["sequence_cases"]]
+        self.assertEqual(cases[0]["outcome"]["retest_status"], "no_eligible_retest_in_window")
+        self.assertEqual(cases[1]["outcome"]["first_eligible_geometric_retest"]["date"], "2021-05-14")
+        invalid = cases[2]["outcome"]
+        self.assertEqual(invalid["first_gap_contact"]["date"], invalid["first_invalidation"]["bar"]["date"])
+        self.assertIsNone(invalid["first_eligible_geometric_retest"])
+        bars = windows[p["sequence_cases"][0]["source_window_sha256"]]
+        adjacent = s.sequence_features(bars, "2020-01-29", "long")
+        self.assertFalse(adjacent["price_sequence_qualified"])
+        self.assertIn("no_fresh_prior_reference_close_break", adjacent["missing_price_conditions"])
+
+    def test_sequence_receipt_rejects_fabricated_retest(self):
+        p = receipt()
+        p["sequence_cases"][2]["case"]["outcome"]["first_eligible_geometric_retest"] = {"date": "2022-06-01"}
+        with self.assertRaises(AssertionError):
+            s.check_receipt(p, ROOT)
+
 
 if __name__ == "__main__":
     unittest.main()

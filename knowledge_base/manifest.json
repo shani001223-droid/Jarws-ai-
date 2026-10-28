@@ -156,7 +156,10 @@
     },
     {
       "path": "knowledge_base/04_SMC_COMPLETE/smc_entry_models_and_invalidation.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2182,
+      "sha256": "e68fc1af14645f1877728cad9a9a2e3ad030fff92513288462a49f246977a6a8"
     },
     {
       "path": "knowledge_base/04_SMC_COMPLETE/smc_evidence_and_counterexamples.md",
@@ -308,7 +311,7 @@
     {
       "path": "knowledge_base/04_SMC_COMPLETE/smc_observations_20261028.json",
       "kind": "smc_cases",
-      "sha256": "c199c7f7c73f06876dc5ee56515a336b245915669dc44d1367403374d26091a0"
+      "sha256": "61e5846d41fd159ce442a8e6d4bb255eaf39fe125efde23bcf9b2296abc51d5d"
     }
   ],
   "scope_history": [

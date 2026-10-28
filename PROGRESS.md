@@ -9,8 +9,8 @@ entire branch was already deployed. Production V2 remains a separate release.
 
 ## Current measured progress
 
-**Day 1: completed 18 of 49 planned knowledge chapters — 36.73%; 31 chapters,
-63.27% of the declared curriculum, remain.**
+**Day 1: completed 19 of 49 planned knowledge chapters — 38.78%; 30 chapters,
+61.22% of the declared curriculum, remain.**
 
 The denominator is the versioned, expandable file manifest in
 `knowledge_base/manifest.json`. Scope revision 2 explicitly expands the initial
@@ -43,6 +43,7 @@ topics require an explicit manifest/progress revision, never silent omission.
 | `03_SUPPLY_DEMAND_ORDERBLOCKS/execution_and_zone_failure_cases.md` | Source-checked; three real dated path/absence/failure cases, hypothetical sizing, same-bar ambiguity, source-time and execution limitations; no fills or runtime replay claimed |
 | `04_SMC_COMPLETE/bos_choch_and_displacement.md` | Source-checked; prior-confirmed first close-crosses, distinct displacement, consumed-reference recross suppression and three adverse historical paths; no probability or runtime detector claim |
 | `04_SMC_COMPLETE/premium_discount_and_dealing_ranges.md` | Source-checked; frozen before-open versus as-of-close and twenty-bar anchors, outside/invalid ranges, same-price label changes and three real dated comparisons |
+| `04_SMC_COMPLETE/smc_entry_models_and_invalidation.md` | Source-checked; ordered sweep/break/gap diagnostics, no-return, eligible geometry with missing strategy gates, and first-contact gap invalidation; all diagnostic decisions stay WAIT |
 | Remaining curriculum documents | Pending; no empty placeholder chapters counted as complete |
 | Brain loader and runtime knowledge bundle | Pending — new source chapters are not yet consumed by Hoshi |
 | 40/20/20/20 history/liquidity/structure/global-flow engine | Pending — weights will mean evidence coverage, not an invented win probability |
@@ -111,6 +112,9 @@ topics require an explicit manifest/progress revision, never silent omission.
 
 
 - **28 October, Day 1:** completed `premium_discount_and_dealing_ranges.md` (2111 substantive words). Three actual BTCUSDT cases distinguish range coordinates from value/probability, preserve outside prices without clamping and expose different causal anchor policies. The 7 November 2022 close changes from premium to discount only when a newly confirmed high is admitted at close; subsequent adverse prices remain visible. Three added range/availability/corruption checks bring local evidence regressions to 37 passing tests. Prior [e2585819](https://github.com/shani001223-droid/Jarws-ai-/commit/e25858195a46a0ef98ab803b2ef8f6da9c4edc1e) passed [actual curriculum/evidence CI 40611483251](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40611483251). Curriculum: 18/49 (36.73%); next independent chapter is `smc_entry_models_and_invalidation.md`. The exact mitigation/breaker gap and all runtime/release gates remain pending.
+
+
+- **28 October, Day 1:** completed `smc_entry_models_and_invalidation.md` (2182 substantive words) with three genuine dated BTCUSDT event chains. Original offline audit preserves strict sweep/B/C clocks, specific missing conditions, later-only retests and invalidation priority. Cases retain no return (2020), an eligible geometric retest without joint block/full-strategy evidence (2021), and first-contact gap invalidation while the block survives by close (2022). Every audit decision remains WAIT with null probability and unknown fills; this is not delivered runtime replay or full V2/V3 confluence. Three added event-order/missing-retest/corruption checks bring passing local evidence tests to 40. Prior [297eca2b](https://github.com/shani001223-droid/Jarws-ai-/commit/297eca2bcf4990b5caf727f6234d6337444cc616) passed [actual curriculum/evidence CI 40611884065](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40611884065). Curriculum: 19/49 (38.78%); next independent chapter is `smc_evidence_and_counterexamples.md`. Source-gap and runtime/release gates remain pending.
 
 ## Completion and release rules
 

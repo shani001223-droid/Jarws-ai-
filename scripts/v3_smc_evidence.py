@@ -12,6 +12,7 @@ import math
 
 from v3_structure_evidence import check_window, pivots, summarize, utc_day
 from v3_zone_evidence import bar_record
+from v3_zone_evidence import orderblock_features
 
 SOURCE = "knowledge_base/01_MARKET_STRUCTURE/structure_observations_20261028.json"
 
@@ -148,6 +149,95 @@ def range_case(bars, event_date):
         "strategy_pnl": None, "fill_known": False}}
 
 
+def sequence_features(bars, confirmation_date, direction):
+    """Original sweep -> fresh close-break -> C gap chain, not full V2.
+
+    Sweep must be in the three bars STRICTLY before displacement B and reclaim
+    the latest pivot known before its own open. No later timestamps are read.
+    """
+    assert direction in ("long", "short")
+    i = next(i for i, b in enumerate(bars) if utc_day(b["time"]) == confirmation_date)
+    assert i >= 21
+    bull = direction == "long"
+    b = i-1
+    break_features = structure_features(bars, utc_day(bars[b]["time"]))
+    break_passed = break_features["up_close_crossing" if bull else "down_close_crossing"]
+    impulse_passed = break_features["displacement"]["up_qualified" if bull else "down_qualified"]
+    sweeps = []
+    for k in range(b-3, b):
+        known = [p for p in pivots(bars[:k]) if p["kind"] == ("low" if bull else "high")]
+        if not known:
+            continue
+        reference = known[-1]
+        event = bars[k]
+        reclaim = (event["low"] < reference["price"] < event["close"] if bull else
+                   event["close"] < reference["price"] < event["high"])
+        if reclaim:
+            sweeps.append({"event": bar_record(event), "reference": reference,
+                           "known_at": event["close_time"]})
+    sweep = sweeps[-1] if sweeps else None
+    try:
+        formation = orderblock_features(bars, confirmation_date, direction)
+    except AssertionError:
+        formation = None
+    initial_valid = bool(formation and (bars[i]["close"] >= formation["zone_low"] if bull
+                                       else bars[i]["close"] <= formation["zone_high"]))
+    missing = []
+    if sweep is None:
+        missing.append("no_prior_three_bar_sweep_reclaim")
+    if not break_passed:
+        missing.append("no_fresh_prior_reference_close_break")
+    if not impulse_passed:
+        missing.append("no_displacement")
+    if formation is None:
+        missing.append("no_qualified_orderblock_gap_formation")
+    elif not initial_valid:
+        missing.append("origin_close_invalid_at_confirmation")
+    return {"method": "hoshi-sweep-break-gap-audit-1", "direction": direction,
+            "confirmation": bar_record(bars[i]), "known_at": bars[i]["close_time"],
+            "sweep": sweep, "break": break_features, "formation": formation,
+            "price_sequence_qualified": not missing, "missing_price_conditions": missing,
+            "decision": "WAIT", "runtime_integrated": False, "orders_enabled": False,
+            "win_probability": None, "missing_full_strategy_inputs": [
+                "higher_timeframe_alignment", "liquidity_target", "joint_orderblock_overlap",
+                "global_flow", "session_and_news_context", "current_source_freshness_and_crosscheck",
+                "actual_execution_inputs", "independent_calibration"]}
+
+
+def sequence_case(bars, confirmation_date, direction):
+    f = sequence_features(bars, confirmation_date, direction)
+    i = next(i for i, b in enumerate(bars) if b["close_time"] == f["known_at"])
+    future = bars[i+1:i+6]
+    if len(future) != 5:
+        return {"features": f, "outcome_status": "incomplete", "outcome": None}
+    contact = eligible = invalidation = None
+    if f["price_sequence_qualified"]:
+        formation = f["formation"]
+        lo, hi = formation["gap_low"], formation["gap_high"]
+        bull = direction == "long"
+        for bar in future:
+            overlap = bar["low"] <= hi and bar["high"] >= lo
+            if overlap and contact is None:
+                contact = bar_record(bar)
+            full_cross = bar["low"] <= lo if bull else bar["high"] >= hi
+            block_breach = bar["close"] < formation["zone_low"] if bull else bar["close"] > formation["zone_high"]
+            if full_cross or block_breach:
+                invalidation = {"bar": bar_record(bar), "full_gap_crossing": full_cross,
+                                "block_close_breach": block_breach}
+                break
+            hold = bar["close"] >= (lo+hi)/2 if bull else bar["close"] <= (lo+hi)/2
+            if overlap and hold and eligible is None:
+                eligible = bar_record(bar)
+    return {"features": f, "outcome_status": "observed", "outcome": {
+        "available_at": future[-1]["close_time"], "horizon_bars": 5,
+        "path": [bar_record(b) for b in future], "first_gap_contact": contact,
+        "first_eligible_geometric_retest": eligible, "first_invalidation": invalidation,
+        "retest_status": ("not_qualified_at_formation" if not f["price_sequence_qualified"] else
+                          "eligible_geometric_event_not_trade" if eligible else
+                          "invalidated_before_eligible_retest" if invalidation else "no_eligible_retest_in_window"),
+        "strategy_pnl": None, "fill_known": False}}
+
+
 def check_receipt(payload, root):
     assert payload["schema_version"] == "hoshi-v3-smc-evidence-1"
     assert payload["source_receipt"] == SOURCE
@@ -162,4 +252,8 @@ def check_receipt(payload, root):
     for entry in payload.get("range_cases", []):
         f = entry["case"]["features"]
         assert range_case(windows[entry["source_window_sha256"]], f["event"]["date"]) == entry["case"]
+    for entry in payload.get("sequence_cases", []):
+        f = entry["case"]["features"]
+        assert sequence_case(windows[entry["source_window_sha256"]],
+                             f["confirmation"]["date"], f["direction"]) == entry["case"]
     return windows

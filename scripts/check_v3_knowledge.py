@@ -21,6 +21,7 @@ from v3_liquidity_evidence import check_receipt as check_liquidity_receipt
 from v3_fvg_evidence import check_receipt as check_fvg_receipt
 from v3_indicator_evidence import check_receipt as check_indicator_receipt
 from v3_macro_evidence import check_receipt as check_macro_receipt
+from v3_risk_evidence import check_receipt as check_risk_receipt
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "knowledge_base/manifest.json"
@@ -85,7 +86,10 @@ def check():
         assert len(raw) <= 1000000 and hashlib.sha256(raw).hexdigest() == receipt["sha256"], rel
         payload = json.loads(raw)
         kind = receipt.get("kind", "crash_windows")
-        assert kind in ("crash_windows", "event_windows", "ohlcv_windows", "pattern_cases", "zone_cases", "smc_cases", "ict_intraday", "liquidity_cases", "fvg_cases", "indicator_cases", "macro_cases"), kind
+        assert kind in ("crash_windows", "event_windows", "ohlcv_windows", "pattern_cases", "zone_cases", "smc_cases", "ict_intraday", "liquidity_cases", "fvg_cases", "indicator_cases", "macro_cases", "synthetic_risk"), kind
+        if kind == "synthetic_risk":
+            check_risk_receipt(payload, ROOT)
+            continue
         if kind == "macro_cases":
             check_macro_receipt(payload, ROOT)
             continue

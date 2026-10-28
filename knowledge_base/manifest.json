@@ -1049,7 +1049,63 @@
     },
     {
       "path": "knowledge_base/10_TRADING_PSYCHOLOGY_AND_RISK/kelly_portfolio_risk_and_ruin.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2274,
+      "sha256": "1602e0d96165b8426bab4298004c3d5c04cd0ed629d131017662fff29f761747",
+      "source_review": {
+        "status": "checked-primary-author-research-and-dated-official-cases",
+        "primary_sources": [
+          {
+            "url": "https://www.nokia.com/bell-labs/publications-and-media/publications/a-new-interpretation-of-information-rate/",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://stanford.edu/~boyd/papers/pdf/kelly.pdf",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://web.stanford.edu/~boyd/papers/kelly.html",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://arxiv.org/abs/1603.06183",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://web.stanford.edu/~boyd/papers/robust_kelly.html",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.federalreserve.gov/boarddocs/testimony/1998/19981001.htm",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.sec.gov/Archives/edgar/data/1053092/000137036821000064/a210729-ex992.htm",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.bankofengland.co.uk/financial-stability-report/2022/december-2022",
+            "checked": "2026-10-28"
+          }
+        ],
+        "limitations": [
+          "1956 original: primary Nokia catalogue/excerpt checked, complete original-paper review not claimed. Modern 2016 author manuscript and 2018 author note supply separate technical context.",
+          "Probability/payoff/return/covariance/streak fixtures are explicitly synthetic mathematical assumptions, not calibrated trading probabilities, historical prices or market replay.",
+          "LTCM 1998, Archegos March 2021 and LDI September/October 2022 cases are source-dated later reports; full position, quote, arrival and execution books unavailable. No calibrated alternative sizing outcome or causal trading signal claimed."
+        ],
+        "evidence_method": "hoshi-synthetic-log-growth-streak-and-portfolio-1",
+        "reviewed_on": "2026-10-28",
+        "resolved_at_asia_karachi": "2026-10-28T11:41:55.215951+05:00",
+        "author_manuscript_capture": {
+          "url": "https://web.stanford.edu/~boyd/papers/pdf/kelly.pdf",
+          "http_status": 200,
+          "checked_on": "2026-10-28",
+          "bytes": 491747,
+          "sha256": "1a51f811ea225d3abbdb9eaf2225d38122f7f7b0a4368d15341c63536403b74d",
+          "full_pdf_redistributed": false
+        }
+      }
     },
     {
       "path": "knowledge_base/10_TRADING_PSYCHOLOGY_AND_RISK/biases_and_decision_process.md",
@@ -1136,6 +1192,11 @@
       "path": "knowledge_base/09_GLOBAL_MONEY_FLOW/macro_observations_20261028.json",
       "kind": "macro_cases",
       "sha256": "15ac4218ab241f954e3ae88d79a95e9e86326e3799f42ef71c78b3daee2b6e65"
+    },
+    {
+      "path": "knowledge_base/10_TRADING_PSYCHOLOGY_AND_RISK/risk_arithmetic_20261028.json",
+      "kind": "synthetic_risk",
+      "sha256": "850c5ca3d1072a9eee8274d55d71ca3d3bab6369b55d7b4d2ac7ac8c5ee93439"
     }
   ],
   "scope_history": [

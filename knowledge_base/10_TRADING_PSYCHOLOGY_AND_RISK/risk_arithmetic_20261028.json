@@ -1,0 +1,134 @@
+{
+  "schema_version": "hoshi-v3-synthetic-risk-1",
+  "use": "synthetic-mathematical-education-not-market-evaluation-or-runtime",
+  "diagnostic": {
+    "method": "hoshi-synthetic-log-growth-streak-and-portfolio-1",
+    "kelly": {
+      "assumed_p": 0.55,
+      "assumed_net_win_per_unit_risk": 1,
+      "unconstrained_binary_fraction": 0.10000000000000009,
+      "log_growth_at_fraction": 0.005008366846356846,
+      "log_growth_at_double_fraction": -0.00013774185471934763,
+      "log_growth_if_true_p_were_0_51": -0.003018460972129218
+    },
+    "streak": {
+      "assumed_p": 0.55,
+      "trials": 100,
+      "loss_run_length": 10,
+      "one_specified_ten_loss_block_probability": 0.0003405062891601559,
+      "at_least_one_run_probability": 0.017080022387218396
+    },
+    "ten_losses": {
+      "fraction_0_1": {
+        "ending_equity": 34.86784401000001,
+        "maximum_drawdown_fraction": 0.6513215598999998,
+        "marks": [
+          {
+            "equity": 90.0,
+            "drawdown_fraction": 0.09999999999999998
+          },
+          {
+            "equity": 81.0,
+            "drawdown_fraction": 0.18999999999999995
+          },
+          {
+            "equity": 72.9,
+            "drawdown_fraction": 0.2709999999999999
+          },
+          {
+            "equity": 65.61000000000001,
+            "drawdown_fraction": 0.3438999999999999
+          },
+          {
+            "equity": 59.049000000000014,
+            "drawdown_fraction": 0.4095099999999998
+          },
+          {
+            "equity": 53.144100000000016,
+            "drawdown_fraction": 0.46855899999999984
+          },
+          {
+            "equity": 47.829690000000014,
+            "drawdown_fraction": 0.5217030999999999
+          },
+          {
+            "equity": 43.04672100000001,
+            "drawdown_fraction": 0.5695327899999999
+          },
+          {
+            "equity": 38.742048900000015,
+            "drawdown_fraction": 0.6125795109999999
+          },
+          {
+            "equity": 34.86784401000001,
+            "drawdown_fraction": 0.6513215598999998
+          }
+        ],
+        "returns_are_synthetic_net_assumptions": true,
+        "observed_trade_fills": null
+      },
+      "fraction_0_05": {
+        "ending_equity": 59.87369392383786,
+        "maximum_drawdown_fraction": 0.4012630607616213,
+        "marks": [
+          {
+            "equity": 95.0,
+            "drawdown_fraction": 0.050000000000000044
+          },
+          {
+            "equity": 90.25,
+            "drawdown_fraction": 0.09750000000000003
+          },
+          {
+            "equity": 85.7375,
+            "drawdown_fraction": 0.142625
+          },
+          {
+            "equity": 81.45062499999999,
+            "drawdown_fraction": 0.18549375000000012
+          },
+          {
+            "equity": 77.37809374999999,
+            "drawdown_fraction": 0.22621906250000012
+          },
+          {
+            "equity": 73.50918906249998,
+            "drawdown_fraction": 0.2649081093750002
+          },
+          {
+            "equity": 69.83372960937498,
+            "drawdown_fraction": 0.30166270390625016
+          },
+          {
+            "equity": 66.34204312890623,
+            "drawdown_fraction": 0.33657956871093775
+          },
+          {
+            "equity": 63.02494097246091,
+            "drawdown_fraction": 0.3697505902753909
+          },
+          {
+            "equity": 59.87369392383786,
+            "drawdown_fraction": 0.4012630607616213
+          }
+        ],
+        "returns_are_synthetic_net_assumptions": true,
+        "observed_trade_fills": null
+      }
+    },
+    "portfolio": {
+      "weights": [
+        0.5,
+        0.5
+      ],
+      "individual_variance_assumption": 0.04,
+      "zero_correlation_variance": 0.02,
+      "perfect_positive_correlation_variance": 0.04
+    },
+    "historical_price_or_trade_inputs": null,
+    "win_probability": null,
+    "decision": "WAIT",
+    "orders_enabled": false,
+    "production_calibration": null
+  }
+}

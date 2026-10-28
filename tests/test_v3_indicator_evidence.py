@@ -1,5 +1,7 @@
 """Closed-bar causality, warmup, scaling and finite-history dependence."""
 from copy import deepcopy
+from decimal import Decimal as D
+from hashlib import sha256
 import json
 from pathlib import Path
 import sys
@@ -74,6 +76,58 @@ class V3IndicatorTests(unittest.TestCase):
             elif kind=='outcome':p['momentum_cases'][0]['diagnostic']['outcome']['raw_close_change_pct']+=1
             elif kind=='omitted':p['momentum_cases'].pop()
             else:p['momentum_cases'][2]=deepcopy(p['momentum_cases'][0])
+            with self.assertRaises(AssertionError):f.check_receipt(p,ROOT)
+
+    def test_trade_profiles_conserve_base_volume_but_rebinning_changes_poc(self):
+        p=receipt();f.check_receipt(p,ROOT)
+        for e in p['volume_cases']:
+            d=e['diagnostic'];a=d['profile_1_usdt'];b=d['profile_5_usdt']
+            for profile in (a,b):
+                self.assertEqual(sum((D(r['base_volume']) for r in profile['bins']),D(0)),D(d['minute_base_volume']))
+                self.assertGreaterEqual(D(profile['value_area_volume_pct']),70)
+                self.assertLessEqual(D(profile['value_area_volume_pct']),100)
+            self.assertGreater(a['occupied_bins'],b['occupied_bins'])
+            self.assertFalse(d['session_profile_available'])
+            self.assertFalse(d['archive_whole_file_rechecked_offline'])
+        d=p['volume_cases'][2]['diagnostic']
+        self.assertFalse(D(d['profile_5_usdt']['poc_low_inclusive'])<=D(d['profile_1_usdt']['poc_low_inclusive'])<D(d['profile_5_usdt']['poc_high_exclusive']))
+
+    def test_anchor_choice_can_reverse_relative_price_label_and_proxy_is_distinct(self):
+        p=receipt();windows=f.check_receipt(p,ROOT)
+        e=p['volume_cases'][1];d=e['diagnostic'];close=D(str(windows[e['source_window_sha256']][60]['close']))
+        self.assertGreater(close,D(d['capture_anchor']['quote_divided_by_base_vwap']))
+        self.assertLess(close,D(d['later_clock_anchor']['quote_divided_by_base_vwap']))
+        for e in p['volume_cases']:
+            for key in ('capture_anchor','later_clock_anchor'):
+                a=e['diagnostic'][key]
+                self.assertNotEqual(a['quote_divided_by_base_vwap'],a['hlc3_bar_proxy'])
+            self.assertEqual(e['diagnostic']['earliest_after_close'],e['aggregate_capture']['end_exclusive_ms'])
+            self.assertEqual(e['diagnostic']['decision'],'WAIT')
+
+    def test_profile_exact_edges_ties_and_overshoot_are_declared(self):
+        trades=[{'price':D(100),'quantity':D(2)},{'price':D(105),'quantity':D(4)}]
+        p=f.profile(trades,'5')
+        self.assertEqual(p['poc_low_inclusive'],'105')
+        self.assertEqual(p['value_area_volume_pct'],'100')
+        tied=f.profile([{'price':D(100),'quantity':D(1)},{'price':D(101),'quantity':D(1)}],'1')
+        self.assertEqual(tied['poc_tied_low_boundaries'],['100','101'])
+        self.assertEqual(tied['poc_low_inclusive'],'100')
+        with self.assertRaises(AssertionError):f.profile(trades,'0')
+
+    def test_aggregate_omissions_native_mismatch_and_forged_profile_rejected(self):
+        for kind in ('missing_trade','native_mismatch','profile','missing_window','duplicate_window'):
+            p=receipt();e=p['volume_cases'][0];a=e['aggregate_capture']
+            if kind=='missing_trade':
+                lines=a['response_body'].splitlines(keepends=True);lines.pop(20);a['response_body']=''.join(lines)
+                a['subset_rows']-=1;a['subset_sha256']=sha256(a['response_body'].encode()).hexdigest()
+            elif kind=='native_mismatch':
+                # Rehashed but altered quantity must still fail native-minute reconciliation.
+                lines=a['response_body'].splitlines(keepends=True);fields=lines[0].strip().split(',')
+                fields[2]='999';lines[0]=','.join(fields)+'\n';a['response_body']=''.join(lines)
+                a['subset_sha256']=sha256(a['response_body'].encode()).hexdigest()
+            elif kind=='profile':e['diagnostic']['profile_1_usdt']['poc_low_inclusive']='1'
+            elif kind=='missing_window':p['volume_cases'].pop()
+            else:p['volume_cases'][2]=deepcopy(p['volume_cases'][0])
             with self.assertRaises(AssertionError):f.check_receipt(p,ROOT)
 
 

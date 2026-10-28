@@ -678,7 +678,43 @@
     },
     {
       "path": "knowledge_base/08_INDICATORS_AND_ORDERFLOW/vwap_and_volume_profile.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2246,
+      "sha256": "c182201fb622d29dbb58e178af7d22747a841431042d3ea3b575259c7ab22002",
+      "source_review": {
+        "status": "primary_archive_checksums_and_selected_trade_minutes_verified_with_offline_native_kline_reconciliation",
+        "primary_sources": [
+          {
+            "url": "https://github.com/binance/binance-public-data",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://github.com/binance/binance-public-data/blob/master/TERMS_AND_CONDITIONS.md",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.sierrachart.com/index.php?ID=141&page=doc/StudiesReference.php",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.sierrachart.com/index.php?ID=108&page=doc/StudiesReference.php",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.tradingview.com/support/solutions/43000502040-volume-profile-indicators-basic-concepts/",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.tradingview.com/support/solutions/43000502018-volume-weighted-average-price-vwap/",
+            "checked": "2026-10-28"
+          }
+        ],
+        "archive_receipts": "Three official daily BTCUSDT aggregate-trade ZIPs downloaded and matched actual companion CHECKSUM SHA-256 values. Full scans: 721934, 1642400 and 1832959 rows; selected all 465/1653/575 aggregates from the three fixed minute windows. Exact archive URLs, digests, extracted raw CSV and boundary neighbors retained in indicator receipt.",
+        "limitations": "Bounded noncommercial research, CC BY-NC-SA 4.0; no production/training rights claimed. All selected OHLC/base/quote/underlying trade totals reconcile with independently captured klines. Complete ZIPs not bundled or rechecked by offline CI. Only one-minute profiles, not full sessions. VWAP anchors and bar proxy differ; price binning and original 70% overshoot/tie conventions are explicit. Empty REST response is not absence of historical trades. No platform parity, causal edge, fills, strategy PnL or probability.",
+        "reviewed_on": "2026-10-28",
+        "resolved_at_asia_karachi": "2026-10-28T10:23:28.711861+05:00"
+      }
     },
     {
       "path": "knowledge_base/08_INDICATORS_AND_ORDERFLOW/cvd_footprint_and_delta.md",
@@ -790,7 +826,7 @@
     {
       "path": "knowledge_base/08_INDICATORS_AND_ORDERFLOW/indicator_observations_20261028.json",
       "kind": "indicator_cases",
-      "sha256": "c13b545fa8c91d85dce6c440c6c523723019ec5fe974e0caefa971a0cf79f6eb"
+      "sha256": "a9404b0ca934f715b1a80ee1efdf4fbc801da6b9d22587c7d961ff20f45ee35a"
     }
   ],
   "scope_history": [

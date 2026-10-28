@@ -23,6 +23,25 @@ This section supersedes any suggestion that the main goal is to write 300 isolat
 
 **Existing known blockers:** Task 06 physical Realme Note 50 and release/rollback acceptance; Task 11 a real reachable OpenJarvis endpoint; Flora owner product/price/photo approvals and any external-account permission; independent Urdu voice/editorial/cast rights; GPU/render/storage availability. Existing EP001–EP012 are private short editorial drafts, not an instruction to keep generating EP013–EP300 before a working studio exists. Do not auto-publish, deploy, merge, buy services, modify accounts or trade.
 
+## Anime Studio pilot implementation — 29 October 2026 (review-only)
+
+The development branch now includes `cloud_backend/anime_pilot_animatic.py`, `scripts/render_hoshi_anime_animatic.py` and `tests/test_anime_pilot_animatic.py`. This is a **real offline 30-second H.264 storyboard animatic encoder**, not full character animation, not a Hindi/Urdu voice actor, not an AI art generator, and not a 30-minute episode. It takes **exactly three local, original/rightfully supplied PNG/JPEG stills** and three short Hindi/Urdu/Roman Urdu caption lines. The output is a private MP4, separate UTF-8 SRT subtitle file and SHA-256 provenance manifest; no source is fetched from the internet. FFmpeg and ffprobe must be installed. No paid GPU, external API or public upload is required.
+
+Operator-only example (local private paths, not a public Hoshi chat command):
+
+```bash
+python -m scripts.render_hoshi_anime_animatic \
+  --shot /private/shot1.png --shot /private/shot2.png --shot /private/shot3.png \
+  --caption "Raat ka aasmaan khamosh hai." \
+  --caption "Ek naya raaz saamne hai." \
+  --caption "Kal sach ki talaash shuru hogi." \
+  --image-rights-attested --out /private/new-animatic-output
+```
+
+The output directory **must not already exist**; the CLI refuses overwrite. The operator must affirm still-image rights, which is **not** independent rights verification. The optional Python API also supports explicitly attested 30-second mono PCM WAV; the CLI intentionally remains silent by default. The SRT is a separate subtitle file, not burned into video. The MP4 is independently probed for 480×270 H.264, 30 seconds, and optional AAC. Tests use original synthetic geometric stills rather than third-party anime imagery. Stage flags explicitly report `full_character_animation=false`, `hindi_urdu_voice_recorded=false`, `owner_approved=false`, `published=false`.
+
+**Status:** source implementation present; automated full-branch CI must pass on its final commit before code/test verification is claimed. Physical Realme playback, professional anime visual fidelity, native Hindi/Urdu dubbing, character-consistent generated art, autonomous orchestration and publication remain **unverified**. Tasks 56–60 stay unchecked, 48/60 unchanged. Next safe milestones: prove end-to-end CLI/MP4/SRT QA, add approved storyboard and character asset handoffs, then voice/lip-sync and original animation, without confusing this animatic with finished anime.
+
 ## Current release / review routing (27 October 2026)
 
 Production main now includes PR #24, merged as `1a0f532afb34d5f3f1d939b2daef86ec9fd46e29`; the existing Render frontend and primary backend were verified live. See [release evidence](HOSHI_RELEASE_PRECHECK.md). The development branch remains `hoshi/dnd-foundation-20261026`. **PR #24 is merged, not an active draft**: first find the current open PR for this branch; create at most one successor draft PR when new changes require review. Historical PR #24 references below describe prior development evidence. Do not create a second project or reset the roadmap.

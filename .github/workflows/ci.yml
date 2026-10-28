@@ -17,6 +17,7 @@ on:
       - "hoshi-*.css"
       - "android/**"
       - "tests/**"
+      - "game-studio/**"
       - "index.html"
       - "sw.js"
       - "hoshi-*.js"
@@ -96,6 +97,10 @@ jobs:
         run: node --check hoshi-trading-research.js
       - name: Test annotated chart evidence and export safety
         run: node --test tests/hoshi-annotated-chart.test.cjs
+      - name: Test offline Game Studio Canvas preview engine
+        run: node --test tests/hoshi-game-engine.test.cjs
+      - name: Check offline Game Studio engine JavaScript syntax
+        run: node --check game-studio/engine.mjs
       - name: Check annotated chart JavaScript syntax
         run: node --check hoshi-annotated-chart.js
       - name: Test opt-in local memory export and deletion

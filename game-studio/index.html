@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Hoshi Star Trail — Design Preview</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#060d1d;color:#ecf6ff}
+*{box-sizing:border-box}body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px}
+main{width:min(100%,430px);background:#0b182b;border:1px solid #304762;border-radius:20px;padding:20px}
+h1{font-size:1.4rem;margin:0 0 8px}p{line-height:1.5;color:#bcd2e6}
+label{display:block;margin:18px 0 8px}select{width:100%;min-height:48px;border:1px solid #79bde0;border-radius:10px;background:#142b45;color:white;font:inherit;padding:8px}
+select:focus-visible{outline:3px solid #a4ecff;outline-offset:3px}
+canvas{display:block;width:100%;height:auto;aspect-ratio:1;margin:18px auto;border-radius:12px;background:#060d1d}
+small{display:block;color:#bcd2e6}#status{min-height:2.5em}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<h1>Hoshi Star Trail</h1>
+<p><strong>Design preview only — game abhi playable nahi hai.</strong> Original star puzzle ka free Canvas template. Koi login, ads ya payment nahi.</p>
+<label for="level">Level ka preview</label>
+<select id="level" aria-label="Choose level preview" disabled></select>
+<canvas id="board" width="350" height="350" role="img" aria-label="Level board design preview; no movement controls"></canvas>
+<p id="status" role="status" aria-live="polite">Loading local design...</p>
+<small>Blue = start, mint = exit, golden stars = collectibles. Gameplay, save aur APK future tasks hain.</small>
+</main>
+<script type="module">
+import {validateManifest,paintPreview} from "./engine.mjs";
+const picker=document.getElementById("level");
+const board=document.getElementById("board");
+const status=document.getElementById("status");
+try {
+  const response=await fetch("./levels.json",{cache:"no-store"});
+  if(!response.ok) throw new Error("local_manifest_unavailable");
+  const levels=validateManifest(await response.json());
+  for(const level of levels){
+    const option=document.createElement("option");
+    option.value=String(level.id);
+    option.textContent="Level "+level.id;
+    picker.append(option);
+  }
+  const show=()=>{
+    const level=levels[Number(picker.value)-1];
+    if(!level) return;
+    paintPreview(board,level,window.devicePixelRatio||1);
+    status.textContent="Level "+level.id+": "+level.stars+" stars, shortest solution "+level.minimum_moves+" moves. Preview only.";
+    board.setAttribute("aria-label",status.textContent);
+  };
+  picker.disabled=false;
+  picker.addEventListener("change",show);
+  show();
+} catch {
+  picker.disabled=true;
+  status.textContent="Local design unavailable. Preview cannot load.";
+}
+</script>
+</body>
+</html>

@@ -838,5 +838,246 @@
         "orders_enabled": false
       }
     }
-  ]
+  ],
+  "cot_cases": [
+    {
+      "id": "march_2020",
+      "capture": {
+        "dataset_id": "6dca-aqww",
+        "report_family": "legacy-futures-only",
+        "contract_market_code": "088691",
+        "requested_start": "2020-03-03",
+        "requested_end": "2020-03-10",
+        "request_url": "https://publicreporting.cftc.gov/resource/6dca-aqww.json?%24select=market_and_exchange_names%2Creport_date_as_yyyy_mm_dd%2Ccftc_contract_market_code%2Cfutonly_or_combined%2Copen_interest_all%2Cnoncomm_positions_long_all%2Cnoncomm_positions_short_all%2Cnoncomm_postions_spread_all%2Ccomm_positions_long_all%2Ccomm_positions_short_all%2Cnonrept_positions_long_all%2Cnonrept_positions_short_all&%24where=cftc_contract_market_code%3D%27088691%27+AND+report_date_as_yyyy_mm_dd+between+%272020-03-03T00%3A00%3A00%27+and+%272020-03-10T23%3A59%3A59%27&%24order=report_date_as_yyyy_mm_dd&%24limit=10",
+        "http_status": 200,
+        "captured_at_utc": "2026-10-28T06:14:36.253625+00:00",
+        "source_sha256": "1f5a1bf746eee8a6b5c59a0a62d009b82dd2adcb0c10f5d2bdd6da2c60c3b8ae",
+        "response_body": "[{\"market_and_exchange_names\":\"GOLD - COMMODITY EXCHANGE INC.\",\"report_date_as_yyyy_mm_dd\":\"2020-03-03T00:00:00.000\",\"cftc_contract_market_code\":\"088691\",\"futonly_or_combined\":\"FutOnly\",\"open_interest_all\":\"691985\",\"noncomm_positions_long_all\":\"366173\",\"noncomm_positions_short_all\":\"46440\",\"noncomm_postions_spread_all\":\"85359\",\"comm_positions_long_all\":\"178134\",\"comm_positions_short_all\":\"529145\",\"nonrept_positions_long_all\":\"62319\",\"nonrept_positions_short_all\":\"31041\"}\n,{\"market_and_exchange_names\":\"GOLD - COMMODITY EXCHANGE INC.\",\"report_date_as_yyyy_mm_dd\":\"2020-03-10T00:00:00.000\",\"cftc_contract_market_code\":\"088691\",\"futonly_or_combined\":\"FutOnly\",\"open_interest_all\":\"633470\",\"noncomm_positions_long_all\":\"336290\",\"noncomm_positions_short_all\":\"36759\",\"noncomm_postions_spread_all\":\"54064\",\"comm_positions_long_all\":\"182948\",\"comm_positions_short_all\":\"511252\",\"nonrept_positions_long_all\":\"60168\",\"nonrept_positions_short_all\":\"31395\"}]\n"
+      },
+      "publication": {
+        "normally_expected_publication_date": "2020-03-13",
+        "documented_publication_date": null,
+        "timezone": "America/New_York",
+        "source_url": null,
+        "normal_clock_rule": "15:30 Eastern is a general schedule, not a verified historical arrival timestamp"
+      },
+      "diagnostic": {
+        "method": "hoshi-legacy-gold-position-accounting-and-release-lag-1",
+        "observations": [
+          {
+            "position_date": "2020-03-03",
+            "open_interest_contracts": 691985,
+            "noncommercial_long_contracts": 366173,
+            "noncommercial_short_contracts": 46440,
+            "noncommercial_spreading_contracts": 85359,
+            "noncommercial_net_contracts": 319733,
+            "noncommercial_net_pct_of_open_interest": 46.205192309081845,
+            "commercial_net_contracts": -351011,
+            "nonreportable_net_contracts": 31278,
+            "long_short_open_interest_reconciled": true
+          },
+          {
+            "position_date": "2020-03-10",
+            "open_interest_contracts": 633470,
+            "noncommercial_long_contracts": 336290,
+            "noncommercial_short_contracts": 36759,
+            "noncommercial_spreading_contracts": 54064,
+            "noncommercial_net_contracts": 299531,
+            "noncommercial_net_pct_of_open_interest": 47.28416499597455,
+            "commercial_net_contracts": -328304,
+            "nonreportable_net_contracts": 28773,
+            "long_short_open_interest_reconciled": true
+          }
+        ],
+        "weekly_change_contracts": {
+          "open_interest_contracts": -58515,
+          "noncommercial_long_contracts": -29883,
+          "noncommercial_short_contracts": -9681,
+          "noncommercial_spreading_contracts": -31295,
+          "noncommercial_net_contracts": -20202
+        },
+        "publication": {
+          "normally_expected_publication_date": "2020-03-13",
+          "documented_publication_date": null,
+          "timezone": "America/New_York",
+          "source_url": null,
+          "normal_clock_rule": "15:30 Eastern is a general schedule, not a verified historical arrival timestamp"
+        },
+        "documented_asof_to_publication_calendar_days": null,
+        "documented_delay_from_normal_schedule_calendar_days": null,
+        "first_publication_time_and_arrival": null,
+        "original_vintage_verified": false,
+        "position_date_is_price_timestamp": false,
+        "long_term_extreme_percentile": null,
+        "gold_price_reaction_or_trade_return": null,
+        "capital_inflow_dollars": null,
+        "decision": "WAIT",
+        "win_probability": null,
+        "orders_enabled": false
+      }
+    },
+    {
+      "id": "ion_2023",
+      "capture": {
+        "dataset_id": "6dca-aqww",
+        "report_family": "legacy-futures-only",
+        "contract_market_code": "088691",
+        "requested_start": "2023-01-24",
+        "requested_end": "2023-01-31",
+        "request_url": "https://publicreporting.cftc.gov/resource/6dca-aqww.json?%24select=market_and_exchange_names%2Creport_date_as_yyyy_mm_dd%2Ccftc_contract_market_code%2Cfutonly_or_combined%2Copen_interest_all%2Cnoncomm_positions_long_all%2Cnoncomm_positions_short_all%2Cnoncomm_postions_spread_all%2Ccomm_positions_long_all%2Ccomm_positions_short_all%2Cnonrept_positions_long_all%2Cnonrept_positions_short_all&%24where=cftc_contract_market_code%3D%27088691%27+AND+report_date_as_yyyy_mm_dd+between+%272023-01-24T00%3A00%3A00%27+and+%272023-01-31T23%3A59%3A59%27&%24order=report_date_as_yyyy_mm_dd&%24limit=10",
+        "http_status": 200,
+        "captured_at_utc": "2026-10-28T06:14:39.706330+00:00",
+        "source_sha256": "98a16fe1da777764715ed012f3eea4318f6e0676bb2f15dccafbc365530e4f31",
+        "response_body": "[{\"market_and_exchange_names\":\"GOLD - COMMODITY EXCHANGE INC.\",\"report_date_as_yyyy_mm_dd\":\"2023-01-24T00:00:00.000\",\"cftc_contract_market_code\":\"088691\",\"futonly_or_combined\":\"FutOnly\",\"open_interest_all\":\"499927\",\"noncomm_positions_long_all\":\"253311\",\"noncomm_positions_short_all\":\"95638\",\"noncomm_postions_spread_all\":\"71317\",\"comm_positions_long_all\":\"127419\",\"comm_positions_short_all\":\"307973\",\"nonrept_positions_long_all\":\"47880\",\"nonrept_positions_short_all\":\"24999\"}\n,{\"market_and_exchange_names\":\"GOLD - COMMODITY EXCHANGE INC.\",\"report_date_as_yyyy_mm_dd\":\"2023-01-31T00:00:00.000\",\"cftc_contract_market_code\":\"088691\",\"futonly_or_combined\":\"FutOnly\",\"open_interest_all\":\"471642\",\"noncomm_positions_long_all\":\"256417\",\"noncomm_positions_short_all\":\"96136\",\"noncomm_postions_spread_all\":\"51094\",\"comm_positions_long_all\":\"120147\",\"comm_positions_short_all\":\"300667\",\"nonrept_positions_long_all\":\"43984\",\"nonrept_positions_short_all\":\"23745\"}]\n"
+      },
+      "publication": {
+        "normally_expected_publication_date": "2023-02-03",
+        "documented_publication_date": "2023-02-24",
+        "timezone": "America/New_York",
+        "source_url": "https://www.cftc.gov/MarketReports/CommitmentsofTraders/HistoricalSpecialAnnouncements/index.htm",
+        "normal_clock_rule": "15:30 Eastern is a general schedule, not a verified historical arrival timestamp"
+      },
+      "diagnostic": {
+        "method": "hoshi-legacy-gold-position-accounting-and-release-lag-1",
+        "observations": [
+          {
+            "position_date": "2023-01-24",
+            "open_interest_contracts": 499927,
+            "noncommercial_long_contracts": 253311,
+            "noncommercial_short_contracts": 95638,
+            "noncommercial_spreading_contracts": 71317,
+            "noncommercial_net_contracts": 157673,
+            "noncommercial_net_pct_of_open_interest": 31.53920472388969,
+            "commercial_net_contracts": -180554,
+            "nonreportable_net_contracts": 22881,
+            "long_short_open_interest_reconciled": true
+          },
+          {
+            "position_date": "2023-01-31",
+            "open_interest_contracts": 471642,
+            "noncommercial_long_contracts": 256417,
+            "noncommercial_short_contracts": 96136,
+            "noncommercial_spreading_contracts": 51094,
+            "noncommercial_net_contracts": 160281,
+            "noncommercial_net_pct_of_open_interest": 33.98361469080362,
+            "commercial_net_contracts": -180520,
+            "nonreportable_net_contracts": 20239,
+            "long_short_open_interest_reconciled": true
+          }
+        ],
+        "weekly_change_contracts": {
+          "open_interest_contracts": -28285,
+          "noncommercial_long_contracts": 3106,
+          "noncommercial_short_contracts": 498,
+          "noncommercial_spreading_contracts": -20223,
+          "noncommercial_net_contracts": 2608
+        },
+        "publication": {
+          "normally_expected_publication_date": "2023-02-03",
+          "documented_publication_date": "2023-02-24",
+          "timezone": "America/New_York",
+          "source_url": "https://www.cftc.gov/MarketReports/CommitmentsofTraders/HistoricalSpecialAnnouncements/index.htm",
+          "normal_clock_rule": "15:30 Eastern is a general schedule, not a verified historical arrival timestamp"
+        },
+        "documented_asof_to_publication_calendar_days": 24,
+        "documented_delay_from_normal_schedule_calendar_days": 21,
+        "first_publication_time_and_arrival": null,
+        "original_vintage_verified": false,
+        "position_date_is_price_timestamp": false,
+        "long_term_extreme_percentile": null,
+        "gold_price_reaction_or_trade_return": null,
+        "capital_inflow_dollars": null,
+        "decision": "WAIT",
+        "win_probability": null,
+        "orders_enabled": false
+      }
+    },
+    {
+      "id": "august_2024",
+      "capture": {
+        "dataset_id": "6dca-aqww",
+        "report_family": "legacy-futures-only",
+        "contract_market_code": "088691",
+        "requested_start": "2024-07-30",
+        "requested_end": "2024-08-06",
+        "request_url": "https://publicreporting.cftc.gov/resource/6dca-aqww.json?%24select=market_and_exchange_names%2Creport_date_as_yyyy_mm_dd%2Ccftc_contract_market_code%2Cfutonly_or_combined%2Copen_interest_all%2Cnoncomm_positions_long_all%2Cnoncomm_positions_short_all%2Cnoncomm_postions_spread_all%2Ccomm_positions_long_all%2Ccomm_positions_short_all%2Cnonrept_positions_long_all%2Cnonrept_positions_short_all&%24where=cftc_contract_market_code%3D%27088691%27+AND+report_date_as_yyyy_mm_dd+between+%272024-07-30T00%3A00%3A00%27+and+%272024-08-06T23%3A59%3A59%27&%24order=report_date_as_yyyy_mm_dd&%24limit=10",
+        "http_status": 200,
+        "captured_at_utc": "2026-10-28T06:14:43.620025+00:00",
+        "source_sha256": "c73a279709d83225ee421cfe15320bb0a974cd60eca8e464a09001d843368ff0",
+        "response_body": "[{\"market_and_exchange_names\":\"GOLD - COMMODITY EXCHANGE INC.\",\"report_date_as_yyyy_mm_dd\":\"2024-07-30T00:00:00.000\",\"cftc_contract_market_code\":\"088691\",\"futonly_or_combined\":\"FutOnly\",\"open_interest_all\":\"510914\",\"noncomm_positions_long_all\":\"313364\",\"noncomm_positions_short_all\":\"66763\",\"noncomm_postions_spread_all\":\"48604\",\"comm_positions_long_all\":\"99015\",\"comm_positions_short_all\":\"371872\",\"nonrept_positions_long_all\":\"49931\",\"nonrept_positions_short_all\":\"23675\"}\n,{\"market_and_exchange_names\":\"GOLD - COMMODITY EXCHANGE INC.\",\"report_date_as_yyyy_mm_dd\":\"2024-08-06T00:00:00.000\",\"cftc_contract_market_code\":\"088691\",\"futonly_or_combined\":\"FutOnly\",\"open_interest_all\":\"480645\",\"noncomm_positions_long_all\":\"298119\",\"noncomm_positions_short_all\":\"59370\",\"noncomm_postions_spread_all\":\"42879\",\"comm_positions_long_all\":\"88442\",\"comm_positions_short_all\":\"357476\",\"nonrept_positions_long_all\":\"51205\",\"nonrept_positions_short_all\":\"20920\"}]\n"
+      },
+      "publication": {
+        "normally_expected_publication_date": "2024-08-09",
+        "documented_publication_date": null,
+        "timezone": "America/New_York",
+        "source_url": null,
+        "normal_clock_rule": "15:30 Eastern is a general schedule, not a verified historical arrival timestamp"
+      },
+      "diagnostic": {
+        "method": "hoshi-legacy-gold-position-accounting-and-release-lag-1",
+        "observations": [
+          {
+            "position_date": "2024-07-30",
+            "open_interest_contracts": 510914,
+            "noncommercial_long_contracts": 313364,
+            "noncommercial_short_contracts": 66763,
+            "noncommercial_spreading_contracts": 48604,
+            "noncommercial_net_contracts": 246601,
+            "noncommercial_net_pct_of_open_interest": 48.266635872182015,
+            "commercial_net_contracts": -272857,
+            "nonreportable_net_contracts": 26256,
+            "long_short_open_interest_reconciled": true
+          },
+          {
+            "position_date": "2024-08-06",
+            "open_interest_contracts": 480645,
+            "noncommercial_long_contracts": 298119,
+            "noncommercial_short_contracts": 59370,
+            "noncommercial_spreading_contracts": 42879,
+            "noncommercial_net_contracts": 238749,
+            "noncommercial_net_pct_of_open_interest": 49.67262740692195,
+            "commercial_net_contracts": -269034,
+            "nonreportable_net_contracts": 30285,
+            "long_short_open_interest_reconciled": true
+          }
+        ],
+        "weekly_change_contracts": {
+          "open_interest_contracts": -30269,
+          "noncommercial_long_contracts": -15245,
+          "noncommercial_short_contracts": -7393,
+          "noncommercial_spreading_contracts": -5725,
+          "noncommercial_net_contracts": -7852
+        },
+        "publication": {
+          "normally_expected_publication_date": "2024-08-09",
+          "documented_publication_date": null,
+          "timezone": "America/New_York",
+          "source_url": null,
+          "normal_clock_rule": "15:30 Eastern is a general schedule, not a verified historical arrival timestamp"
+        },
+        "documented_asof_to_publication_calendar_days": null,
+        "documented_delay_from_normal_schedule_calendar_days": null,
+        "first_publication_time_and_arrival": null,
+        "original_vintage_verified": false,
+        "position_date_is_price_timestamp": false,
+        "long_term_extreme_percentile": null,
+        "gold_price_reaction_or_trade_return": null,
+        "capital_inflow_dollars": null,
+        "decision": "WAIT",
+        "win_probability": null,
+        "orders_enabled": false
+      }
+    }
+  ],
+  "cot_source_metadata": {
+    "publisher": "Commodity Futures Trading Commission",
+    "dataset_id": "6dca-aqww",
+    "metadata_url": "https://publicreporting.cftc.gov/api/views/6dca-aqww.json",
+    "metadata_licenseId": null,
+    "government_information_policy_url": "https://www.cftc.gov/WebPolicy/index.htm",
+    "government_information_policy_checked_on": "2026-10-28",
+    "acknowledgement": "Source: U.S. Commodity Futures Trading Commission. Original HOSHI calculations; no CFTC endorsement.",
+    "scope": "Small selections of government-produced aggregate positioning data, not private contributed material or a market-price feed. The dataset metadata supplied no standalone license identifier.",
+    "clocks": "Position-date fields with midnight suffixes are report labels, not verified UTC timestamps. Original-vintage and delivery histories have not been captured."
+  }
 }

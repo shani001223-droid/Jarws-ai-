@@ -914,7 +914,51 @@
     },
     {
       "path": "knowledge_base/09_GLOBAL_MONEY_FLOW/cot_positioning_and_reporting_lags.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2390,
+      "sha256": "514f861bdff0224e58502bb29f13ae569d7fcd28ce87c13fc2d51ed8609f6b67",
+      "source_review": {
+        "status": "checked-primary-documents-and-actual-public-api-records",
+        "primary_sources": [
+          {
+            "url": "https://www.cftc.gov/MarketReports/CommitmentsofTraders/AbouttheCOTReports/cot_about.html",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.cftc.gov/MarketReports/CommitmentsofTraders/DisaggregatedExplanatoryNotes/index.htm",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.cftc.gov/sites/default/files/idc/groups/public/%40commitmentsoftraders/documents/file/tfmexplanatorynotes.pdf",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.cftc.gov/MarketReports/CommitmentsofTraders/ReleaseSchedule/index.htm",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.cftc.gov/MarketReports/CommitmentsofTraders/HistoricalSpecialAnnouncements/index.htm",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://publicreporting.cftc.gov/api/views/6dca-aqww.json",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.cftc.gov/WebPolicy/index.htm",
+            "checked": "2026-10-28"
+          }
+        ],
+        "limitations": [
+          "Legacy Gold futures-only 088691; all-maturity positions, not XAUUSD prices, managed-money-only classification or flow dollars.",
+          "Three selected two-Tuesday windows are retrospective current history; original-vintage and first arrival times unknown. Actual 2023 publication date is documented; 2020/2024 dates remain unverified normal-schedule expectations.",
+          "No long-term percentile, current quote, gold reaction, execution, causal effect, calibration or account return; WAIT with win_probability null."
+        ],
+        "evidence_method": "hoshi-legacy-gold-position-accounting-and-release-lag-1",
+        "reviewed_on": "2026-10-28",
+        "resolved_at_asia_karachi": "2026-10-28T11:18:47.496894+05:00"
+      }
     },
     {
       "path": "knowledge_base/09_GLOBAL_MONEY_FLOW/btc_correlations_and_regime_changes.md",
@@ -1012,7 +1056,7 @@
     {
       "path": "knowledge_base/09_GLOBAL_MONEY_FLOW/macro_observations_20261028.json",
       "kind": "macro_cases",
-      "sha256": "e321a01a3abe8e2d9e51db74936c89d97ae89fd06b4652b648e404810742cb8f"
+      "sha256": "b3d97e68806f90c9b9e6d497d0df7b39a1335718b64346623bc350b3a13916fd"
     }
   ],
   "scope_history": [

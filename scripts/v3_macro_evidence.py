@@ -8,6 +8,9 @@ from datetime import date, datetime
 from decimal import Decimal
 from hashlib import sha256
 import io
+import json
+import re
+from urllib.parse import urlencode
 import math
 
 PUBLIC_SERIES={'DTWEXBGS','DCOILWTICO','DGS2','DGS10','DFII10','DFF'}
@@ -112,6 +115,85 @@ def rate_case(captures,announcement):
             'causal_policy_effect_estimated':False,'decision':'WAIT','win_probability':None,'orders_enabled':False}
 
 
+COT_FIELDS=(
+    'market_and_exchange_names','report_date_as_yyyy_mm_dd','cftc_contract_market_code',
+    'futonly_or_combined','open_interest_all','noncomm_positions_long_all',
+    'noncomm_positions_short_all','noncomm_postions_spread_all','comm_positions_long_all',
+    'comm_positions_short_all','nonrept_positions_long_all','nonrept_positions_short_all',
+)
+COT_PUBLICATION_SOURCE='https://www.cftc.gov/MarketReports/CommitmentsofTraders/HistoricalSpecialAnnouncements/index.htm'
+COT_WINDOWS={
+    'march_2020':('2020-03-03','2020-03-10','2020-03-13',None),
+    'ion_2023':('2023-01-24','2023-01-31','2023-02-03','2023-02-24'),
+    'august_2024':('2024-07-30','2024-08-06','2024-08-09',None),
+}
+
+
+def cot_query(start,end):
+    params={'$select':','.join(COT_FIELDS),
+            '$where':f"cftc_contract_market_code='088691' AND report_date_as_yyyy_mm_dd between '{start}T00:00:00' and '{end}T23:59:59'",
+            '$order':'report_date_as_yyyy_mm_dd','$limit':'10'}
+    return 'https://publicreporting.cftc.gov/resource/6dca-aqww.json?'+urlencode(params)
+
+
+def cot_capture(c):
+    assert c['dataset_id']=='6dca-aqww' and c['report_family']=='legacy-futures-only'
+    assert c['contract_market_code']=='088691' and c['http_status']==200
+    start=date.fromisoformat(c['requested_start']);end=date.fromisoformat(c['requested_end'])
+    assert (end-start).days==7 and start.weekday()==end.weekday()==1
+    assert c['request_url']==cot_query(start.isoformat(),end.isoformat())
+    captured=datetime.fromisoformat(c['captured_at_utc']);assert captured.utcoffset() is not None
+    assert captured.date()>end
+    body=c['response_body'];assert len(body.encode())<200000
+    assert sha256(body.encode()).hexdigest()==c['source_sha256']
+    rows=json.loads(body);assert isinstance(rows,list) and len(rows)==2
+    result=[]
+    for row,day in zip(rows,(start,end)):
+        assert set(row)==set(COT_FIELDS)
+        assert row['report_date_as_yyyy_mm_dd']==day.isoformat()+'T00:00:00.000'
+        assert row['market_and_exchange_names']=='GOLD - COMMODITY EXCHANGE INC.'
+        assert row['cftc_contract_market_code']=='088691' and row['futonly_or_combined']=='FutOnly'
+        counts={}
+        for key in COT_FIELDS[4:]:
+            assert isinstance(row[key],str) and re.fullmatch(r'[0-9]+',row[key])
+            counts[key]=int(row[key])
+        oi=counts['open_interest_all'];long=counts['noncomm_positions_long_all'];short=counts['noncomm_positions_short_all']
+        spread=counts['noncomm_postions_spread_all'];cl=counts['comm_positions_long_all'];cs=counts['comm_positions_short_all']
+        nl=counts['nonrept_positions_long_all'];ns=counts['nonrept_positions_short_all']
+        assert long+spread+cl+nl==short+spread+cs+ns==oi
+        result.append({'position_date':day.isoformat(),'open_interest_contracts':oi,
+                       'noncommercial_long_contracts':long,'noncommercial_short_contracts':short,
+                       'noncommercial_spreading_contracts':spread,'noncommercial_net_contracts':long-short,
+                       'noncommercial_net_pct_of_open_interest':float(Decimal(long-short)/oi*100) if oi else None,
+                       'commercial_net_contracts':cl-cs,'nonreportable_net_contracts':nl-ns,
+                       'long_short_open_interest_reconciled':True})
+    return result
+
+
+def cot_case(c,publication):
+    rows=cot_capture(c);before,after=rows
+    assert publication['timezone']=='America/New_York'
+    expected=date.fromisoformat(publication['normally_expected_publication_date'])
+    asof=date.fromisoformat(after['position_date']);assert (expected-asof).days==3
+    actual=publication['documented_publication_date']
+    age=delay=None
+    if actual is not None:
+        actual=date.fromisoformat(actual);assert actual>=expected
+        assert publication['source_url']==COT_PUBLICATION_SOURCE
+        age=(actual-asof).days;delay=(actual-expected).days
+    else:assert publication['source_url'] is None
+    return {'method':'hoshi-legacy-gold-position-accounting-and-release-lag-1','observations':rows,
+            'weekly_change_contracts':{key:after[key]-before[key] for key in (
+                'open_interest_contracts','noncommercial_long_contracts','noncommercial_short_contracts',
+                'noncommercial_spreading_contracts','noncommercial_net_contracts')},
+            'publication':publication,'documented_asof_to_publication_calendar_days':age,
+            'documented_delay_from_normal_schedule_calendar_days':delay,
+            'first_publication_time_and_arrival':None,'original_vintage_verified':False,
+            'position_date_is_price_timestamp':False,'long_term_extreme_percentile':None,
+            'gold_price_reaction_or_trade_return':None,'capital_inflow_dollars':None,
+            'decision':'WAIT','win_probability':None,'orders_enabled':False}
+
+
 def check_receipt(payload,root=None):
     assert payload['schema_version']=='hoshi-v3-macro-evidence-1'
     assert payload['use']=='bounded-retrospective-source-research-not-runtime-or-training'
@@ -127,4 +209,12 @@ def check_receipt(payload,root=None):
             assert a['timezone']=='America/New_York'
             assert a['source_url']==f'https://www.federalreserve.gov/newsevents/pressreleases/monetary{suffix}a.htm'
             assert rate_case(e['captures'],a)==e['diagnostic']
+    if 'cot_cases' in payload:
+        entries=payload['cot_cases'];assert len(entries)==3
+        assert {e['id'] for e in entries}==set(COT_WINDOWS)
+        for e in entries:
+            start,end,expected,actual=COT_WINDOWS[e['id']];c=e['capture'];p=e['publication']
+            assert c['requested_start']==start and c['requested_end']==end
+            assert p['normally_expected_publication_date']==expected and p['documented_publication_date']==actual
+            assert cot_case(c,p)==e['diagnostic']
     return cases

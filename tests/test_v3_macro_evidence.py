@@ -123,4 +123,67 @@ class V3MacroTests(unittest.TestCase):
             with self.assertRaises(AssertionError):f.check_receipt(p)
 
 
+class V3COTTests(unittest.TestCase):
+    def test_actual_accounting_changes_do_not_become_capital_flow(self):
+        p=receipt();f.check_receipt(p)
+        a=p['cot_cases'][0]['diagnostic'];b=p['cot_cases'][2]['diagnostic']
+        self.assertEqual(a['weekly_change_contracts']['noncommercial_net_contracts'],-20202)
+        self.assertEqual(b['weekly_change_contracts']['noncommercial_net_contracts'],-7852)
+        for e in p['cot_cases']:
+            d=e['diagnostic']
+            for row in d['observations']:
+                self.assertEqual(row['noncommercial_net_contracts']+row['commercial_net_contracts']+row['nonreportable_net_contracts'],0)
+            self.assertIsNone(d['capital_inflow_dollars']);self.assertIsNone(d['gold_price_reaction_or_trade_return'])
+
+    def test_documented_ion_delay_is_not_the_normal_friday_schedule(self):
+        d=receipt()['cot_cases'][1]['diagnostic']
+        self.assertEqual(d['documented_asof_to_publication_calendar_days'],24)
+        self.assertEqual(d['documented_delay_from_normal_schedule_calendar_days'],21)
+        self.assertEqual(d['weekly_change_contracts']['noncommercial_net_contracts'],2608)
+        self.assertIsNone(d['first_publication_time_and_arrival'])
+        self.assertFalse(d['original_vintage_verified'])
+
+    def test_unknown_release_and_long_term_extremes_stay_unknown(self):
+        p=receipt();f.check_receipt(p)
+        for e in p['cot_cases']:
+            d=e['diagnostic'];self.assertIsNone(d['long_term_extreme_percentile'])
+            self.assertEqual(d['decision'],'WAIT');self.assertIsNone(d['win_probability']);self.assertFalse(d['orders_enabled'])
+        for k in (0,2):
+            d=p['cot_cases'][k]['diagnostic']
+            self.assertIsNone(d['publication']['documented_publication_date'])
+            self.assertIsNone(d['documented_asof_to_publication_calendar_days'])
+
+    def test_zero_open_interest_is_not_a_zero_percentile(self):
+        c=deepcopy(receipt()['cot_cases'][0]['capture']);rows=json.loads(c['response_body'])
+        for row in rows:
+            for key in f.COT_FIELDS[4:]:row[key]='0'
+        d=f.cot_capture(changed(c,json.dumps(rows)))
+        self.assertTrue(all(r['noncommercial_net_pct_of_open_interest'] is None for r in d))
+
+    def test_wrong_family_market_schema_and_position_labels_rejected(self):
+        for key,value in (('futonly_or_combined','Combined'),('cftc_contract_market_code','088692'),
+                          ('market_and_exchange_names','XAUUSD SPOT'),('report_date_as_yyyy_mm_dd','2020-03-04T00:00:00.000')):
+            c=receipt()['cot_cases'][0]['capture'];rows=json.loads(c['response_body']);rows[0][key]=value
+            with self.assertRaises(AssertionError):f.cot_capture(changed(c,json.dumps(rows)))
+        c=receipt()['cot_cases'][0]['capture'];rows=json.loads(c['response_body']);del rows[0]['noncomm_positions_short_all']
+        with self.assertRaises(AssertionError):f.cot_capture(changed(c,json.dumps(rows)))
+
+    def test_negative_fractional_or_unbalanced_contracts_rejected(self):
+        for value in ('-1','1.5','NaN','366174'):
+            c=receipt()['cot_cases'][0]['capture'];rows=json.loads(c['response_body'])
+            rows[0]['noncomm_positions_long_all']=value
+            with self.assertRaises(AssertionError):f.cot_capture(changed(c,json.dumps(rows)))
+
+    def test_source_hash_query_and_forged_diagnostic_rejected(self):
+        for kind in ('hash','url','duplicate','summary','release'):
+            p=receipt();e=p['cot_cases'][0];c=e['capture']
+            if kind=='hash':c['source_sha256']='0'*64
+            elif kind=='url':c['request_url']=c['request_url'].replace('6dca-aqww','kh3c-gbw2')
+            elif kind=='duplicate':
+                rows=json.loads(c['response_body']);e['capture']=changed(c,json.dumps([rows[0],rows[0]]))
+            elif kind=='summary':e['diagnostic']['weekly_change_contracts']['noncommercial_net_contracts']+=1
+            else:e['publication']['documented_publication_date']='2020-03-13'
+            with self.assertRaises(AssertionError):f.check_receipt(p)
+
+
 if __name__=='__main__':unittest.main()

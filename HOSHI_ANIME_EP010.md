@@ -11,6 +11,6 @@ python -m unittest tests.test_anime_episode_ten tests.test_anime_script_readines
 python -m scripts.export_hoshi_anime_episode_ten --out Hoshi-EP010-draft.json
 ```
 
-**Verification:** pending current-head GitHub Python/Node/Playwright and Docker CI; do not mark Task 56 complete from this draft alone. Native Android source is unchanged, so physical Realme Note 50 acceptance remains pending. Task 11 still requires a real OpenJarvis server, and Flora owner media/price approvals remain outstanding.
+**Verified source/test head `345f8da280b0de50bccbaf406124669862637c05`:** [full Python/backend (508 tests), JavaScript and Playwright Chromium CI](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40733301091) and [real Docker/Uvicorn backend smoke](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40733301205) both passed. This is source/test verification only, not episode or production acceptance. Native Android source is unchanged, so physical Realme Note 50 acceptance remains pending. Task 11 still requires a real OpenJarvis server, and Flora owner media/price approvals remain outstanding.
 
 **Canonical roadmap remains 48/60 (80%), Task 56 unchecked.** Ten short editorial drafts are not ten approved 30-minute screenplays. EP011–EP300, timed table reads, human Roman Urdu editing, owner approval and cast/voice rights remain pending. No new repo, PR, automation, production merge/deploy, purchase, secret change, external publishing or real trading.

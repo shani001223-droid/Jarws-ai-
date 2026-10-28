@@ -76,6 +76,34 @@ class V3ZoneTests(unittest.TestCase):
         with self.assertRaises(AssertionError):
             z.check_receipt(p, ROOT)
 
+    def test_role_change_anchors_are_known_before_break_and_prefix_stable(self):
+        p = receipt(); windows = z.check_receipt(p, ROOT)
+        for entry in p["role_retest_cases"]:
+            f = entry["case"]["features"]; bars = windows[entry["source_window_sha256"]]
+            prefix = [b for b in bars if b["close_time"] <= f["known_at"]]
+            self.assertEqual(z.role_retest_features(prefix, f["event"]["date"], f["direction"]), f)
+            self.assertIsNone(z.role_retest_case(prefix, f["event"]["date"], f["direction"])["outcome"])
+            for key in ("first_swing", "middle_swing", "last_swing"):
+                self.assertLess(f[key]["confirmed_at"], f["known_at"]-86_400_000+1)
+            self.assertFalse(f["creator_parity_validated"])
+            self.assertFalse(f["actual_stops_known"])
+
+    def test_role_retests_preserve_absence_later_failure_and_failed_swing(self):
+        p = receipt(); z.check_receipt(p, ROOT)
+        cases = [e["case"] for e in p["role_retest_cases"]]
+        self.assertIsNone(cases[0]["outcome"]["first_contact"])
+        self.assertEqual(cases[1]["outcome"]["first_closing_rejection"]["date"], "2021-04-11")
+        self.assertEqual(cases[1]["outcome"]["first_close_breach"]["date"], "2021-04-18")
+        self.assertEqual(cases[2]["features"]["variant"], "failed_swing_role_retest")
+        self.assertEqual(cases[2]["outcome"]["first_contact"]["date"], "2022-09-09")
+        self.assertIsNone(cases[2]["outcome"]["first_closing_rejection"])
+
+    def test_role_receipt_rejects_false_variant_or_fill(self):
+        p = receipt()
+        p["role_retest_cases"][2]["case"]["features"]["variant"] = "swept_extreme_role_retest"
+        with self.assertRaises(AssertionError):
+            z.check_receipt(p, ROOT)
+
 
 if __name__ == "__main__":
     unittest.main()

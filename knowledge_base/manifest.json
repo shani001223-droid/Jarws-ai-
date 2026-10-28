@@ -115,10 +115,10 @@
     },
     {
       "path": "knowledge_base/03_SUPPLY_DEMAND_ORDERBLOCKS/mitigation_breakers_and_retests.md",
-      "status": "pending",
+      "status": "source_checked",
       "source_review": {
         "reviewed_on": "2026-10-28",
-        "status": "primary_lesson_content_unavailable",
+        "status": "primary_caption_tracks_and_public_metadata_checked",
         "attempts": [
           {
             "url": "https://www.youtube.com/watch?v=FOUzW0QmsfI",
@@ -129,9 +129,37 @@
             "result": "Primary title retrieved, but body contains navigation only; original lesson/captions unavailable."
           }
         ],
-        "remaining_requirement": "Check original creator definitions and distinguish mitigation/breaker construction before writing and counting this chapter. Third-party ASR summaries are not accepted as primary technical evidence. No placeholder or canonical recognizer is counted as delivered.",
-        "last_rechecked_at_asia_karachi": "2026-10-28T05:51:16.091356+05:00"
-      }
+        "remaining_requirement": "Caption/metadata access gap resolved. Original chart visuals, a separate licensed study PDF and exact creator-recognizer parity are not obtained or claimed; chapter uses brief attribution and original replayable Hoshi rules.",
+        "last_rechecked_at_asia_karachi": "2026-10-28T05:51:16.091356+05:00",
+        "resolved_at_asia_karachi": "2026-10-28T06:52:22.334445+05:00",
+        "primary_sources": [
+          {
+            "url": "https://www.youtube.com/watch?v=FOUzW0QmsfI",
+            "title": "ICT Mentorship Core Content - Month 04 - Mitigation Blocks",
+            "channel_id": "UCtjxa77NqamhVC8atV85Rog",
+            "published_at_utc": "2022-09-07T19:45:00Z",
+            "duration_seconds": 906,
+            "caption_language": "en",
+            "caption_sha256": "a56d1e43b31edabfa8c3018a3d68a9757f6913c7a3db53a35c2bdd482b511d04",
+            "caption_lines": 54,
+            "retrieval": "Original YouTube captions via vidIQ; full copyrighted track not republished."
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=UrS-mtGHtAA",
+            "title": "ICT Mentorship Core Content - Month 04 - ICT Breaker Block",
+            "channel_id": "UCtjxa77NqamhVC8atV85Rog",
+            "published_at_utc": "2022-09-08T19:00:09Z",
+            "duration_seconds": 601,
+            "caption_language": "en",
+            "caption_sha256": "b444980ac67e9495e9334fffee6b50894a53b964d03befd3a77a0a795c0f0eb1",
+            "caption_lines": 36,
+            "retrieval": "Original YouTube captions via vidIQ; full copyrighted track not republished."
+          }
+        ]
+      },
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2086,
+      "sha256": "61978dc800f1493ab8c7f2e69efa251609a77fc8f3f4449204142e1dc1ac1aad"
     },
     {
       "path": "knowledge_base/03_SUPPLY_DEMAND_ORDERBLOCKS/execution_and_zone_failure_cases.md",
@@ -309,7 +337,7 @@
     {
       "path": "knowledge_base/03_SUPPLY_DEMAND_ORDERBLOCKS/zone_observations_20261028.json",
       "kind": "zone_cases",
-      "sha256": "867441176635c9c8ff132f4d63ccc225825d181e12ab21ce7ddaa3ac6301cd0a"
+      "sha256": "2de0600ccb7d0393ca27c3801b48d66ca33255aef08d7ce26b6b8c8ea1f2a159"
     },
     {
       "path": "knowledge_base/04_SMC_COMPLETE/smc_observations_20261028.json",

@@ -290,3 +290,8 @@ Added `smc_entry_models_and_invalidation.md` with 2182 substantive words and thr
 ## V3 SMC evidence and counterexamples receipt — 28 October 2026
 
 Added `smc_evidence_and_counterexamples.md` with 2033 substantive words and three real dated source-window studies. Full bounded ledger retains 1,096 directional decisions, 44 formations, eight price chains, two eligible geometric events, one pre-retest invalidation and five no-retest chains. Thirty decision horizons are incomplete; zero geometric events in 2020 is not zero drawdown or measured trading performance. Overlaps, reused origins and adverse/raw endpoints remain explicit. All 43 offline evidence tests passed locally. Curriculum: 20/49 (40.82%), with exact original mitigation/breaker source gap, runtime integration and release gates pending. Prior `9132b3f65a3ca5413355352895b0b9b6e692212c` passed actual CI 40612391857. No orders, main merge, deployment, unrelated roadmap or identity/privacy/voice/Stop changes.
+
+
+## V3 mitigation/breaker source gap resolved — 28 October 2026
+
+Added `mitigation_breakers_and_retests.md` with 2086 substantive words. Original-channel captions and publication metadata were retrieved and checked; hashes, language and upload times are retained, without full-track republication or creator-chart/PDF/parity claims. Original offline three-swing role-change rules preserve no-contact, early-rejection/later-failure and same-contact invalidation cases. All 46 evidence regressions passed locally. Curriculum: 21/49 (42.86%); runtime/release gates pending. Prior `9fe994a3ece30f8edbeea2ce338f08805ab9e544` passed actual CI 40612996730. No runtime, main, backup, unrelated task/automation or privacy/voice/Stop changes.

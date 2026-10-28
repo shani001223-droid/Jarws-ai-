@@ -124,6 +124,53 @@ def orderblock_case(bars, confirmation_date, direction):
     return {"features": f, **observed}
 
 
+def role_retest_features(bars, break_date, direction):
+    """Original confirmed three-swing role-change hypotheses, not ICT parity.
+
+    Highest/lowest body origin conventions differ by educator. Here the
+    latest same-direction origin at/within two bars before the middle pivot
+    is selected, strictly inside the first-to-middle leg. No trader intent
+    or real stop order is inferred from an extreme being crossed.
+    """
+    assert direction in ("long", "short")
+    i = next(i for i, b in enumerate(bars) if utc_day(b["time"]) == break_date)
+    assert i >= 1
+    known = pivots(bars[:i])
+    assert len(known) >= 3
+    first, middle, last = known[-3:]
+    bull = direction == "long"
+    assert [p["kind"] for p in (first,middle,last)] == (["low","high","low"] if bull else ["high","low","high"])
+    assert first["pivot_at"] < middle["pivot_at"] < last["pivot_at"]
+    assert all(p["confirmed_at"] < bars[i]["time"] for p in (first,middle,last))
+    assert first["price"] != last["price"], "equal-extreme sequence is ambiguous"
+    crossed = (bars[i-1]["close"] <= middle["price"] < bars[i]["close"] if bull else
+               bars[i]["close"] < middle["price"] <= bars[i-1]["close"])
+    assert crossed
+    prior_after_middle = [b for b in bars[:i] if b["close_time"] > middle["confirmed_at"]]
+    assert not any((b["close"] > middle["price"] if bull else b["close"] < middle["price"])
+                   for b in prior_after_middle), "reference already broken"
+    mid_i = next(k for k,b in enumerate(bars) if b["close_time"] == middle["pivot_at"])
+    origins = [b for b in bars[max(0,mid_i-2):mid_i+1]
+               if b["close_time"] > first["pivot_at"]
+               and (b["close"] > b["open"] if bull else b["close"] < b["open"])]
+    assert origins, "missing original-rule zone candle"
+    origin = origins[-1]
+    swept = last["price"] < first["price"] if bull else last["price"] > first["price"]
+    return {"method": "hoshi-confirmed-three-swing-role-retest-1", "direction": direction,
+            "kind": "demand" if bull else "supply", "origin": bar_record(origin),
+            "first_swing": first, "middle_swing": middle, "last_swing": last,
+            "variant": "swept_extreme_role_retest" if swept else "failed_swing_role_retest",
+            "event": bar_record(bars[i]), "known_at": bars[i]["close_time"],
+            "zone_low": origin["low"], "zone_high": origin["high"],
+            "creator_parity_validated": False, "actual_stops_known": False,
+            "institutional_intent_known": False, "orders_enabled": False, "win_probability": None}
+
+
+def role_retest_case(bars, break_date, direction):
+    f = role_retest_features(bars, break_date, direction)
+    return {"features": f, **observe_zone(bars, f)}
+
+
 def check_receipt(payload, root):
     assert payload["schema_version"] == "hoshi-v3-zone-evidence-1"
     assert payload["source_receipt"] == SOURCE
@@ -140,4 +187,8 @@ def check_receipt(payload, root):
         f = entry["case"]["features"]
         assert orderblock_case(windows[entry["source_window_sha256"]],
                                f["confirmation"]["date"], f["direction"]) == entry["case"]
+    for entry in payload.get("role_retest_cases", []):
+        f = entry["case"]["features"]
+        assert role_retest_case(windows[entry["source_window_sha256"]],
+                                f["event"]["date"], f["direction"]) == entry["case"]
     return windows

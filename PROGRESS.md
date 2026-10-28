@@ -9,8 +9,8 @@ entire branch was already deployed. Production V2 remains a separate release.
 
 ## Current measured progress
 
-**Day 1: completed 20 of 49 planned knowledge chapters — 40.82%; 29 chapters,
-59.18% of the declared curriculum, remain.**
+**Day 1: completed 21 of 49 planned knowledge chapters — 42.86%; 28 chapters,
+57.14% of the declared curriculum, remain.**
 
 The denominator is the versioned, expandable file manifest in
 `knowledge_base/manifest.json`. Scope revision 2 explicitly expands the initial
@@ -39,7 +39,7 @@ topics require an explicit manifest/progress revision, never silent omission.
 | `02_CANDLESTICK_AND_CHART_PATTERNS/pattern_testing_and_failures.md` | Source-checked; exhaustive scans within three bounded windows, adverse/overlapping/incomplete outcomes and hypothetical cost sensitivity; not independent holdout or account returns |
 | `03_SUPPLY_DEMAND_ORDERBLOCKS/supply_demand_zones.md` | Source-checked; causal pivot-wick geometry and three actual contact/no-contact/invalidation cases; no hidden-order inference or fill claim |
 | `03_SUPPLY_DEMAND_ORDERBLOCKS/orderblock_identification_and_validation.md` | Source-checked; audited existing V2 formation arithmetic on actual daily examples, distinct gap/block invalidation and no-return outcomes; no full runtime or canonical creator-method certification |
-| `03_SUPPLY_DEMAND_ORDERBLOCKS/mitigation_breakers_and_retests.md` | Pending: original lesson body/captions unavailable at two exact URLs recorded in manifest; third-party ASR summaries are not substituted as primary proof |
+| `03_SUPPLY_DEMAND_ORDERBLOCKS/mitigation_breakers_and_retests.md` | Source-checked; original-channel captions/metadata now retrieved, briefly attributed, and separated from three actual original-rule role-change cases; visuals/PDF/parity remain unclaimed |
 | `03_SUPPLY_DEMAND_ORDERBLOCKS/execution_and_zone_failure_cases.md` | Source-checked; three real dated path/absence/failure cases, hypothetical sizing, same-bar ambiguity, source-time and execution limitations; no fills or runtime replay claimed |
 | `04_SMC_COMPLETE/bos_choch_and_displacement.md` | Source-checked; prior-confirmed first close-crosses, distinct displacement, consumed-reference recross suppression and three adverse historical paths; no probability or runtime detector claim |
 | `04_SMC_COMPLETE/premium_discount_and_dealing_ranges.md` | Source-checked; frozen before-open versus as-of-close and twenty-bar anchors, outside/invalid ranges, same-price label changes and three real dated comparisons |
@@ -119,6 +119,9 @@ topics require an explicit manifest/progress revision, never silent omission.
 
 
 - **28 October, Day 1:** completed `smc_evidence_and_counterexamples.md` (2033 substantive words). Exhaustive descriptive scans of the three already-inspected 2020/2021/2022 captures retain 1,096 directional decisions (30 incomplete horizons), 44 formations and eight price chains: two geometric retests, one invalidated before retest and five without an eligible retest. The 2020 window has zero geometric retests; this is not a zero-drawdown or profitable zero-trade backtest. Nine overlapping formation-horizon pairs, two reused-origin groups, rejected chains and adverse endpoints are disclosed. Every audit decision remains WAIT; simulated trades, PnL, drawdown and probability remain null, costs unmeasured and no independent holdout claimed. Three added exhaustive/zero-event/missing-tail tests bring passing local evidence regressions to 43. Prior [9132b3f6](https://github.com/shani001223-droid/Jarws-ai-/commit/9132b3f65a3ca5413355352895b0b9b6e692212c) passed [actual curriculum/evidence CI 40612391857](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40612391857). Curriculum: 20/49 (40.82%); four initial SMC chapters are source-checked, not every SMC concept. The mitigation/breaker original-lesson gap remains pending. Next independent declared chapter: `05_ICT_COMPLETE/ict_core_and_2022_models.md`; check original accessible primary material before making creator-specific claims. Runtime retrieval/weighted strategy, independent replay/evaluation and final release remain pending.
+
+
+- **28 October, Day 1 — primary-source gap resolved:** completed `mitigation_breakers_and_retests.md` (2086 substantive words). Retrieved the two original English YouTube caption tracks through vidIQ and verified publication metadata against creator channel `UCtjxa77NqamhVC8atV85Rog`; exact language, upload times and caption hashes are retained in the manifest without republishing copyrighted tracks. Earlier web-only retrieval failures remain in the review history. Creator descriptions are brief attribution; unviewed charts, a separate study PDF and recognizer parity remain explicitly unclaimed. Three genuine BTCUSDT role-change examples retain no return, rejection followed by failure, and failed-swing first-contact invalidation. Three added prefix/lifecycle/corruption regressions bring passing local evidence tests to 46. Prior [9fe994a3](https://github.com/shani001223-droid/Jarws-ai-/commit/9fe994a3ece30f8edbeea2ce338f08805ab9e544) passed [actual curriculum/evidence CI 40612996730](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40612996730). Curriculum: 21/49 (42.86%); next declared chapter is `05_ICT_COMPLETE/ict_core_and_2022_models.md`. Runtime, model training and release remain pending.
 
 ## Completion and release rules
 

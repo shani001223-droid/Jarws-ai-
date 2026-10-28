@@ -81,7 +81,6 @@ Post-release test/document follow-up: [PR #28](https://github.com/shani001223-dr
 | Original Game Studio GDD (Task 49, source/test verified) | `HOSHI_GAME_DESIGN.md`, `cloud_backend/game_design.py` | Proposed offline 7x7 six-level star puzzle with BFS solvability evidence, no playable build or owner genre approval. Future Tasks 50–54; no new app/repo. |\n| Urdu voice quality | `cloud_backend/urdu_tts_text.py` | Pronunciation fixes for common terms |
 | Android APK/bridge | `android/app/src/main/java/com/valtron/jarvis/` | WebView, native mic/TTS, reminders, limited permitted accessibility |
 | Regression and browser tests | `tests/`, `.github/workflows/` | Unit, JS, Playwright and Android build checks |
-
 | Anime Studio EP001/EP002 editorial drafts (Task 56 partial) | `cloud_backend/anime_scripts.py`, `cloud_backend/anime_episode_two.py`, `scripts/export_hoshi_anime_episode_two.py` | Original Roman Urdu unreviewed scene drafts, pilot-linked EP002 continuity and digest; **not** paced 30-minute scripts, approved voice or media. See `HOSHI_ANIME_PILOT_EP001.md`, `HOSHI_ANIME_EP002.md` |
 
 ## 4. What is real vs what still needs work

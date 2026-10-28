@@ -15,61 +15,61 @@ PILOT_ID = "EP001"
 SCENE_SECONDS = 180
 SPEAKERS = frozenset({"laila", "rayan", "meher", "aman", "zoya"})
 SCENES = (
-    ("Subah ka sannata", "Noorabad observatory", "Laila register par aakhri reading likhti hai; door shehar ki roshni kam hoti hai.", (
+    ("Subah ka sannata", "Noorabad hilltop observatory room", "Laila register par aakhri reading likhti hai; door shehar ki roshni kam hoti hai.", (
         ("laila", "Aaj bhi bijli teen martaba gayi. Agar reading ghalat hai to main dobara napungi."),
         ("rayan", "Receiver ko chherne se pehle us ka purana calibration record dekh lete hain."),
         ("laila", "Bilkul. Hum sirf sun rahe hain, kisi public line ko control nahi kar rahe."),
         ("rayan", "Main battery ka meter note karta hoon; yeh bhi hamesha ke liye nahi chalegi."),
     )),
-    ("Pehli dhun", "Observatory listening desk", "Receiver par barabar waqfay se halki pulse sunai deti hai; Laila waqt likhti hai.", (
+    ("Pehli dhun", "Noorabad observatory listening desk", "Receiver par barabar waqfay se halki pulse sunai deti hai; Laila waqt likhti hai.", (
         ("laila", "Rayan, yeh awaaz phir aayi. Waqt 06:14:20 likh lo, andaza nahi."),
         ("rayan", "Teen pulses mein faasla qareeban barabar hai, magar source abhi maloom nahi."),
         ("laila", "Main recording ka asli file naam aur receiver settings bhi saath rakhungi."),
         ("rayan", "Aur doosra sample lene tak hum isay kisi ka paigham nahi kahenge."),
     )),
-    ("Kaghaz ki gawahi", "Observatory archive shelf", "Laila purani duty diary se receiver ki serial plate milati hai.", (
+    ("Kaghaz ki gawahi", "Noorabad observatory archive shelf", "Laila purani duty diary se receiver ki serial plate milati hai.", (
         ("laila", "Is diary mein receiver ka number mukhtalif hai. Shayad kisi ne part badla tha."),
         ("meher", "Purani entry ko mitaana mat. Nayi correction alag tareekh ke saath likho."),
         ("laila", "Theek hai, pehle asal safhay ki tasveer aur phir apna note."),
         ("meher", "Saboot tabhi kaam aata hai jab agla shakhs bhi hamara raasta samajh sake."),
     )),
-    ("Band hoti roshni", "Observatory corridor", "Aman phone par clinic ke outage ki khabar deta hai; team bijli ka kharch ginti hai.", (
+    ("Band hoti roshni", "Noorabad observatory corridor", "Aman phone par clinic ke outage ki khabar deta hai; team bijli ka kharch ginti hai.", (
         ("aman", "Clinic ki backup light kamzor hai. Mareezon ko pehle dekhna zaroori hai."),
         ("laila", "Hum receiver ka doosra test chhota rakhenge; battery tumhare kaam aa sakti hai."),
         ("aman", "Mujhe sirf tasdeeq shuda halat batao, kisi afwah se log pareshan honge."),
         ("rayan", "Test ke baad battery level dobara note karunga, phir faisla karenge."),
     )),
-    ("Doosra sample", "Observatory listening desk", "Rayan bina signal bheje passive recording karta hai; Laila timestamp milati hai.", (
+    ("Doosra sample", "Noorabad observatory listening desk", "Rayan bina signal bheje passive recording karta hai; Laila timestamp milati hai.", (
         ("rayan", "Antenna ko sirf receive par rakha hai. Hum koi transmission nahi bhej rahe."),
         ("laila", "Pehle sample ke muqable mein pulse zara dair se aayi hai."),
         ("meher", "Dono files ki copies aur waqt alag register mein likh do."),
         ("rayan", "Ek pattern ho sakta hai, lekin do samples se faisla nahi hota."),
     )),
-    ("Gawah ka sawal", "Observatory entrance", "Zoya safety inspection par aati hai aur data ki chain-of-custody poochti hai.", (
+    ("Gawah ka sawal", "Noorabad observatory entrance", "Zoya safety inspection par aati hai aur data ki chain-of-custody poochti hai.", (
         ("zoya", "Agar yeh public report banegi to asli file aur recording ki custody kaun rakhega?"),
         ("laila", "Main source file rakhungi, Meher copy aur register ka zimma le sakti hai."),
         ("meher", "Har transfer par waqt, naam aur ijazat likhenge. Koi chhupa edit nahi."),
         ("zoya", "Acha. Aur jab tak saboot na ho, is pulse ka asal source mat batana."),
     )),
-    ("Aik chhoti ghalti", "Observatory clock wall", "Team ko maloom hota hai desk clock do minute aage hai; woh raw timestamps bachati hai.", (
+    ("Aik chhoti ghalti", "Noorabad observatory clock wall", "Team ko maloom hota hai desk clock do minute aage hai; woh raw timestamps bachati hai.", (
         ("rayan", "Desk clock do minute aage hai. Pehli reading ko khamoshi se badalna ghalat hoga."),
         ("laila", "Asal timestamp rehne do; correction ka naya column banao."),
         ("meher", "Yeh farq report mein saaf likhenge, warna baad mein hum par shak hoga."),
         ("zoya", "Ghalti maan lena saboot ko kamzor nahi, behtar banata hai."),
     )),
-    ("Bahar ki awaaz", "Observatory courtyard", "Door se blackout ke dauran logon ki baat sunai deti hai; Aman ehtiyat samjhata hai.", (
+    ("Bahar ki awaaz", "Noorabad observatory courtyard", "Door se blackout ke dauran logon ki baat sunai deti hai; Aman ehtiyat samjhata hai.", (
         ("aman", "Log pareshan hain. Kisi ko yeh mat kaho ke humne wajah dhoond li."),
         ("laila", "Hum itna keh sakte hain ke ek ajeeb radio pulse record hui hai."),
         ("aman", "Aur yeh bhi ke is ka bijli ke maslay se taalluq abhi sabit nahi."),
         ("rayan", "Agle test se pehle clinic ki battery zaroorat poori karte hain."),
     )),
-    ("Saboot ki do copies", "Meher's archive desk", "Meher source recording ko read-only media par copy karti hai aur register seal karti hai.", (
+    ("Saboot ki do copies", "Meher's city archive records desk", "Meher source recording ko read-only media par copy karti hai aur register seal karti hai.", (
         ("meher", "Ek copy mere paas, doosri Laila ke paas. Dono ka hash yahan likha hai."),
         ("laila", "Kisi ko sunane se pehle gawahon ki ijazat aur context zaroor dena."),
         ("zoya", "Mujhe sirf inspection record chahiye, main asli file le kar nahi jaungi."),
         ("meher", "Aaj ka packet abhi sirf preliminary hai; hum kal dobara verify karenge."),
     )),
-    ("Agla qadam", "Observatory roof at dusk", "Laila evidence packet band karti hai; team next observation aur safety check tay karti hai.", (
+    ("Agla qadam", "Noorabad observatory roof at dusk", "Laila evidence packet band karti hai; team next observation aur safety check tay karti hai.", (
         ("laila", "Aaj humne sirf pulse record ki. Is ke peeche ki kahani abhi baqi hai."),
         ("rayan", "Kal passive receiver ko alag clock se milayenge, bina live grid chheray."),
         ("aman", "Aur pehle clinic ki zaroorat ka hisaab. Kisi ki sehat tajribe se bari hai."),

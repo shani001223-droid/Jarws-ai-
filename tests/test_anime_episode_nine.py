@@ -21,7 +21,7 @@ def rehash(draft):
 
 
 class EpisodeNineTests(unittest.TestCase):
-    def test_public_library_beat_and_provenance(self):
+    def test_qeemat_beat_and_provenance(self):
         draft = episode_nine_script()
         outline = series_manifest()["episodes"][8]
         self.assertEqual(draft["episode_id"], "EP009")
@@ -118,7 +118,7 @@ class EpisodeNineTests(unittest.TestCase):
     def test_create_only_private_export(self):
         root = Path(__file__).resolve().parents[1]
         with tempfile.TemporaryDirectory() as folder:
-            target = Path(folder) / "ep008.json"
+            target = Path(folder) / "ep009.json"
             cmd = [sys.executable, "-m", "scripts.export_hoshi_anime_episode_nine",
                    "--out", str(target)]
             first = subprocess.run(cmd, cwd=root, text=True, capture_output=True, timeout=15)

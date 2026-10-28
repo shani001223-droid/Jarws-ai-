@@ -278,3 +278,10 @@ User approved keeping anime Hoshi as the main assistant visual, replacing the st
 - **Unverified:** layered Live2D-quality rig, accurate eye/mouth alignment on Realme Note 50, independently moving fox ears/hair, audio-amplitude/viseme lip sync, clothing-layer outfit swaps, phone performance, APK acceptance and production release. CSS mouth cycling must never be marketed as accurate lip sync. No paid tool, live user action or production merge was performed.
 
 This v1 does not independently complete canonical Task 57; track all 28 subtasks within the linked plan and only check the top-level roadmap task when every acceptance gate is truly satisfied.
+
+
+## Task 56 — original EP001 Roman Urdu pilot editorial draft (28 October 2026; PARTIAL)
+
+The same Hoshi development branch and existing draft PR #29 now include `cloud_backend/anime_scripts.py`, `tests/test_anime_scripts.py`, `scripts/export_hoshi_anime_pilot.py` and [the pilot evidence/limits](HOSHI_ANIME_PILOT_EP001.md). Ten original sequential scenes with at least forty Pakistani Roman Urdu dialogue turns, scene locations/action, a proposed 1,800-second timing allocation, source-outline SHA-256 linkage, fixed cast and explicit early-revelation checks can be exported as a private create-only JSON review artifact. No external model, paid provider, voice clone, user artwork, account action or media render is involved.
+
+**Task 56 remains unchecked:** the scenes are a short first-pass editorial/table-read draft, **not** a verified 30-minute performance or an independently human-reviewed/owner-approved full script. Episodes 002–300 are still outlines only. Full script expansion, human Urdu review, measured pacing, voice rights and later media acceptance remain outstanding. Existing Task 57 avatar work is separate and does not imply anime episode casting/voice licenses. The sole authoritative completion count remains in `HOSHI_60_TASK_MASTER_ROADMAP.md`. Task 06 physical Realme QA, Task 11 live OpenJarvis, Flora owner evidence and production release remain pending. No production merge/deploy, purchases, publishing, secret change or real trading.

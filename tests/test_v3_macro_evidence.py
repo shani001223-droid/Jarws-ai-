@@ -186,4 +186,64 @@ class V3COTTests(unittest.TestCase):
             with self.assertRaises(AssertionError):f.check_receipt(p)
 
 
+class V3BTCCorrelationTests(unittest.TestCase):
+    def test_actual_endpoint_changes_are_not_win_probabilities(self):
+        p=receipt();f.check_receipt(p)
+        cases=p['btc_cases']
+        self.assertAlmostEqual(cases[0]['diagnostic']['btc_spot_usdt']['arithmetic_close_change_pct'],-21.70918312658341)
+        self.assertAlmostEqual(cases[1]['diagnostic']['btc_spot_usdt']['arithmetic_close_change_pct'],3.974817724881148)
+        for e in cases:
+            d=e['diagnostic']
+            self.assertEqual(d['decision'],'WAIT');self.assertIsNone(d['win_probability']);self.assertFalse(d['orders_enabled'])
+            self.assertIsNone(d['equity_benchmark_correlation']);self.assertIsNone(d['gold_benchmark_correlation'])
+            self.assertFalse(d['same_instant_observations']);self.assertFalse(d['structural_regime_change_tested'])
+
+    def test_three_calendar_day_interval_uses_same_btc_endpoints(self):
+        from decimal import Decimal
+        d=receipt()['btc_cases'][2]['diagnostic']['btc_vs_broad_dollar']
+        i=next(v for v in d['intervals'] if v['start_date']=='2024-08-02')
+        self.assertEqual(i['end_date'],'2024-08-05');self.assertEqual(i['calendar_days'],3)
+        c=receipt()['btc_cases'][2]['capture'];prices=f.crypto_capture(c)
+        expected=float((prices['2024-08-05']/prices['2024-08-02']-Decimal(1))*100)
+        self.assertEqual(i['first_change_pct'],expected)
+        self.assertEqual(d['complete_interval_count'],5)
+        self.assertNotIn('2024-08-03',d['common_observation_dates'])
+        self.assertFalse(d['forward_fill_used'])
+
+    def test_prefix_pairing_cannot_see_later_btc_closes(self):
+        e=receipt()['btc_cases'][0];prices=f.crypto_capture(e['capture'])
+        macro=f.check_capture(receipt()['money_flow_cases'][0]['captures']['DTWEXBGS'])
+        short={k:v for k,v in prices.items() if k<='2020-03-13'}
+        a=f.paired_daily_values(short,macro)['intervals']
+        b=f.paired_daily_values(prices,macro)['intervals']
+        self.assertEqual(a,b[:len(a)])
+
+    def test_timestamp_units_ohlc_and_date_corruption_rejected(self):
+        for kind in ('unit','close_clock','price','duplicate'):
+            c=receipt()['btc_cases'][0]['capture'];rows=json.loads(c['response_body'])
+            if kind=='unit':rows[0][0]*=1000;rows[0][6]*=1000
+            elif kind=='close_clock':rows[0][6]+=1
+            elif kind=='price':rows[0][4]='0'
+            else:rows[1]=rows[0]
+            with self.assertRaises(AssertionError):f.crypto_capture(changed(c,json.dumps(rows)))
+
+    def test_quote_venue_hash_and_comparison_alias_rejected(self):
+        for kind in ('quote','venue','hash','macro','summary'):
+            p=receipt();e=p['btc_cases'][0];c=e['capture']
+            if kind=='quote':c['symbol']='BTCUSD'
+            elif kind=='venue':c['venue']='Binance Futures'
+            elif kind=='hash':c['source_sha256']='0'*64
+            elif kind=='macro':c['requested_start']='2020-03-08'
+            else:e['diagnostic']['btc_vs_broad_dollar']['pearson_change_correlation']=0.99
+            with self.assertRaises(AssertionError):f.check_receipt(p)
+
+    def test_positive_endpoint_paths_do_not_imply_positive_interval_correlation(self):
+        p=receipt();f.check_receipt(p)
+        b=p['btc_cases'][1]['diagnostic'];m=p['money_flow_cases'][1]['diagnostic']
+        self.assertGreater(b['btc_spot_usdt']['arithmetic_close_change_pct'],0)
+        self.assertGreater(m['broad_fed_dollar']['arithmetic_change_pct'],0)
+        self.assertLess(b['btc_vs_broad_dollar']['pearson_change_correlation'],0)
+        self.assertFalse(b['independent_holdout']);self.assertFalse(b['causal_effect_estimated'])
+
+
 if __name__=='__main__':unittest.main()

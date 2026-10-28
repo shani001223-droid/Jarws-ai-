@@ -4,7 +4,7 @@ Current retrieved history can contain revisions. Observation dates are not
 original publication/arrival timestamps; unsupported licensed series stay None.
 """
 import csv
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from decimal import Decimal
 from hashlib import sha256
 import io
@@ -55,6 +55,10 @@ def endpoint_change(c):
 def paired_intervals(first,second):
     left=check_capture(first);right=check_capture(second)
     assert first['requested_start']==second['requested_start'] and first['requested_end']==second['requested_end']
+    return paired_daily_values(left,right)
+
+
+def paired_daily_values(left,right):
     dates=sorted(d for d in set(left)&set(right) if left[d] is not None and right[d] is not None)
     intervals=[]
     for a,b in zip(dates,dates[1:]):
@@ -194,6 +198,54 @@ def cot_case(c,publication):
             'decision':'WAIT','win_probability':None,'orders_enabled':False}
 
 
+
+def crypto_query(start,end):
+    start_ms=int(datetime.fromisoformat(start).replace(tzinfo=timezone.utc).timestamp()*1000)
+    end_ms=int(datetime.fromisoformat(end).replace(tzinfo=timezone.utc).timestamp()*1000)+86400000-1
+    return 'https://data-api.binance.vision/api/v3/klines?'+urlencode({
+        'symbol':'BTCUSDT','interval':'1d','startTime':start_ms,'endTime':end_ms,'limit':1000})
+
+
+def crypto_capture(c):
+    from v3_structure_evidence import normalized,utc_day
+    assert c['symbol']=='BTCUSDT' and c['venue']=='Binance Spot' and c['interval']=='1d'
+    assert c['timezone']=='UTC' and c['time_unit']=='milliseconds' and c['http_status']==200
+    start=date.fromisoformat(c['requested_start']);end=date.fromisoformat(c['requested_end'])
+    assert start<=end and (end-start).days<32 and end<date(2025,1,1)
+    assert c['request_url']==crypto_query(start.isoformat(),end.isoformat())
+    captured=datetime.fromisoformat(c['captured_at_utc']);assert captured.utcoffset() is not None and captured.date()>end
+    body=c['response_body'];assert len(body.encode())<100000
+    assert sha256(body.encode()).hexdigest()==c['source_sha256']
+    rows=json.loads(body);bars=normalized(rows)
+    assert len(rows)==(end-start).days+1
+    assert utc_day(bars[0]['time'])==start.isoformat() and utc_day(bars[-1]['time'])==end.isoformat()
+    for r in rows:
+        assert type(r[8]) is int and r[8]>=0
+        quantities=[Decimal(r[i]) for i in (5,7,9,10)]
+        assert all(v.is_finite() and v>=0 for v in quantities)
+        assert quantities[2]<=quantities[0] and quantities[3]<=quantities[1]
+    return {utc_day(b['time']):Decimal(r[4]) for r,b in zip(rows,bars)}
+
+
+def btc_macro_case(c,captures):
+    assert set(captures)=={'DTWEXBGS','DCOILWTICO'}
+    assert all(v['series']==k for k,v in captures.items())
+    assert all(v['requested_start']==c['requested_start'] and v['requested_end']==c['requested_end'] for v in captures.values())
+    prices=crypto_capture(c);a=prices[c['requested_start']];b=prices[c['requested_end']]
+    return {'method':'hoshi-btc-public-macro-common-date-comparison-1',
+            'btc_spot_usdt':{'start_date':c['requested_start'],'end_date':c['requested_end'],
+                             'start_close_usdt':str(a),'end_close_usdt':str(b),
+                             'arithmetic_close_change_pct':float((b/a-1)*100),
+                             'bar_timezone':'UTC','native_daily_close':'23:59:59.999 UTC',
+                             'usdt_is_usd_cash':False,'quote_is_current':False},
+            'btc_vs_broad_dollar':paired_daily_values(prices,check_capture(captures['DTWEXBGS'])),
+            'btc_vs_wti_spot':paired_daily_values(prices,check_capture(captures['DCOILWTICO'])),
+            'equity_benchmark_correlation':None,'gold_benchmark_correlation':None,
+            'same_instant_observations':False,'original_vintage_and_arrival_verified':False,
+            'structural_regime_change_tested':False,'independent_holdout':False,'causal_effect_estimated':False,
+            'decision':'WAIT','win_probability':None,'orders_enabled':False}
+
+
 def check_receipt(payload,root=None):
     assert payload['schema_version']=='hoshi-v3-macro-evidence-1'
     assert payload['use']=='bounded-retrospective-source-research-not-runtime-or-training'
@@ -217,4 +269,10 @@ def check_receipt(payload,root=None):
             assert c['requested_start']==start and c['requested_end']==end
             assert p['normally_expected_publication_date']==expected and p['documented_publication_date']==actual
             assert cot_case(c,p)==e['diagnostic']
+    if 'btc_cases' in payload:
+        entries=payload['btc_cases'];assert len(entries)==3
+        assert {e['id'] for e in entries}=={e['id'] for e in cases}
+        for e in entries:
+            match=next(k for k in cases if k['id']==e['id'])
+            assert btc_macro_case(e['capture'],match['captures'])==e['diagnostic']
     return cases

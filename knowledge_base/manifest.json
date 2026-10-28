@@ -962,7 +962,47 @@
     },
     {
       "path": "knowledge_base/09_GLOBAL_MONEY_FLOW/btc_correlations_and_regime_changes.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2264,
+      "sha256": "1a70bdfb6c0eb0b00c04889143cc09c8514bec33e3f7f7a03694f589a4560206",
+      "source_review": {
+        "status": "checked-primary-research-documents-and-actual-price-responses",
+        "primary_sources": [
+          {
+            "url": "https://www.imf.org/en/Blogs/Articles/2022/01/11/crypto-prices-move-more-in-sync-with-stocks-posing-new-risks",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.imf.org/en/publications/wp/issues/2023/08/04/the-crypto-cycle-and-us-monetary-policy-534834",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://github.com/binance/binance-public-data/blob/master/README.md",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://github.com/binance/binance-public-data/blob/master/TERMS_AND_CONDITIONS.md",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://fred.stlouisfed.org/series/DTWEXBGS",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://fred.stlouisfed.org/series/DCOILWTICO",
+            "checked": "2026-10-28"
+          }
+        ],
+        "limitations": [
+          "Binance Spot BTCUSDT UTC daily closes; USDT not USD cash, 2020/2022/2024 millisecond boundaries. BTC data/derived calculations noncommercial CC BY-NC-SA 4.0 research only.",
+          "Same-date Fed broad dollar and EIA WTI spot observations are not synchronous with UTC BTC closes; original publication/arrival and vintages unknown.",
+          "Only nine/nine/five paired intervals in selected teaching windows; no structural regime change, holdout, licensed equity/gold correlation, causal effect, execution or performance calibration. All WAIT/null."
+        ],
+        "evidence_method": "hoshi-btc-public-macro-common-date-comparison-1",
+        "reviewed_on": "2026-10-28",
+        "resolved_at_asia_karachi": "2026-10-28T11:24:58.012556+05:00"
+      }
     },
     {
       "path": "knowledge_base/10_TRADING_PSYCHOLOGY_AND_RISK/position_sizing_and_loss_limits.md",
@@ -1056,7 +1096,7 @@
     {
       "path": "knowledge_base/09_GLOBAL_MONEY_FLOW/macro_observations_20261028.json",
       "kind": "macro_cases",
-      "sha256": "b3d97e68806f90c9b9e6d497d0df7b39a1335718b64346623bc350b3a13916fd"
+      "sha256": "15ac4218ab241f954e3ae88d79a95e9e86326e3799f42ef71c78b3daee2b6e65"
     }
   ],
   "scope_history": [

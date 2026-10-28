@@ -1079,5 +1079,588 @@
     "acknowledgement": "Source: U.S. Commodity Futures Trading Commission. Original HOSHI calculations; no CFTC endorsement.",
     "scope": "Small selections of government-produced aggregate positioning data, not private contributed material or a market-price feed. The dataset metadata supplied no standalone license identifier.",
     "clocks": "Position-date fields with midnight suffixes are report labels, not verified UTC timestamps. Original-vintage and delivery histories have not been captured."
+  },
+  "btc_cases": [
+    {
+      "id": "covid_2020",
+      "capture": {
+        "symbol": "BTCUSDT",
+        "venue": "Binance Spot",
+        "interval": "1d",
+        "timezone": "UTC",
+        "time_unit": "milliseconds",
+        "requested_start": "2020-03-09",
+        "requested_end": "2020-03-20",
+        "request_url": "https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=1d&startTime=1583712000000&endTime=1584748799999&limit=1000",
+        "http_status": 200,
+        "captured_at_utc": "2026-10-28T06:20:39.769925+00:00",
+        "source_sha256": "c93dfbfd10529b188f4e9dfd97ddc500e1bd7d37725ce6f99e6619e74bb10367",
+        "response_body": "[[1583712000000,\"8034.76000000\",\"8179.31000000\",\"7632.01000000\",\"7929.87000000\",\"116968.86326800\",1583798399999,\"918787729.08558386\",929234,\"58020.95792700\",\"455866837.30462256\",\"0\"],[1583798400000,\"7929.87000000\",\"8149.00000000\",\"7728.01000000\",\"7894.56000000\",\"86783.44387500\",1583884799999,\"689700153.44909328\",737528,\"43673.58402400\",\"347117049.36196732\",\"0\"],[1583884800000,\"7894.57000000\",\"7980.00000000\",\"7590.00000000\",\"7934.52000000\",\"79942.41117200\",1583971199999,\"624465167.36481883\",699401,\"40497.89273800\",\"316442882.75970132\",\"0\"],[1583971200000,\"7934.58000000\",\"7966.17000000\",\"4410.00000000\",\"4800.00000000\",\"261505.60865300\",1584057599999,\"1628590104.22221324\",1770812,\"119298.00619700\",\"743481672.20376488\",\"0\"],[1584057600000,\"4800.01000000\",\"5955.00000000\",\"3782.13000000\",\"5578.60000000\",\"402201.67376400\",1584143999999,\"2063819540.63899484\",2309830,\"197511.95427300\",\"1017423855.75574906\",\"0\"],[1584144000000,\"5576.05000000\",\"5640.52000000\",\"5055.13000000\",\"5172.06000000\",\"136910.13597400\",1584230399999,\"736651880.92107893\",1106125,\"66104.01972900\",\"356020329.85217690\",\"0\"],[1584230400000,\"5172.48000000\",\"5940.00000000\",\"5093.10000000\",\"5361.30000000\",\"139916.14653400\",1584316799999,\"753755706.42687720\",1037714,\"70540.65095000\",\"380499471.94982265\",\"0\"],[1584316800000,\"5360.33000000\",\"5365.42000000\",\"4442.12000000\",\"5028.97000000\",\"227276.92276000\",1584403199999,\"1113690309.10158680\",1608176,\"108901.96736600\",\"533857910.81658686\",\"0\"],[1584403200000,\"5028.86000000\",\"5525.00000000\",\"4921.45000000\",\"5312.64000000\",\"150089.92631800\",1584489599999,\"793147908.26849729\",1069217,\"74698.37425400\",\"394902319.12415861\",\"0\"],[1584489600000,\"5312.64000000\",\"5436.17000000\",\"5009.37000000\",\"5393.04000000\",\"137127.63489400\",1584575999999,\"719748122.45301997\",962843,\"65106.06777800\",\"341970839.57798240\",\"0\"],[1584576000000,\"5393.26000000\",\"6400.00000000\",\"5252.53000000\",\"6162.37000000\",\"199020.87343900\",1584662399999,\"1164739707.51423590\",1403608,\"99011.94701100\",\"579536547.75822434\",\"0\"],[1584662400000,\"6162.05000000\",\"6900.00000000\",\"5670.00000000\",\"6208.36000000\",\"219298.32951400\",1584748799999,\"1401734013.17520213\",1580069,\"104719.63918000\",\"670117999.14814168\",\"0\"]]"
+      },
+      "diagnostic": {
+        "method": "hoshi-btc-public-macro-common-date-comparison-1",
+        "btc_spot_usdt": {
+          "start_date": "2020-03-09",
+          "end_date": "2020-03-20",
+          "start_close_usdt": "7929.87000000",
+          "end_close_usdt": "6208.36000000",
+          "arithmetic_close_change_pct": -21.70918312658341,
+          "bar_timezone": "UTC",
+          "native_daily_close": "23:59:59.999 UTC",
+          "usdt_is_usd_cash": false,
+          "quote_is_current": false
+        },
+        "btc_vs_broad_dollar": {
+          "method": "hoshi-common-date-arithmetic-interval-correlation-1",
+          "common_observation_dates": [
+            "2020-03-09",
+            "2020-03-10",
+            "2020-03-11",
+            "2020-03-12",
+            "2020-03-13",
+            "2020-03-16",
+            "2020-03-17",
+            "2020-03-18",
+            "2020-03-19",
+            "2020-03-20"
+          ],
+          "intervals": [
+            {
+              "start_date": "2020-03-09",
+              "end_date": "2020-03-10",
+              "calendar_days": 1,
+              "first_change_pct": -0.4452784219665644,
+              "second_change_pct": 0.610647417676519
+            },
+            {
+              "start_date": "2020-03-10",
+              "end_date": "2020-03-11",
+              "calendar_days": 1,
+              "first_change_pct": 0.5061713382379766,
+              "second_change_pct": 0.2949890036445306
+            },
+            {
+              "start_date": "2020-03-11",
+              "end_date": "2020-03-12",
+              "calendar_days": 1,
+              "first_change_pct": -39.50484717412017,
+              "second_change_pct": 1.8924232878507914
+            },
+            {
+              "start_date": "2020-03-12",
+              "end_date": "2020-03-13",
+              "calendar_days": 1,
+              "first_change_pct": 16.220833333333335,
+              "second_change_pct": -0.041082827129273136
+            },
+            {
+              "start_date": "2020-03-13",
+              "end_date": "2020-03-16",
+              "calendar_days": 3,
+              "first_change_pct": -9.852471946366473,
+              "second_change_pct": 0.41215953662773125
+            },
+            {
+              "start_date": "2020-03-16",
+              "end_date": "2020-03-17",
+              "calendar_days": 1,
+              "first_change_pct": 5.640717681751929,
+              "second_change_pct": 1.2787013210380436
+            },
+            {
+              "start_date": "2020-03-17",
+              "end_date": "2020-03-18",
+              "calendar_days": 1,
+              "first_change_pct": 1.513371882905674,
+              "second_change_pct": 1.3722061109587074
+            },
+            {
+              "start_date": "2020-03-18",
+              "end_date": "2020-03-19",
+              "calendar_days": 1,
+              "first_change_pct": 14.265238158812098,
+              "second_change_pct": 0.7219582755796244
+            },
+            {
+              "start_date": "2020-03-19",
+              "end_date": "2020-03-20",
+              "calendar_days": 1,
+              "first_change_pct": 0.7463037759822925,
+              "second_change_pct": -0.09795400080122374
+            }
+          ],
+          "complete_interval_count": 9,
+          "pearson_change_correlation": -0.5909063558542405,
+          "forward_fill_used": false,
+          "synchronized_intraday_prices": false,
+          "independent_holdout": false
+        },
+        "btc_vs_wti_spot": {
+          "method": "hoshi-common-date-arithmetic-interval-correlation-1",
+          "common_observation_dates": [
+            "2020-03-09",
+            "2020-03-10",
+            "2020-03-11",
+            "2020-03-12",
+            "2020-03-13",
+            "2020-03-16",
+            "2020-03-17",
+            "2020-03-18",
+            "2020-03-19",
+            "2020-03-20"
+          ],
+          "intervals": [
+            {
+              "start_date": "2020-03-09",
+              "end_date": "2020-03-10",
+              "calendar_days": 1,
+              "first_change_pct": -0.4452784219665644,
+              "second_change_pct": 11.014492753623188
+            },
+            {
+              "start_date": "2020-03-10",
+              "end_date": "2020-03-11",
+              "calendar_days": 1,
+              "first_change_pct": 0.5061713382379766,
+              "second_change_pct": -3.88743835219031
+            },
+            {
+              "start_date": "2020-03-11",
+              "end_date": "2020-03-12",
+              "calendar_days": 1,
+              "first_change_pct": -39.50484717412017,
+              "second_change_pct": -4.738907334741926
+            },
+            {
+              "start_date": "2020-03-12",
+              "end_date": "2020-03-13",
+              "calendar_days": 1,
+              "first_change_pct": 16.220833333333335,
+              "second_change_pct": 0.5069708491761724
+            },
+            {
+              "start_date": "2020-03-13",
+              "end_date": "2020-03-16",
+              "calendar_days": 3,
+              "first_change_pct": -9.852471946366473,
+              "second_change_pct": -8.701134930643127
+            },
+            {
+              "start_date": "2020-03-16",
+              "end_date": "2020-03-17",
+              "calendar_days": 1,
+              "first_change_pct": 5.640717681751929,
+              "second_change_pct": -6.906077348066298
+            },
+            {
+              "start_date": "2020-03-17",
+              "end_date": "2020-03-18",
+              "calendar_days": 1,
+              "first_change_pct": 1.513371882905674,
+              "second_change_pct": -24.03560830860534
+            },
+            {
+              "start_date": "2020-03-18",
+              "end_date": "2020-03-19",
+              "calendar_days": 1,
+              "first_change_pct": 14.265238158812098,
+              "second_change_pct": 22.509765625
+            },
+            {
+              "start_date": "2020-03-19",
+              "end_date": "2020-03-20",
+              "calendar_days": 1,
+              "first_change_pct": 0.7463037759822925,
+              "second_change_pct": -22.359505779194897
+            }
+          ],
+          "complete_interval_count": 9,
+          "pearson_change_correlation": 0.23903921448563062,
+          "forward_fill_used": false,
+          "synchronized_intraday_prices": false,
+          "independent_holdout": false
+        },
+        "equity_benchmark_correlation": null,
+        "gold_benchmark_correlation": null,
+        "same_instant_observations": false,
+        "original_vintage_and_arrival_verified": false,
+        "structural_regime_change_tested": false,
+        "independent_holdout": false,
+        "causal_effect_estimated": false,
+        "decision": "WAIT",
+        "win_probability": null,
+        "orders_enabled": false
+      }
+    },
+    {
+      "id": "ukraine_2022",
+      "capture": {
+        "symbol": "BTCUSDT",
+        "venue": "Binance Spot",
+        "interval": "1d",
+        "timezone": "UTC",
+        "time_unit": "milliseconds",
+        "requested_start": "2022-02-23",
+        "requested_end": "2022-03-08",
+        "request_url": "https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=1d&startTime=1645574400000&endTime=1646783999999&limit=1000",
+        "http_status": 200,
+        "captured_at_utc": "2026-10-28T06:20:42.951010+00:00",
+        "source_sha256": "4634b57dfc163de4397dc74ca19997e4bd5e2094168dcb1900b373557d5637b2",
+        "response_body": "[[1645574400000,\"38230.33000000\",\"39249.93000000\",\"37036.79000000\",\"37250.01000000\",\"43560.73200000\",1645660799999,\"1665486687.23993710\",1030872,\"21449.95580000\",\"820639942.03183170\",\"0\"],[1645660800000,\"37250.02000000\",\"39843.00000000\",\"34322.28000000\",\"38327.21000000\",\"120476.29458000\",1645747199999,\"4335107392.00948810\",2622780,\"60103.13140000\",\"2164376869.72610720\",\"0\"],[1645747200000,\"38328.68000000\",\"39683.53000000\",\"38014.37000000\",\"39219.17000000\",\"56574.57125000\",1645833599999,\"2197889580.28266900\",1408558,\"29904.01589000\",\"1161436657.82962850\",\"0\"],[1645833600000,\"39219.16000000\",\"40348.45000000\",\"38573.18000000\",\"39116.72000000\",\"29361.25680000\",1645919999999,\"1152621719.69438010\",924257,\"14658.93596000\",\"575852237.98081680\",\"0\"],[1645920000000,\"39116.73000000\",\"39855.70000000\",\"37000.00000000\",\"37699.07000000\",\"46229.44719000\",1646006399999,\"1780512702.88640200\",1265753,\"21789.25080000\",\"840141690.32935450\",\"0\"],[1646006400000,\"37699.08000000\",\"44225.84000000\",\"37450.17000000\",\"43160.00000000\",\"73945.63858000\",1646092799999,\"2975160226.16898520\",1931087,\"38543.78078000\",\"1553136662.00345820\",\"0\"],[1646092800000,\"43160.00000000\",\"44949.00000000\",\"42809.98000000\",\"44421.20000000\",\"61743.09873000\",1646179199999,\"2701611023.69431990\",1866871,\"30937.54085000\",\"1353520463.00847440\",\"0\"],[1646179200000,\"44421.20000000\",\"45400.00000000\",\"43334.09000000\",\"43892.98000000\",\"57782.65081000\",1646265599999,\"2550792948.28862420\",1653131,\"28624.11310000\",\"1264172354.04562620\",\"0\"],[1646265600000,\"43892.99000000\",\"44101.12000000\",\"41832.28000000\",\"42454.00000000\",\"50940.61021000\",1646351999999,\"2192152097.92518790\",1289320,\"24438.40113000\",\"1051969942.21123210\",\"0\"],[1646352000000,\"42454.00000000\",\"42527.30000000\",\"38550.00000000\",\"39148.66000000\",\"61964.68498000\",1646438399999,\"2527001270.71946910\",1465066,\"29322.62323000\",\"1196441375.29618270\",\"0\"],[1646438400000,\"39148.65000000\",\"39613.24000000\",\"38407.59000000\",\"39397.96000000\",\"30363.13341000\",1646524799999,\"1187689935.08799350\",879727,\"14846.61434000\",\"580820200.94256520\",\"0\"],[1646524800000,\"39397.97000000\",\"39693.87000000\",\"38088.57000000\",\"38420.81000000\",\"39677.26158000\",1646611199999,\"1542258009.62921880\",986352,\"19055.16367000\",\"740741244.89651720\",\"0\"],[1646611200000,\"38420.80000000\",\"39547.57000000\",\"37155.00000000\",\"37988.00000000\",\"63994.11559000\",1646697599999,\"2449362161.70153860\",1456041,\"31641.49735000\",\"1211103666.76717830\",\"0\"],[1646697600000,\"37988.01000000\",\"39362.08000000\",\"37867.65000000\",\"38730.63000000\",\"55583.06638000\",1646783999999,\"2149652714.80434550\",1271128,\"27964.07361000\",\"1081516303.59409020\",\"0\"]]"
+      },
+      "diagnostic": {
+        "method": "hoshi-btc-public-macro-common-date-comparison-1",
+        "btc_spot_usdt": {
+          "start_date": "2022-02-23",
+          "end_date": "2022-03-08",
+          "start_close_usdt": "37250.01000000",
+          "end_close_usdt": "38730.63000000",
+          "arithmetic_close_change_pct": 3.974817724881148,
+          "bar_timezone": "UTC",
+          "native_daily_close": "23:59:59.999 UTC",
+          "usdt_is_usd_cash": false,
+          "quote_is_current": false
+        },
+        "btc_vs_broad_dollar": {
+          "method": "hoshi-common-date-arithmetic-interval-correlation-1",
+          "common_observation_dates": [
+            "2022-02-23",
+            "2022-02-24",
+            "2022-02-25",
+            "2022-02-28",
+            "2022-03-01",
+            "2022-03-02",
+            "2022-03-03",
+            "2022-03-04",
+            "2022-03-07",
+            "2022-03-08"
+          ],
+          "intervals": [
+            {
+              "start_date": "2022-02-23",
+              "end_date": "2022-02-24",
+              "calendar_days": 1,
+              "first_change_pct": 2.8918113042117306,
+              "second_change_pct": 1.1120045209249756
+            },
+            {
+              "start_date": "2022-02-24",
+              "end_date": "2022-02-25",
+              "calendar_days": 1,
+              "first_change_pct": 2.327223922638773,
+              "second_change_pct": -0.5901231565120116
+            },
+            {
+              "start_date": "2022-02-25",
+              "end_date": "2022-02-28",
+              "calendar_days": 3,
+              "first_change_pct": 10.048223866032862,
+              "second_change_pct": -0.030627021014648044
+            },
+            {
+              "start_date": "2022-02-28",
+              "end_date": "2022-03-01",
+              "calendar_days": 1,
+              "first_change_pct": 2.922150139017609,
+              "second_change_pct": 0.497993445718888
+            },
+            {
+              "start_date": "2022-03-01",
+              "end_date": "2022-03-02",
+              "calendar_days": 1,
+              "first_change_pct": -1.1891169081429587,
+              "second_change_pct": -0.02927557208267629
+            },
+            {
+              "start_date": "2022-03-02",
+              "end_date": "2022-03-03",
+              "calendar_days": 1,
+              "first_change_pct": -3.278383012499949,
+              "second_change_pct": 0.1617106778286195
+            },
+            {
+              "start_date": "2022-03-03",
+              "end_date": "2022-03-04",
+              "calendar_days": 1,
+              "first_change_pct": -7.785697460781081,
+              "second_change_pct": 0.6044010539070889
+            },
+            {
+              "start_date": "2022-03-04",
+              "end_date": "2022-03-07",
+              "calendar_days": 3,
+              "first_change_pct": -2.964750262205654,
+              "second_change_pct": 0.580795763062761
+            },
+            {
+              "start_date": "2022-03-07",
+              "end_date": "2022-03-08",
+              "calendar_days": 1,
+              "first_change_pct": 1.9549068126776876,
+              "second_change_pct": 0.2470002846725158
+            }
+          ],
+          "complete_interval_count": 9,
+          "pearson_change_correlation": -0.24509160372422242,
+          "forward_fill_used": false,
+          "synchronized_intraday_prices": false,
+          "independent_holdout": false
+        },
+        "btc_vs_wti_spot": {
+          "method": "hoshi-common-date-arithmetic-interval-correlation-1",
+          "common_observation_dates": [
+            "2022-02-23",
+            "2022-02-24",
+            "2022-02-25",
+            "2022-02-28",
+            "2022-03-01",
+            "2022-03-02",
+            "2022-03-03",
+            "2022-03-04",
+            "2022-03-07",
+            "2022-03-08"
+          ],
+          "intervals": [
+            {
+              "start_date": "2022-02-23",
+              "end_date": "2022-02-24",
+              "calendar_days": 1,
+              "first_change_pct": 2.8918113042117306,
+              "second_change_pct": 0.6837421315389625
+            },
+            {
+              "start_date": "2022-02-24",
+              "end_date": "2022-02-25",
+              "calendar_days": 1,
+              "first_change_pct": 2.327223922638773,
+              "second_change_pct": -1.174948798102835
+            },
+            {
+              "start_date": "2022-02-25",
+              "end_date": "2022-02-28",
+              "calendar_days": 3,
+              "first_change_pct": 10.048223866032862,
+              "second_change_pct": 4.853839441535777
+            },
+            {
+              "start_date": "2022-02-28",
+              "end_date": "2022-03-01",
+              "calendar_days": 1,
+              "first_change_pct": 2.922150139017609,
+              "second_change_pct": 7.833142619369604
+            },
+            {
+              "start_date": "2022-03-01",
+              "end_date": "2022-03-02",
+              "calendar_days": 1,
+              "first_change_pct": -1.1891169081429587,
+              "second_change_pct": 6.83002122322979
+            },
+            {
+              "start_date": "2022-03-02",
+              "end_date": "2022-03-03",
+              "calendar_days": 1,
+              "first_change_pct": -3.278383012499949,
+              "second_change_pct": -2.7541990247426402
+            },
+            {
+              "start_date": "2022-03-03",
+              "end_date": "2022-03-04",
+              "calendar_days": 1,
+              "first_change_pct": -7.785697460781081,
+              "second_change_pct": 7.50301792181261
+            },
+            {
+              "start_date": "2022-03-04",
+              "end_date": "2022-03-07",
+              "calendar_days": 3,
+              "first_change_pct": -2.964750262205654,
+              "second_change_pct": 3.0145979096484408
+            },
+            {
+              "start_date": "2022-03-07",
+              "end_date": "2022-03-08",
+              "calendar_days": 1,
+              "first_change_pct": 1.9549068126776876,
+              "second_change_pct": 3.67264799597518
+            }
+          ],
+          "complete_interval_count": 9,
+          "pearson_change_correlation": -0.032469029539872206,
+          "forward_fill_used": false,
+          "synchronized_intraday_prices": false,
+          "independent_holdout": false
+        },
+        "equity_benchmark_correlation": null,
+        "gold_benchmark_correlation": null,
+        "same_instant_observations": false,
+        "original_vintage_and_arrival_verified": false,
+        "structural_regime_change_tested": false,
+        "independent_holdout": false,
+        "causal_effect_estimated": false,
+        "decision": "WAIT",
+        "win_probability": null,
+        "orders_enabled": false
+      }
+    },
+    {
+      "id": "august_2024",
+      "capture": {
+        "symbol": "BTCUSDT",
+        "venue": "Binance Spot",
+        "interval": "1d",
+        "timezone": "UTC",
+        "time_unit": "milliseconds",
+        "requested_start": "2024-08-01",
+        "requested_end": "2024-08-08",
+        "request_url": "https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=1d&startTime=1722470400000&endTime=1723161599999&limit=1000",
+        "http_status": 200,
+        "captured_at_utc": "2026-10-28T06:20:46.326011+00:00",
+        "source_sha256": "0c1e171a63d348ef662b1938473054267643cc7a03b8a73ec0b2784e48f0ee31",
+        "response_body": "[[1722470400000,\"64628.01000000\",\"65659.78000000\",\"62302.00000000\",\"65354.02000000\",\"35542.26854000\",1722556799999,\"2270877792.65867990\",2397257,\"16886.93292000\",\"1079221072.75802780\",\"0\"],[1722556800000,\"65354.02000000\",\"65596.14000000\",\"61230.01000000\",\"61498.33000000\",\"38820.42937000\",1722643199999,\"2469588785.69815740\",2457735,\"18202.35794000\",\"1158565579.09029100\",\"0\"],[1722643200000,\"61498.34000000\",\"62198.22000000\",\"59850.00000000\",\"60697.99000000\",\"28034.71567000\",1722729599999,\"1711555901.18010990\",1669555,\"12947.95791000\",\"790701622.63757370\",\"0\"],[1722729600000,\"60697.99000000\",\"61117.63000000\",\"57122.77000000\",\"58161.00000000\",\"31616.52003000\",1722815999999,\"1874490041.54373530\",1886195,\"14556.62470000\",\"863334319.96789840\",\"0\"],[1722816000000,\"58161.00000000\",\"58305.59000000\",\"49000.00000000\",\"54018.81000000\",\"162065.59186000\",1722902399999,\"8580928177.42990090\",7568497,\"77363.26323000\",\"4097736999.06792360\",\"0\"],[1722902400000,\"54018.82000000\",\"57040.99000000\",\"53950.00000000\",\"56022.01000000\",\"55884.77676000\",1722988799999,\"3119018848.32988790\",3433824,\"27934.19288000\",\"1559417942.64908360\",\"0\"],[1722988800000,\"56022.00000000\",\"57736.05000000\",\"54558.62000000\",\"55134.16000000\",\"44269.37684000\",1723075199999,\"2490553853.60258280\",2397504,\"21897.14983000\",\"1232415104.44728570\",\"0\"],[1723075200000,\"55133.76000000\",\"62745.14000000\",\"54730.00000000\",\"61685.99000000\",\"48349.52949000\",1723161599999,\"2836312292.43181820\",2603042,\"25676.29533000\",\"1508140014.00051670\",\"0\"]]"
+      },
+      "diagnostic": {
+        "method": "hoshi-btc-public-macro-common-date-comparison-1",
+        "btc_spot_usdt": {
+          "start_date": "2024-08-01",
+          "end_date": "2024-08-08",
+          "start_close_usdt": "65354.02000000",
+          "end_close_usdt": "61685.99000000",
+          "arithmetic_close_change_pct": -5.612554514626645,
+          "bar_timezone": "UTC",
+          "native_daily_close": "23:59:59.999 UTC",
+          "usdt_is_usd_cash": false,
+          "quote_is_current": false
+        },
+        "btc_vs_broad_dollar": {
+          "method": "hoshi-common-date-arithmetic-interval-correlation-1",
+          "common_observation_dates": [
+            "2024-08-01",
+            "2024-08-02",
+            "2024-08-05",
+            "2024-08-06",
+            "2024-08-07",
+            "2024-08-08"
+          ],
+          "intervals": [
+            {
+              "start_date": "2024-08-01",
+              "end_date": "2024-08-02",
+              "calendar_days": 1,
+              "first_change_pct": -5.899698289408976,
+              "second_change_pct": -0.3238897773701797
+            },
+            {
+              "start_date": "2024-08-02",
+              "end_date": "2024-08-05",
+              "calendar_days": 3,
+              "first_change_pct": -12.16215139500536,
+              "second_change_pct": 0.08957779377831197
+            },
+            {
+              "start_date": "2024-08-05",
+              "end_date": "2024-08-06",
+              "calendar_days": 1,
+              "first_change_pct": 3.708337891930607,
+              "second_change_pct": 0.0602854699070309
+            },
+            {
+              "start_date": "2024-08-06",
+              "end_date": "2024-08-07",
+              "calendar_days": 1,
+              "first_change_pct": -1.5848235363208139,
+              "second_change_pct": -0.0674466976996956
+            },
+            {
+              "start_date": "2024-08-07",
+              "end_date": "2024-08-08",
+              "calendar_days": 1,
+              "first_change_pct": 11.883431252058616,
+              "second_change_pct": -0.09970073594033493
+            }
+          ],
+          "complete_interval_count": 5,
+          "pearson_change_correlation": -0.051383948508610416,
+          "forward_fill_used": false,
+          "synchronized_intraday_prices": false,
+          "independent_holdout": false
+        },
+        "btc_vs_wti_spot": {
+          "method": "hoshi-common-date-arithmetic-interval-correlation-1",
+          "common_observation_dates": [
+            "2024-08-01",
+            "2024-08-02",
+            "2024-08-05",
+            "2024-08-06",
+            "2024-08-07",
+            "2024-08-08"
+          ],
+          "intervals": [
+            {
+              "start_date": "2024-08-01",
+              "end_date": "2024-08-02",
+              "calendar_days": 1,
+              "first_change_pct": -5.899698289408976,
+              "second_change_pct": -3.5374324671983537
+            },
+            {
+              "start_date": "2024-08-02",
+              "end_date": "2024-08-05",
+              "calendar_days": 3,
+              "first_change_pct": -12.16215139500536,
+              "second_change_pct": -0.7067609014535271
+            },
+            {
+              "start_date": "2024-08-05",
+              "end_date": "2024-08-06",
+              "calendar_days": 1,
+              "first_change_pct": 3.708337891930607,
+              "second_change_pct": 0.18802041364491
+            },
+            {
+              "start_date": "2024-08-06",
+              "end_date": "2024-08-07",
+              "calendar_days": 1,
+              "first_change_pct": -1.5848235363208139,
+              "second_change_pct": 2.7882037533512065
+            },
+            {
+              "start_date": "2024-08-07",
+              "end_date": "2024-08-08",
+              "calendar_days": 1,
+              "first_change_pct": 11.883431252058616,
+              "second_change_pct": 1.2519561815336464
+            }
+          ],
+          "complete_interval_count": 5,
+          "pearson_change_correlation": 0.4675545592657522,
+          "forward_fill_used": false,
+          "synchronized_intraday_prices": false,
+          "independent_holdout": false
+        },
+        "equity_benchmark_correlation": null,
+        "gold_benchmark_correlation": null,
+        "same_instant_observations": false,
+        "original_vintage_and_arrival_verified": false,
+        "structural_regime_change_tested": false,
+        "independent_holdout": false,
+        "causal_effect_estimated": false,
+        "decision": "WAIT",
+        "win_probability": null,
+        "orders_enabled": false
+      }
+    }
+  ],
+  "btc_source_metadata": {
+    "publisher": "Binance Vision",
+    "venue": "Binance Spot",
+    "instrument": "BTCUSDT spot; USDT quote is not USD cash",
+    "data_license": "CC BY-NC-SA 4.0",
+    "data_license_url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+    "provider_terms_url": "https://github.com/binance/binance-public-data/blob/master/TERMS_AND_CONDITIONS.md",
+    "terms_checked_on": "2026-10-28",
+    "attribution": "Source: Binance Vision. Historical selected response bodies and original HOSHI BTC-derived calculations are noncommercial educational research under CC BY-NC-SA 4.0. No Binance endorsement.",
+    "license_scope": "This acknowledgement applies to BTC captures and BTC-derived calculations, not unrelated repository code or government series. No production feed, commercial redistribution, order generation or model training authorization is claimed.",
+    "publication_clock": "Daily UTC bar close times are source event boundaries, not verified original API delivery times."
   }
 }

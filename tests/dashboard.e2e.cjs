@@ -747,9 +747,8 @@ async function main() {
     await page.locator('#tradePair').selectOption('SOLUSDT');
     assert.equal(await page.locator('#tradeAnnotatedRun').isDisabled(),true);
     assert.equal(await page.locator('#tradeAnnotatedCanvas').isVisible(),false);
-    // Focus Home must work on an actual narrow mobile browser independently
-    // of existing full-workspace tests. No external assets are required to
-    // render the CSS orb; existing tools are preserved behind Settings.
+    // Anime Home must work on a real narrow mobile browser independently
+    // of full-workspace tests; the older holographic core stays as fallback.
     const focusContext=await browser.newContext({viewport:{width:390,height:844}});
     await focusContext.addInitScript(()=>{
       try{localStorage.setItem('hoshiVoiceReplies','false')}catch(_){}
@@ -761,12 +760,22 @@ async function main() {
     const focusPage=await focusContext.newPage();
     focusPage.on('pageerror',error=>pageErrors.push(error.message));
     await focusPage.goto(url,{waitUntil:'domcontentloaded'});
-    await focusPage.locator('.focus-core').waitFor({state:'visible'});
+    await focusPage.locator('.hoshi-animated-avatar').waitFor({state:'visible'});
+    assert.equal(await focusPage.locator('#hoshiEnergy').isVisible(),false,
+      'Old holographic core must not overlap the approved anime Hoshi');
+    assert.equal(await focusPage.locator('.hoshi-animated-avatar').getAttribute('data-emotion'),'caring');
+    const portrait=await focusPage.locator('.avatar-face').evaluate(el=>getComputedStyle(el).backgroundImage);
+    assert.match(portrait,/hoshi-expressions\\.webp/);
+    await focusPage.evaluate(()=>window.hoshiSetSpeaking(true));
+    assert.equal(await focusPage.locator('.hoshi-animated-avatar').getAttribute('data-state'),'speaking');
+    await focusPage.evaluate(()=>window.hoshiSetSpeaking(false));
+    assert.equal(await focusPage.locator('.hoshi-animated-avatar').getAttribute('data-state'),'idle');
     assert.equal(await focusPage.locator('.nightroom.focus-mode').count(),1);
     assert.equal(await focusPage.locator('[data-tab="chat"]').isVisible(),false);
     assert.equal(await focusPage.locator('[data-tab="settings"]').isVisible(),true);
     const focusBackground=await focusPage.evaluate(()=>getComputedStyle(document.querySelector('#nightroom')).backgroundImage);
-    assert.equal(focusBackground.includes('url('),false,'Focus mode must not download or display room/character images');
+    assert.equal(focusBackground.includes('url('),false,
+      'Black focus background must not load the unrelated anime room wallpaper');
     await focusPage.locator('[data-tab="settings"]').click();
     // Confirm the selected panel before interacting with its child. If a
     // browser regression hides it, report actual DOM/CSS state rather than
@@ -787,7 +796,7 @@ async function main() {
     assert.equal(await focusPage.locator('#commandInput').isVisible(),true);
     await focusContext.close();
     assert.deepEqual(pageErrors,[]);
-    console.log('PASS — minimal black animated focus home and full tool access on mobile');
+    console.log('PASS — animated anime Hoshi mobile home, speech state and full Settings tool access');
   } finally {
     if (browser) await browser.close();
     await new Promise(resolve => server.close(resolve));

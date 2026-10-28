@@ -1,5 +1,12 @@
 # HOSHI AI — ONE MASTER PROJECT
 
+## 29 October 2026 — private shot-by-shot voice cue timing handoff (development only)
+
+The existing Hoshi Anime Studio 30-second animatic accepts optional `--voice-cues-json` **only alongside** a validated `--storyboard-json`, caller-owned 30-second `--audio-wav`, and the existing explicit image/audio rights attestations. New `cloud_backend/anime_voice_timing.py` binds exactly three operator-authored voice cues to the exact WAV SHA-256, storyboard plan SHA-256, language, original caption text, shot ID, a referenced speaker/character ID and strict within-shot millisecond timing. This prevents stale audio, cross-shot/cross-character cue mismatches, out-of-window timings, and claims of successful automatic dubbing. The returned manifest includes `voice_timing_handoff` with `lip_sync_generated=false`, `voice_language_verified=false` and `owner_approved=false`. It **does not** analyze the WAV to prove that any words were spoken or lip-sync mouths; timestamps are operator-provided metadata only. This is a private offline render handoff, not a voice AI, account uploader, production release or real-device test.
+
+Source and CI verification for this checkpoint must be read from the branch head's GitHub Actions results; do not mark Task 59 complete before passing CI and genuine dubbed/animated QA. Canonical roadmap remains **48/60**. No external publication, payment, production merge/deploy, live trading or secret changes.
+
+
 ## 29 October 2026 — private Anime Studio audio-to-MP4 handoff (development only)
 
 The existing operator-only 30-second Anime Studio CLI now accepts an **optional caller-owned 30-second PCM WAV** via `--audio-wav /private/audio.wav --audio-rights-attested`. Both flags are required together. The input is size-bounded (3 MB), mono 16-bit uncompressed PCM, 16 or 24 kHz, with a validated 30–30.2-second duration; malformed, truncated, unsupported, or rights-unattested audio fails closed before output creation. FFmpeg muxes the verified source into the private H.264 MP4 as AAC; `ffprobe` independently checks audio/video streams and duration. The manifest records `source_audio_sha256`, `audio_status=caller_attested_wav_unverified`, and retains `owner_approved=false`, `published=false`, `uploaded=false` and `hindi_urdu_voice_recorded=false`. The operator's output directory remains create-only; repeat invocations never overwrite a draft.

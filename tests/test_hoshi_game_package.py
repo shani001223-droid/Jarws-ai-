@@ -28,7 +28,8 @@ class OfflineGamePackageTests(unittest.TestCase):
                 self.assertEqual(html, (Path(temp) / "one" / OFFLINE_NAME).read_bytes())
                 self.assertIn(b'const EMBEDDED_MANIFEST=', html)
                 self.assertIn(b'connect-src &#39;none&#39;', html)
-                self.assertIn(b'game-studio', b'game-studio')  # no generated assets
+                self.assertNotIn(b'<script src=', html)
+                self.assertNotIn(b'<link rel="stylesheet"', html)
                 self.assertNotIn(b'<script type="module">', html)
                 self.assertNotIn(b'fetch("./levels.json"', html)
                 self.assertNotIn(b'https://', html)

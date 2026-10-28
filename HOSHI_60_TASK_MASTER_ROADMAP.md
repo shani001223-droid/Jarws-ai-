@@ -75,7 +75,7 @@
 - [x] **51** Develop original licensed assets and animation. Acceptance: implementation or evidence, passing tests, limitations recorded.
 - [x] **52** Write playable game code, levels and save flow. Acceptance: implementation or evidence, passing tests, limitations recorded.
 - [x] **53** Run automated gameplay and crash tests. Acceptance: implementation or evidence, passing tests, limitations recorded.
-- [ ] **54** Export and verify playable game APK/web release. Acceptance: implementation or evidence, passing tests, limitations recorded.
+- [x] **54** Export and verify playable game APK/web release. Acceptance: implementation or evidence, passing tests, limitations recorded.
 
 ## Phase 10 — Anime Studio
 - [ ] **55** Maintain series bible and 300-episode chronology. Acceptance: implementation or evidence, passing tests, limitations recorded.
@@ -351,3 +351,9 @@
 - Added `tests/game-studio-qa.e2e.cjs`: real Chromium full six-level button-play run at 320px, no external requests or non-consensual saves, corrupt-manifest disabled controls, denied-storage recovery and uncaught-exception checks. CI workflow runs both suites. An initial Playwright misuse of `.check()` on a deliberately auto-unchecked checkbox and a subsequent malformed test comment were diagnosed and fixed before acceptance.
 - **Full Python/backend, Node, Playwright Chromium passed** on code/test head `a0dfc40a7e3305bcfad65b0714d3e4803c1ffd93`: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40635360245 . **Docker/Uvicorn passed:** https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40635360247 . Coverage and limits: [HOSHI_GAME_QA.md](HOSHI_GAME_QA.md).
 - Task 53 is **source/test accepted only**. Canonical scoreboard **46/60 (76.7%)**. Task 54 offline export/APK, Task 06 physical Realme Note 50 QA, Task 11 real OpenJarvis and Flora owner approvals remain open. No production merge/deploy, external publishing, purchase, secrets or real trading.
+
+
+## Task 54 — deterministic offline web ZIP export (28 Oct 2026; source/Chromium verified)
+- The same branch/PR #29 now packages the existing six-level original Game Studio into a **real standalone offline HTML ZIP** using `scripts/package_hoshi_game.py`. The deterministic archive contains HTML, README and SHA-256 checksum; it uses a strict source-module allowlist and CSP, and makes no network request, account write or storage access without opt-in. No APK, public website, paid service or external media was created.
+- **Verified on code/test head `01679fbfc11de7a9ba818953ff2c96b2630231f4`:** [full Python/Node/Playwright CI 40640249175](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40640249175) passed, including actual packaged file:// Chromium offline tests at 320/390px, all six levels, no network requests, archive determinism/checksum/tamper rejection. GitHub Actions artifact `hoshi-star-trail-offline-web` (ID 12794714761) was uploaded and expires 11 November 2026. See `HOSHI_GAME_OFFLINE_RELEASE.md`. Backend/Android source unchanged; prior Docker backend [40635593829](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40635593829) passed.
+- **Acceptance boundary:** Task 54 checked for offline **web export**, not Android APK, physical Realme Note 50 QA, production deployment, user-approved genre, live OpenJarvis or Flora approvals. Task 06, Task 11, Tasks 43/45–48 and Tasks 55–60 remain unchecked. **Canonical scoreboard: 47/60 (78.3%), 13 pending.** No merge, deployment, purchases, external publishing, secrets or real trading.

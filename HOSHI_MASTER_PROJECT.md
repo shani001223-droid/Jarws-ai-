@@ -240,3 +240,21 @@ The **same** development branch and single draft PR #29 now contain deterministi
 - Existing branch and single open draft PR #29: `tests/hoshi-game-qa.test.cjs` verifies six shortest paths, 24,000 seeded state transitions, immutable/undo/restart/win invariants, strict storage and invalid-move failures. `tests/game-studio-qa.e2e.cjs` uses real Chromium to play all six levels and exercise malformed manifest and blocked localStorage without external requests. The existing CI workflow runs both suites.
 - After fixing two test-harness errors, **full Python/Node/Playwright CI passed**: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40635360245 ; **Docker/Uvicorn smoke passed**: https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40635360247 . Evidence: [HOSHI_GAME_QA.md](HOSHI_GAME_QA.md).
 - Sole canonical roadmap now records **46/60 source/test-verified tasks**. Task 54 still requires reviewed offline web/APK packaging; physical Realme Note 50 QA (Task 06), real OpenJarvis (Task 11), Flora media approvals and live production acceptance remain pending. This is not a production merge/deployment or proof of physical phone performance.
+
+
+## Task 54 — verified offline Game Studio ZIP export (28 October 2026)
+
+The same Hoshi development branch and existing draft PR #29 now include a
+deterministic, dependency-free offline **web** ZIP for the playable six-level
+Hoshi Star Trail. `scripts/package_hoshi_game.py` embeds the original Canvas
+modules and levels in a single HTML, adds an offline CSP, SHA-256 checks and
+a README; `tests/game-studio-offline.e2e.cjs` actually plays the generated
+file:// HTML with Chromium network disabled. [Full Python/Node/Playwright CI
+40640249175](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40640249175) passed; GitHub Actions uploaded review-only
+artifact `hoshi-star-trail-offline-web` (expires 11 November 2026).
+See [offline release evidence](HOSHI_GAME_OFFLINE_RELEASE.md). Only the
+canonical roadmap records **47/60 (78.3%)** verified tasks. This is **not**
+an APK, phone installation, production deployment, owner-approved genre or
+proof of Realme Note 50 performance. Tasks 06/11, Flora owner approvals and
+Anime Studio 55–60 remain pending. No production merge/deploy or account
+changes are authorized.

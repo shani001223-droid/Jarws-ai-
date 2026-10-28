@@ -1,12 +1,12 @@
 import { drawOriginalTile } from "./art.mjs";
-// Task 50: free, dependency-free HTML5 Canvas preview engine. NOT playable.
-export const ENGINE_VERSION = "canvas-preview-v1";
+// Tasks 50-52: original dependency-free HTML5 Canvas puzzle renderer.
+export const ENGINE_VERSION = "canvas-game-v2";
 const SIZE = 7;
 const TILES = new Set(["#", ".", "S", "C", "E"]);
 
 export function validateManifest(manifest) {
   if (!manifest || manifest.version !== "gdd-v1" || !Array.isArray(manifest.levels) ||
-      manifest.levels.length !== 6 || manifest.status !== "design_only_not_playable") {
+      manifest.levels.length !== 6 || manifest.status !== "playable_local_mvp") {
     throw new Error("invalid_game_manifest");
   }
   return manifest.levels.map((level, index) => {
@@ -38,11 +38,17 @@ export function validateManifest(manifest) {
   });
 }
 
-export function paintPreview(canvas, level, deviceScale = 1, phase = 0) {
+export function paintPreview(canvas, level, deviceScale = 1, phase = 0, gameState = null) {
   if (!canvas || typeof canvas.getContext !== "function" || !level ||
       !Array.isArray(level.rows) || level.rows.length !== SIZE ||
       !Number.isFinite(phase) || phase < 0 || phase > 1) {
     throw new Error("invalid_preview_target");
+  }
+  if (gameState && (gameState.level !== level || !Number.isInteger(gameState.x) ||
+      !Number.isInteger(gameState.y) || gameState.x < 1 || gameState.x > 5 ||
+      gameState.y < 1 || gameState.y > 5 || !Number.isInteger(gameState.collected) ||
+      gameState.collected < 0 || gameState.collected >= (1 << level.stars))) {
+    throw new Error("invalid_game_render_state");
   }
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("canvas_unavailable");
@@ -56,11 +62,25 @@ export function paintPreview(canvas, level, deviceScale = 1, phase = 0) {
   const cell = width / SIZE;
   level.rows.forEach((row, y) => {
     for (let x = 0; x < SIZE; x++) {
-      const tile = row[x], px = x * cell, py = y * cell;
+      const original = row[x], px = x * cell, py = y * cell;
+      let tile = original;
+      if (original === "C" && gameState) {
+        let index = 0;
+        for (let sy = 0; sy <= y; sy++) {
+          for (let sx = 0; sx < SIZE; sx++) {
+            if (sy === y && sx >= x) break;
+            if (level.rows[sy][sx] === "C") index++;
+          }
+        }
+        if (gameState.collected & (1 << index)) tile = ".";
+      }
       ctx.fillStyle = tile === "#" ? "#203450" : "#101f35";
       ctx.fillRect(px + 1, py + 1, cell - 2, cell - 2);
       drawOriginalTile(ctx, tile, px, py, cell, phase);
     }
   });
-  return { width: canvas.width, height: canvas.height, playable: false };
+  if (gameState) {
+    drawOriginalTile(ctx, "S", gameState.x * cell, gameState.y * cell, cell, phase);
+  }
+  return { width: canvas.width, height: canvas.height, playable: Boolean(gameState) };
 }

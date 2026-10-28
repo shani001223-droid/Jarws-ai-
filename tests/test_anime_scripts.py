@@ -69,6 +69,25 @@ class PilotScriptTests(unittest.TestCase):
         self.assertFalse(any("http://" in line["text"] or "https://" in line["text"]
                              for scene in script["scenes"] for line in scene["dialogue"]))
 
+    def test_export_creates_json_without_overwriting(self):
+        import subprocess
+        import sys
+        import tempfile
+        from pathlib import Path
+        root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as folder:
+            target = Path(folder) / "pilot.json"
+            cmd = [sys.executable, "-m", "scripts.export_hoshi_anime_pilot", "--out", str(target)]
+            first = subprocess.run(cmd, cwd=root, capture_output=True, text=True, timeout=12)
+            self.assertEqual(first.returncode, 0, first.stderr)
+            data = json.loads(target.read_text(encoding="utf-8"))
+            self.assertEqual(data["sha256"], pilot_script()["sha256"])
+            self.assertFalse(data["human_reviewed"])
+            before = target.read_bytes()
+            second = subprocess.run(cmd, cwd=root, capture_output=True, text=True, timeout=12)
+            self.assertNotEqual(second.returncode, 0)
+            self.assertEqual(target.read_bytes(), before)
+
 
 if __name__ == "__main__":
     unittest.main()

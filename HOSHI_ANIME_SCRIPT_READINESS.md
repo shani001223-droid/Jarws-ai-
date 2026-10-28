@@ -1,10 +1,10 @@
 # HOSHI Anime Studio — Task 56 script-readiness QA (partial)
 
-**Private, unreviewed and non-production.** This is an offline audit of the existing EP001, EP002, EP003, EP004 and EP005 authored Roman Urdu editorial drafts. It is not another anime project, an episode script, a recording, a rendered video or an owner approval.
+**Private, unreviewed and non-production.** This is an offline audit of the existing EP001, EP002, EP003, EP004, EP005 and EP006 authored Roman Urdu editorial drafts. It is not another anime project, an episode script, a recording, a rendered video or an owner approval.
 
-`cloud_backend/anime_script_readiness.py` validates each original draft against its immutable locally authored source, links the Task 55 outline revision and EP001→EP002→EP003→EP004→EP005 hashes, counts dialogue turns and whitespace-separated words, and reports each episode's proposed 1,800-second scene slots. A clearly labelled **illustrative** 120 words/minute dialogue-only calculation makes the difference between planned screen time and actual authored dialogue visible. It cannot measure performance, silence, acting, action, scene transitions or natural Urdu delivery, and it must not be used to claim a 30-minute screenplay.
+`cloud_backend/anime_script_readiness.py` validates each original draft against its immutable locally authored source, links the Task 55 outline revision and EP001→EP002→EP003→EP004→EP005→EP006 hashes, counts dialogue turns and whitespace-separated words, and reports each episode's proposed 1,800-second scene slots. A clearly labelled **illustrative** 120 words/minute dialogue-only calculation makes the difference between planned screen time and actual authored dialogue visible. It cannot measure performance, silence, acting, action, scene transitions or natural Urdu delivery, and it must not be used to claim a 30-minute screenplay.
 
-Every episode remains `human_reviewed=false`, `approved=false`, `verified_30_minute_screenplay=false`, `production_ready=false`. Required blockers: human Roman Urdu editorial review, measured table read and scene/action pacing, owner screenplay approval, and cast/voice recording consent and rights. Remaining individual scripts: 295. No false claims of voice assets, audio, media or production.
+Every episode remains `human_reviewed=false`, `approved=false`, `verified_30_minute_screenplay=false`, `production_ready=false`. Required blockers: human Roman Urdu editorial review, measured table read and scene/action pacing, owner screenplay approval, and cast/voice recording consent and rights. Remaining individual scripts: 294. No false claims of voice assets, audio, media or production.
 
 Run: `python -m unittest tests.test_anime_script_readiness -v`
 

@@ -67,6 +67,7 @@ async function main() {
       assert.equal(await page.locator("#level option[value=2]").isEnabled(),true);
       assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem("hoshi-star-trail-progress-v1")).highest_unlocked),2);
       await page.locator("#level").selectOption("2");
+      await page.locator("#board").click();
       await page.keyboard.press("ArrowDown");
       assert.match(await page.locator("#status").innerText(),/1 moves/);
       await page.locator("#pause").click();

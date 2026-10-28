@@ -1,3 +1,4 @@
+import { drawOriginalTile } from "./art.mjs";
 // Task 50: free, dependency-free HTML5 Canvas preview engine. NOT playable.
 export const ENGINE_VERSION = "canvas-preview-v1";
 const SIZE = 7;
@@ -37,22 +38,10 @@ export function validateManifest(manifest) {
   });
 }
 
-function star(ctx, cx, cy, radius) {
-  ctx.beginPath();
-  for (let point = 0; point < 10; point++) {
-    const angle = -Math.PI / 2 + point * Math.PI / 5;
-    const r = point % 2 ? radius * 0.46 : radius;
-    const x = cx + Math.cos(angle) * r, y = cy + Math.sin(angle) * r;
-    if (point === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
-  }
-  ctx.closePath();
-  ctx.fill();
-}
-
-export function paintPreview(canvas, level, deviceScale = 1) {
+export function paintPreview(canvas, level, deviceScale = 1, phase = 0) {
   if (!canvas || typeof canvas.getContext !== "function" || !level ||
-      !Array.isArray(level.rows) || level.rows.length !== SIZE) {
+      !Array.isArray(level.rows) || level.rows.length !== SIZE ||
+      !Number.isFinite(phase) || phase < 0 || phase > 1) {
     throw new Error("invalid_preview_target");
   }
   const ctx = canvas.getContext("2d");
@@ -70,15 +59,7 @@ export function paintPreview(canvas, level, deviceScale = 1) {
       const tile = row[x], px = x * cell, py = y * cell;
       ctx.fillStyle = tile === "#" ? "#203450" : "#101f35";
       ctx.fillRect(px + 1, py + 1, cell - 2, cell - 2);
-      if (tile === "S" || tile === "E") {
-        ctx.fillStyle = tile === "S" ? "#73dcff" : "#b2f5d4";
-        ctx.beginPath();
-        ctx.arc(px + cell / 2, py + cell / 2, cell * 0.24, 0, Math.PI * 2);
-        ctx.fill();
-      } else if (tile === "C") {
-        ctx.fillStyle = "#ffe7a0";
-        star(ctx, px + cell / 2, py + cell / 2, cell * 0.27);
-      }
+      drawOriginalTile(ctx, tile, px, py, cell, phase);
     }
   });
   return { width: canvas.width, height: canvas.height, playable: false };

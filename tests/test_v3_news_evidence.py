@@ -56,4 +56,40 @@ class V3NewsTests(unittest.TestCase):
             with self.assertRaises(AssertionError):f.check_receipt(p)
 
 
+class V3ShockTests(unittest.TestCase):
+    def test_later_certification_or_register_text_is_not_an_earlier_feature(self):
+        p=receipt();f.check_receipt(p)
+        a,b,c=p['shock_cases']
+        self.assertFalse(a['diagnostic']['source_document_postdates_observation_window'])
+        self.assertTrue(b['diagnostic']['source_document_postdates_observation_window'])
+        self.assertTrue(c['diagnostic']['source_document_postdates_observation_window'])
+        self.assertEqual(b['event']['document_date'],'2018-01-09')
+        self.assertEqual(b['event']['event_date'],'2016-11-08')
+
+    def test_actual_event_windows_have_different_descriptive_yield_directions(self):
+        p=receipt();f.check_receipt(p);a,b,c=p['shock_cases']
+        self.assertEqual(a['diagnostic']['rates']['DGS2']['change_basis_points'],-27)
+        self.assertEqual(b['diagnostic']['rates']['DGS10']['change_basis_points'],32)
+        self.assertEqual(c['diagnostic']['rates']['DGS10']['change_basis_points'],-16)
+
+    def test_unknown_first_news_clock_and_unestimated_causality_cannot_create_signal(self):
+        p=receipt();f.check_receipt(p)
+        for e in p['shock_cases']:
+            d=e['diagnostic']
+            for key in ('first_news_time_and_network_arrival','pre_event_probability_or_consensus','causal_return_or_instantaneous_price_response','win_probability'):
+                self.assertIsNone(d[key])
+            self.assertFalse(d['later_document_is_point_in_time_feature'])
+            self.assertEqual(d['decision'],'WAIT');self.assertFalse(d['orders_enabled'])
+
+    def test_relabelled_event_late_source_and_forged_action_rejected(self):
+        for kind in ('date','document','source','summary','duplicate'):
+            p=receipt();e=p['shock_cases'][1]
+            if kind=='date':e['event']['event_date']='2016-11-09'
+            elif kind=='document':e['event']['document_date']='2016-11-08'
+            elif kind=='source':e['event']['source_url']='https://example.org/certification'
+            elif kind=='summary':e['diagnostic']['decision']='SHORT'
+            else:p['shock_cases'][1]=deepcopy(p['shock_cases'][0])
+            with self.assertRaises(AssertionError):f.check_receipt(p)
+
+
 if __name__=='__main__':unittest.main()

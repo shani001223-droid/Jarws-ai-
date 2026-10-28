@@ -1227,7 +1227,61 @@
     },
     {
       "path": "knowledge_base/11_NEWS_TRADING/war_elections_and_policy_shocks.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2074,
+      "sha256": "c99f9b4da92ec1b72d6d317778f2cb7065b7a23f1cab95de67893c5e28adfa7b",
+      "source_review": {
+        "status": "checked-primary-event-documents-and-actual-daily-yield-captures",
+        "primary_sources": [
+          {
+            "url": "https://ukraine.un.org/en/173250-statement-secretary-general-%E2%80%93-ukraine",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.fec.gov/resources/cms-content/documents/federalelections2016.pdf",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.fec.gov/updates/election-results-publication-now-available-2018/",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.govinfo.gov/content/pkg/FR-2025-04-07/html/2025-06063.htm",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.govinfo.gov/app/details/DCPD-202500425",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://fred.stlouisfed.org/series/DGS2",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://fred.stlouisfed.org/series/DGS10",
+            "checked": "2026-10-28"
+          }
+        ],
+        "limitations": [
+          "War date-only UN statement, US election calendar date and tariff signing date are not verified first-news or ingestion timestamps.",
+          "FEC compilation notice 9 January 2018 and Federal Register publication 7 April 2025 postdate their selected market windows; neither is backdated as a point-in-time feature. Earlier contemporaneous sources may exist but were not captured here.",
+          "Daily H.15 observations are descriptive later-retrieved context, not causal/intraday returns, tradable bond prices, current tariff law, full political-event coverage or calibrated signals. All decisions WAIT/null."
+        ],
+        "evidence_method": "hoshi-retrospective-shock-date-and-daily-yield-context-1",
+        "reviewed_on": "2026-10-28",
+        "resolved_at_asia_karachi": "2026-10-28T12:17:09.256099+05:00",
+        "fec_compilation_capture": {
+          "url": "https://www.fec.gov/resources/cms-content/documents/federalelections2016.pdf",
+          "http_status": 200,
+          "bytes": 11855912,
+          "sha256": "d5b10acb1c34ca0c5d4a88a7c0f6943b3bf4118db87dd05d7a1b7b790a2e4841",
+          "title_page_edition": "December 2017",
+          "availability_notice_date": "2018-01-09",
+          "earliest_publication_or_election_night_receipt_verified": false,
+          "full_pdf_redistributed": false
+        }
+      }
     },
     {
       "path": "knowledge_base/11_NEWS_TRADING/event_study_historical_reactions.md",
@@ -1307,7 +1361,7 @@
     {
       "path": "knowledge_base/11_NEWS_TRADING/news_events_20261028.json",
       "kind": "news_events",
-      "sha256": "3586f0a22697c23c6f297dbf9c381e018b5447754365896bb5d215f59cd2eff1"
+      "sha256": "08468846c31c667848b720c3fdae286add2699ee7266ea69107347491578e964"
     }
   ],
   "scope_history": [

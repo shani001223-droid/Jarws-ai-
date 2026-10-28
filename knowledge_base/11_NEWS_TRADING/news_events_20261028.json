@@ -262,5 +262,220 @@
       "causal announcement return",
       "win probability"
     ]
-  }
+  },
+  "shock_cases": [
+    {
+      "id": "ukraine_2022",
+      "event": {
+        "kind": "war",
+        "event_date": "2022-02-24",
+        "document_date": "2022-02-24",
+        "source_url": "https://ukraine.un.org/en/173250-statement-secretary-general-%E2%80%93-ukraine",
+        "date_scope": "Date shown by UN Ukraine statement; no exact first-news timestamp or UTC conversion claimed."
+      },
+      "captures": {
+        "DGS2": {
+          "series": "DGS2",
+          "requested_start": "2022-02-23",
+          "requested_end": "2022-03-01",
+          "request_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2022-02-23&coed=2022-03-01",
+          "http_status": 200,
+          "response_body": "observation_date,DGS2\n2022-02-23,1.58\n2022-02-24,1.54\n2022-02-25,1.55\n2022-02-28,1.44\n2022-03-01,1.31\n",
+          "source_sha256": "bd8d4feea734057e3649bbecf74180579fd97fd288d76d1c81fdfb6d3814cb87",
+          "captured_at_utc": "2026-10-28T07:10:27.535266+00:00"
+        },
+        "DGS10": {
+          "series": "DGS10",
+          "requested_start": "2022-02-23",
+          "requested_end": "2022-03-01",
+          "request_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10&cosd=2022-02-23&coed=2022-03-01",
+          "http_status": 200,
+          "response_body": "observation_date,DGS10\n2022-02-23,1.99\n2022-02-24,1.96\n2022-02-25,1.97\n2022-02-28,1.83\n2022-03-01,1.72\n",
+          "source_sha256": "6586475769ac586eb99be27173075334a47089e60ff3837c6321248c74a0df2d",
+          "captured_at_utc": "2026-10-28T07:10:32.205364+00:00"
+        }
+      },
+      "diagnostic": {
+        "method": "hoshi-retrospective-shock-date-and-daily-yield-context-1",
+        "event": {
+          "kind": "war",
+          "event_date": "2022-02-24",
+          "document_date": "2022-02-24",
+          "source_url": "https://ukraine.un.org/en/173250-statement-secretary-general-%E2%80%93-ukraine",
+          "date_scope": "Date shown by UN Ukraine statement; no exact first-news timestamp or UTC conversion claimed."
+        },
+        "rates": {
+          "DGS2": {
+            "start_date": "2022-02-23",
+            "end_date": "2022-03-01",
+            "start_percent": "1.58",
+            "end_percent": "1.31",
+            "change_basis_points": -27.0,
+            "bond_price_return": null,
+            "original_publication_and_arrival_times": null
+          },
+          "DGS10": {
+            "start_date": "2022-02-23",
+            "end_date": "2022-03-01",
+            "start_percent": "1.99",
+            "end_percent": "1.72",
+            "change_basis_points": -27.0,
+            "bond_price_return": null,
+            "original_publication_and_arrival_times": null
+          }
+        },
+        "source_document_postdates_observation_window": false,
+        "first_news_time_and_network_arrival": null,
+        "pre_event_probability_or_consensus": null,
+        "causal_return_or_instantaneous_price_response": null,
+        "original_rate_vintage_verified": false,
+        "later_document_is_point_in_time_feature": false,
+        "decision": "WAIT",
+        "win_probability": null,
+        "orders_enabled": false
+      }
+    },
+    {
+      "id": "election_2016",
+      "event": {
+        "kind": "election",
+        "event_date": "2016-11-08",
+        "document_date": "2018-01-09",
+        "source_url": "https://www.fec.gov/updates/election-results-publication-now-available-2018/",
+        "date_scope": "US general-election calendar date; document date is the later FEC compilation notice, not election-night information arrival."
+      },
+      "captures": {
+        "DGS2": {
+          "series": "DGS2",
+          "requested_start": "2016-11-07",
+          "requested_end": "2016-11-10",
+          "request_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2016-11-07&coed=2016-11-10",
+          "http_status": 200,
+          "response_body": "observation_date,DGS2\n2016-11-07,0.82\n2016-11-08,0.87\n2016-11-09,0.90\n2016-11-10,0.92\n",
+          "source_sha256": "4817da085cb8b63c911a88e091c4fea610f4e33f23f69f1993794ab73f448ffb",
+          "captured_at_utc": "2026-10-28T07:10:36.008592+00:00"
+        },
+        "DGS10": {
+          "series": "DGS10",
+          "requested_start": "2016-11-07",
+          "requested_end": "2016-11-10",
+          "request_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10&cosd=2016-11-07&coed=2016-11-10",
+          "http_status": 200,
+          "response_body": "observation_date,DGS10\n2016-11-07,1.83\n2016-11-08,1.88\n2016-11-09,2.07\n2016-11-10,2.15\n",
+          "source_sha256": "3ba5cc0da5cdad420eae59265755bf76c8b70a776b85a511c8bf4223e919d2c4",
+          "captured_at_utc": "2026-10-28T07:10:39.948474+00:00"
+        }
+      },
+      "diagnostic": {
+        "method": "hoshi-retrospective-shock-date-and-daily-yield-context-1",
+        "event": {
+          "kind": "election",
+          "event_date": "2016-11-08",
+          "document_date": "2018-01-09",
+          "source_url": "https://www.fec.gov/updates/election-results-publication-now-available-2018/",
+          "date_scope": "US general-election calendar date; document date is the later FEC compilation notice, not election-night information arrival."
+        },
+        "rates": {
+          "DGS2": {
+            "start_date": "2016-11-07",
+            "end_date": "2016-11-10",
+            "start_percent": "0.82",
+            "end_percent": "0.92",
+            "change_basis_points": 10.0,
+            "bond_price_return": null,
+            "original_publication_and_arrival_times": null
+          },
+          "DGS10": {
+            "start_date": "2016-11-07",
+            "end_date": "2016-11-10",
+            "start_percent": "1.83",
+            "end_percent": "2.15",
+            "change_basis_points": 32.0,
+            "bond_price_return": null,
+            "original_publication_and_arrival_times": null
+          }
+        },
+        "source_document_postdates_observation_window": true,
+        "first_news_time_and_network_arrival": null,
+        "pre_event_probability_or_consensus": null,
+        "causal_return_or_instantaneous_price_response": null,
+        "original_rate_vintage_verified": false,
+        "later_document_is_point_in_time_feature": false,
+        "decision": "WAIT",
+        "win_probability": null,
+        "orders_enabled": false
+      }
+    },
+    {
+      "id": "tariffs_2025",
+      "event": {
+        "kind": "policy",
+        "event_date": "2025-04-02",
+        "document_date": "2025-04-07",
+        "source_url": "https://www.govinfo.gov/content/pkg/FR-2025-04-07/html/2025-06063.htm",
+        "date_scope": "EO 14257 signing date versus Federal Register publication; no exact first-announcement or ingestion timestamp claimed."
+      },
+      "captures": {
+        "DGS2": {
+          "series": "DGS2",
+          "requested_start": "2025-04-01",
+          "requested_end": "2025-04-04",
+          "request_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2025-04-01&coed=2025-04-04",
+          "http_status": 200,
+          "response_body": "observation_date,DGS2\n2025-04-01,3.87\n2025-04-02,3.91\n2025-04-03,3.71\n2025-04-04,3.68\n",
+          "source_sha256": "9f1e7fd0accc17baa814489fc198e3d2227d0360266b50275038d01889efdeaa",
+          "captured_at_utc": "2026-10-28T07:10:43.469547+00:00"
+        },
+        "DGS10": {
+          "series": "DGS10",
+          "requested_start": "2025-04-01",
+          "requested_end": "2025-04-04",
+          "request_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10&cosd=2025-04-01&coed=2025-04-04",
+          "http_status": 200,
+          "response_body": "observation_date,DGS10\n2025-04-01,4.17\n2025-04-02,4.20\n2025-04-03,4.06\n2025-04-04,4.01\n",
+          "source_sha256": "5ad87f1811529f6d0f89d3305d2cf9549f12f96ee55cf68c7010fb2051b58f9e",
+          "captured_at_utc": "2026-10-28T07:10:47.457673+00:00"
+        }
+      },
+      "diagnostic": {
+        "method": "hoshi-retrospective-shock-date-and-daily-yield-context-1",
+        "event": {
+          "kind": "policy",
+          "event_date": "2025-04-02",
+          "document_date": "2025-04-07",
+          "source_url": "https://www.govinfo.gov/content/pkg/FR-2025-04-07/html/2025-06063.htm",
+          "date_scope": "EO 14257 signing date versus Federal Register publication; no exact first-announcement or ingestion timestamp claimed."
+        },
+        "rates": {
+          "DGS2": {
+            "start_date": "2025-04-01",
+            "end_date": "2025-04-04",
+            "start_percent": "3.87",
+            "end_percent": "3.68",
+            "change_basis_points": -19.0,
+            "bond_price_return": null,
+            "original_publication_and_arrival_times": null
+          },
+          "DGS10": {
+            "start_date": "2025-04-01",
+            "end_date": "2025-04-04",
+            "start_percent": "4.17",
+            "end_percent": "4.01",
+            "change_basis_points": -16.0,
+            "bond_price_return": null,
+            "original_publication_and_arrival_times": null
+          }
+        },
+        "source_document_postdates_observation_window": true,
+        "first_news_time_and_network_arrival": null,
+        "pre_event_probability_or_consensus": null,
+        "causal_return_or_instantaneous_price_response": null,
+        "original_rate_vintage_verified": false,
+        "later_document_is_point_in_time_feature": false,
+        "decision": "WAIT",
+        "win_probability": null,
+        "orders_enabled": false
+      }
+    }
+  ]
 }

@@ -20,6 +20,7 @@ def main() -> int:
     parser.add_argument("--caption", action="append", required=True,
                         help="Hindi/Urdu/Roman Urdu single-line subtitle (exactly 3)")
     parser.add_argument("--out", required=True, help="New local directory; must not exist")
+    parser.add_argument("--storyboard-json", help="Optional local 3-shot v1 plan; must match images, captions and moves")
     parser.add_argument("--camera-move", action="append", choices=("static", "push_in", "pan_left", "pan_right"),
                         help="Optional 2D still camera move, once per shot (exactly 3)")
     parser.add_argument("--image-rights-attested", action="store_true",
@@ -39,9 +40,18 @@ def main() -> int:
             if not path.is_file() or not 100 <= path.stat().st_size <= MAX_IMAGE_BYTES:
                 raise AnimePilotError("Local still missing or too large.")
             images.append(path.read_bytes())
+        storyboard = None
+        if args.storyboard_json:
+            plan_path = Path(args.storyboard_json)
+            if not plan_path.is_file() or not 1 <= plan_path.stat().st_size <= 12000:
+                raise AnimePilotError("Local storyboard JSON missing or too large.")
+            try:
+                storyboard = json.loads(plan_path.read_text(encoding="utf-8"))
+            except (UnicodeError, json.JSONDecodeError):
+                raise AnimePilotError("Invalid UTF-8 storyboard JSON.") from None
         output = render_private_animatic(
             images, args.caption, image_rights_attested=True,
-            camera_moves=args.camera_move)
+            camera_moves=args.camera_move, storyboard_handoff=storyboard)
         destination = Path(args.out)
         destination.mkdir(parents=False, exist_ok=False)
         try:

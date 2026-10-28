@@ -95,7 +95,12 @@ async function main() {
     const deniedPage=await denied.newPage(),deniedErrors=[];
     deniedPage.on("pageerror",e=>deniedErrors.push(e.message));
     await deniedPage.goto(origin+"/index.html",{waitUntil:"networkidle"});
-    // The app intentionally unchecks immediately when storage is denied; Playwright.check()\n    // expects a lasting checked state and would misclassify this safe recovery as a crash.\n    await deniedPage.locator("#save").click();
+    // Inject exactly one storage-denied opt-in change event. The UI intentionally
+    // unchecks immediately, so Playwright.check() cannot be used here.
+    await deniedPage.locator("#save").evaluate(input=>{
+      input.checked=true;
+      input.dispatchEvent(new Event("change",{bubbles:true}));
+    });
     assert.equal(await deniedPage.locator("#save").isChecked(),false);
     assert.match(await deniedPage.locator("#status").innerText(),/storage unavailable/i);
     assert.equal(await deniedPage.locator('[data-dir="right"]').isEnabled(),true,"game stays playable");

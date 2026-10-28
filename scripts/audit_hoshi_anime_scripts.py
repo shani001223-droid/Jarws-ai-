@@ -9,7 +9,7 @@ from cloud_backend.anime_script_readiness import build_readiness_report
 
 
 def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(description="Audit Hoshi EP001-EP003 draft readiness")
+    parser = argparse.ArgumentParser(description="Audit Hoshi EP001-EP005 draft readiness")
     parser.add_argument("--out", help="New local JSON path; never overwrite")
     args = parser.parse_args(argv)
     payload = json.dumps(build_readiness_report(), ensure_ascii=False, indent=2) + "\n"

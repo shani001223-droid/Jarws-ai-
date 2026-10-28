@@ -302,7 +302,7 @@ def validate_episode_twelve(script: dict) -> None:
 def episode_twelve_script() -> dict:
     """Return a fresh EP012 draft linked to immutable EP011 and series outline."""
     manifest = series_manifest()
-    episode = manifest["episodes"][10]
+    episode = manifest["episodes"][11]
     draft = {
         "episode_id": EPISODE_ID,
         "previous_episode_id": "EP011",

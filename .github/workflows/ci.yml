@@ -99,6 +99,10 @@ jobs:
         run: node --test tests/hoshi-annotated-chart.test.cjs
       - name: Test offline Game Studio Canvas preview engine
         run: node --test tests/hoshi-game-engine.test.cjs
+      - name: Test Task 52 playable game rules and opt-in saves
+        run: node --test tests/hoshi-gameplay.test.cjs
+      - name: Check offline Game Studio gameplay syntax
+        run: node --check game-studio/gameplay.mjs
       - name: Check offline Game Studio engine JavaScript syntax
         run: node --check game-studio/engine.mjs
       - name: Check annotated chart JavaScript syntax

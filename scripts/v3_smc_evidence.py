@@ -238,6 +238,63 @@ def sequence_case(bars, confirmation_date, direction):
         "strategy_pnl": None, "fill_known": False}}
 
 
+def sequence_study(bars):
+    """Exhaust all directional C decisions in one already-inspected capture.
+
+    This is a descriptive curriculum ledger, not independent strategy
+    evaluation. Preserve all formation rows, including rejected chains.
+    """
+    rows = []
+    qualified = eligible = invalid_before = no_retest = incomplete_chains = 0
+    for i in range(21, len(bars)):
+        for direction in ("long", "short"):
+            case = sequence_case(bars, utc_day(bars[i]["time"]), direction)
+            f, outcome = case["features"], case["outcome"]
+            if f["formation"] is None:
+                continue
+            q = f["price_sequence_qualified"]
+            status = outcome["retest_status"] if outcome else "incomplete"
+            qualified += q
+            eligible += q and status == "eligible_geometric_event_not_trade"
+            invalid_before += q and status == "invalidated_before_eligible_retest"
+            no_retest += q and status == "no_eligible_retest_in_window"
+            incomplete_chains += q and outcome is None
+            rows.append({"confirmation_date": f["confirmation"]["date"], "direction": direction,
+                         "known_at": f["known_at"], "origin_date": f["formation"]["origin"]["date"],
+                         "sweep_date": f["sweep"]["event"]["date"] if f["sweep"] else None,
+                         "break_label": f["break"]["label"], "price_sequence_qualified": q,
+                         "missing_price_conditions": f["missing_price_conditions"],
+                         "outcome_status": case["outcome_status"], "retest_status": status,
+                         "outcome_available_at": outcome["available_at"] if outcome else None,
+                         "eligible_retest_date": outcome["first_eligible_geometric_retest"]["date"]
+                            if outcome and outcome["first_eligible_geometric_retest"] else None,
+                         "invalidation_date": outcome["first_invalidation"]["bar"]["date"]
+                            if outcome and outcome["first_invalidation"] else None,
+                         "raw_five_bar_close_change_pct": (outcome["path"][-1]["close"]/f["confirmation"]["close"]-1)*100
+                            if outcome else None,
+                         "decision": f["decision"]})
+    overlaps = sum(0 < b["known_at"]-a["known_at"] < 5*86_400_000
+                   for i,a in enumerate(rows) for b in rows[i+1:])
+    origins = {}
+    for row in rows:
+        origins.setdefault((row["origin_date"], row["direction"]), []).append(row["confirmation_date"])
+    duplicate_origins = [{"origin_date": date, "direction": direction, "confirmation_dates": dates}
+                         for (date,direction),dates in sorted(origins.items()) if len(dates) > 1]
+    return {"method": "hoshi-exploratory-sequence-ledger-1", "sequence_method": "hoshi-sweep-break-gap-audit-1",
+            "window_start": utc_day(bars[0]["time"]), "window_end": utc_day(bars[-1]["time"]),
+            "source_bars": len(bars), "warmup_bars": 21,
+            "directional_decisions": max(0,len(bars)-21)*2,
+            "decisions_with_complete_five_bar_horizon": max(0,len(bars)-26)*2,
+            "decisions_with_incomplete_horizon": min(5,max(0,len(bars)-21))*2,
+            "formation_count": len(rows), "qualified_price_chains": qualified,
+            "eligible_geometric_retest_chains": eligible, "invalid_before_eligible_retest_chains": invalid_before,
+            "no_eligible_retest_chains": no_retest, "incomplete_qualified_chains": incomplete_chains,
+            "formation_horizon_overlap_pairs": overlaps, "duplicate_origin_groups": duplicate_origins,
+            "formation_rows": rows, "all_decisions_wait": True, "orders_submitted": 0,
+            "simulated_trade_count": None, "win_probability": None, "strategy_pnl": None,
+            "drawdown": None, "costs_measured": False, "independent_holdout": False}
+
+
 def check_receipt(payload, root):
     assert payload["schema_version"] == "hoshi-v3-smc-evidence-1"
     assert payload["source_receipt"] == SOURCE
@@ -256,4 +313,6 @@ def check_receipt(payload, root):
         f = entry["case"]["features"]
         assert sequence_case(windows[entry["source_window_sha256"]],
                              f["confirmation"]["date"], f["direction"]) == entry["case"]
+    for entry in payload.get("sequence_studies", []):
+        assert sequence_study(windows[entry["source_window_sha256"]]) == entry["study"]
     return windows

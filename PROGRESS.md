@@ -9,8 +9,8 @@ entire branch was already deployed. Production V2 remains a separate release.
 
 ## Current measured progress
 
-**Day 1: completed 19 of 49 planned knowledge chapters — 38.78%; 30 chapters,
-61.22% of the declared curriculum, remain.**
+**Day 1: completed 20 of 49 planned knowledge chapters — 40.82%; 29 chapters,
+59.18% of the declared curriculum, remain.**
 
 The denominator is the versioned, expandable file manifest in
 `knowledge_base/manifest.json`. Scope revision 2 explicitly expands the initial
@@ -44,6 +44,7 @@ topics require an explicit manifest/progress revision, never silent omission.
 | `04_SMC_COMPLETE/bos_choch_and_displacement.md` | Source-checked; prior-confirmed first close-crosses, distinct displacement, consumed-reference recross suppression and three adverse historical paths; no probability or runtime detector claim |
 | `04_SMC_COMPLETE/premium_discount_and_dealing_ranges.md` | Source-checked; frozen before-open versus as-of-close and twenty-bar anchors, outside/invalid ranges, same-price label changes and three real dated comparisons |
 | `04_SMC_COMPLETE/smc_entry_models_and_invalidation.md` | Source-checked; ordered sweep/break/gap diagnostics, no-return, eligible geometry with missing strategy gates, and first-contact gap invalidation; all diagnostic decisions stay WAIT |
+| `04_SMC_COMPLETE/smc_evidence_and_counterexamples.md` | Source-checked; exhaustive bounded ledger with 1,096 directional decisions, 44 formations, eight price chains, two geometric retests and retained no-return/invalidation/adverse paths; not performance calibration |
 | Remaining curriculum documents | Pending; no empty placeholder chapters counted as complete |
 | Brain loader and runtime knowledge bundle | Pending — new source chapters are not yet consumed by Hoshi |
 | 40/20/20/20 history/liquidity/structure/global-flow engine | Pending — weights will mean evidence coverage, not an invented win probability |
@@ -115,6 +116,9 @@ topics require an explicit manifest/progress revision, never silent omission.
 
 
 - **28 October, Day 1:** completed `smc_entry_models_and_invalidation.md` (2182 substantive words) with three genuine dated BTCUSDT event chains. Original offline audit preserves strict sweep/B/C clocks, specific missing conditions, later-only retests and invalidation priority. Cases retain no return (2020), an eligible geometric retest without joint block/full-strategy evidence (2021), and first-contact gap invalidation while the block survives by close (2022). Every audit decision remains WAIT with null probability and unknown fills; this is not delivered runtime replay or full V2/V3 confluence. Three added event-order/missing-retest/corruption checks bring passing local evidence tests to 40. Prior [297eca2b](https://github.com/shani001223-droid/Jarws-ai-/commit/297eca2bcf4990b5caf727f6234d6337444cc616) passed [actual curriculum/evidence CI 40611884065](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40611884065). Curriculum: 19/49 (38.78%); next independent chapter is `smc_evidence_and_counterexamples.md`. Source-gap and runtime/release gates remain pending.
+
+
+- **28 October, Day 1:** completed `smc_evidence_and_counterexamples.md` (2033 substantive words). Exhaustive descriptive scans of the three already-inspected 2020/2021/2022 captures retain 1,096 directional decisions (30 incomplete horizons), 44 formations and eight price chains: two geometric retests, one invalidated before retest and five without an eligible retest. The 2020 window has zero geometric retests; this is not a zero-drawdown or profitable zero-trade backtest. Nine overlapping formation-horizon pairs, two reused-origin groups, rejected chains and adverse endpoints are disclosed. Every audit decision remains WAIT; simulated trades, PnL, drawdown and probability remain null, costs unmeasured and no independent holdout claimed. Three added exhaustive/zero-event/missing-tail tests bring passing local evidence regressions to 43. Prior [9132b3f6](https://github.com/shani001223-droid/Jarws-ai-/commit/9132b3f65a3ca5413355352895b0b9b6e692212c) passed [actual curriculum/evidence CI 40612391857](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40612391857). Curriculum: 20/49 (40.82%); four initial SMC chapters are source-checked, not every SMC concept. The mitigation/breaker original-lesson gap remains pending. Next independent declared chapter: `05_ICT_COMPLETE/ict_core_and_2022_models.md`; check original accessible primary material before making creator-specific claims. Runtime retrieval/weighted strategy, independent replay/evaluation and final release remain pending.
 
 ## Completion and release rules
 

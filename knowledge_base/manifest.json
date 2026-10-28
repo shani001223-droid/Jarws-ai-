@@ -163,7 +163,10 @@
     },
     {
       "path": "knowledge_base/04_SMC_COMPLETE/smc_evidence_and_counterexamples.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2033,
+      "sha256": "b49f5b4183b704ec2f787f7b9efec1e4fec8bff1c86b0393b8d57ea4399ad633"
     },
     {
       "path": "knowledge_base/05_ICT_COMPLETE/ict_core_and_2022_models.md",
@@ -311,7 +314,7 @@
     {
       "path": "knowledge_base/04_SMC_COMPLETE/smc_observations_20261028.json",
       "kind": "smc_cases",
-      "sha256": "61e5846d41fd159ce442a8e6d4bb255eaf39fe125efde23bcf9b2296abc51d5d"
+      "sha256": "c70d34723c16c5dc5e11f52cbaf680cfeed4dfb850a6b57db9ed8eeb924227fc"
     }
   ],
   "scope_history": [

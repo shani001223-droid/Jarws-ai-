@@ -1304,5 +1304,950 @@
         }
       }
     }
+  ],
+  "sequence_studies": [
+    {
+      "source_window_sha256": "0a8fd6b6cee125cb5de8a199f86c88a5d9dacd572070a2f0999852154f688fea",
+      "study": {
+        "method": "hoshi-exploratory-sequence-ledger-1",
+        "sequence_method": "hoshi-sweep-break-gap-audit-1",
+        "window_start": "2020-01-01",
+        "window_end": "2020-06-30",
+        "source_bars": 182,
+        "warmup_bars": 21,
+        "directional_decisions": 322,
+        "decisions_with_complete_five_bar_horizon": 312,
+        "decisions_with_incomplete_horizon": 10,
+        "formation_count": 17,
+        "qualified_price_chains": 2,
+        "eligible_geometric_retest_chains": 0,
+        "invalid_before_eligible_retest_chains": 0,
+        "no_eligible_retest_chains": 2,
+        "incomplete_qualified_chains": 0,
+        "formation_horizon_overlap_pairs": 5,
+        "duplicate_origin_groups": [
+          {
+            "origin_date": "2020-01-25",
+            "direction": "long",
+            "confirmation_dates": [
+              "2020-01-28",
+              "2020-01-29"
+            ]
+          },
+          {
+            "origin_date": "2020-02-23",
+            "direction": "short",
+            "confirmation_dates": [
+              "2020-02-26",
+              "2020-02-27"
+            ]
+          }
+        ],
+        "formation_rows": [
+          {
+            "confirmation_date": "2020-01-28",
+            "direction": "long",
+            "known_at": 1580255999999,
+            "origin_date": "2020-01-25",
+            "sweep_date": "2020-01-26",
+            "break_label": "choch_up",
+            "price_sequence_qualified": true,
+            "missing_price_conditions": [],
+            "outcome_status": "observed",
+            "retest_status": "no_eligible_retest_in_window",
+            "outcome_available_at": 1580687999999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": -0.4555050505589131,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2020-01-29",
+            "direction": "long",
+            "known_at": 1580342399999,
+            "origin_date": "2020-01-25",
+            "sweep_date": "2020-01-26",
+            "break_label": "no_new_close_break",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_fresh_prior_reference_close_break"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1580774399999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": -0.09987604189849453,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2020-02-12",
+            "direction": "long",
+            "known_at": 1581551999999,
+            "origin_date": "2020-02-10",
+            "sweep_date": null,
+            "break_label": "no_new_close_break",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_prior_three_bar_sweep_reclaim",
+              "no_fresh_prior_reference_close_break"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1581983999999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": -6.008448200060812,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2020-02-26",
+            "direction": "short",
+            "known_at": 1582761599999,
+            "origin_date": "2020-02-23",
+            "sweep_date": null,
+            "break_label": "unclassified_down_break",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_prior_three_bar_sweep_reclaim"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1583193599999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": 1.4796391679235077,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2020-02-27",
+            "direction": "short",
+            "known_at": 1582847999999,
+            "origin_date": "2020-02-23",
+            "sweep_date": null,
+            "break_label": "no_new_close_break",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_prior_three_bar_sweep_reclaim",
+              "no_fresh_prior_reference_close_break"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1583279999999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": -0.7156125718417616,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2020-03-09",
+            "direction": "short",
+            "known_at": 1583798399999,
+            "origin_date": "2020-03-06",
+            "sweep_date": "2020-03-07",
+            "break_label": "bos_down",
+            "price_sequence_qualified": true,
+            "missing_price_conditions": [],
+            "outcome_status": "observed",
+            "retest_status": "no_eligible_retest_in_window",
+            "outcome_available_at": 1584230399999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": -34.77749319976241,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2020-03-13",
+            "direction": "short",
+            "known_at": 1584143999999,
+            "origin_date": "2020-03-11",
+            "sweep_date": null,
+            "break_label": "no_new_close_break",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_prior_three_bar_sweep_reclaim",
+              "no_fresh_prior_reference_close_break"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1584575999999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": -3.3262825798587525,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2020-03-20",
+            "direction": "long",
+            "known_at": 1584748799999,
+            "origin_date": "2020-03-16",
+            "sweep_date": null,
+            "break_label": "no_new_close_break",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_prior_three_bar_sweep_reclaim",
+              "no_fresh_prior_reference_close_break"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1585180799999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": 7.555457479914196,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2020-04-07",
+            "direction": "long",
+            "known_at": 1586303999999,
+            "origin_date": "2020-04-05",
+            "sweep_date": null,
+            "break_label": "bos_up",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_prior_three_bar_sweep_reclaim"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1586735999999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": -4.078323598228229,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2020-04-24",
+            "direction": "long",
+            "known_at": 1587772799999,
+            "origin_date": "2020-04-20",
+            "sweep_date": null,
+            "break_label": "unclassified_up_break",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_prior_three_bar_sweep_reclaim"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1588204799999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": 16.969620253164553,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2020-04-30",
+            "direction": "long",
+            "known_at": 1588291199999,
+            "origin_date": "2020-04-28",
+            "sweep_date": null,
+            "break_label": "no_new_close_break",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_prior_three_bar_sweep_reclaim",
+              "no_fresh_prior_reference_close_break"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1588723199999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": 4.661600928074239,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2020-05-08",
+            "direction": "long",
+            "known_at": 1588982399999,
+            "origin_date": "2020-05-04",
+            "sweep_date": null,
+            "break_label": "unclassified_up_break",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_prior_three_bar_sweep_reclaim"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1589414399999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": -5.006525503545401,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2020-05-11",
+            "direction": "short",
+            "known_at": 1589241599999,
+            "origin_date": "2020-05-07",
+            "sweep_date": null,
+            "break_label": "no_new_close_break",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_prior_three_bar_sweep_reclaim",
+              "no_fresh_prior_reference_close_break"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1589673599999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": 9.574818490174653,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2020-05-22",
+            "direction": "short",
+            "known_at": 1590191999999,
+            "origin_date": "2020-05-19",
+            "sweep_date": "2020-05-18",
+            "break_label": "no_new_close_break",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_fresh_prior_reference_close_break"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1590623999999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": 0.37153762268264945,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2020-05-25",
+            "direction": "short",
+            "known_at": 1590451199999,
+            "origin_date": "2020-05-23",
+            "sweep_date": null,
+            "break_label": "choch_down",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_prior_three_bar_sweep_reclaim"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1590883199999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": 8.958861168381006,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2020-06-12",
+            "direction": "short",
+            "known_at": 1592006399999,
+            "origin_date": "2020-06-10",
+            "sweep_date": null,
+            "break_label": "choch_down",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_prior_three_bar_sweep_reclaim"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1592438399999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": 0.00010565095249770451,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2020-06-23",
+            "direction": "long",
+            "known_at": 1592956799999,
+            "origin_date": "2020-06-21",
+            "sweep_date": null,
+            "break_label": "choch_up",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_prior_three_bar_sweep_reclaim"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1593388799999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": -5.2835928514507575,
+            "decision": "WAIT"
+          }
+        ],
+        "all_decisions_wait": true,
+        "orders_submitted": 0,
+        "simulated_trade_count": null,
+        "win_probability": null,
+        "strategy_pnl": null,
+        "drawdown": null,
+        "costs_measured": false,
+        "independent_holdout": false
+      }
+    },
+    {
+      "source_window_sha256": "6d533be481380a79e5ee6ab85436cfa6bac8c5b50ae6ff2080b433901610c1ee",
+      "study": {
+        "method": "hoshi-exploratory-sequence-ledger-1",
+        "sequence_method": "hoshi-sweep-break-gap-audit-1",
+        "window_start": "2021-03-01",
+        "window_end": "2021-08-31",
+        "source_bars": 184,
+        "warmup_bars": 21,
+        "directional_decisions": 326,
+        "decisions_with_complete_five_bar_horizon": 316,
+        "decisions_with_incomplete_horizon": 10,
+        "formation_count": 10,
+        "qualified_price_chains": 3,
+        "eligible_geometric_retest_chains": 1,
+        "invalid_before_eligible_retest_chains": 0,
+        "no_eligible_retest_chains": 2,
+        "incomplete_qualified_chains": 0,
+        "formation_horizon_overlap_pairs": 0,
+        "duplicate_origin_groups": [],
+        "formation_rows": [
+          {
+            "confirmation_date": "2021-04-14",
+            "direction": "long",
+            "known_at": 1618444799999,
+            "origin_date": "2021-04-12",
+            "sweep_date": null,
+            "break_label": "unclassified_up_break",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_prior_three_bar_sweep_reclaim"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1618876799999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": -11.636665648552336,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2021-04-19",
+            "direction": "short",
+            "known_at": 1618876799999,
+            "origin_date": "2021-04-15",
+            "sweep_date": "2021-04-16",
+            "break_label": "no_new_close_break",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_fresh_prior_reference_close_break"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1619308799999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": -10.039519610074144,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2021-05-01",
+            "direction": "long",
+            "known_at": 1619913599999,
+            "origin_date": "2021-04-29",
+            "sweep_date": null,
+            "break_label": "no_new_close_break",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_prior_three_bar_sweep_reclaim",
+              "no_fresh_prior_reference_close_break"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1620345599999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": -2.4337041441084284,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2021-05-13",
+            "direction": "short",
+            "known_at": 1620950399999,
+            "origin_date": "2021-05-11",
+            "sweep_date": "2021-05-10",
+            "break_label": "unclassified_down_break",
+            "price_sequence_qualified": true,
+            "missing_price_conditions": [],
+            "outcome_status": "observed",
+            "retest_status": "eligible_geometric_event_not_trade",
+            "outcome_available_at": 1621382399999,
+            "eligible_retest_date": "2021-05-14",
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": -13.73274973289228,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2021-06-14",
+            "direction": "long",
+            "known_at": 1623715199999,
+            "origin_date": "2021-06-12",
+            "sweep_date": null,
+            "break_label": "choch_up",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_prior_three_bar_sweep_reclaim"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1624147199999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": -12.42110272189285,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2021-06-22",
+            "direction": "short",
+            "known_at": 1624406399999,
+            "origin_date": "2021-06-20",
+            "sweep_date": null,
+            "break_label": "choch_down",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_prior_three_bar_sweep_reclaim"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1624838399999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": 6.738879271205134,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2021-07-24",
+            "direction": "long",
+            "known_at": 1627171199999,
+            "origin_date": "2021-07-20",
+            "sweep_date": "2021-07-21",
+            "break_label": "choch_up",
+            "price_sequence_qualified": true,
+            "missing_price_conditions": [],
+            "outcome_status": "observed",
+            "retest_status": "no_eligible_retest_in_window",
+            "outcome_available_at": 1627603199999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": 16.80867671157864,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2021-07-31",
+            "direction": "long",
+            "known_at": 1627775999999,
+            "origin_date": "2021-07-29",
+            "sweep_date": null,
+            "break_label": "no_new_close_break",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_prior_three_bar_sweep_reclaim",
+              "no_fresh_prior_reference_close_break"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1628207999999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": -1.4455946589911783,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2021-08-07",
+            "direction": "long",
+            "known_at": 1628380799999,
+            "origin_date": "2021-08-03",
+            "sweep_date": "2021-08-05",
+            "break_label": "bos_up",
+            "price_sequence_qualified": true,
+            "missing_price_conditions": [],
+            "outcome_status": "observed",
+            "retest_status": "no_eligible_retest_in_window",
+            "outcome_available_at": 1628812799999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": -0.3893428554890499,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2021-08-21",
+            "direction": "long",
+            "known_at": 1629590399999,
+            "origin_date": "2021-08-17",
+            "sweep_date": null,
+            "break_label": "bos_up",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_prior_three_bar_sweep_reclaim"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1630022399999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": -4.051463002134081,
+            "decision": "WAIT"
+          }
+        ],
+        "all_decisions_wait": true,
+        "orders_submitted": 0,
+        "simulated_trade_count": null,
+        "win_probability": null,
+        "strategy_pnl": null,
+        "drawdown": null,
+        "costs_measured": false,
+        "independent_holdout": false
+      }
+    },
+    {
+      "source_window_sha256": "5860446413d27c8678d93b80ce791940ad4e06b76a512b6e1230f6b4ab19b74f",
+      "study": {
+        "method": "hoshi-exploratory-sequence-ledger-1",
+        "sequence_method": "hoshi-sweep-break-gap-audit-1",
+        "window_start": "2022-05-01",
+        "window_end": "2022-12-31",
+        "source_bars": 245,
+        "warmup_bars": 21,
+        "directional_decisions": 448,
+        "decisions_with_complete_five_bar_horizon": 438,
+        "decisions_with_incomplete_horizon": 10,
+        "formation_count": 17,
+        "qualified_price_chains": 3,
+        "eligible_geometric_retest_chains": 1,
+        "invalid_before_eligible_retest_chains": 1,
+        "no_eligible_retest_chains": 1,
+        "incomplete_qualified_chains": 0,
+        "formation_horizon_overlap_pairs": 4,
+        "duplicate_origin_groups": [],
+        "formation_rows": [
+          {
+            "confirmation_date": "2022-05-31",
+            "direction": "long",
+            "known_at": 1654041599999,
+            "origin_date": "2022-05-27",
+            "sweep_date": "2022-05-28",
+            "break_label": "choch_up",
+            "price_sequence_qualified": true,
+            "missing_price_conditions": [],
+            "outcome_status": "observed",
+            "retest_status": "invalidated_before_eligible_retest",
+            "outcome_available_at": 1654473599999,
+            "eligible_retest_date": null,
+            "invalidation_date": "2022-06-01",
+            "raw_five_bar_close_change_pct": -5.917510873858223,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2022-06-11",
+            "direction": "short",
+            "known_at": 1654991999999,
+            "origin_date": "2022-06-06",
+            "sweep_date": null,
+            "break_label": "bos_down",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_prior_three_bar_sweep_reclaim"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1655423999999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": -28.226823853901706,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2022-07-08",
+            "direction": "long",
+            "known_at": 1657324799999,
+            "origin_date": "2022-07-05",
+            "sweep_date": null,
+            "break_label": "unclassified_up_break",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_prior_three_bar_sweep_reclaim"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1657756799999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": -6.297271327521736,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2022-07-20",
+            "direction": "long",
+            "known_at": 1658361599999,
+            "origin_date": "2022-07-17",
+            "sweep_date": null,
+            "break_label": "bos_up",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_prior_three_bar_sweep_reclaim"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1658793599999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": -8.234833120185325,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2022-07-26",
+            "direction": "short",
+            "known_at": 1658879999999,
+            "origin_date": "2022-07-24",
+            "sweep_date": null,
+            "break_label": "no_new_close_break",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_prior_three_bar_sweep_reclaim",
+              "no_fresh_prior_reference_close_break"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1659311999999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": 9.591539177037344,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2022-07-29",
+            "direction": "long",
+            "known_at": 1659139199999,
+            "origin_date": "2022-07-26",
+            "sweep_date": null,
+            "break_label": "no_new_close_break",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_prior_three_bar_sweep_reclaim",
+              "no_fresh_prior_reference_close_break"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1659571199999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": -4.018633997581366,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2022-08-18",
+            "direction": "short",
+            "known_at": 1660867199999,
+            "origin_date": "2022-08-13",
+            "sweep_date": "2022-08-15",
+            "break_label": "no_new_close_break",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_fresh_prior_reference_close_break"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1661299199999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": -7.166856393804554,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2022-08-27",
+            "direction": "short",
+            "known_at": 1661644799999,
+            "origin_date": "2022-08-25",
+            "sweep_date": null,
+            "break_label": "choch_down",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_prior_three_bar_sweep_reclaim"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1662076799999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": 0.4684193715814189,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2022-09-07",
+            "direction": "short",
+            "known_at": 1662595199999,
+            "origin_date": "2022-09-04",
+            "sweep_date": null,
+            "break_label": "bos_down",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_prior_three_bar_sweep_reclaim"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1663027199999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": 16.083168678121005,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2022-09-10",
+            "direction": "long",
+            "known_at": 1662854399999,
+            "origin_date": "2022-09-06",
+            "sweep_date": null,
+            "break_label": "choch_up",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_prior_three_bar_sweep_reclaim"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1663286399999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": -8.991266766874496,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2022-10-05",
+            "direction": "long",
+            "known_at": 1665014399999,
+            "origin_date": "2022-10-02",
+            "sweep_date": null,
+            "break_label": "unclassified_up_break",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_prior_three_bar_sweep_reclaim"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1665446399999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": -5.0916596968190735,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2022-10-26",
+            "direction": "long",
+            "known_at": 1666828799999,
+            "origin_date": "2022-10-24",
+            "sweep_date": null,
+            "break_label": "unclassified_up_break",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_prior_three_bar_sweep_reclaim"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1667260799999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": -1.3520871536555346,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2022-11-05",
+            "direction": "long",
+            "known_at": 1667692799999,
+            "origin_date": "2022-11-02",
+            "sweep_date": null,
+            "break_label": "bos_up",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_prior_three_bar_sweep_reclaim"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1668124799999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": -17.363048766231103,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2022-11-09",
+            "direction": "short",
+            "known_at": 1668038399999,
+            "origin_date": "2022-11-05",
+            "sweep_date": "2022-11-06",
+            "break_label": "choch_down",
+            "price_sequence_qualified": true,
+            "missing_price_conditions": [],
+            "outcome_status": "observed",
+            "retest_status": "no_eligible_retest_in_window",
+            "outcome_available_at": 1668470399999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": 4.375169960578562,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2022-12-01",
+            "direction": "long",
+            "known_at": 1669939199999,
+            "origin_date": "2022-11-28",
+            "sweep_date": null,
+            "break_label": "choch_up",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_prior_three_bar_sweep_reclaim"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1670371199999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": 0.6572867293344054,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2022-12-14",
+            "direction": "long",
+            "known_at": 1671062399999,
+            "origin_date": "2022-12-11",
+            "sweep_date": null,
+            "break_label": "unclassified_up_break",
+            "price_sequence_qualified": false,
+            "missing_price_conditions": [
+              "no_prior_three_bar_sweep_reclaim"
+            ],
+            "outcome_status": "observed",
+            "retest_status": "not_qualified_at_formation",
+            "outcome_available_at": 1671494399999,
+            "eligible_retest_date": null,
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": -7.663082095022511,
+            "decision": "WAIT"
+          },
+          {
+            "confirmation_date": "2022-12-17",
+            "direction": "short",
+            "known_at": 1671321599999,
+            "origin_date": "2022-12-14",
+            "sweep_date": "2022-12-15",
+            "break_label": "unclassified_down_break",
+            "price_sequence_qualified": true,
+            "missing_price_conditions": [],
+            "outcome_status": "observed",
+            "retest_status": "eligible_geometric_event_not_trade",
+            "outcome_available_at": 1671753599999,
+            "eligible_retest_date": "2022-12-18",
+            "invalidation_date": null,
+            "raw_five_bar_close_change_pct": 0.26769556499202096,
+            "decision": "WAIT"
+          }
+        ],
+        "all_decisions_wait": true,
+        "orders_submitted": 0,
+        "simulated_trade_count": null,
+        "win_probability": null,
+        "strategy_pnl": null,
+        "drawdown": null,
+        "costs_measured": false,
+        "independent_holdout": false
+      }
+    }
   ]
 }

@@ -122,6 +122,44 @@ class V3SMCTests(unittest.TestCase):
         with self.assertRaises(AssertionError):
             s.check_receipt(p, ROOT)
 
+    def test_exhaustive_formation_ledger_preserves_rejected_and_adverse_cases(self):
+        p = receipt(); s.check_receipt(p, ROOT)
+        studies = [e["study"] for e in p["sequence_studies"]]
+        self.assertEqual([x["directional_decisions"] for x in studies], [322,326,448])
+        self.assertEqual([x["formation_count"] for x in studies], [17,10,17])
+        self.assertEqual([x["qualified_price_chains"] for x in studies], [2,3,3])
+        self.assertEqual([x["eligible_geometric_retest_chains"] for x in studies], [0,1,1])
+        for x in studies:
+            self.assertEqual(x["directional_decisions"], x["decisions_with_complete_five_bar_horizon"]+x["decisions_with_incomplete_horizon"])
+            self.assertEqual(x["formation_count"], len(x["formation_rows"]))
+            self.assertEqual(x["qualified_price_chains"], sum(x[k] for k in (
+                "eligible_geometric_retest_chains", "invalid_before_eligible_retest_chains",
+                "no_eligible_retest_chains", "incomplete_qualified_chains")))
+            self.assertTrue(any(r["missing_price_conditions"] for r in x["formation_rows"]))
+            self.assertTrue(all(r["decision"] == "WAIT" for r in x["formation_rows"]))
+        p["sequence_studies"][0]["study"]["formation_rows"].pop()
+        with self.assertRaises(AssertionError):
+            s.check_receipt(p, ROOT)
+
+    def test_zero_geometric_events_are_not_zero_drawdown_or_perfect_accuracy(self):
+        p = receipt(); s.check_receipt(p, ROOT)
+        x = p["sequence_studies"][0]["study"]
+        self.assertEqual(x["eligible_geometric_retest_chains"], 0)
+        for key in ("drawdown", "simulated_trade_count", "win_probability", "strategy_pnl"):
+            self.assertIsNone(x[key])
+        self.assertFalse(x["costs_measured"])
+        self.assertFalse(x["independent_holdout"])
+
+    def test_qualified_tail_chain_keeps_its_missing_horizon(self):
+        p = receipt(); windows = s.check_receipt(p, ROOT)
+        bars = windows[p["sequence_cases"][0]["source_window_sha256"]]
+        prefix = [b for b in bars if s.utc_day(b["time"]) <= "2020-01-28"]
+        x = s.sequence_study(prefix)
+        self.assertEqual(x["incomplete_qualified_chains"], 1)
+        row = next(r for r in x["formation_rows"] if r["confirmation_date"] == "2020-01-28")
+        self.assertIsNone(row["raw_five_bar_close_change_pct"])
+        self.assertEqual(row["outcome_status"], "incomplete")
+
 
 if __name__ == "__main__":
     unittest.main()

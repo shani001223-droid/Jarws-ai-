@@ -3,6 +3,26 @@
 
 > Updated: 27 October 2026. This is a unified project map, **not** a declaration that unfinished features work. Keep every future Hoshi/JARVIS discussion, decision, code change, test, build and issue linked to this one repository and this one project file.
 
+
+## 29 October 2026 — owner-corrected unified delivery mission (development only)
+
+This section supersedes any suggestion that the main goal is to write 300 isolated anime scripts. **Hoshi is ONE private, mobile-first AI assistant with genuinely executable specialist workflows.** Keep the existing code, history, releases, 60-task scoreboard and sole development PR. Do not start a new app, repo, tracker or automation. The ten workstreams below are priorities/groupings, **not** ten new task scoreboards:
+
+1. **Audit and repair:** distinguish code-present, CI-verified, and real-world/device-verified; fix broken behavior before reporting success.
+2. **Brain and speed:** measured voice-to-answer latency, bounded free-provider fallback, truthful task completion.
+3. **Urdu voice and memory:** Pakistani Roman Urdu input, natural Urdu output, interruption and opt-in private memory.
+4. **Android agent:** explicit permission, narrowly scoped verified actions, emergency stop and physical Realme Note 50 acceptance.
+5. **Backend job engine:** authorized executable workers, durable storage where configured, bounded queue, cancellation, recovery and verifiable artifacts.
+6. **Anime production studio:** reusable role pipeline (production manager, story/script, character consistency, backgrounds, storyboard, animation/VFX, voice casting/TTS, lip-sync, original music/SFX, editing, Hindi/Urdu subtitles, thumbnails, SEO, render/QC and approval-gated uploader). Original dark fantasy/action/romance aesthetics are a **quality direction**, never permission to copy existing anime assets. First deliverable: a genuinely encoded **30–60 second private animatic/pilot** with original or explicitly rights-attested stills, timed captions, provenance and independent media probe. An animatic is not fully animated television-quality anime. Never silently turn planned dialogue duration into measured performance. No publishing without separate owner approval.
+7. **Flora business:** owner-verified photos/prices, real rendered MP4 ads, approval-gated publishing and grounded sales reports.
+8. **Trading research:** closed-candle market analysis, actual source checks and paper-only risk; no live orders.
+9. **Game studio:** genuinely playable offline builds, automated QA and physical Android acceptance.
+10. **Security and release:** private authentication, origin/secret controls, regression CI, explicit review and approved production rollout.
+
+**Priority order:** repair false completion claims and blockers; improve working voice/phone reliability and executable backend jobs; build the reusable anime pilot pipeline; finish owner-approved Flora deliverables; then close trading/game and production acceptance gaps. The canonical 60-task roadmap remains the only scoreboard: **48/60 code/test milestones checked, 12 unchecked at this checkpoint**, not 80% real-world production readiness. Re-evaluate every checkbox at its documented acceptance boundary; never mark a feature real-world verified from mocks, prompts, scripts or static documentation. Maintain a separate explicit status for code, CI and real-world evidence.
+
+**Existing known blockers:** Task 06 physical Realme Note 50 and release/rollback acceptance; Task 11 a real reachable OpenJarvis endpoint; Flora owner product/price/photo approvals and any external-account permission; independent Urdu voice/editorial/cast rights; GPU/render/storage availability. Existing EP001–EP012 are private short editorial drafts, not an instruction to keep generating EP013–EP300 before a working studio exists. Do not auto-publish, deploy, merge, buy services, modify accounts or trade.
+
 ## Current release / review routing (27 October 2026)
 
 Production main now includes PR #24, merged as `1a0f532afb34d5f3f1d939b2daef86ec9fd46e29`; the existing Render frontend and primary backend were verified live. See [release evidence](HOSHI_RELEASE_PRECHECK.md). The development branch remains `hoshi/dnd-foundation-20261026`. **PR #24 is merged, not an active draft**: first find the current open PR for this branch; create at most one successor draft PR when new changes require review. Historical PR #24 references below describe prior development evidence. Do not create a second project or reset the roadmap.

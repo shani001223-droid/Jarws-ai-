@@ -24,6 +24,7 @@ class AnimePilotError(ValueError):
 
 WIDTH, HEIGHT, FPS, SHOT_SECONDS = 480, 270, 12, 10
 DURATION_SECONDS = 30
+CAMERA_MOVES = ("static", "push_in", "pan_left", "pan_right")
 MAX_IMAGE_BYTES = 4_000_000
 MAX_MP4_BYTES = 15_000_000
 MAX_AUDIO_BYTES = 3_000_000
@@ -113,11 +114,34 @@ def _probe(path: Path, ffprobe: str, with_audio: bool) -> None:
         raise AnimePilotError("Could not independently verify MP4.") from None
 
 
+def _camera_filter(moves: tuple[str, ...]) -> str:
+    """Allowlisted FFmpeg 2D still reframing; never interpolate character motion."""
+    segments = []
+    for index, move in enumerate(moves):
+        source, target = f"[{index}:v]", f"[shot{index}]"
+        if move == "static":
+            effect = "setpts=PTS-STARTPTS"
+        elif move == "push_in":
+            effect = ("zoompan=z='min(zoom+0.001,1.12)':"
+                      "x='(iw-iw/zoom)/2':y='(ih-ih/zoom)/2':"
+                      f"d=1:s={WIDTH}x{HEIGHT}:fps={FPS},setpts=PTS-STARTPTS")
+        else:
+            horizontal = ("(iw-iw/zoom)*(1-on/119)" if move == "pan_left"
+                          else "(iw-iw/zoom)*on/119")
+            effect = (f"zoompan=z=1.12:x='{horizontal}':"
+                      f"y='(ih-ih/zoom)/2':d=1:s={WIDTH}x{HEIGHT}:"
+                      f"fps={FPS},setpts=PTS-STARTPTS")
+        segments.append(f"{source}{effect}{target}")
+    segments.append("[shot0][shot1][shot2]concat=n=3:v=1:a=0,format=yuv420p[v]")
+    return ";".join(segments)
+
+
 def render_private_animatic(stills: list[bytes] | tuple[bytes, ...],
                             captions: list[str] | tuple[str, ...], *,
                             image_rights_attested: bool = False,
                             audio_wav: bytes | None = None,
-                            audio_rights_attested: bool = False) -> dict:
+                            audio_rights_attested: bool = False,
+                            camera_moves: list[str] | tuple[str, ...] | None = None) -> dict:
     """Encode a private 30-second storyboard preview; never approve/publish it.
 
     Caller must attest rights to every still and optional soundtrack. No claim
@@ -134,6 +158,13 @@ def render_private_animatic(stills: list[bytes] | tuple[bytes, ...],
         _validate_audio(audio_wav)
     if type(stills) not in (list, tuple) or len(stills) != 3:
         raise AnimePilotError("Exactly three original stills are required.")
+    if camera_moves is None:
+        camera_moves = ("static",) * 3
+    if (type(camera_moves) not in (list, tuple) or len(camera_moves) != 3
+            or any(type(move) is not str or move not in CAMERA_MOVES
+                   for move in camera_moves)):
+        raise AnimePilotError("Camera moves must be three allowlisted 2D moves.")
+    camera_moves = tuple(camera_moves)
     srt = _captions_to_srt(captions)
     images = [_image_to_frame(still) for still in stills]
     ffmpeg, ffprobe = shutil.which("ffmpeg"), shutil.which("ffprobe")
@@ -153,7 +184,7 @@ def render_private_animatic(stills: list[bytes] | tuple[bytes, ...],
                 wav_path = root / "audio.wav"
                 wav_path.write_bytes(audio_wav)
                 cmd += ["-i", str(wav_path)]
-            cmd += ["-filter_complex", "[0:v][1:v][2:v]concat=n=3:v=1:a=0,format=yuv420p[v]",
+            cmd += ["-filter_complex", _camera_filter(camera_moves),
                     "-map", "[v]"]
             if audio_wav is not None:
                 cmd += ["-map", "3:a:0"]
@@ -186,6 +217,8 @@ def render_private_animatic(stills: list[bytes] | tuple[bytes, ...],
         "duration_seconds": DURATION_SECONDS,
         "resolution": [WIDTH, HEIGHT],
         "frame_rate": FPS,
+        "camera_moves": list(camera_moves),
+        "camera_motion_is_2d_still_reframing": any(m != "static" for m in camera_moves),
         "production_roles": list(ROLES),
         "stage": "private_storyboard_animatic_only",
         "actual_mp4_rendered": True,

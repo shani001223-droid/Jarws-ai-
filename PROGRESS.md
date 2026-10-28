@@ -9,8 +9,8 @@ entire branch was already deployed. Production V2 remains a separate release.
 
 ## Current measured progress
 
-**Day 1: completed 21 of 49 planned knowledge chapters — 42.86%; 28 chapters,
-57.14% of the declared curriculum, remain.**
+**Day 1: completed 22 of 49 planned knowledge chapters — 44.90%; 27 chapters,
+55.10% of the declared curriculum, remain.**
 
 The denominator is the versioned, expandable file manifest in
 `knowledge_base/manifest.json`. Scope revision 2 explicitly expands the initial
@@ -45,6 +45,7 @@ topics require an explicit manifest/progress revision, never silent omission.
 | `04_SMC_COMPLETE/premium_discount_and_dealing_ranges.md` | Source-checked; frozen before-open versus as-of-close and twenty-bar anchors, outside/invalid ranges, same-price label changes and three real dated comparisons |
 | `04_SMC_COMPLETE/smc_entry_models_and_invalidation.md` | Source-checked; ordered sweep/break/gap diagnostics, no-return, eligible geometry with missing strategy gates, and first-contact gap invalidation; all diagnostic decisions stay WAIT |
 | `04_SMC_COMPLETE/smc_evidence_and_counterexamples.md` | Source-checked; exhaustive bounded ledger with 1,096 directional decisions, 44 formations, eight price chains, two geometric retests and retained no-return/invalidation/adverse paths; not performance calibration |
+| `05_ICT_COMPLETE/ict_core_and_2022_models.md` | Source-checked; bounded original 2022 source distinctions, 360 native minute candles, causal clock/gap evidence and three genuine no-contact/invalidation cases; no creator-parity or full-signal claim |
 | Remaining curriculum documents | Pending; no empty placeholder chapters counted as complete |
 | Brain loader and runtime knowledge bundle | Pending — new source chapters are not yet consumed by Hoshi |
 | 40/20/20/20 history/liquidity/structure/global-flow engine | Pending — weights will mean evidence coverage, not an invented win probability |
@@ -122,6 +123,8 @@ topics require an explicit manifest/progress revision, never silent omission.
 
 
 - **28 October, Day 1 — primary-source gap resolved:** completed `mitigation_breakers_and_retests.md` (2086 substantive words). Retrieved the two original English YouTube caption tracks through vidIQ and verified publication metadata against creator channel `UCtjxa77NqamhVC8atV85Rog`; exact language, upload times and caption hashes are retained in the manifest without republishing copyrighted tracks. Earlier web-only retrieval failures remain in the review history. Creator descriptions are brief attribution; unviewed charts, a separate study PDF and recognizer parity remain explicitly unclaimed. Three genuine BTCUSDT role-change examples retain no return, rejection followed by failure, and failed-swing first-contact invalidation. Three added prefix/lifecycle/corruption regressions bring passing local evidence tests to 46. Prior [9fe994a3](https://github.com/shani001223-droid/Jarws-ai-/commit/9fe994a3ece30f8edbeea2ce338f08805ab9e544) passed [actual curriculum/evidence CI 40612996730](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40612996730). Curriculum: 21/49 (42.86%); next declared chapter is `05_ICT_COMPLETE/ict_core_and_2022_models.md`. Runtime, model training and release remain pending.
+
+- **28 October, Day 1 (07:07 PKT):** completed `ict_core_and_2022_models.md` (1956 substantive words). Original creator-channel Episode 3 captions and metadata distinguish native wick-cross permission/multiple-candle references from Hoshi's original stricter rules. Captured 360 native BTCUSDT one-minute bars over three fixed 2023/2024 windows, with exact HTTP bodies/digests, New York daylight-saving conversion and first-chronological gap selection. Three actual cases retain first-contact invalidation, no retest, and a rejection-looking close after a full crossing; all decisions WAIT, fills/PnL/probability unknown. Five added clock/prefix/corruption regressions bring passing offline evidence tests to 51. Prior [693e56b7](https://github.com/shani001223-droid/Jarws-ai-/commit/693e56b763b3f97d594a52cc467557c8ddcf8f15) passed [actual CI 40617684956](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40617684956). Curriculum: 22/49 (44.90%); next declared chapter `ict_mentorship_2023_2024.md`. These are source/diagnostic receipts, not runtime integration or model training.
 
 ## Completion and release rules
 

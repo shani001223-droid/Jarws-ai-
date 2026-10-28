@@ -295,3 +295,8 @@ Added `smc_evidence_and_counterexamples.md` with 2033 substantive words and thre
 ## V3 mitigation/breaker source gap resolved — 28 October 2026
 
 Added `mitigation_breakers_and_retests.md` with 2086 substantive words. Original-channel captions and publication metadata were retrieved and checked; hashes, language and upload times are retained, without full-track republication or creator-chart/PDF/parity claims. Original offline three-swing role-change rules preserve no-contact, early-rejection/later-failure and same-contact invalidation cases. All 46 evidence regressions passed locally. Curriculum: 21/49 (42.86%); runtime/release gates pending. Prior `9fe994a3ece30f8edbeea2ce338f08805ab9e544` passed actual CI 40612996730. No runtime, main, backup, unrelated task/automation or privacy/voice/Stop changes.
+
+
+## V3 bounded 2022 ICT source and minute evidence — 28 October 2026
+
+Added `ict_core_and_2022_models.md` with 1956 substantive body words. Original English captions/public creator metadata are checked and hashed without track republication; exact ICT parity and unviewed charts remain unclaimed. New fixed 360-bar native minute receipt retains earliest possible post-close times, unknown provider arrival, DST/hour-end filters and three actual failed/absent-entry outcomes. All 51 offline evidence tests passed locally. Curriculum 22/49 (44.90%); runtime/evaluation/release gates pending. Prior `693e56b763b3f97d594a52cc467557c8ddcf8f15` passed actual CI 40617684956. No orders, main/backup/identity/privacy/voice/Stop or unrelated work changed.

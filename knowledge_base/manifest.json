@@ -198,7 +198,28 @@
     },
     {
       "path": "knowledge_base/05_ICT_COMPLETE/ict_core_and_2022_models.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 1956,
+      "sha256": "fd74fab5ee742ee79563d955f4341c5ed3dec105fcfef6cf281477ff75a79878",
+      "source_review": {
+        "status": "bounded_original_caption_passages_and_creator_public_metadata_checked",
+        "reviewed_on": "2026-10-28",
+        "primary_sources": [
+          {
+            "url": "https://www.youtube.com/watch?v=nQfHZ2DEJ8c",
+            "title": "2022 ICT Mentorship Episode 3",
+            "channel_id": "UCtjxa77NqamhVC8atV85Rog",
+            "published_at_utc": "2022-01-26T03:00:03Z",
+            "duration": "PT52M27S",
+            "caption_language": "en",
+            "caption_sha256": "d69d58d1c5006820c9fa9319674254cb4291eeff811f594e9e6763b2b1d68b17",
+            "caption_lines": 192,
+            "retrieval": "Original YouTube captions via vidIQ; full copyrighted track not republished."
+          }
+        ],
+        "limitations": "Selected original Episode 3 passages checked; chart visuals, full-mentorship coverage and recognizer parity are not claimed. Cases use independent venue-specific minute data; all decisions WAIT."
+      }
     },
     {
       "path": "knowledge_base/05_ICT_COMPLETE/ict_mentorship_2023_2024.md",
@@ -343,6 +364,11 @@
       "path": "knowledge_base/04_SMC_COMPLETE/smc_observations_20261028.json",
       "kind": "smc_cases",
       "sha256": "c70d34723c16c5dc5e11f52cbaf680cfeed4dfb850a6b57db9ed8eeb924227fc"
+    },
+    {
+      "path": "knowledge_base/05_ICT_COMPLETE/ict_intraday_observations_20261028.json",
+      "kind": "ict_intraday",
+      "sha256": "cd4c7a638333c91779512e0a995289c23b4c3f4d26ad68ce8f747450b7435c63"
     }
   ],
   "scope_history": [

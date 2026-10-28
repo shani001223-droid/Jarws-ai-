@@ -389,11 +389,51 @@
     },
     {
       "path": "knowledge_base/06_LIQUIDITY_GOD/inducement_turtle_soup_and_reclaims.md",
-      "status": "pending"
+      "status": "pending",
+      "source_review": {
+        "status": "pending_verified_original_turtle_soup_rules",
+        "last_rechecked_at_asia_karachi": "2026-10-28T07:33:49.891314+05:00",
+        "attempts": [
+          {
+            "url": "https://lindaraschke.net/",
+            "result": "Primary author homepage web retrieval timed out on this attempt; retryable, not proof of universal unavailability."
+          },
+          {
+            "query": "Author-site-targeted Turtle Soup/Street Smarts primary search",
+            "result": "No checked original rule text obtained. Third-party full-book mirrors/search excerpts were not adopted as primary technical evidence or copied into the curriculum."
+          }
+        ],
+        "remaining_requirement": "Obtain and check an authorized original author/publisher passage or original public lesson defining Turtle Soup versus Plus One, trigger offsets, lookback/age filters and invalidation. Separate generic original reclaim geometry from creator parity; supply three genuine dated examples. Keep combined chapter pending until that source gap is resolved; continue other independent items without purchases."
+      }
     },
     {
       "path": "knowledge_base/06_LIQUIDITY_GOD/liquidity_voids_and_stop_events.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2142,
+      "sha256": "e9256d7084e1800e9f5cf923c3492afdb343e2e59517e79760cdb372c0a2ddc2",
+      "source_review": {
+        "status": "primary_official_historical_reports_and_limited_case_facts_checked",
+        "reviewed_on": "2026-10-28",
+        "primary_sources": [
+          {
+            "url": "https://www.sec.gov/news/studies/2010/marketevents-report.pdf",
+            "publication_date": "2010-09-30",
+            "checked": "Executive summary and E-mini hot-potato/Stop Logic discussion; report findings distinguished from own calculations."
+          },
+          {
+            "url": "https://www.federalreserve.gov/econres/notes/feds-notes/retrospective-the-agency-mbs-market-on-october-15-2014-20200924.html",
+            "publication_date": "2020-09-24",
+            "checked": "2014 event window, yield changes, BrokerTec/TRACE venues and midpoint versus transaction distinctions."
+          },
+          {
+            "url": "https://www.bis.org/publications/sterling-flash-event-7-october-2016.pdf",
+            "publication_date": "2017-01-13",
+            "checked": "Full primary 29-page report accessible; selected executive summary and pages 3/5-9, Reuters midpoint BST timing, fixed-quantity depth shortfall and revisions/venue caveats."
+          }
+        ],
+        "limitations": "Three documented official cases, not raw-book replays, creator-chart replicas or live data. No strategy returns, entry levels, global FX tape, calibrated accuracy or institutional-intent assertion."
+      }
     },
     {
       "path": "knowledge_base/06_LIQUIDITY_GOD/liquidity_historical_cases_and_execution.md",

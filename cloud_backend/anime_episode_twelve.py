@@ -10,14 +10,14 @@ import json
 from copy import deepcopy
 from functools import lru_cache
 
-from cloud_backend.anime_episode_eleven import episode_twelve_script
+from cloud_backend.anime_episode_eleven import episode_eleven_script
 from cloud_backend.anime_series import series_manifest
 
 
 @lru_cache(maxsize=1)
 def _previous_episode_sha256() -> str:
     """Cache an immutable digest only, not mutable prior script objects."""
-    return episode_twelve_script()["sha256"]
+    return episode_eleven_script()["sha256"]
 
 
 EPISODE_ID = "EP012"

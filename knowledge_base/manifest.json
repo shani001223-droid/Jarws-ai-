@@ -346,8 +346,8 @@
       "status": "pending",
       "scope_note": "Explicit expansion: original 2024 source introduces day/week session opening gaps distinct from three-candle FVG and arbitrary spot clock envelopes; requires checked original session boundaries, actual dated endpoints and failures, with unsupported data gaps retained.",
       "source_review": {
-        "status": "pending_actual_session_endpoint_and_redistribution_evidence",
-        "last_rechecked_at_asia_karachi": "2026-10-28T12:41:58.431829+05:00",
+        "status": "partial_offline_sample_audit_delivered_calendar_endpoint_and_permission_gaps_remain",
+        "last_rechecked_at_asia_karachi": "2026-10-28T13:18:24.224493+05:00",
         "checked_sources": [
           {
             "url": "https://www.youtube.com/watch?v=hdSscxZgE58",
@@ -385,9 +385,69 @@
             "url": "https://databento.com/blog/introduction-market-data-licensing",
             "checked_on": "2026-10-28",
             "result": "Primary vendor FAQ (2 October 2023) read including historical-data exceptions: historical access and redistribution are distinct; redistribution can require licensing. No account or credits activated, exact permitted public futures samples not obtained. This general FAQ is not a project-specific rights grant."
+          },
+          {
+            "url": "https://cmegroupclientsite.atlassian.net/wiki/spaces/EPICSANDBOX/pages/457223239/Time%2Band%2BSales",
+            "checked_on": "2026-10-28",
+            "result": "Opened primary sample table and v2 layout. Actual UTC/nanosecond fields and contract/security/delivery identity checked; no settlement or spread substitution. Current documentation and an individual published part-file do not certify a 2025 historical session calendar or original pipeline arrival."
+          },
+          {
+            "url": "https://www.cmegroup.com/files/download/xcme-tick-es-fut-20250312-part-00039-c000.csv",
+            "checked_on": "2026-10-28",
+            "result": "Actually captured the complete HTTP 200 CSV body, 96,281,850 bytes, SHA256 c62b5527f57079ee28c1a05184adf03f6cafea41bf3ed48c85c59f1b45a2fe51 at 2026-10-28T07:56:14.448284+00:00. Offline audit counted 839,644 records: 825,930 TRD and 13,714 VOL. Quarantined six empty-quantity TRD/O rows and separated 6,943 usable non-outright rows from 818,981 usable outright rows. Three maturity/security groups are not three gap examples. Raw source is private scratch research only; repository receipt contains counts/identities/clock bounds, no trade prices or price series. No adjacent-session endpoint pair, original arrival or redistribution permission certified."
+          },
+          {
+            "url": "https://www.cmegroup.com/market-data/license-data/information-policies.html",
+            "checked_on": "2026-10-28",
+            "result": "Opened current Information Policies version 5.06. These policies refer to the Information License Agreement; a public page is not treated as a project-specific data publishing grant. No license agreement, registration, purchase or account mutation occurred."
+          },
+          {
+            "url": "https://portaracqg.com/sample-data/",
+            "checked_on": "2026-10-28",
+            "result": "Opened primary sample/format page, distinguishing individual-contract snippets, millisecond trade records, source exchange clocks, adjusted continuous data and settlement. No continuous or settlement substitute used."
+          },
+          {
+            "url": "https://portaradownloadersampledata.s3.amazonaws.com/PortaraCQG%20Sample%20Data/EP2014U.txt",
+            "checked_on": "2026-10-28",
+            "result": "Actually read HTTP 200 sample: 783,038 bytes, SHA256 2cb22b2dbf4528876d8bb56dba7ab999fcac40d05883da1f89e580e916abb808, 20,000 rows on 10 July 2014, recorded span 14:54:36.244 to 22:17:06.628. These are source-recorded clock bounds, not a certified complete session or three dated endpoint pairs; no market prices or raw file committed. An as-of historical calendar and applicable sample-use permission remain unverified."
+          },
+          {
+            "url": "https://portaradownloadersampledata.s3.amazonaws.com/Trades/EP/EP2026M.txt",
+            "checked_on": "2026-10-28",
+            "result": "Actually read HTTP 200 current linked sample: 204,796 bytes, SHA256 27a624c804103b058cc9c861a2d12a228af7a7a764ebad887849a2fe621342bc at 2026-10-28T08:12:22.454449+00:00. Corrected for the Timestamp/Price/Volume header: 6,205 data rows, 15 June 2026 recorded 20:01:38.180 to 23:59:59.960. Header text is not a date. No three complete session gaps or publishing grant established; no raw file or prices committed."
+          },
+          {
+            "url": "https://portaracqg.com/license/",
+            "checked_on": "2026-10-28",
+            "result": "Read primary one-off purchase license: it permits publication of derived results for licensed purchasers while restricting raw/substantially reconstructable data distribution. This was not silently extended into a free-sample or project-specific license; no purchase or agreement executed."
+          },
+          {
+            "url": "https://www.kibot.com/free-historical-intraday-data.html",
+            "checked_on": "2026-10-28",
+            "result": "Opened primary page and explicit no-free-futures section: public files are US stocks/ETFs; futures/forex samples require a contact request. No message/form submitted, account created, guest login probed or purchase made."
+          },
+          {
+            "url": "https://www.tickdata.com/demo",
+            "checked_on": "2026-10-28",
+            "result": "Opened primary page advertising Windows TickWrite demo with futures samples. This run did not obtain three permitted exact-contract endpoint pairs, a usable raw sample license or a historical session calendar from it. Do not infer global free-data unavailability."
+          },
+          {
+            "url": "https://historicalfuturesdata.com/docs",
+            "checked_on": "2026-10-28",
+            "result": "Opened primary documentation: unauthenticated latest-year samples are 10-second OHLCV bars; tick access is a paid path. Those bars omit exact first/last trade instants and are not used as a substitute. No account, credits or purchase activated."
           }
         ],
-        "remaining_requirement": "Still obtain permitted exact-contract dated calendars plus timestamped pre-break last and post-break first actual trades for three cases, original availability evidence and applicable redistribution rights. Public CME MD samples are reachable but have not supplied verified three endpoint pairs or a publishing grant. Continue checking official Time-and-Sales samples and other genuinely permitted sources without account creation, purchase, external messages or substituting settlement/continuous/24-7 spot values."
+        "remaining_requirement": "Still need verified permitted exact-contract historical session/holiday calendars and actual pre-break last/post-break first trades across three genuinely dated cases, complete adjacent-session/correction coverage, source availability evidence and applicable use/redistribution rights. Complete HTTP download of one sample part-file and three maturity identities do not satisfy those requirements. Portara one-date snippets do not certify complete tape coverage or sample-use rights. Continue only genuinely permitted independent source investigation; do not use settlement, adjusted continuous series, broker quotes or arbitrary 24/7 spot envelopes to manufacture completion. No all-free-data-unavailable claim.",
+        "partial_deliverable": {
+          "auditor": "scripts/v3_session_evidence.py",
+          "metadata_receipt": "knowledge_base/05_ICT_COMPLETE/session_source_audit_20261028.json",
+          "actual_source_rows_audited": 839644,
+          "separate_outright_contract_groups": 3,
+          "eligible_opening_gap_cases": 0,
+          "new_synthetic_decoder_and_metadata_tests": 17,
+          "raw_market_file_or_price_series_published": false,
+          "runtime_integration": false
+        }
       }
     },
     {
@@ -1458,6 +1518,11 @@
       "path": "knowledge_base/11_NEWS_TRADING/news_events_20261028.json",
       "kind": "news_events",
       "sha256": "2132590a5151c06c417fb67caa9b852981bb754c6618d27de74d7716ad152b3e"
+    },
+    {
+      "path": "knowledge_base/05_ICT_COMPLETE/session_source_audit_20261028.json",
+      "kind": "session_source_audit",
+      "sha256": "594ab5845fd62267f18b0c875f15716f98662e07ed5644194c9c3b1531c7a5a0"
     }
   ],
   "scope_history": [

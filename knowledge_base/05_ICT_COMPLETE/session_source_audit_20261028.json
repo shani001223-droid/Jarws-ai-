@@ -1,0 +1,96 @@
+{
+  "schema_version": "hoshi-v3-session-source-receipt-1",
+  "use": "historical-sample-metadata-not-opening-gap-cases-or-runtime-inputs",
+  "capture": {
+    "url": "https://www.cmegroup.com/files/download/xcme-tick-es-fut-20250312-part-00039-c000.csv",
+    "http": 200,
+    "bytes": 96281850,
+    "sha256": "c62b5527f57079ee28c1a05184adf03f6cafea41bf3ed48c85c59f1b45a2fe51",
+    "complete_http_body": true,
+    "captured_at_utc": "2026-10-28T07:56:14.448284+00:00",
+    "content_type": "text/csv",
+    "content_length_header": "96281850",
+    "rights_for_repository_redistribution_verified": false
+  },
+  "audit": {
+    "schema_version": "hoshi-v3-session-source-audit-1",
+    "layout_reference_url": "https://cmegroupclientsite.atlassian.net/wiki/spaces/EPICSANDBOX/pages/457223239/Time%2Band%2BSales",
+    "source_origin_verified_by_parser": false,
+    "source_sha256": "c62b5527f57079ee28c1a05184adf03f6cafea41bf3ed48c85c59f1b45a2fe51",
+    "source_bytes": 96281850,
+    "captured_at_utc": "2026-10-28T07:56:14.448284+00:00",
+    "complete_http_body": true,
+    "coverage_scope": "one-published-part-file-not-certified-session",
+    "rows": 839644,
+    "report_types": {
+      "TRD": 825930,
+      "VOL": 13714
+    },
+    "instrument_kinds": {
+      "FUT": 839644
+    },
+    "non_outright_trade_rows": 6943,
+    "unusable_trade_rows": 6,
+    "unusable_trade_reasons": {
+      "missing_trade_quantity": 6
+    },
+    "unsequenced_volume_rows": 13714,
+    "trade_report_sequence_regressions_in_file_order": 37509,
+    "sequence_regression_scope": "file-order-within-ticker-across-contracts-not-proof-of-feed-error",
+    "outright_instruments": [
+      {
+        "instrument": "ESH5",
+        "security_id": 5002,
+        "delivery_month": "202503",
+        "exchange": "XCME",
+        "trade_rows": 779026,
+        "first_observed_utc": "2025-03-11T22:00:00.000000000Z",
+        "last_observed_utc": "2025-03-12T20:59:59.445923749Z",
+        "timestamp_regressions_in_file_order": 0
+      },
+      {
+        "instrument": "ESM5",
+        "security_id": 4916,
+        "delivery_month": "202506",
+        "exchange": "XCME",
+        "trade_rows": 39781,
+        "first_observed_utc": "2025-03-11T22:00:00.000000000Z",
+        "last_observed_utc": "2025-03-12T20:59:58.760193239Z",
+        "timestamp_regressions_in_file_order": 0
+      },
+      {
+        "instrument": "ESU5",
+        "security_id": 14160,
+        "delivery_month": "202509",
+        "exchange": "XCME",
+        "trade_rows": 174,
+        "first_observed_utc": "2025-03-11T22:03:46.078749409Z",
+        "last_observed_utc": "2025-03-12T19:35:59.321308997Z",
+        "timestamp_regressions_in_file_order": 0
+      }
+    ],
+    "session_calendar_verified": false,
+    "adjacent_session_coverage_verified": false,
+    "executed_trade_coverage_certified": false,
+    "original_historical_arrival_utc": null,
+    "redistribution_permission_verified": false,
+    "actual_trade_prices_published": false,
+    "eligible_opening_gap_case_count": 0,
+    "decision": "WAIT",
+    "entry": null,
+    "stop_loss": null,
+    "take_profit": null,
+    "win_probability": null,
+    "orders_enabled": false
+  },
+  "limitations": [
+    "Only one published ES part-file was captured at the stated 28 October 2026 UTC time. EOF and its HTTP Content-Length match; this is not proof of a complete exchange session, every part, correction, original 2025 delivery or timely trading access.",
+    "Counts, identifiers and observation-clock bounds are derived source-audit metadata. No raw CSV, market trade-price rows or reconstructed price series is retained in the repository or runtime bundle. Source origin is checked separately against the public primary link; the parser correctly makes no authenticity claim from arbitrary local bytes.",
+    "Six TRD rows marked O have empty Trade_Quantity in this actual snapshot. They are quarantined as unusable execution evidence; no quantity or fill is invented. The decoder first rejected missing fields until separate whole-file profiling established their actual representations. This did not create a completed chart case.",
+    "13,714 VOL records have no Sequence_Number; they are counted separately and never used as priced trades. Current primary documentation describes volume records separately; unknown or malformed traded records still fail closed.",
+    "Three outright delivery/security groups are three contract identities, not three opening-gap examples. The observed UTC span does not include an adjacent-session pre-break close and post-break reopen pair. A checked historical session/holiday calendar, complete endpoints and original arrival evidence remain absent.",
+    "The 37,509 ticker-level sequence regressions are measured across interleaved contracts in file order, not proof of a feed error or event-time reversal. Exact contract identity is retained; no sorting across maturities manufactures a single price tape.",
+    "Public sample access is not a project-specific redistribution grant. The checked CME FAQ distinguishes access from external redistribution. Applicable permission for raw data or price-series redistribution remains unverified; no registration, contact, purchase or entitlement occurred.",
+    "All gap-case eligibility remains zero and the outcome is WAIT with null entry, stop, target and win probability. This metadata audit is not causal replay, market training, runtime knowledge loading or an independently evaluated trading strategy."
+  ]
+}

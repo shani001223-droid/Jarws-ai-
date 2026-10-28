@@ -1,5 +1,12 @@
 # HOSHI — 60-Task Autonomous Development Roadmap
 
+## Anime Studio offline WAV-to-MP4 handoff — 29 October 2026 (PARTIAL, NOT ACCEPTED)
+
+- **Implemented:** The existing private `scripts/render_hoshi_anime_animatic.py` now optionally accepts a locally supplied rights-attested 30s mono PCM WAV, strictly bounded and format-validated before FFmpeg. AAC is muxed into the actual H.264 MP4; `ffprobe` verifies audio/video, and the manifest stores the exact WAV SHA-256. Missing rights, malformed/oversized WAV and attempted overwrite fail closed. This is an **operator-only handoff**, not a voice-generation agent.
+- **Verified source/test commit `d90b2ebc5c59f5f56c16482d0eb9268782c238b9`:** [full Python/Node/Playwright CI 40779901146](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40779901146), [Docker/Uvicorn 40779908039](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40779908039), plus negative WAV/rights and real AAC/MP4 tests in `tests/test_anime_audio_handoff.py`.
+- **Not accepted:** Original Hindi/Urdu dubbing, cast voices, emotional speech, timing-by-dialogue, lip-sync, character animation, soundtrack generation, rights clearance, Realme Note 50 playback and owner-approved video release. **Tasks 56–60 remain unchecked; canonical score 48/60.** No production merge/deploy, external upload, paid compute, account actions or real trades.
+
+
 ## Anime Studio storyboard-to-media handoff — 29 October 2026 (PARTIAL, NOT ACCEPTED)
 
 - **Implemented:** `cloud_backend/anime_storyboard_handoff.py` validates a strict private three-shot storyboard against exact rights-attested still-image bytes, UTF-8 Hindi/Urdu/Roman Urdu captions, allowlisted camera moves, and a bounded 1–6 character reference-ID registry. Every original character reference must have an attested caller-supplied design SHA-256; references are **metadata only**, not verified character artwork or evidence of consistent facial animation. The renderer embeds the canonical storyboard plan digest and bound plan in the private MP4 manifest. `scripts/render_hoshi_anime_animatic.py --storyboard-json` accepts only a local <=12 KB JSON file, with the original create-only output contract and no account action or publication.

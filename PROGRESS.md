@@ -9,8 +9,8 @@ entire branch was already deployed. Production V2 remains a separate release.
 
 ## Current measured progress
 
-**Day 1: completed 45 of 50 planned knowledge chapters — 90.00%; 5 chapters,
-10.00% of the declared curriculum, remain.**
+**Day 1: completed 46 of 50 planned knowledge chapters — 92.00%; 4 chapters,
+8.00% of the declared curriculum, remain.**
 
 The denominator is the versioned, expandable file manifest in
 `knowledge_base/manifest.json`. Scope revision 2 expanded the initial 48
@@ -72,6 +72,7 @@ topics require an explicit manifest/progress revision, never silent omission.
 | `10_TRADING_PSYCHOLOGY_AND_RISK/kelly_portfolio_risk_and_ruin.md` | Source-checked; original growth/overbetting/probability-error, finite-streak, covariance and drawdown counterexamples plus documented LTCM/Archegos/LDI cases; no live Kelly allocation or calibration |
 | `10_TRADING_PSYCHOLOGY_AND_RISK/biases_and_decision_process.md` | Source-checked; reasoning/selection/reference/process distinctions and genuine 1974, 1987–1993/1998 and 1991–1996/2000 research cases; sample and publication clocks separated |
 | `10_TRADING_PSYCHOLOGY_AND_RISK/backtest_overfitting_and_validation.md` | Source-checked; chronology/selection/overlap/execution/metric controls with three actual already-explored minute ledgers; no new holdout, filled trades, strategy PnL or calibrated accuracy |
+| `11_NEWS_TRADING/nfp_cpi_and_fomc.md` | Source-checked; actual employment/CPI/FOMC archives, winter/summer clocks and three bounded daily yield contexts; unknown consensus/arrival/intraday effects remain null |
 | Remaining curriculum documents | Pending; no empty placeholder chapters counted as complete |
 | Benchmark data rights / point-in-time availability | Pending — new raw NASDAQCOM, ICE DXY and gold benchmark histories are not licensed by public page access; review earlier limited observations before data/runtime bundling |
 | Brain loader and runtime knowledge bundle | Pending — new source chapters are not yet consumed by Hoshi |
@@ -198,6 +199,8 @@ topics require an explicit manifest/progress revision, never silent omission.
 - **28 October, Day 1 (11:51 PKT):** completed `biases_and_decision_process.md` (2159 substantive words). Three primary research cases distinguish experimental estimates from market prices, opportunity-adjusted disposition evidence, and 1991–1996 trade/holdings versus February 1991–January 1997 return windows. No raw customer data, clinical diagnosis, chart fabrication, new journal/memory or performance calibration. Existing 122-test V3 evidence suite remains applicable; content/hash validator passes. Prior [427be1b8](https://github.com/shani001223-droid/Jarws-ai-/commit/427be1b8a03ca9eabefea6a3547778c1545ebc15) passed [actual CI 40645579395](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40645579395). Curriculum 44/50 (88.00%), 6 pending (12.00%). Runtime retrieval, weighted strategy, independent evaluation and exact-head final release remain pending; source chapters are not model training or loaded knowledge.
 
 - **28 October, Day 1 (12:00 PKT):** completed `backtest_overfitting_and_validation.md` (2162 substantive words). Completed fourth risk-family chapter. Three genuine dated already-explored windows preserve 107 gaps, 102 complete outcomes, censoring and overlap; favorable endpoints without entry stay distinct from filled trades. Primary PBO/Reality Check/publication-decay sources checked with version/publication dates. No new independent trial, unpushed prototype, complete market replay or account performance claim. Content/hash checks pass; existing evidence checks retain all 122 tests. Prior [d27e5189](https://github.com/shani001223-droid/Jarws-ai-/commit/d27e518933ce7f1fb970f7a75dfd4bc91e240667) passed [actual CI 40646884443](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40646884443). Curriculum 45/50 (90.00%), 5 pending (10.00%). Runtime retrieval, weighted strategy, independent evaluation and exact-head final release remain pending; source chapters are not model training or loaded knowledge.
+
+- **28 October, Day 1 (12:08 PKT):** completed `nfp_cpi_and_fomc.md` (2027 substantive words). Added three actual official releases and exact New York/UTC clocks plus raw public H.15 captures: employment-day and later paths differ, CPI units remain separate, and a 50 bp policy cut coexists with a rising ten-year window. Five new provenance/clock/field/hash/missing-endpoint tests bring the passing V3 evidence suite to 127. Consensus, surprise, original arrival, causal intraday effects, bond returns and win probability remain null. This is historical research, not a live news adapter or full strategy evaluation. Prior [f25ccc85](https://github.com/shani001223-droid/Jarws-ai-/commit/f25ccc85349b4eea9debc4feeca10e659e6a41b5) passed [actual CI 40647481873](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40647481873). Curriculum 46/50 (92.00%), 4 pending (8.00%). Runtime retrieval, weighted strategy, independent evaluation and exact-head final release remain pending; source chapters are not model training or loaded knowledge.
 
 ## Completion and release rules
 

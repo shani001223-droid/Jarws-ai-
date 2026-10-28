@@ -1,0 +1,266 @@
+{
+  "schema_version": "hoshi-v3-news-events-1",
+  "use": "historical-release-research-not-runtime-feed-or-causal-trading-evaluation",
+  "reviewed_on": "2026-10-28",
+  "scheduled_release_cases": [
+    {
+      "id": "employment_2024",
+      "release": {
+        "kind": "employment",
+        "reference_period": "2023-12",
+        "source_url": "https://www.bls.gov/news.release/archives/empsit_01052024.htm",
+        "stated_release_local": "2024-01-05T08:30:00-05:00",
+        "stated_release_utc": "2024-01-05T13:30:00+00:00",
+        "reported_fields": {
+          "nonfarm_payroll_change_persons_sa": 216000,
+          "unemployment_percent": 3.7
+        }
+      },
+      "captures": {
+        "DGS2": {
+          "series": "DGS2",
+          "requested_start": "2024-01-04",
+          "requested_end": "2024-01-08",
+          "request_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2024-01-04&coed=2024-01-08",
+          "http_status": 200,
+          "response_body": "observation_date,DGS2\n2024-01-04,4.38\n2024-01-05,4.40\n2024-01-08,4.36\n",
+          "source_sha256": "5ec8757cfaa4bbaf2e086db542009d4bae8ac7da3155e146145815f0db7d0448",
+          "captured_at_utc": "2026-10-28T07:03:17.170468+00:00"
+        },
+        "DGS10": {
+          "series": "DGS10",
+          "requested_start": "2024-01-04",
+          "requested_end": "2024-01-08",
+          "request_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10&cosd=2024-01-04&coed=2024-01-08",
+          "http_status": 200,
+          "response_body": "observation_date,DGS10\n2024-01-04,3.99\n2024-01-05,4.05\n2024-01-08,4.01\n",
+          "source_sha256": "af588dcba5dc05a193910039aac0c8705f3b0f301cae4ee684d59bd90cf6d604",
+          "captured_at_utc": "2026-10-28T07:03:21.603725+00:00"
+        }
+      },
+      "diagnostic": {
+        "method": "hoshi-stated-release-versus-retrospective-daily-yield-context-1",
+        "release": {
+          "kind": "employment",
+          "reference_period": "2023-12",
+          "source_url": "https://www.bls.gov/news.release/archives/empsit_01052024.htm",
+          "stated_release_local": "2024-01-05T08:30:00-05:00",
+          "stated_release_utc": "2024-01-05T13:30:00+00:00",
+          "reported_fields": {
+            "nonfarm_payroll_change_persons_sa": 216000,
+            "unemployment_percent": 3.7
+          }
+        },
+        "rates": {
+          "DGS2": {
+            "start_date": "2024-01-04",
+            "end_date": "2024-01-08",
+            "start_percent": "4.38",
+            "end_percent": "4.36",
+            "change_basis_points": -2.0,
+            "bond_price_return": null,
+            "original_publication_and_arrival_times": null
+          },
+          "DGS10": {
+            "start_date": "2024-01-04",
+            "end_date": "2024-01-08",
+            "start_percent": "3.99",
+            "end_percent": "4.01",
+            "change_basis_points": 2.0,
+            "bond_price_return": null,
+            "original_publication_and_arrival_times": null
+          }
+        },
+        "original_network_arrival_time": null,
+        "consensus_snapshot": null,
+        "surprise": null,
+        "synchronized_intraday_reaction": null,
+        "daily_observations_are_causal_announcement_effect": false,
+        "original_rate_vintage_verified": false,
+        "bond_price_return": null,
+        "decision": "WAIT",
+        "win_probability": null,
+        "orders_enabled": false
+      }
+    },
+    {
+      "id": "cpi_2022",
+      "release": {
+        "kind": "cpi",
+        "reference_period": "2022-09",
+        "source_url": "https://www.bls.gov/news.release/archives/cpi_10132022.htm",
+        "stated_release_local": "2022-10-13T08:30:00-04:00",
+        "stated_release_utc": "2022-10-13T12:30:00+00:00",
+        "reported_fields": {
+          "headline_monthly_percent_sa": 0.4,
+          "headline_yearly_percent_nsa": 8.2,
+          "ex_food_energy_monthly_percent_sa": 0.6,
+          "ex_food_energy_yearly_percent_nsa": 6.6
+        }
+      },
+      "captures": {
+        "DGS2": {
+          "series": "DGS2",
+          "requested_start": "2022-10-12",
+          "requested_end": "2022-10-14",
+          "request_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2022-10-12&coed=2022-10-14",
+          "http_status": 200,
+          "response_body": "observation_date,DGS2\n2022-10-12,4.28\n2022-10-13,4.47\n2022-10-14,4.48\n",
+          "source_sha256": "27081f44a08d085ed2e8ac5a1fdf5ca0be635dfd025e08df5b1bccc52ed2e4a3",
+          "captured_at_utc": "2026-10-28T07:03:25.405550+00:00"
+        },
+        "DGS10": {
+          "series": "DGS10",
+          "requested_start": "2022-10-12",
+          "requested_end": "2022-10-14",
+          "request_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10&cosd=2022-10-12&coed=2022-10-14",
+          "http_status": 200,
+          "response_body": "observation_date,DGS10\n2022-10-12,3.91\n2022-10-13,3.97\n2022-10-14,4.00\n",
+          "source_sha256": "19a7393079a4086ba63da81eb80aac48cfbf7d2ac99be3a6ad183ad22a56c7c0",
+          "captured_at_utc": "2026-10-28T07:03:29.032081+00:00"
+        }
+      },
+      "diagnostic": {
+        "method": "hoshi-stated-release-versus-retrospective-daily-yield-context-1",
+        "release": {
+          "kind": "cpi",
+          "reference_period": "2022-09",
+          "source_url": "https://www.bls.gov/news.release/archives/cpi_10132022.htm",
+          "stated_release_local": "2022-10-13T08:30:00-04:00",
+          "stated_release_utc": "2022-10-13T12:30:00+00:00",
+          "reported_fields": {
+            "headline_monthly_percent_sa": 0.4,
+            "headline_yearly_percent_nsa": 8.2,
+            "ex_food_energy_monthly_percent_sa": 0.6,
+            "ex_food_energy_yearly_percent_nsa": 6.6
+          }
+        },
+        "rates": {
+          "DGS2": {
+            "start_date": "2022-10-12",
+            "end_date": "2022-10-14",
+            "start_percent": "4.28",
+            "end_percent": "4.48",
+            "change_basis_points": 20.0,
+            "bond_price_return": null,
+            "original_publication_and_arrival_times": null
+          },
+          "DGS10": {
+            "start_date": "2022-10-12",
+            "end_date": "2022-10-14",
+            "start_percent": "3.91",
+            "end_percent": "4.00",
+            "change_basis_points": 9.0,
+            "bond_price_return": null,
+            "original_publication_and_arrival_times": null
+          }
+        },
+        "original_network_arrival_time": null,
+        "consensus_snapshot": null,
+        "surprise": null,
+        "synchronized_intraday_reaction": null,
+        "daily_observations_are_causal_announcement_effect": false,
+        "original_rate_vintage_verified": false,
+        "bond_price_return": null,
+        "decision": "WAIT",
+        "win_probability": null,
+        "orders_enabled": false
+      }
+    },
+    {
+      "id": "fomc_2024",
+      "release": {
+        "kind": "fomc",
+        "reference_period": "2024-09-18 decision",
+        "source_url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20240918a.htm",
+        "stated_release_local": "2024-09-18T14:00:00-04:00",
+        "stated_release_utc": "2024-09-18T18:00:00+00:00",
+        "reported_fields": {
+          "target_lower_percent": 4.75,
+          "target_upper_percent": 5.0,
+          "target_change_basis_points": -50
+        }
+      },
+      "captures": {
+        "DGS2": {
+          "id": "large_cut_2024_DGS2",
+          "series": "DGS2",
+          "requested_start": "2024-09-17",
+          "requested_end": "2024-09-20",
+          "request_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2024-09-17&coed=2024-09-20",
+          "captured_at_utc": "2026-10-28T06:00:54.455345+00:00",
+          "http_status": 200,
+          "source_sha256": "87104bd04c35d019bb42558e6b4d0c78f5f969bc78719235864fc5cc6d91c489",
+          "response_body": "observation_date,DGS2\n2024-09-17,3.59\n2024-09-18,3.61\n2024-09-19,3.59\n2024-09-20,3.55\n"
+        },
+        "DGS10": {
+          "id": "large_cut_2024_DGS10",
+          "series": "DGS10",
+          "requested_start": "2024-09-17",
+          "requested_end": "2024-09-20",
+          "request_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10&cosd=2024-09-17&coed=2024-09-20",
+          "captured_at_utc": "2026-10-28T06:00:57.779236+00:00",
+          "http_status": 200,
+          "source_sha256": "21cc5991ca6e3a59870387c77f1cd7e2cb50e32c873d45e68ad083d4600eca6a",
+          "response_body": "observation_date,DGS10\n2024-09-17,3.65\n2024-09-18,3.70\n2024-09-19,3.73\n2024-09-20,3.73\n"
+        }
+      },
+      "diagnostic": {
+        "method": "hoshi-stated-release-versus-retrospective-daily-yield-context-1",
+        "release": {
+          "kind": "fomc",
+          "reference_period": "2024-09-18 decision",
+          "source_url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20240918a.htm",
+          "stated_release_local": "2024-09-18T14:00:00-04:00",
+          "stated_release_utc": "2024-09-18T18:00:00+00:00",
+          "reported_fields": {
+            "target_lower_percent": 4.75,
+            "target_upper_percent": 5.0,
+            "target_change_basis_points": -50
+          }
+        },
+        "rates": {
+          "DGS2": {
+            "start_date": "2024-09-17",
+            "end_date": "2024-09-20",
+            "start_percent": "3.59",
+            "end_percent": "3.55",
+            "change_basis_points": -4.0,
+            "bond_price_return": null,
+            "original_publication_and_arrival_times": null
+          },
+          "DGS10": {
+            "start_date": "2024-09-17",
+            "end_date": "2024-09-20",
+            "start_percent": "3.65",
+            "end_percent": "3.73",
+            "change_basis_points": 8.0,
+            "bond_price_return": null,
+            "original_publication_and_arrival_times": null
+          }
+        },
+        "original_network_arrival_time": null,
+        "consensus_snapshot": null,
+        "surprise": null,
+        "synchronized_intraday_reaction": null,
+        "daily_observations_are_causal_announcement_effect": false,
+        "original_rate_vintage_verified": false,
+        "bond_price_return": null,
+        "decision": "WAIT",
+        "win_probability": null,
+        "orders_enabled": false
+      }
+    }
+  ],
+  "source_metadata": {
+    "release_sources": "Archived BLS releases and official Fed statement. Stated embargo/release clock is not original API/network arrival. Numeric fields preserve the reviewed release, not a current revised historical observation.",
+    "rate_source": "Board H.15 DGS2/DGS10 via FRED, percent per annum, public-domain-tagged with citation requested. Later retrieved history; no original vintage/arrival verification.",
+    "unsupported": [
+      "pre-release consensus and its source time",
+      "intraday tradable bond prices",
+      "execution spreads, fills and costs",
+      "causal announcement return",
+      "win probability"
+    ]
+  }
+}

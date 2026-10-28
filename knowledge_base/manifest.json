@@ -1183,7 +1183,47 @@
     },
     {
       "path": "knowledge_base/11_NEWS_TRADING/nfp_cpi_and_fomc.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2027,
+      "sha256": "9faf9245da132044abe2633309de03b1a1abc1be9165103a5eb5e683c0f75dc3",
+      "source_review": {
+        "status": "checked-primary-archived-releases-and-actual-h15-captures",
+        "primary_sources": [
+          {
+            "url": "https://www.bls.gov/news.release/archives/empsit_01052024.htm",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.bls.gov/news.release/archives/cpi_10132022.htm",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20240918a.htm",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://fred.stlouisfed.org/series/DGS2",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://fred.stlouisfed.org/series/DGS10",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.federalreserve.gov/releases/h15/",
+            "checked": "2026-10-28"
+          }
+        ],
+        "limitations": [
+          "Stated official release/embargo times are not verified original network arrival. Economic reference months, publication dates and later-retrieved rate dates are distinct.",
+          "Four new DGS2/DGS10 daily captures and reused FOMC daily captures provide descriptive context only, not synchronized announcement effects or bond-price returns.",
+          "Pre-release consensus, surprise, original rate vintages, executable prices/spreads/fills and calibration are unavailable. All diagnostics WAIT/null; no live news adapter or runtime training."
+        ],
+        "evidence_method": "hoshi-stated-release-versus-retrospective-daily-yield-context-1",
+        "reviewed_on": "2026-10-28",
+        "resolved_at_asia_karachi": "2026-10-28T12:08:29.941090+05:00"
+      }
     },
     {
       "path": "knowledge_base/11_NEWS_TRADING/war_elections_and_policy_shocks.md",
@@ -1263,6 +1303,11 @@
       "path": "knowledge_base/10_TRADING_PSYCHOLOGY_AND_RISK/risk_arithmetic_20261028.json",
       "kind": "synthetic_risk",
       "sha256": "850c5ca3d1072a9eee8274d55d71ca3d3bab6369b55d7b4d2ac7ac8c5ee93439"
+    },
+    {
+      "path": "knowledge_base/11_NEWS_TRADING/news_events_20261028.json",
+      "kind": "news_events",
+      "sha256": "3586f0a22697c23c6f297dbf9c381e018b5447754365896bb5d215f59cd2eff1"
     }
   ],
   "scope_history": [

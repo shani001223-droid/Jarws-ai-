@@ -29,7 +29,7 @@ class VoiceTimingTests(unittest.TestCase):
             wav.setnchannels(1)
             wav.setsampwidth(2)
             wav.setframerate(16000)
-            wav.writeframes(b"\\x00\\x00" * (16000 * 30))
+            wav.writeframes(bytes(16000 * 30 * 2))
         self.wav = stream.getvalue()
         self.captions = ["سلام", "नमस्ते", "Phir milenge"]
         self.moves = ["static", "static", "static"]
@@ -109,7 +109,7 @@ class VoiceTimingTests(unittest.TestCase):
             self.stills, self.captions, image_rights_attested=True,
             audio_wav=self.wav, audio_rights_attested=True,
             storyboard_handoff=self.storyboard, voice_timing_plan=self.cues)
-        self.assertTrue(result["video_mp4"].startswith(b"\\x00") or b"ftyp" in result["video_mp4"][:32])
+        self.assertIn(b"ftyp", result["video_mp4"][:32])
         self.assertEqual(result["voice_timing_handoff"]["plan"]["audio_sha256"],
                          result["source_audio_sha256"])
         self.assertEqual(result["voice_timing_handoff"]["plan"]["cues"][0]["text"], "سلام")

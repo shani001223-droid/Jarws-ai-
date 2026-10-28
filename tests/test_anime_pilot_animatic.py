@@ -56,7 +56,7 @@ class AnimePilotAnimaticTests(unittest.TestCase):
             with self.subTest(bad=len(bad)), self.assertRaises(pilot.AnimePilotError):
                 pilot.render_private_animatic([bad, *images[1:]], CAPTIONS,
                                               image_rights_attested=True)
-        for bad in ("<script>evil</script>", "Hello\\nworld", "safe\\u202eunsafe",
+        for bad in ("<script>evil</script>", "Hello\nworld", "safe\u202eunsafe",
                     "", "x" * 181):
             with self.subTest(bad=bad), self.assertRaises(pilot.AnimePilotError):
                 pilot.render_private_animatic(images, [bad, *CAPTIONS[1:]],

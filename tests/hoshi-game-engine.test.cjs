@@ -10,11 +10,11 @@ const engine = import(pathToFileURL(resolve(root, "game-studio/engine.mjs")).hre
 test("Task 50 template uses the six immutable design levels", async () => {
   const { validateManifest, ENGINE_VERSION } = await engine;
   const levels = validateManifest(manifest);
-  assert.equal(ENGINE_VERSION, "canvas-preview-v1");
+  assert.equal(ENGINE_VERSION, "canvas-game-v2");
   assert.equal(levels.length, 6);
   assert.deepEqual(levels.map(x => x.minimum_moves), [8,8,8,16,16,12]);
   assert.ok(Object.isFrozen(levels[0].rows));
-  assert.equal(manifest.status, "design_only_not_playable");
+  assert.equal(manifest.status, "playable_local_mvp");
 });
 
 test("malformed or forged level manifests fail closed", async () => {

@@ -1,0 +1,59 @@
+"""Reference proximity is not observed stop inventory or a win rate."""
+from copy import deepcopy
+import json
+from pathlib import Path
+import sys
+import unittest
+
+ROOT=Path(__file__).resolve().parents[1]
+sys.path.insert(0,str(ROOT/"scripts"))
+import v3_liquidity_evidence as l
+
+
+def receipt():
+    return json.loads((ROOT/"knowledge_base/06_LIQUIDITY_GOD/liquidity_observations_20261028.json").read_text())
+
+
+class V3LiquidityTests(unittest.TestCase):
+    def test_cluster_references_are_prior_confirmed_and_prefix_stable(self):
+        p=receipt();windows=l.check_receipt(p,ROOT)
+        for entry in p["cluster_cases"]:
+            f=entry["case"]["features"];bars=windows[entry["source_window_sha256"]]
+            prefix=[b for b in bars if b["close_time"]<=f["event"]["close_time"]]
+            self.assertEqual(l.cluster_features(prefix,f["event"]["date"],f["kind"]),f)
+            self.assertIsNone(l.cluster_case(prefix,f["event"]["date"],f["kind"])["outcome"])
+            self.assertLess(f["second_pivot"]["confirmed_at"],f["prior_available_at"])
+            self.assertLessEqual(f["separation_bps"],25)
+
+    def test_absent_event_excursion_is_not_a_completed_raid(self):
+        p=receipt();l.check_receipt(p,ROOT)
+        c=p["cluster_cases"][1]["case"]
+        self.assertFalse(c["features"]["event_wick_beyond_outer"])
+        self.assertEqual(c["outcome"]["first_beyond_outer_bar"]["date"],"2021-04-10")
+        self.assertEqual(c["outcome"]["first_post_excursion_reclaim"]["date"],"2021-04-10")
+        # Apr 6 is already below the cluster but has not made the required excursion.
+        self.assertNotEqual(c["outcome"]["first_post_excursion_reclaim"]["date"],"2021-04-06")
+
+    def test_outer_excursion_does_not_guarantee_reversal_or_execution(self):
+        p=receipt();l.check_receipt(p,ROOT)
+        first,last=(p["cluster_cases"][k]["case"] for k in (0,2))
+        self.assertFalse(first["features"]["event_close_reclaims_entire_cluster"])
+        self.assertEqual(first["outcome"]["first_post_excursion_reclaim"]["date"],"2020-06-02")
+        self.assertIsNone(last["outcome"]["first_post_excursion_reclaim"])
+        for entry in p["cluster_cases"]:
+            f=entry["case"]["features"]
+            self.assertFalse(f["actual_stop_inventory_known"])
+            self.assertIsNone(f["win_probability"])
+            self.assertEqual(f["decision"],"WAIT")
+            self.assertIsNone(entry["case"]["outcome"]["strategy_pnl"])
+
+    def test_corrupted_cluster_or_outcome_or_source_rejected(self):
+        for key in ("boundary","outcome","source"):
+            p=deepcopy(receipt())
+            if key=="boundary":p["cluster_cases"][0]["case"]["features"]["upper"]+=1
+            elif key=="outcome":p["cluster_cases"][1]["case"]["outcome"]["first_post_excursion_reclaim"]=None
+            else:p["source_file_sha256"]="0"*64
+            with self.assertRaises(AssertionError):l.check_receipt(p,ROOT)
+
+
+if __name__ == "__main__":unittest.main()

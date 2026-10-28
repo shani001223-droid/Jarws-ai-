@@ -344,11 +344,48 @@
     {
       "path": "knowledge_base/05_ICT_COMPLETE/session_opening_gaps_ndog_nwog_and_2024_context.md",
       "status": "pending",
-      "scope_note": "Explicit expansion: original 2024 source introduces day/week session opening gaps distinct from three-candle FVG and arbitrary spot clock envelopes; requires checked original session boundaries, actual dated endpoints and failures, with unsupported data gaps retained."
+      "scope_note": "Explicit expansion: original 2024 source introduces day/week session opening gaps distinct from three-candle FVG and arbitrary spot clock envelopes; requires checked original session boundaries, actual dated endpoints and failures, with unsupported data gaps retained.",
+      "source_review": {
+        "status": "pending_actual_session_endpoint_and_redistribution_evidence",
+        "last_rechecked_at_asia_karachi": "2026-10-28T07:27:06.550082+05:00",
+        "checked_sources": [
+          {
+            "url": "https://www.youtube.com/watch?v=hdSscxZgE58",
+            "result": "Original selected captions/public metadata obtained; chart visuals and actual dated contract close/reopen endpoints not obtained."
+          },
+          {
+            "url": "https://www.cmegroup.com/datamine/datamine-api.html",
+            "result": "Primary API documentation checked: purchased/entitled historical-file access requires an authenticated API ID. No account, purchase or entitlement was created."
+          },
+          {
+            "url": "https://cmegroupclientsite.atlassian.net/wiki/spaces/EPICSANDBOX/pages/457319709/CME%2BDataMine%2BSupport",
+            "result": "Primary FAQ checked: limited free historical/sample data may exist; exact suitable dated close/reopen samples and redistribution permission have not yet been verified. Do not claim data are unavailable everywhere."
+          }
+        ],
+        "remaining_requirement": "Obtain a permitted primary or licensed exact-contract session calendar plus actual timestamped pre-break last trade and post-break first trade for three dated cases, raw receipts/point-in-time availability and applicable redistribution rights; otherwise keep chapter pending. Settlement/daily closes and arbitrary 24/7 spot envelopes are not equivalent endpoints. Continue independent pending chapters without paid access."
+      }
     },
     {
       "path": "knowledge_base/06_LIQUIDITY_GOD/bsl_ssl_equal_highs_lows.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2052,
+      "sha256": "82e26ff0caa191f280ed5e7843aebfd985536061e119477fdaf1521bb62e0537",
+      "source_review": {
+        "status": "primary_order_mechanics_and_genuine_venue_specific_replay_checked",
+        "reviewed_on": "2026-10-28",
+        "primary_sources": [
+          {
+            "url": "https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-15",
+            "checked": "Stock stop/stop-limit trigger and execution mechanics, not Binance inventory or trigger parity."
+          },
+          {
+            "url": "https://developers.binance.com/docs/binance-spot-api-docs/rest-api/market-data-endpoints",
+            "checked": "Native kline field/time schema; exact source responses already pinned in referenced daily receipt."
+          }
+        ],
+        "limitations": "25-basis-point latest-two-pivot cluster is original exploratory geometry. Actual stop inventory, institutional intent, fills and probability remain unknown. Reuses prior daily data, not independent holdout."
+      }
     },
     {
       "path": "knowledge_base/06_LIQUIDITY_GOD/inducement_turtle_soup_and_reclaims.md",
@@ -482,6 +519,11 @@
       "path": "knowledge_base/05_ICT_COMPLETE/ict_intraday_observations_20261028.json",
       "kind": "ict_intraday",
       "sha256": "4e6b66fa819aa93c1b0aa7b10f76cce8716eb05039951b535d470d7bb5d9e602"
+    },
+    {
+      "path": "knowledge_base/06_LIQUIDITY_GOD/liquidity_observations_20261028.json",
+      "kind": "liquidity_cases",
+      "sha256": "f683a687e304397cc00fcea8a617f65df9656228c1a0b754c493e0785599388b"
     }
   ],
   "scope_history": [

@@ -796,7 +796,58 @@
     },
     {
       "path": "knowledge_base/09_GLOBAL_MONEY_FLOW/dollar_gold_oil_and_equity_links.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2157,
+      "sha256": "7a5805102ecd0737991161edb1df8dc4c068f7f795ef29bac1e6a5e8d886fb6e",
+      "source_review": {
+        "status": "checked_primary_definitions_and_three_bounded_public_series_cases_with_benchmark_gaps_explicit",
+        "primary_sources": [
+          {
+            "url": "https://www.ice.com/forex/usdx",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://developer.ice.com/fixed-income-data-services/catalog/ice-data-indices-currency-indices",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.federalreserve.gov/releases/H10/summary/default.htm",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://fred.stlouisfed.org/series/DTWEXBGS",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://fred.stlouisfed.org/series/DCOILWTICO",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://fred.stlouisfed.org/series/NASDAQCOM",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.eia.gov/todayinenergy/detail.php?id=51498",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.gold.org/goldhub/research/gold-prices-swing-as-markets-sell-off",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.gold.org/goldhub/research/gold-market-commentary-february-2022",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.gold.org/goldhub/research/gold-market-commentary-august-2024",
+            "checked": "2026-10-28"
+          }
+        ],
+        "limitations": "Only Fed broad-dollar and EIA Cushing WTI spot raw observations retained; broad dollar is not ICE DXY. Exact fixed windows 2020-03-09/20, 2022-02-23/03-08 and 2024-08-01/08, current revised history with unknown original vintage/arrival. Nine/nine/five common-date intervals, no forward fill, tiny descriptive correlations and no causal inference. Gold observations are brief dated WGC report paraphrases with different monthly windows; no licensed gold array acquired. New raw NASDAQCOM excluded after checking the Pre-Approval Required tag. Existing earlier limited observations need rights review before runtime/data bundling; no blanket redistribution license assumed. Price changes are not measured capital flows.",
+        "reviewed_on": "2026-10-28",
+        "resolved_at_asia_karachi": "2026-10-28T10:59:21.114073+05:00"
+      }
     },
     {
       "path": "knowledge_base/09_GLOBAL_MONEY_FLOW/bonds_yields_fed_and_interest_rates.md",
@@ -846,7 +897,8 @@
   "integration_gates": {
     "bounded_brain_loader_and_bundle": "pending",
     "history_liquidity_structure_global_flow_engine": "pending",
-    "exact_head_verification_and_release": "pending"
+    "exact_head_verification_and_release": "pending",
+    "benchmark_data_rights_and_point_in_time_inputs": "pending"
   },
   "data_receipts": [
     {
@@ -897,6 +949,11 @@
       "path": "knowledge_base/08_INDICATORS_AND_ORDERFLOW/indicator_observations_20261028.json",
       "kind": "indicator_cases",
       "sha256": "795c44e62c334a85dfaac137311001ced4bf5623fb85b7598e4f98aae54b22cf"
+    },
+    {
+      "path": "knowledge_base/09_GLOBAL_MONEY_FLOW/macro_observations_20261028.json",
+      "kind": "macro_cases",
+      "sha256": "15e003544f7b16e4a345f5e4783669f57f7ed7178ac147dc57ea77aa0d5b6dd7"
     }
   ],
   "scope_history": [

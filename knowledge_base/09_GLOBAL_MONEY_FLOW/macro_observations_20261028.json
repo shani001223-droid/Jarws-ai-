@@ -1,0 +1,425 @@
+{
+  "schema_version": "hoshi-v3-macro-evidence-1",
+  "use": "bounded-retrospective-source-research-not-runtime-or-training",
+  "reviewed_on": "2026-10-28",
+  "sources": {
+    "DTWEXBGS": {
+      "provider": "Board of Governors of the Federal Reserve System via FRED",
+      "units": "Index January 2006=100, daily, not seasonally adjusted",
+      "rights": "Public Domain: Citation Requested, as tagged on checked FRED series page",
+      "source_url": "https://fred.stlouisfed.org/series/DTWEXBGS",
+      "publication_clock": "H.10 release schedule; original daily vintage and client arrival not reconstructed"
+    },
+    "DCOILWTICO": {
+      "provider": "US Energy Information Administration via FRED",
+      "units": "US dollars per barrel, WTI Cushing spot, daily, not seasonally adjusted",
+      "rights": "Public Domain: Citation Requested, as tagged on checked FRED series page",
+      "source_url": "https://fred.stlouisfed.org/series/DCOILWTICO",
+      "publication_clock": "Daily price observation label; exact historical intraday fixing/arrival not obtained"
+    }
+  },
+  "excluded_series": {
+    "ICE_DXY": "Methodology checked; permitted original daily price-series source and redistribution rights not verified. Fed broad dollar is not relabelled DXY.",
+    "GOLD_BENCHMARK": "No licensed raw benchmark series obtained. Brief dated WGC published report observations are separate from these paired daily windows.",
+    "NASDAQCOM": "FRED metadata checked 2026-10-28: Copyrighted: Pre-Approval Required. New raw daily series not redistributed here; existing earlier limited observations still need rights review before data/runtime bundling."
+  },
+  "money_flow_cases": [
+    {
+      "id": "covid_2020",
+      "captures": {
+        "DTWEXBGS": {
+          "id": "covid_2020_DTWEXBGS",
+          "series": "DTWEXBGS",
+          "requested_start": "2020-03-09",
+          "requested_end": "2020-03-20",
+          "request_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DTWEXBGS&cosd=2020-03-09&coed=2020-03-20",
+          "captured_at_utc": "2026-10-28T05:51:06.879830+00:00",
+          "http_status": 200,
+          "source_sha256": "d7277702e312e4178ade2a0bad01336b5ad2aa841ebc2496cd7b95cf2d75e603",
+          "response_body": "observation_date,DTWEXBGS\n2020-03-09,117.1871\n2020-03-10,117.9027\n2020-03-11,118.2505\n2020-03-12,120.4883\n2020-03-13,120.4388\n2020-03-16,120.9352\n2020-03-17,122.4816\n2020-03-18,124.1623\n2020-03-19,125.0587\n2020-03-20,124.9362\n"
+        },
+        "DCOILWTICO": {
+          "id": "covid_2020_DCOILWTICO",
+          "series": "DCOILWTICO",
+          "requested_start": "2020-03-09",
+          "requested_end": "2020-03-20",
+          "request_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DCOILWTICO&cosd=2020-03-09&coed=2020-03-20",
+          "captured_at_utc": "2026-10-28T05:51:06.844963+00:00",
+          "http_status": 200,
+          "source_sha256": "05978738a585459b822f25045bfc9c52fb04ef15916c3bdd9d1c17910fce2ca7",
+          "response_body": "observation_date,DCOILWTICO\n2020-03-09,31.05\n2020-03-10,34.47\n2020-03-11,33.13\n2020-03-12,31.56\n2020-03-13,31.72\n2020-03-16,28.96\n2020-03-17,26.96\n2020-03-18,20.48\n2020-03-19,25.09\n2020-03-20,19.48\n"
+        }
+      },
+      "diagnostic": {
+        "method": "hoshi-bounded-public-dollar-oil-context-1",
+        "broad_fed_dollar": {
+          "start_date": "2020-03-09",
+          "end_date": "2020-03-20",
+          "start_value": "117.1871",
+          "end_value": "124.9362",
+          "status": "observed",
+          "arithmetic_change_pct": 6.612587904300047,
+          "same_instant_prices": false,
+          "original_publication_and_arrival_times": null
+        },
+        "cushing_wti_spot": {
+          "start_date": "2020-03-09",
+          "end_date": "2020-03-20",
+          "start_value": "31.05",
+          "end_value": "19.48",
+          "status": "observed",
+          "arithmetic_change_pct": -37.26247987117552,
+          "same_instant_prices": false,
+          "original_publication_and_arrival_times": null
+        },
+        "paired_changes": {
+          "method": "hoshi-common-date-arithmetic-interval-correlation-1",
+          "common_observation_dates": [
+            "2020-03-09",
+            "2020-03-10",
+            "2020-03-11",
+            "2020-03-12",
+            "2020-03-13",
+            "2020-03-16",
+            "2020-03-17",
+            "2020-03-18",
+            "2020-03-19",
+            "2020-03-20"
+          ],
+          "intervals": [
+            {
+              "start_date": "2020-03-09",
+              "end_date": "2020-03-10",
+              "calendar_days": 1,
+              "first_change_pct": 0.610647417676519,
+              "second_change_pct": 11.014492753623188
+            },
+            {
+              "start_date": "2020-03-10",
+              "end_date": "2020-03-11",
+              "calendar_days": 1,
+              "first_change_pct": 0.2949890036445306,
+              "second_change_pct": -3.88743835219031
+            },
+            {
+              "start_date": "2020-03-11",
+              "end_date": "2020-03-12",
+              "calendar_days": 1,
+              "first_change_pct": 1.8924232878507914,
+              "second_change_pct": -4.738907334741926
+            },
+            {
+              "start_date": "2020-03-12",
+              "end_date": "2020-03-13",
+              "calendar_days": 1,
+              "first_change_pct": -0.041082827129273136,
+              "second_change_pct": 0.5069708491761724
+            },
+            {
+              "start_date": "2020-03-13",
+              "end_date": "2020-03-16",
+              "calendar_days": 3,
+              "first_change_pct": 0.41215953662773125,
+              "second_change_pct": -8.701134930643127
+            },
+            {
+              "start_date": "2020-03-16",
+              "end_date": "2020-03-17",
+              "calendar_days": 1,
+              "first_change_pct": 1.2787013210380436,
+              "second_change_pct": -6.906077348066298
+            },
+            {
+              "start_date": "2020-03-17",
+              "end_date": "2020-03-18",
+              "calendar_days": 1,
+              "first_change_pct": 1.3722061109587074,
+              "second_change_pct": -24.03560830860534
+            },
+            {
+              "start_date": "2020-03-18",
+              "end_date": "2020-03-19",
+              "calendar_days": 1,
+              "first_change_pct": 0.7219582755796244,
+              "second_change_pct": 22.509765625
+            },
+            {
+              "start_date": "2020-03-19",
+              "end_date": "2020-03-20",
+              "calendar_days": 1,
+              "first_change_pct": -0.09795400080122374,
+              "second_change_pct": -22.359505779194897
+            }
+          ],
+          "complete_interval_count": 9,
+          "pearson_change_correlation": -0.05259009212159108,
+          "forward_fill_used": false,
+          "synchronized_intraday_prices": false,
+          "independent_holdout": false
+        },
+        "ice_dxy_price_series": null,
+        "gold_benchmark_price_series": null,
+        "equity_benchmark_price_series": null,
+        "measured_capital_flows": null,
+        "original_vintage_verified": false,
+        "decision": "WAIT",
+        "win_probability": null,
+        "orders_enabled": false
+      }
+    },
+    {
+      "id": "ukraine_2022",
+      "captures": {
+        "DTWEXBGS": {
+          "id": "ukraine_2022_DTWEXBGS",
+          "series": "DTWEXBGS",
+          "requested_start": "2022-02-23",
+          "requested_end": "2022-03-08",
+          "request_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DTWEXBGS&cosd=2022-02-23&coed=2022-03-08",
+          "captured_at_utc": "2026-10-28T05:51:10.766494+00:00",
+          "http_status": 200,
+          "source_sha256": "5372b872167d0b0588ccb8f750db433b07976c5e72f6f9004bffd33dc7306ee3",
+          "response_body": "observation_date,DTWEXBGS\n2022-02-23,114.6668\n2022-02-24,115.9419\n2022-02-25,115.2577\n2022-02-28,115.2224\n2022-03-01,115.7962\n2022-03-02,115.7623\n2022-03-03,115.9495\n2022-03-04,116.6503\n2022-03-07,117.3278\n2022-03-08,117.6176\n"
+        },
+        "DCOILWTICO": {
+          "id": "ukraine_2022_DCOILWTICO",
+          "series": "DCOILWTICO",
+          "requested_start": "2022-02-23",
+          "requested_end": "2022-03-08",
+          "request_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DCOILWTICO&cosd=2022-02-23&coed=2022-03-08",
+          "captured_at_utc": "2026-10-28T05:51:10.657912+00:00",
+          "http_status": 200,
+          "source_sha256": "98bb33ff60278b0cb860e933909cbf4a2ecebf05a2f52b0367555e3da8e01c33",
+          "response_body": "observation_date,DCOILWTICO\n2022-02-23,92.14\n2022-02-24,92.77\n2022-02-25,91.68\n2022-02-28,96.13\n2022-03-01,103.66\n2022-03-02,110.74\n2022-03-03,107.69\n2022-03-04,115.77\n2022-03-07,119.26\n2022-03-08,123.64\n"
+        }
+      },
+      "diagnostic": {
+        "method": "hoshi-bounded-public-dollar-oil-context-1",
+        "broad_fed_dollar": {
+          "start_date": "2022-02-23",
+          "end_date": "2022-03-08",
+          "start_value": "114.6668",
+          "end_value": "117.6176",
+          "status": "observed",
+          "arithmetic_change_pct": 2.5733691007336037,
+          "same_instant_prices": false,
+          "original_publication_and_arrival_times": null
+        },
+        "cushing_wti_spot": {
+          "start_date": "2022-02-23",
+          "end_date": "2022-03-08",
+          "start_value": "92.14",
+          "end_value": "123.64",
+          "status": "observed",
+          "arithmetic_change_pct": 34.187106576948125,
+          "same_instant_prices": false,
+          "original_publication_and_arrival_times": null
+        },
+        "paired_changes": {
+          "method": "hoshi-common-date-arithmetic-interval-correlation-1",
+          "common_observation_dates": [
+            "2022-02-23",
+            "2022-02-24",
+            "2022-02-25",
+            "2022-02-28",
+            "2022-03-01",
+            "2022-03-02",
+            "2022-03-03",
+            "2022-03-04",
+            "2022-03-07",
+            "2022-03-08"
+          ],
+          "intervals": [
+            {
+              "start_date": "2022-02-23",
+              "end_date": "2022-02-24",
+              "calendar_days": 1,
+              "first_change_pct": 1.1120045209249756,
+              "second_change_pct": 0.6837421315389625
+            },
+            {
+              "start_date": "2022-02-24",
+              "end_date": "2022-02-25",
+              "calendar_days": 1,
+              "first_change_pct": -0.5901231565120116,
+              "second_change_pct": -1.174948798102835
+            },
+            {
+              "start_date": "2022-02-25",
+              "end_date": "2022-02-28",
+              "calendar_days": 3,
+              "first_change_pct": -0.030627021014648044,
+              "second_change_pct": 4.853839441535777
+            },
+            {
+              "start_date": "2022-02-28",
+              "end_date": "2022-03-01",
+              "calendar_days": 1,
+              "first_change_pct": 0.497993445718888,
+              "second_change_pct": 7.833142619369604
+            },
+            {
+              "start_date": "2022-03-01",
+              "end_date": "2022-03-02",
+              "calendar_days": 1,
+              "first_change_pct": -0.02927557208267629,
+              "second_change_pct": 6.83002122322979
+            },
+            {
+              "start_date": "2022-03-02",
+              "end_date": "2022-03-03",
+              "calendar_days": 1,
+              "first_change_pct": 0.1617106778286195,
+              "second_change_pct": -2.7541990247426402
+            },
+            {
+              "start_date": "2022-03-03",
+              "end_date": "2022-03-04",
+              "calendar_days": 1,
+              "first_change_pct": 0.6044010539070889,
+              "second_change_pct": 7.50301792181261
+            },
+            {
+              "start_date": "2022-03-04",
+              "end_date": "2022-03-07",
+              "calendar_days": 3,
+              "first_change_pct": 0.580795763062761,
+              "second_change_pct": 3.0145979096484408
+            },
+            {
+              "start_date": "2022-03-07",
+              "end_date": "2022-03-08",
+              "calendar_days": 1,
+              "first_change_pct": 0.2470002846725158,
+              "second_change_pct": 3.67264799597518
+            }
+          ],
+          "complete_interval_count": 9,
+          "pearson_change_correlation": 0.20877192998651528,
+          "forward_fill_used": false,
+          "synchronized_intraday_prices": false,
+          "independent_holdout": false
+        },
+        "ice_dxy_price_series": null,
+        "gold_benchmark_price_series": null,
+        "equity_benchmark_price_series": null,
+        "measured_capital_flows": null,
+        "original_vintage_verified": false,
+        "decision": "WAIT",
+        "win_probability": null,
+        "orders_enabled": false
+      }
+    },
+    {
+      "id": "august_2024",
+      "captures": {
+        "DTWEXBGS": {
+          "id": "august_2024_DTWEXBGS",
+          "series": "DTWEXBGS",
+          "requested_start": "2024-08-01",
+          "requested_end": "2024-08-08",
+          "request_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DTWEXBGS&cosd=2024-08-01&coed=2024-08-08",
+          "captured_at_utc": "2026-10-28T05:51:14.171307+00:00",
+          "http_status": 200,
+          "source_sha256": "de24f64f3e278782770089926a94d6618c458cff8e5a296a0bff4430b1938d04",
+          "response_body": "observation_date,DTWEXBGS\n2024-08-01,123.8693\n2024-08-02,123.4681\n2024-08-05,123.5787\n2024-08-06,123.6532\n2024-08-07,123.5698\n2024-08-08,123.4466\n"
+        },
+        "DCOILWTICO": {
+          "id": "august_2024_DCOILWTICO",
+          "series": "DCOILWTICO",
+          "requested_start": "2024-08-01",
+          "requested_end": "2024-08-08",
+          "request_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DCOILWTICO&cosd=2024-08-01&coed=2024-08-08",
+          "captured_at_utc": "2026-10-28T05:51:14.243286+00:00",
+          "http_status": 200,
+          "source_sha256": "7a0ab6d5a67a0601a4f655a90422d2cce335fbf0fa652009adf09cefa01bbc11",
+          "response_body": "observation_date,DCOILWTICO\n2024-08-01,77.74\n2024-08-02,74.99\n2024-08-05,74.46\n2024-08-06,74.60\n2024-08-07,76.68\n2024-08-08,77.64\n"
+        }
+      },
+      "diagnostic": {
+        "method": "hoshi-bounded-public-dollar-oil-context-1",
+        "broad_fed_dollar": {
+          "start_date": "2024-08-01",
+          "end_date": "2024-08-08",
+          "start_value": "123.8693",
+          "end_value": "123.4466",
+          "status": "observed",
+          "arithmetic_change_pct": -0.3412467818902666,
+          "same_instant_prices": false,
+          "original_publication_and_arrival_times": null
+        },
+        "cushing_wti_spot": {
+          "start_date": "2024-08-01",
+          "end_date": "2024-08-08",
+          "start_value": "77.74",
+          "end_value": "77.64",
+          "status": "observed",
+          "arithmetic_change_pct": -0.12863390789812196,
+          "same_instant_prices": false,
+          "original_publication_and_arrival_times": null
+        },
+        "paired_changes": {
+          "method": "hoshi-common-date-arithmetic-interval-correlation-1",
+          "common_observation_dates": [
+            "2024-08-01",
+            "2024-08-02",
+            "2024-08-05",
+            "2024-08-06",
+            "2024-08-07",
+            "2024-08-08"
+          ],
+          "intervals": [
+            {
+              "start_date": "2024-08-01",
+              "end_date": "2024-08-02",
+              "calendar_days": 1,
+              "first_change_pct": -0.3238897773701797,
+              "second_change_pct": -3.5374324671983537
+            },
+            {
+              "start_date": "2024-08-02",
+              "end_date": "2024-08-05",
+              "calendar_days": 3,
+              "first_change_pct": 0.08957779377831197,
+              "second_change_pct": -0.7067609014535271
+            },
+            {
+              "start_date": "2024-08-05",
+              "end_date": "2024-08-06",
+              "calendar_days": 1,
+              "first_change_pct": 0.0602854699070309,
+              "second_change_pct": 0.18802041364491
+            },
+            {
+              "start_date": "2024-08-06",
+              "end_date": "2024-08-07",
+              "calendar_days": 1,
+              "first_change_pct": -0.0674466976996956,
+              "second_change_pct": 2.7882037533512065
+            },
+            {
+              "start_date": "2024-08-07",
+              "end_date": "2024-08-08",
+              "calendar_days": 1,
+              "first_change_pct": -0.09970073594033493,
+              "second_change_pct": 1.2519561815336464
+            }
+          ],
+          "complete_interval_count": 5,
+          "pearson_change_correlation": 0.501997858737457,
+          "forward_fill_used": false,
+          "synchronized_intraday_prices": false,
+          "independent_holdout": false
+        },
+        "ice_dxy_price_series": null,
+        "gold_benchmark_price_series": null,
+        "equity_benchmark_price_series": null,
+        "measured_capital_flows": null,
+        "original_vintage_verified": false,
+        "decision": "WAIT",
+        "win_probability": null,
+        "orders_enabled": false
+      }
+    }
+  ]
+}

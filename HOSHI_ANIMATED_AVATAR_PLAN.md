@@ -1,6 +1,6 @@
 # HOSHI Animated Anime Avatar — implementation plan (Task 57 sub-plan)
 
-**Status:** PLAN ONLY — none of these subtasks is verified or complete. Do not start implementation based solely on this file. This is a subordinate breakdown of **canonical Task 57** ("Build consistent original character/voice system") in `HOSHI_60_TASK_MASTER_ROADMAP.md`; it does **not** create a second 60-task scoreboard or increase the completed-task count.
+**Status:** IMPLEMENTATION STARTED on 28 October 2026; acceptance remains gated on green browser/Node CI and Android device QA. Subtasks are checked only after evidence. This is a subordinate breakdown of **canonical Task 57** ("Build consistent original character/voice system") in `HOSHI_60_TASK_MASTER_ROADMAP.md`; it does **not** create a second 60-task scoreboard or increase the completed-task count.
 
 ## User-approved direction
 
@@ -76,3 +76,25 @@
 - Current code may have sprite-sheet emotion switching or speaking-state mouth approximation; those are **not evidence** that a fully layered animated avatar or real audio-driven lip-sync is done.
 - Do not mark canonical Task 57 complete until the character/voice deliverables and their tests are actually verified. The 28 subtasks are planning detail only.
 - Do not silently merge to `main`, deploy Render or publish an APK. User asked for a **task list**, not immediate build.
+
+
+## Approved V2 design and working sprint (28 October 2026)
+
+The approved image board establishes a **silver-white-haired, blue-eyed, fox-eared anime Hoshi** framed by a black/cyan holographic mobile UI. The final animated home should be expressive, with subtle natural motion, visibly distinct emotional moods and a working speech-mouth response. The approved board is a **concept image**, not an existing sprite rig, actual working app, or licensed audio/character model. Maintain a consistent, age-appropriate outfit.
+
+**Current development implementation (awaiting final green CI at this checkpoint):**
+- Added `hoshi-anime-avatar.js` with a testable browser-side state controller, speech/listening/thinking priority, supported emotion aliases, randomized blink scheduling, reduced-motion cancellation and disposal.
+- Added `hoshi-anime-avatar.css` reusing existing 4×2 Hoshi expression art for changing face moods, subtle CSS idle sway, eyelid overlay blink, cyan status signal and a **speaking-state mouth loop**. This is a lightweight **portrait sprite**, **not** layered ears, hair, clothing, physical full-body movement, viseme matching or audio-amplitude sync.
+- The same `index.html` home uses the animated Hoshi instead of the holographic orb, with existing mic/Settings/Stop and preserved complete hidden workspace; emotion and microphone/AI/TTS callbacks are linked without new provider requests or permissions.
+- Added `tests/hoshi-anime-avatar.test.cjs` and a mobile Chromium regression; `sw.js` caches new assets, and GitHub CI executes the new tests.
+- **Do not count** as complete until the latest full Python/Node/Playwright workflow is green, and **never** count as production or physical-phone verified.
+
+**Next concrete sprint:**
+1. Check that the portrait sprite face and eyelid/mouth overlays align correctly on real phone screenshot and remove inaccurate overlays before claiming a natural blink/lip-sync.
+2. Make actual **rigged transparent layers** (eyelids/eyes, front/back hair, fox ears, neck, shoulders, mouths and kimono) from consistent rights-cleared source art, replacing the flattened sprite.
+3. Animate individual hair/ears, expression transitions and realistic blinks using that rig; add measured app responsiveness/animation throttling.
+4. Wire voice audio amplitude envelope when web audio is playable; keep honest speaking-state fallback for native TTS.
+5. Make outfit swapping alter clothing layers on the visible character, not background wallpaper.
+6. Physical Realme Note 50 performance and voice QA, then approved staged release and rollback.
+
+This is an updated sub-plan of canonical Task 57, not a separate project or another completion scoreboard.

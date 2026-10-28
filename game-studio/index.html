@@ -58,11 +58,11 @@ const animation=createPreviewAnimation({
   requestFrame:callback=>requestAnimationFrame(callback),
   cancelFrame:id=>cancelAnimationFrame(id),
   render:phase=>draw(phase),
-  shouldRun:()=>wantsAnimation&&!reducedMotion.matches&&!document.hidden
+  shouldRun:()=>wantsAnimation&&!paused&&!reducedMotion.matches&&!document.hidden
 });
 const syncAnimation=()=>{
   if(reducedMotion.matches)wantsAnimation=false;
-  if(wantsAnimation&&!document.hidden)animation.start();
+  if(wantsAnimation&&!paused&&!document.hidden)animation.start();
   else{animation.stop();draw();}
   animateButton.disabled=reducedMotion.matches||!game;
   animateButton.setAttribute("aria-pressed",String(wantsAnimation));
@@ -91,7 +91,7 @@ const describe=message=>{
   syncControls();
   draw();
 };
-const storeIfAllowed=()=>{if(saveToggle.checked)writeSavedProgress(localStorage,progress);};
+const storeIfAllowed=()=>{if(!saveToggle.checked)return true;try{return writeSavedProgress(window.localStorage,progress);}catch{return false;}};
 const selectLevel=id=>{
   const level=levels[id-1];
   if(!level||id>progress.highest_unlocked)return;
@@ -116,18 +116,25 @@ document.addEventListener("visibilitychange",syncAnimation);
 for(const button of directionButtons)button.addEventListener("click",()=>move(button.dataset.dir));
 undoButton.addEventListener("click",()=>{if(!game)return;game=undoGame(game);describe();});
 restartButton.addEventListener("click",()=>{if(!game)return;game=restartGame(game);paused=false;describe();});
-pauseButton.addEventListener("click",()=>{if(!game||game.won)return;paused=!paused;describe();});
+pauseButton.addEventListener("click",()=>{if(!game||game.won)return;paused=!paused;describe();syncAnimation();});
 picker.addEventListener("change",()=>selectLevel(Number(picker.value)));
 saveToggle.addEventListener("change",()=>{
+  let message;
   if(saveToggle.checked){
-    const saved=readSavedProgress(localStorage);
+    let saved=null;
+    try{saved=readSavedProgress(window.localStorage);}catch{}
     if(saved)progress=saved;
-    storeIfAllowed();
+    if(!storeIfAllowed()){
+      saveToggle.checked=false;
+      message="Browser storage unavailable. Progress sirf is session mein rahegi.";
+    }else message="Local save enabled (is device par).";
     if(game&&game.level.id>progress.highest_unlocked)selectLevel(1);
   }else{
-    clearSavedProgress(localStorage);
+    let deleted=false;
+    try{deleted=clearSavedProgress(window.localStorage);}catch{}
+    message=deleted?"Local save disabled; saved progress delete ho gayi.":"Local save disabled; storage deletion verify nahi hui.";
   }
-  describe(saveToggle.checked?"Local save enabled (is device par).":"Local save disabled aur saved progress delete kar diya (agar storage available tha).");
+  describe(message);
 });
 document.addEventListener("keydown",event=>{
   if(event.altKey||event.ctrlKey||event.metaKey||event.repeat)return;

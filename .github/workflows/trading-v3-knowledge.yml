@@ -19,6 +19,8 @@ on:
       - "tests/test_v3_ict_evidence.py"
       - "scripts/v3_liquidity_evidence.py"
       - "tests/test_v3_liquidity_evidence.py"
+      - "scripts/v3_fvg_evidence.py"
+      - "tests/test_v3_fvg_evidence.py"
       - ".github/workflows/trading-v3-knowledge.yml"
   pull_request:
     branches: [main]
@@ -37,6 +39,8 @@ on:
       - "tests/test_v3_ict_evidence.py"
       - "scripts/v3_liquidity_evidence.py"
       - "tests/test_v3_liquidity_evidence.py"
+      - "scripts/v3_fvg_evidence.py"
+      - "tests/test_v3_fvg_evidence.py"
       - ".github/workflows/trading-v3-knowledge.yml"
   workflow_dispatch:
 

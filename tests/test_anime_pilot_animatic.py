@@ -5,6 +5,10 @@ import copy
 import hashlib
 from io import BytesIO
 import json
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
 import shutil
 import unittest
 from unittest.mock import patch
@@ -91,6 +95,37 @@ class AnimePilotAnimaticTests(unittest.TestCase):
                       "subtitles_embedded", "source_rights_independently_verified",
                       "owner_approved", "published", "uploaded"):
             self.assertFalse(output[field], field)
+
+
+    @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"),
+                         "CLI integration requires real offline FFmpeg")
+    def test_cli_creates_private_files_once_and_never_overwrites(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            paths = []
+            for index, data in enumerate(original_stills()):
+                path = root / f"shot{index}.png"
+                path.write_bytes(data)
+                paths.append(path)
+            out = root / "draft"
+            cmd = [sys.executable, "-m", "scripts.render_hoshi_anime_animatic"]
+            for path in paths:
+                cmd += ["--shot", str(path)]
+            for caption in CAPTIONS:
+                cmd += ["--caption", caption]
+            cmd += ["--image-rights-attested", "--out", str(out)]
+            first = subprocess.run(cmd, text=True, capture_output=True, timeout=110)
+            self.assertEqual(first.returncode, 0, first.stderr)
+            manifest = json.loads((out / "manifest.json").read_text(encoding="utf-8"))
+            self.assertFalse(manifest["owner_approved"])
+            self.assertTrue(manifest["actual_mp4_rendered"])
+            mp4 = (out / manifest["filename"]).read_bytes()
+            self.assertEqual(hashlib.sha256(mp4).hexdigest(), manifest["video_sha256"])
+            self.assertEqual((out / "hoshi_anime_animatic_DRAFT.srt").read_bytes(),
+                             pilot._captions_to_srt(CAPTIONS))
+            second = subprocess.run(cmd, text=True, capture_output=True, timeout=110)
+            self.assertNotEqual(second.returncode, 0)
+            self.assertEqual((out / manifest["filename"]).read_bytes(), mp4)
 
 
 if __name__ == "__main__":

@@ -122,7 +122,7 @@ def _camera_filter(moves: tuple[str, ...]) -> str:
         if move == "static":
             effect = "setpts=PTS-STARTPTS"
         elif move == "push_in":
-            effect = ("zoompan=z='min(zoom+0.001,1.12)':"
+            effect = ("zoompan=z='min(1+on*0.001,1.12)':"
                       "x='(iw-iw/zoom)/2':y='(ih-ih/zoom)/2':"
                       f"d=1:s={WIDTH}x{HEIGHT}:fps={FPS},setpts=PTS-STARTPTS")
         else:

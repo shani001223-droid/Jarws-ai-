@@ -454,10 +454,12 @@ async function main() {
       }
       await page.locator('.sheet-close').click();
     }
-    // The approved main screen is a black holographic core, not the old wardrobe.
+    // The newly approved anime Hoshi replaces the previous holographic core.
+    // The old core remains in DOM as a fallback, not a second visible avatar.
     assert.equal(await page.locator('[data-tab="outfit"]').isVisible(),false);
-    assert.equal(await page.locator('#hoshiEnergy').isVisible(),true);
-    await page.waitForFunction(()=>document.querySelector('#core-canvas').width>0);
+    assert.equal(await page.locator('.hoshi-animated-avatar').isVisible(),true);
+    assert.equal(await page.locator('#hoshiEnergy').isVisible(),false);
+    assert.ok(await page.locator('#core-canvas').count());
     assert.equal(await page.locator('#nightroom').evaluate(el=>getComputedStyle(el).backgroundImage),'none');
     for(const width of [320,390,768]){
       await page.setViewportSize({width,height:844});

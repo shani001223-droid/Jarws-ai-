@@ -1,5 +1,12 @@
 # HOSHI — 60-Task Autonomous Development Roadmap
 
+## Task 59 — operator-supplied per-shot voice timing handoff (29 October 2026; PARTIAL)
+
+- Development-only `cloud_backend/anime_voice_timing.py` and optional CLI `--voice-cues-json` validate three caption-matching, character-bound, 200ms-minimum voice cue intervals within the correct 10-second storyboard shots. The plan must bind the exact caller-attested WAV SHA-256 and storyboard SHA-256; mismatched rights/media, IDs, timing, language and captions fail closed before encoding. Tests: `tests/test_anime_voice_timing.py`, including real FFmpeg H.264/AAC manifest verification where available.
+- These are **operator-entered timings**, not verified speech, Hindi/Urdu voice synthesis, lip-sync, face animation, or automatic timing extraction. Physical Realme Note 50 playback, cast/voice rights and owner acceptance remain unverified. Only GitHub CI evidence for the current commit can establish source/test verification; no claim of a successful run until it is confirmed.
+- **Task 59 remains unchecked and the only canonical scoreboard stays 48/60.** No new repo, PR, automation, production deployment, purchase, public upload, key change or real trade.
+
+
 ## Anime Studio offline WAV-to-MP4 handoff — 29 October 2026 (PARTIAL, NOT ACCEPTED)
 
 - **Implemented:** The existing private `scripts/render_hoshi_anime_animatic.py` now optionally accepts a locally supplied rights-attested 30s mono PCM WAV, strictly bounded and format-validated before FFmpeg. AAC is muxed into the actual H.264 MP4; `ffprobe` verifies audio/video, and the manifest stores the exact WAV SHA-256. Missing rights, malformed/oversized WAV and attempted overwrite fail closed. This is an **operator-only handoff**, not a voice-generation agent.

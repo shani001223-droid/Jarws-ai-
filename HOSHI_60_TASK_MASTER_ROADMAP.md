@@ -6,6 +6,10 @@
 **Limitation:** third-party models, GPU render, background workers and persistent free storage depend on actual reachable infrastructure; do not claim a placeholder is functional.
 
 
+## Anime Studio 2D camera movement checkpoint — 29 October 2026 (PARTIAL)
+
+The existing 30-second private MP4 animatic can now render **actual frame-to-frame camera reframing** (push-in or horizontal pan) from rights-attested original stills. Exactly three fixed allowlisted camera moves are passed by the operator-only CLI and included in the manifest. Tests reject filter-injection strings and decode two MP4 frames to confirm visible motion. An initial CI failure caught a non-moving zoom expression; the repaired implementation uses FFmpeg output frame index `on`. **Verified source `f1792de84b0160c211360690db6f432f571fca40`:** [full Python/JS/Playwright checks](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40767566836) and [Docker backend](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40767566943) successful. **Task 58 remains unchecked; 48/60 checkboxes unchanged.** Camera movement of stills is not character animation, Hindi/Urdu voice/lip-sync, professional anime-quality footage or owner-approved release. No production deploy, account publication, payments or live trading.
+
 ## Owner-corrected scope and verification boundary — 29 October 2026
 
 **ONE existing roadmap, no reset or duplicate task list.** Current checked count is **48/60 (80% of scoped code/test milestones)**, **not** 80% of real-world readiness. A checked item means its recorded *narrow implementation and tests* passed, not that all phone, external model, media quality, production or user acceptance was demonstrated. Report separately: (1) source implementation, (2) automated CI evidence tied to a commit, (3) independent real-world/device/production evidence; absent evidence = **unverified**, never inferred.

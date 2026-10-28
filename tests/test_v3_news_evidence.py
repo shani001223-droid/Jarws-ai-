@@ -92,4 +92,46 @@ class V3ShockTests(unittest.TestCase):
             with self.assertRaises(AssertionError):f.check_receipt(p)
 
 
+class V3EventPathTests(unittest.TestCase):
+    def test_exact_path_decomposition_has_no_abnormal_return_or_strategy_pnl(self):
+        p=receipt();f.check_receipt(p)
+        for e in p['yield_studies']:
+            c=next(x for x in p['scheduled_release_cases']+p['shock_cases'] if x['id']==e['id'])
+            for series,path in e['paths'].items():
+                total=c['diagnostic']['rates'][series]['change_basis_points']
+                self.assertAlmostEqual(path['start_to_event_date_observation_bp']+path['event_date_to_end_observation_bp'],total)
+                for key in ('abnormal_return','causal_effect','strategy_trade_count','strategy_pnl','win_probability'):
+                    self.assertIsNone(path[key])
+        d=p['yield_studies'][0]['paths']['DGS2']
+        self.assertEqual(d['start_to_event_date_observation_bp'],2)
+        self.assertEqual(d['event_date_to_end_observation_bp'],-4)
+
+    def test_observation_gaps_are_calendar_spans_not_inserted_market_data(self):
+        p=receipt();f.check_receipt(p)
+        path=p['yield_studies'][0]['paths']['DGS2']
+        self.assertEqual(path['marks'][-1]['elapsed_calendar_days_from_previous_observation'],3)
+        self.assertFalse(path['forward_fill_used']);self.assertFalse(path['event_date_is_an_intraday_release_quote'])
+        self.assertEqual(len(p['yield_studies']),6)
+        self.assertTrue(all(not e['independent_new_event'] for e in p['yield_studies']))
+
+    def test_missing_event_day_does_not_borrow_nearest_daily_observation(self):
+        e=deepcopy(receipt()['scheduled_release_cases'][0]);c=e['captures']['DGS2']
+        lines=c['response_body'].splitlines();lines[2]=lines[2].split(',')[0]+','
+        c['response_body']=chr(10).join(lines)+chr(10)
+        c['source_sha256']=sha256(c['response_body'].encode()).hexdigest()
+        d=f.yield_event_path(c,'2024-01-05')
+        self.assertIsNone(d['start_to_event_date_observation_bp']);self.assertIsNone(d['event_date_to_end_observation_bp'])
+        self.assertEqual(d['marks'][-1]['change_from_requested_start_bp'],-2)
+
+    def test_prefix_path_and_receipt_completeness_reject_future_or_omitted_facts(self):
+        e=receipt()['scheduled_release_cases'][2];c=deepcopy(e['captures']['DGS2'])
+        c['requested_end']='2024-09-19';c['request_url']=c['request_url'].replace('2024-09-20','2024-09-19')
+        lines=c['response_body'].splitlines();c['response_body']=chr(10).join(lines[:-1])+chr(10)
+        c['source_sha256']=sha256(c['response_body'].encode()).hexdigest()
+        a=f.yield_event_path(c,'2024-09-18')['marks'];b=receipt()['yield_studies'][2]['paths']['DGS2']['marks']
+        self.assertEqual(a,b[:-1])
+        p=receipt();p['yield_studies'].pop()
+        with self.assertRaises(AssertionError):f.check_receipt(p)
+
+
 if __name__=='__main__':unittest.main()

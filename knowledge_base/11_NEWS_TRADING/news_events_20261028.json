@@ -477,5 +477,627 @@
         "orders_enabled": false
       }
     }
+  ],
+  "yield_studies": [
+    {
+      "id": "employment_2024",
+      "event_date_label": "2024-01-05",
+      "paths": {
+        "DGS2": {
+          "method": "hoshi-descriptive-daily-yield-event-path-1",
+          "marks": [
+            {
+              "date": "2024-01-04",
+              "calendar_days_relative_to_event_date": -1,
+              "yield_percent": "4.38",
+              "change_from_previous_observed_date_bp": null,
+              "elapsed_calendar_days_from_previous_observation": null,
+              "change_from_requested_start_bp": 0.0
+            },
+            {
+              "date": "2024-01-05",
+              "calendar_days_relative_to_event_date": 0,
+              "yield_percent": "4.40",
+              "change_from_previous_observed_date_bp": 2.0,
+              "elapsed_calendar_days_from_previous_observation": 1,
+              "change_from_requested_start_bp": 2.0
+            },
+            {
+              "date": "2024-01-08",
+              "calendar_days_relative_to_event_date": 3,
+              "yield_percent": "4.36",
+              "change_from_previous_observed_date_bp": -4.0,
+              "elapsed_calendar_days_from_previous_observation": 3,
+              "change_from_requested_start_bp": -2.0
+            }
+          ],
+          "start_to_event_date_observation_bp": 2.0,
+          "event_date_to_end_observation_bp": -4.0,
+          "daily_observation_range_bp": 4.0,
+          "event_date_is_an_intraday_release_quote": false,
+          "forward_fill_used": false,
+          "normal_return_model": null,
+          "abnormal_return": null,
+          "causal_effect": null,
+          "strategy_trade_count": null,
+          "strategy_pnl": null,
+          "win_probability": null
+        },
+        "DGS10": {
+          "method": "hoshi-descriptive-daily-yield-event-path-1",
+          "marks": [
+            {
+              "date": "2024-01-04",
+              "calendar_days_relative_to_event_date": -1,
+              "yield_percent": "3.99",
+              "change_from_previous_observed_date_bp": null,
+              "elapsed_calendar_days_from_previous_observation": null,
+              "change_from_requested_start_bp": 0.0
+            },
+            {
+              "date": "2024-01-05",
+              "calendar_days_relative_to_event_date": 0,
+              "yield_percent": "4.05",
+              "change_from_previous_observed_date_bp": 6.0,
+              "elapsed_calendar_days_from_previous_observation": 1,
+              "change_from_requested_start_bp": 6.0
+            },
+            {
+              "date": "2024-01-08",
+              "calendar_days_relative_to_event_date": 3,
+              "yield_percent": "4.01",
+              "change_from_previous_observed_date_bp": -4.0,
+              "elapsed_calendar_days_from_previous_observation": 3,
+              "change_from_requested_start_bp": 2.0
+            }
+          ],
+          "start_to_event_date_observation_bp": 6.0,
+          "event_date_to_end_observation_bp": -4.0,
+          "daily_observation_range_bp": 6.0,
+          "event_date_is_an_intraday_release_quote": false,
+          "forward_fill_used": false,
+          "normal_return_model": null,
+          "abnormal_return": null,
+          "causal_effect": null,
+          "strategy_trade_count": null,
+          "strategy_pnl": null,
+          "win_probability": null
+        }
+      },
+      "independent_new_event": false,
+      "synchronized_intraday_event_study": false,
+      "decision": "WAIT",
+      "orders_enabled": false
+    },
+    {
+      "id": "cpi_2022",
+      "event_date_label": "2022-10-13",
+      "paths": {
+        "DGS2": {
+          "method": "hoshi-descriptive-daily-yield-event-path-1",
+          "marks": [
+            {
+              "date": "2022-10-12",
+              "calendar_days_relative_to_event_date": -1,
+              "yield_percent": "4.28",
+              "change_from_previous_observed_date_bp": null,
+              "elapsed_calendar_days_from_previous_observation": null,
+              "change_from_requested_start_bp": 0.0
+            },
+            {
+              "date": "2022-10-13",
+              "calendar_days_relative_to_event_date": 0,
+              "yield_percent": "4.47",
+              "change_from_previous_observed_date_bp": 19.0,
+              "elapsed_calendar_days_from_previous_observation": 1,
+              "change_from_requested_start_bp": 19.0
+            },
+            {
+              "date": "2022-10-14",
+              "calendar_days_relative_to_event_date": 1,
+              "yield_percent": "4.48",
+              "change_from_previous_observed_date_bp": 1.0,
+              "elapsed_calendar_days_from_previous_observation": 1,
+              "change_from_requested_start_bp": 20.0
+            }
+          ],
+          "start_to_event_date_observation_bp": 19.0,
+          "event_date_to_end_observation_bp": 1.0,
+          "daily_observation_range_bp": 20.0,
+          "event_date_is_an_intraday_release_quote": false,
+          "forward_fill_used": false,
+          "normal_return_model": null,
+          "abnormal_return": null,
+          "causal_effect": null,
+          "strategy_trade_count": null,
+          "strategy_pnl": null,
+          "win_probability": null
+        },
+        "DGS10": {
+          "method": "hoshi-descriptive-daily-yield-event-path-1",
+          "marks": [
+            {
+              "date": "2022-10-12",
+              "calendar_days_relative_to_event_date": -1,
+              "yield_percent": "3.91",
+              "change_from_previous_observed_date_bp": null,
+              "elapsed_calendar_days_from_previous_observation": null,
+              "change_from_requested_start_bp": 0.0
+            },
+            {
+              "date": "2022-10-13",
+              "calendar_days_relative_to_event_date": 0,
+              "yield_percent": "3.97",
+              "change_from_previous_observed_date_bp": 6.0,
+              "elapsed_calendar_days_from_previous_observation": 1,
+              "change_from_requested_start_bp": 6.0
+            },
+            {
+              "date": "2022-10-14",
+              "calendar_days_relative_to_event_date": 1,
+              "yield_percent": "4.00",
+              "change_from_previous_observed_date_bp": 3.0,
+              "elapsed_calendar_days_from_previous_observation": 1,
+              "change_from_requested_start_bp": 9.0
+            }
+          ],
+          "start_to_event_date_observation_bp": 6.0,
+          "event_date_to_end_observation_bp": 3.0,
+          "daily_observation_range_bp": 9.0,
+          "event_date_is_an_intraday_release_quote": false,
+          "forward_fill_used": false,
+          "normal_return_model": null,
+          "abnormal_return": null,
+          "causal_effect": null,
+          "strategy_trade_count": null,
+          "strategy_pnl": null,
+          "win_probability": null
+        }
+      },
+      "independent_new_event": false,
+      "synchronized_intraday_event_study": false,
+      "decision": "WAIT",
+      "orders_enabled": false
+    },
+    {
+      "id": "fomc_2024",
+      "event_date_label": "2024-09-18",
+      "paths": {
+        "DGS2": {
+          "method": "hoshi-descriptive-daily-yield-event-path-1",
+          "marks": [
+            {
+              "date": "2024-09-17",
+              "calendar_days_relative_to_event_date": -1,
+              "yield_percent": "3.59",
+              "change_from_previous_observed_date_bp": null,
+              "elapsed_calendar_days_from_previous_observation": null,
+              "change_from_requested_start_bp": 0.0
+            },
+            {
+              "date": "2024-09-18",
+              "calendar_days_relative_to_event_date": 0,
+              "yield_percent": "3.61",
+              "change_from_previous_observed_date_bp": 2.0,
+              "elapsed_calendar_days_from_previous_observation": 1,
+              "change_from_requested_start_bp": 2.0
+            },
+            {
+              "date": "2024-09-19",
+              "calendar_days_relative_to_event_date": 1,
+              "yield_percent": "3.59",
+              "change_from_previous_observed_date_bp": -2.0,
+              "elapsed_calendar_days_from_previous_observation": 1,
+              "change_from_requested_start_bp": 0.0
+            },
+            {
+              "date": "2024-09-20",
+              "calendar_days_relative_to_event_date": 2,
+              "yield_percent": "3.55",
+              "change_from_previous_observed_date_bp": -4.0,
+              "elapsed_calendar_days_from_previous_observation": 1,
+              "change_from_requested_start_bp": -4.0
+            }
+          ],
+          "start_to_event_date_observation_bp": 2.0,
+          "event_date_to_end_observation_bp": -6.0,
+          "daily_observation_range_bp": 6.0,
+          "event_date_is_an_intraday_release_quote": false,
+          "forward_fill_used": false,
+          "normal_return_model": null,
+          "abnormal_return": null,
+          "causal_effect": null,
+          "strategy_trade_count": null,
+          "strategy_pnl": null,
+          "win_probability": null
+        },
+        "DGS10": {
+          "method": "hoshi-descriptive-daily-yield-event-path-1",
+          "marks": [
+            {
+              "date": "2024-09-17",
+              "calendar_days_relative_to_event_date": -1,
+              "yield_percent": "3.65",
+              "change_from_previous_observed_date_bp": null,
+              "elapsed_calendar_days_from_previous_observation": null,
+              "change_from_requested_start_bp": 0.0
+            },
+            {
+              "date": "2024-09-18",
+              "calendar_days_relative_to_event_date": 0,
+              "yield_percent": "3.70",
+              "change_from_previous_observed_date_bp": 5.0,
+              "elapsed_calendar_days_from_previous_observation": 1,
+              "change_from_requested_start_bp": 5.0
+            },
+            {
+              "date": "2024-09-19",
+              "calendar_days_relative_to_event_date": 1,
+              "yield_percent": "3.73",
+              "change_from_previous_observed_date_bp": 3.0,
+              "elapsed_calendar_days_from_previous_observation": 1,
+              "change_from_requested_start_bp": 8.0
+            },
+            {
+              "date": "2024-09-20",
+              "calendar_days_relative_to_event_date": 2,
+              "yield_percent": "3.73",
+              "change_from_previous_observed_date_bp": 0.0,
+              "elapsed_calendar_days_from_previous_observation": 1,
+              "change_from_requested_start_bp": 8.0
+            }
+          ],
+          "start_to_event_date_observation_bp": 5.0,
+          "event_date_to_end_observation_bp": 3.0,
+          "daily_observation_range_bp": 8.0,
+          "event_date_is_an_intraday_release_quote": false,
+          "forward_fill_used": false,
+          "normal_return_model": null,
+          "abnormal_return": null,
+          "causal_effect": null,
+          "strategy_trade_count": null,
+          "strategy_pnl": null,
+          "win_probability": null
+        }
+      },
+      "independent_new_event": false,
+      "synchronized_intraday_event_study": false,
+      "decision": "WAIT",
+      "orders_enabled": false
+    },
+    {
+      "id": "ukraine_2022",
+      "event_date_label": "2022-02-24",
+      "paths": {
+        "DGS2": {
+          "method": "hoshi-descriptive-daily-yield-event-path-1",
+          "marks": [
+            {
+              "date": "2022-02-23",
+              "calendar_days_relative_to_event_date": -1,
+              "yield_percent": "1.58",
+              "change_from_previous_observed_date_bp": null,
+              "elapsed_calendar_days_from_previous_observation": null,
+              "change_from_requested_start_bp": 0.0
+            },
+            {
+              "date": "2022-02-24",
+              "calendar_days_relative_to_event_date": 0,
+              "yield_percent": "1.54",
+              "change_from_previous_observed_date_bp": -4.0,
+              "elapsed_calendar_days_from_previous_observation": 1,
+              "change_from_requested_start_bp": -4.0
+            },
+            {
+              "date": "2022-02-25",
+              "calendar_days_relative_to_event_date": 1,
+              "yield_percent": "1.55",
+              "change_from_previous_observed_date_bp": 1.0,
+              "elapsed_calendar_days_from_previous_observation": 1,
+              "change_from_requested_start_bp": -3.0
+            },
+            {
+              "date": "2022-02-28",
+              "calendar_days_relative_to_event_date": 4,
+              "yield_percent": "1.44",
+              "change_from_previous_observed_date_bp": -11.0,
+              "elapsed_calendar_days_from_previous_observation": 3,
+              "change_from_requested_start_bp": -14.0
+            },
+            {
+              "date": "2022-03-01",
+              "calendar_days_relative_to_event_date": 5,
+              "yield_percent": "1.31",
+              "change_from_previous_observed_date_bp": -13.0,
+              "elapsed_calendar_days_from_previous_observation": 1,
+              "change_from_requested_start_bp": -27.0
+            }
+          ],
+          "start_to_event_date_observation_bp": -4.0,
+          "event_date_to_end_observation_bp": -23.0,
+          "daily_observation_range_bp": 27.0,
+          "event_date_is_an_intraday_release_quote": false,
+          "forward_fill_used": false,
+          "normal_return_model": null,
+          "abnormal_return": null,
+          "causal_effect": null,
+          "strategy_trade_count": null,
+          "strategy_pnl": null,
+          "win_probability": null
+        },
+        "DGS10": {
+          "method": "hoshi-descriptive-daily-yield-event-path-1",
+          "marks": [
+            {
+              "date": "2022-02-23",
+              "calendar_days_relative_to_event_date": -1,
+              "yield_percent": "1.99",
+              "change_from_previous_observed_date_bp": null,
+              "elapsed_calendar_days_from_previous_observation": null,
+              "change_from_requested_start_bp": 0.0
+            },
+            {
+              "date": "2022-02-24",
+              "calendar_days_relative_to_event_date": 0,
+              "yield_percent": "1.96",
+              "change_from_previous_observed_date_bp": -3.0,
+              "elapsed_calendar_days_from_previous_observation": 1,
+              "change_from_requested_start_bp": -3.0
+            },
+            {
+              "date": "2022-02-25",
+              "calendar_days_relative_to_event_date": 1,
+              "yield_percent": "1.97",
+              "change_from_previous_observed_date_bp": 1.0,
+              "elapsed_calendar_days_from_previous_observation": 1,
+              "change_from_requested_start_bp": -2.0
+            },
+            {
+              "date": "2022-02-28",
+              "calendar_days_relative_to_event_date": 4,
+              "yield_percent": "1.83",
+              "change_from_previous_observed_date_bp": -14.0,
+              "elapsed_calendar_days_from_previous_observation": 3,
+              "change_from_requested_start_bp": -16.0
+            },
+            {
+              "date": "2022-03-01",
+              "calendar_days_relative_to_event_date": 5,
+              "yield_percent": "1.72",
+              "change_from_previous_observed_date_bp": -11.0,
+              "elapsed_calendar_days_from_previous_observation": 1,
+              "change_from_requested_start_bp": -27.0
+            }
+          ],
+          "start_to_event_date_observation_bp": -3.0,
+          "event_date_to_end_observation_bp": -24.0,
+          "daily_observation_range_bp": 27.0,
+          "event_date_is_an_intraday_release_quote": false,
+          "forward_fill_used": false,
+          "normal_return_model": null,
+          "abnormal_return": null,
+          "causal_effect": null,
+          "strategy_trade_count": null,
+          "strategy_pnl": null,
+          "win_probability": null
+        }
+      },
+      "independent_new_event": false,
+      "synchronized_intraday_event_study": false,
+      "decision": "WAIT",
+      "orders_enabled": false
+    },
+    {
+      "id": "election_2016",
+      "event_date_label": "2016-11-08",
+      "paths": {
+        "DGS2": {
+          "method": "hoshi-descriptive-daily-yield-event-path-1",
+          "marks": [
+            {
+              "date": "2016-11-07",
+              "calendar_days_relative_to_event_date": -1,
+              "yield_percent": "0.82",
+              "change_from_previous_observed_date_bp": null,
+              "elapsed_calendar_days_from_previous_observation": null,
+              "change_from_requested_start_bp": 0.0
+            },
+            {
+              "date": "2016-11-08",
+              "calendar_days_relative_to_event_date": 0,
+              "yield_percent": "0.87",
+              "change_from_previous_observed_date_bp": 5.0,
+              "elapsed_calendar_days_from_previous_observation": 1,
+              "change_from_requested_start_bp": 5.0
+            },
+            {
+              "date": "2016-11-09",
+              "calendar_days_relative_to_event_date": 1,
+              "yield_percent": "0.90",
+              "change_from_previous_observed_date_bp": 3.0,
+              "elapsed_calendar_days_from_previous_observation": 1,
+              "change_from_requested_start_bp": 8.0
+            },
+            {
+              "date": "2016-11-10",
+              "calendar_days_relative_to_event_date": 2,
+              "yield_percent": "0.92",
+              "change_from_previous_observed_date_bp": 2.0,
+              "elapsed_calendar_days_from_previous_observation": 1,
+              "change_from_requested_start_bp": 10.0
+            }
+          ],
+          "start_to_event_date_observation_bp": 5.0,
+          "event_date_to_end_observation_bp": 5.0,
+          "daily_observation_range_bp": 10.0,
+          "event_date_is_an_intraday_release_quote": false,
+          "forward_fill_used": false,
+          "normal_return_model": null,
+          "abnormal_return": null,
+          "causal_effect": null,
+          "strategy_trade_count": null,
+          "strategy_pnl": null,
+          "win_probability": null
+        },
+        "DGS10": {
+          "method": "hoshi-descriptive-daily-yield-event-path-1",
+          "marks": [
+            {
+              "date": "2016-11-07",
+              "calendar_days_relative_to_event_date": -1,
+              "yield_percent": "1.83",
+              "change_from_previous_observed_date_bp": null,
+              "elapsed_calendar_days_from_previous_observation": null,
+              "change_from_requested_start_bp": 0.0
+            },
+            {
+              "date": "2016-11-08",
+              "calendar_days_relative_to_event_date": 0,
+              "yield_percent": "1.88",
+              "change_from_previous_observed_date_bp": 5.0,
+              "elapsed_calendar_days_from_previous_observation": 1,
+              "change_from_requested_start_bp": 5.0
+            },
+            {
+              "date": "2016-11-09",
+              "calendar_days_relative_to_event_date": 1,
+              "yield_percent": "2.07",
+              "change_from_previous_observed_date_bp": 19.0,
+              "elapsed_calendar_days_from_previous_observation": 1,
+              "change_from_requested_start_bp": 24.0
+            },
+            {
+              "date": "2016-11-10",
+              "calendar_days_relative_to_event_date": 2,
+              "yield_percent": "2.15",
+              "change_from_previous_observed_date_bp": 8.0,
+              "elapsed_calendar_days_from_previous_observation": 1,
+              "change_from_requested_start_bp": 32.0
+            }
+          ],
+          "start_to_event_date_observation_bp": 5.0,
+          "event_date_to_end_observation_bp": 27.0,
+          "daily_observation_range_bp": 32.0,
+          "event_date_is_an_intraday_release_quote": false,
+          "forward_fill_used": false,
+          "normal_return_model": null,
+          "abnormal_return": null,
+          "causal_effect": null,
+          "strategy_trade_count": null,
+          "strategy_pnl": null,
+          "win_probability": null
+        }
+      },
+      "independent_new_event": false,
+      "synchronized_intraday_event_study": false,
+      "decision": "WAIT",
+      "orders_enabled": false
+    },
+    {
+      "id": "tariffs_2025",
+      "event_date_label": "2025-04-02",
+      "paths": {
+        "DGS2": {
+          "method": "hoshi-descriptive-daily-yield-event-path-1",
+          "marks": [
+            {
+              "date": "2025-04-01",
+              "calendar_days_relative_to_event_date": -1,
+              "yield_percent": "3.87",
+              "change_from_previous_observed_date_bp": null,
+              "elapsed_calendar_days_from_previous_observation": null,
+              "change_from_requested_start_bp": 0.0
+            },
+            {
+              "date": "2025-04-02",
+              "calendar_days_relative_to_event_date": 0,
+              "yield_percent": "3.91",
+              "change_from_previous_observed_date_bp": 4.0,
+              "elapsed_calendar_days_from_previous_observation": 1,
+              "change_from_requested_start_bp": 4.0
+            },
+            {
+              "date": "2025-04-03",
+              "calendar_days_relative_to_event_date": 1,
+              "yield_percent": "3.71",
+              "change_from_previous_observed_date_bp": -20.0,
+              "elapsed_calendar_days_from_previous_observation": 1,
+              "change_from_requested_start_bp": -16.0
+            },
+            {
+              "date": "2025-04-04",
+              "calendar_days_relative_to_event_date": 2,
+              "yield_percent": "3.68",
+              "change_from_previous_observed_date_bp": -3.0,
+              "elapsed_calendar_days_from_previous_observation": 1,
+              "change_from_requested_start_bp": -19.0
+            }
+          ],
+          "start_to_event_date_observation_bp": 4.0,
+          "event_date_to_end_observation_bp": -23.0,
+          "daily_observation_range_bp": 23.0,
+          "event_date_is_an_intraday_release_quote": false,
+          "forward_fill_used": false,
+          "normal_return_model": null,
+          "abnormal_return": null,
+          "causal_effect": null,
+          "strategy_trade_count": null,
+          "strategy_pnl": null,
+          "win_probability": null
+        },
+        "DGS10": {
+          "method": "hoshi-descriptive-daily-yield-event-path-1",
+          "marks": [
+            {
+              "date": "2025-04-01",
+              "calendar_days_relative_to_event_date": -1,
+              "yield_percent": "4.17",
+              "change_from_previous_observed_date_bp": null,
+              "elapsed_calendar_days_from_previous_observation": null,
+              "change_from_requested_start_bp": 0.0
+            },
+            {
+              "date": "2025-04-02",
+              "calendar_days_relative_to_event_date": 0,
+              "yield_percent": "4.20",
+              "change_from_previous_observed_date_bp": 3.0,
+              "elapsed_calendar_days_from_previous_observation": 1,
+              "change_from_requested_start_bp": 3.0
+            },
+            {
+              "date": "2025-04-03",
+              "calendar_days_relative_to_event_date": 1,
+              "yield_percent": "4.06",
+              "change_from_previous_observed_date_bp": -14.0,
+              "elapsed_calendar_days_from_previous_observation": 1,
+              "change_from_requested_start_bp": -11.0
+            },
+            {
+              "date": "2025-04-04",
+              "calendar_days_relative_to_event_date": 2,
+              "yield_percent": "4.01",
+              "change_from_previous_observed_date_bp": -5.0,
+              "elapsed_calendar_days_from_previous_observation": 1,
+              "change_from_requested_start_bp": -16.0
+            }
+          ],
+          "start_to_event_date_observation_bp": 3.0,
+          "event_date_to_end_observation_bp": -19.0,
+          "daily_observation_range_bp": 19.0,
+          "event_date_is_an_intraday_release_quote": false,
+          "forward_fill_used": false,
+          "normal_return_model": null,
+          "abnormal_return": null,
+          "causal_effect": null,
+          "strategy_trade_count": null,
+          "strategy_pnl": null,
+          "win_probability": null
+        }
+      },
+      "independent_new_event": false,
+      "synchronized_intraday_event_study": false,
+      "decision": "WAIT",
+      "orders_enabled": false
+    }
   ]
 }

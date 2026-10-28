@@ -1285,7 +1285,51 @@
     },
     {
       "path": "knowledge_base/11_NEWS_TRADING/event_study_historical_reactions.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2109,
+      "sha256": "c7088954e9d745b64a70ed32ab4c498f28b0c90474a4b1f6b3fed070cb2b056f",
+      "source_review": {
+        "status": "checked-primary-methods-and-replayed-six-existing-daily-event-contexts",
+        "primary_sources": [
+          {
+            "url": "https://www.federalreserve.gov/pubs/feds/2004/200416/200416pap.pdf",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.federalreserve.gov/pubs/feds/2004/200416/200416abs.html",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://fred.stlouisfed.org/series/DGS2",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://fred.stlouisfed.org/series/DGS10",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.bls.gov/news.release/archives/empsit_01052024.htm",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.bls.gov/news.release/archives/cpi_10132022.htm",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.govinfo.gov/content/pkg/FR-2025-04-07/html/2025-06063.htm",
+            "checked": "2026-10-28"
+          }
+        ],
+        "limitations": [
+          "Daily yield decomposition/ranges are descriptive, not announcement-time quotes, price returns, abnormal returns or identified causal effects.",
+          "Six prior cases are reused and explicitly not new independent events; no new market sample, fitted normal-return model, surprise dataset or strategy execution is delivered.",
+          "Original network arrival/vintages, genuine consensus, tradable prices/fills/costs and independent calibration remain missing. Prefix arithmetic tests do not establish economic transfer."
+        ],
+        "evidence_method": "hoshi-descriptive-daily-yield-event-path-1",
+        "reviewed_on": "2026-10-28",
+        "resolved_at_asia_karachi": "2026-10-28T12:25:19.841145+05:00"
+      }
     },
     {
       "path": "knowledge_base/11_NEWS_TRADING/news_execution_and_data_provenance.md",
@@ -1361,7 +1405,7 @@
     {
       "path": "knowledge_base/11_NEWS_TRADING/news_events_20261028.json",
       "kind": "news_events",
-      "sha256": "08468846c31c667848b720c3fdae286add2699ee7266ea69107347491578e964"
+      "sha256": "2132590a5151c06c417fb67caa9b852981bb754c6618d27de74d7716ad152b3e"
     }
   ],
   "scope_history": [

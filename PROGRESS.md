@@ -9,8 +9,8 @@ entire branch was already deployed. Production V2 remains a separate release.
 
 ## Current measured progress
 
-**Day 1: completed 47 of 50 planned knowledge chapters — 94.00%; 3 chapters,
-6.00% of the declared curriculum, remain.**
+**Day 1: completed 48 of 50 planned knowledge chapters — 96.00%; 2 chapters,
+4.00% of the declared curriculum, remain.**
 
 The denominator is the versioned, expandable file manifest in
 `knowledge_base/manifest.json`. Scope revision 2 expanded the initial 48
@@ -74,6 +74,7 @@ topics require an explicit manifest/progress revision, never silent omission.
 | `10_TRADING_PSYCHOLOGY_AND_RISK/backtest_overfitting_and_validation.md` | Source-checked; chronology/selection/overlap/execution/metric controls with three actual already-explored minute ledgers; no new holdout, filled trades, strategy PnL or calibrated accuracy |
 | `11_NEWS_TRADING/nfp_cpi_and_fomc.md` | Source-checked; actual employment/CPI/FOMC archives, winter/summer clocks and three bounded daily yield contexts; unknown consensus/arrival/intraday effects remain null |
 | `11_NEWS_TRADING/war_elections_and_policy_shocks.md` | Source-checked; actual 2022 Ukraine, 2016 US election and 2025 tariff-document dates with daily Treasury paths; later-source leakage and missing first-news clocks explicit |
+| `11_NEWS_TRADING/event_study_historical_reactions.md` | Source-checked; six reused daily event paths with explicit horizons, calendar gaps, decomposition and range; three dated detailed cases, null causal/abnormal/strategy returns |
 | Remaining curriculum documents | Pending; no empty placeholder chapters counted as complete |
 | Benchmark data rights / point-in-time availability | Pending — new raw NASDAQCOM, ICE DXY and gold benchmark histories are not licensed by public page access; review earlier limited observations before data/runtime bundling |
 | Brain loader and runtime knowledge bundle | Pending — new source chapters are not yet consumed by Hoshi |
@@ -204,6 +205,8 @@ topics require an explicit manifest/progress revision, never silent omission.
 - **28 October, Day 1 (12:08 PKT):** completed `nfp_cpi_and_fomc.md` (2027 substantive words). Added three actual official releases and exact New York/UTC clocks plus raw public H.15 captures: employment-day and later paths differ, CPI units remain separate, and a 50 bp policy cut coexists with a rising ten-year window. Five new provenance/clock/field/hash/missing-endpoint tests bring the passing V3 evidence suite to 127. Consensus, surprise, original arrival, causal intraday effects, bond returns and win probability remain null. This is historical research, not a live news adapter or full strategy evaluation. Prior [f25ccc85](https://github.com/shani001223-droid/Jarws-ai-/commit/f25ccc85349b4eea9debc4feeca10e659e6a41b5) passed [actual CI 40647481873](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40647481873). Curriculum 46/50 (92.00%), 4 pending (8.00%). Runtime retrieval, weighted strategy, independent evaluation and exact-head final release remain pending; source chapters are not model training or loaded knowledge.
 
 - **28 October, Day 1 (12:17 PKT):** completed `war_elections_and_policy_shocks.md` (2074 substantive words). Added three primary dated shock cases and six exact public H.15 captures. Both yields fall 27 bp in the Ukraine window; election-window ten-year rises 32 bp; tariff-window ten-year falls 16 bp. These are descriptive paths, not causal or instantaneous effects. Four new tests reject later-document backdating, event/source relabelling and fabricated actions; all 131 V3 evidence tests pass. Current tariff advice, all-war coverage and calibrated pattern matches are not claimed. Prior [3c24a5af](https://github.com/shani001223-droid/Jarws-ai-/commit/3c24a5af77da3c1add3a6eeb26c9b4e20f717923) passed [actual CI 40648347141](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40648347141). Curriculum 47/50 (94.00%), 3 pending (6.00%). Runtime retrieval, weighted strategy, independent evaluation and exact-head final release remain pending; source chapters are not model training or loaded knowledge.
+
+- **28 October, Day 1 (12:25 PKT):** completed `event_study_historical_reactions.md` (2109 substantive words). Added original daily-yield path diagnostics across all six existing news cases. Event-date labels remain distinct from release quotes; January employment components reverse and tariff-window ranges exceed net changes. Four new tests verify decomposition, weekend spans, exact missing-event behavior, prefix stability and receipt completeness; all 135 V3 evidence tests pass. A local test-source quoting typo was corrected before the full passing suite; no failed CI or runtime change introduced. No new independent events, causal/abnormal-return model or strategy PnL claimed. Prior [d413dc9e](https://github.com/shani001223-droid/Jarws-ai-/commit/d413dc9e95ff3fced535fe6403a9c9348b1af6ec) passed [actual CI 40649210954](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40649210954). Curriculum 48/50 (96.00%), 2 pending (4.00%). Runtime retrieval, weighted strategy, independent evaluation and exact-head final release remain pending; source chapters are not model training or loaded knowledge.
 
 ## Completion and release rules
 

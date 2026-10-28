@@ -1,7 +1,7 @@
 """Historical release metadata and bounded daily yield context, not causal signals."""
 from datetime import date, datetime
 from zoneinfo import ZoneInfo
-from v3_macro_evidence import rate_endpoint
+from v3_macro_evidence import rate_endpoint,check_capture
 
 RELEASES={
  'employment_2024':{'kind':'employment','reference_period':'2023-12',
@@ -72,6 +72,43 @@ def shock_context(event,captures):
             'decision':'WAIT','win_probability':None,'orders_enabled':False}
 
 
+
+def yield_event_path(capture,event_date):
+    values=check_capture(capture);event=date.fromisoformat(event_date)
+    assert capture['requested_start']<event_date<capture['requested_end']
+    start=values.get(capture['requested_start']);end=values.get(capture['requested_end']);at=values.get(event_date)
+    marks=[];previous=None
+    for day,value in values.items():
+        if value is None:continue
+        elapsed=None if previous is None else (date.fromisoformat(day)-date.fromisoformat(previous[0])).days
+        change=None if previous is None else float((value-previous[1])*100)
+        marks.append({'date':day,'calendar_days_relative_to_event_date':(date.fromisoformat(day)-event).days,
+                      'yield_percent':str(value),'change_from_previous_observed_date_bp':change,
+                      'elapsed_calendar_days_from_previous_observation':elapsed,
+                      'change_from_requested_start_bp':float((value-start)*100) if start is not None else None})
+        previous=(day,value)
+    complete=[v for v in values.values() if v is not None]
+    return {'method':'hoshi-descriptive-daily-yield-event-path-1','marks':marks,
+            'start_to_event_date_observation_bp':float((at-start)*100) if at is not None and start is not None else None,
+            'event_date_to_end_observation_bp':float((end-at)*100) if at is not None and end is not None else None,
+            'daily_observation_range_bp':float((max(complete)-min(complete))*100) if complete else None,
+            'event_date_is_an_intraday_release_quote':False,'forward_fill_used':False,
+            'normal_return_model':None,'abnormal_return':None,'causal_effect':None,
+            'strategy_trade_count':None,'strategy_pnl':None,'win_probability':None}
+
+
+def yield_studies(payload):
+    entries=payload['scheduled_release_cases']+payload.get('shock_cases',[])
+    result=[]
+    for e in entries:
+        day=e['release']['stated_release_local'].split('T')[0] if 'release' in e else e['event']['event_date']
+        result.append({'id':e['id'],'event_date_label':day,
+                       'paths':{k:yield_event_path(c,day) for k,c in e['captures'].items()},
+                       'independent_new_event':False,'synchronized_intraday_event_study':False,
+                       'decision':'WAIT','orders_enabled':False})
+    return result
+
+
 def check_receipt(payload,root=None):
     assert payload['schema_version']=='hoshi-v3-news-events-1'
     assert payload['use']=='historical-release-research-not-runtime-feed-or-causal-trading-evaluation'
@@ -90,4 +127,5 @@ def check_receipt(payload,root=None):
             start,end=SHOCK_WINDOWS[e['id']]
             assert all(v['requested_start']==start and v['requested_end']==end for v in e['captures'].values())
             assert shock_context(e['event'],e['captures'])==e['diagnostic']
+    if 'yield_studies' in payload:assert payload['yield_studies']==yield_studies(payload)
     return cases

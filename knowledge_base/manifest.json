@@ -1109,7 +1109,38 @@
     },
     {
       "path": "knowledge_base/10_TRADING_PSYCHOLOGY_AND_RISK/biases_and_decision_process.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2159,
+      "sha256": "b18848edde9c71926381f146ad1b6106d66da157c1768bd08f8c89db5062caed",
+      "source_review": {
+        "status": "checked-original-articles-and-author-publication-metadata",
+        "primary_sources": [
+          {
+            "url": "https://sites.socsci.uci.edu/~bskyrms/bio/readings/tversky_k_heuristics_biases.pdf",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://faculty.haas.berkeley.edu/odean/papers%20current%20versions/areinvestorsreluctant.pdf",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://faculty.haas.berkeley.edu/odean/Papers%20current%20versions/Individual_Investor_Performance_Final.pdf",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://faculty.haas.berkeley.edu/odean/",
+            "checked": "2026-10-28"
+          }
+        ],
+        "limitations": [
+          "Three genuine dated research cases: a 1974 experimental report and two broker-account studies. They are not live charts, individual diagnoses or current execution data.",
+          "Publication versus sample/return/trade windows retained; no raw participant/brokerage/CRSP records, intraday arrival clocks or independent replication obtained.",
+          "Publisher DOI full access failed; actual original 1974 university-hosted scan and author-hosted finance articles were read without reproducing full licensed materials. Behavioral process suggestions are original, not validated treatment or a runtime journal."
+        ],
+        "reviewed_on": "2026-10-28",
+        "resolved_at_asia_karachi": "2026-10-28T11:51:39.342232+05:00"
+      }
     },
     {
       "path": "knowledge_base/10_TRADING_PSYCHOLOGY_AND_RISK/backtest_overfitting_and_validation.md",

@@ -62,5 +62,45 @@ class V3FVGTests(unittest.TestCase):
             else:p['first_gap_cases'][0]['diagnostic']['case']['outcome']['first_contact']=None
             with self.assertRaises(AssertionError):f.check_receipt(p,ROOT)
 
+    def test_inversion_is_known_only_after_first_failure_close(self):
+        p=receipt();w=f.check_receipt(p,ROOT)
+        for entry in p['inversion_balance_cases'][:2]:
+            inv=entry['diagnostic']['inversion'];features=inv['features'];bars=w[entry['source_window_sha256']]
+            parent_i=next(i for i,b in enumerate(bars) if b['time']==features['parent']['c']['time'])
+            k=next(i for i,b in enumerate(bars) if b['time']==features['failure']['time'])
+            self.assertIsNone(f.inversion_case(bars[:k],parent_i)['features'])
+            available=f.inversion_case(bars[:k+1],parent_i)
+            self.assertEqual(available['features'],features)
+            self.assertIsNone(available['outcome'])
+            self.assertGreater(inv['outcome']['first_contact']['time'],features['failure']['time'])
+
+    def test_balance_is_positive_opposite_overlap_at_second_confirmation(self):
+        p=receipt();w=f.check_receipt(p,ROOT)
+        for entry in p['inversion_balance_cases'][:2]:
+            bal=entry['diagnostic']['balance'];features=bal['features'];bars=w[entry['source_window_sha256']]
+            i=next(i for i,b in enumerate(bars) if b['time']==features['first']['c']['time'])
+            k=next(i for i,b in enumerate(bars) if b['time']==features['second']['c']['time'])
+            self.assertIsNone(f.balance_case(bars[:k],i)['features'])
+            self.assertEqual(f.balance_case(bars[:k+1],i)['features'],features)
+            self.assertIsNone(f.balance_case(bars[:k+1],i)['outcome'])
+            self.assertTrue(features['forming_bars_shared'])
+            self.assertIsNone(features['directional_bias'])
+        base={'direction':'long','low':10,'high':12}
+        self.assertIsNone(f.intersection(base,{'direction':'short','low':12,'high':14}))
+        self.assertIsNone(f.intersection(base,{'direction':'long','low':11,'high':13}))
+
+    def test_absence_is_not_zero_probability_and_inverted_holds_can_fail(self):
+        p=receipt();f.check_receipt(p,ROOT)
+        cases=[e['diagnostic'] for e in p['inversion_balance_cases']]
+        for case in cases[:2]:
+            self.assertIsNotNone(case['inversion']['outcome']['first_contact_closing_hold'])
+            self.assertIsNotNone(case['inversion']['outcome']['first_invalidating_close'])
+            self.assertIsNone(case['inversion']['outcome']['strategy_pnl'])
+        self.assertEqual(cases[2]['inversion']['status'],'no_close_failure_within_20_bars')
+        self.assertEqual(cases[2]['balance']['status'],'no_opposite_gap_overlap_within_20_bars')
+        self.assertIsNone(cases[2]['inversion']['features'])
+        p['inversion_balance_cases'][0]['diagnostic']['balance']['features']['low']+=1
+        with self.assertRaises(AssertionError):f.check_receipt(p,ROOT)
+
 
 if __name__=='__main__':unittest.main()

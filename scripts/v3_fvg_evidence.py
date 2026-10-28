@@ -54,6 +54,80 @@ def first_case(bars):
             "independent_holdout":False}
 
 
+def inversion_case(bars,index):
+    parent=geometry(bars,index);assert parent is not None
+    bull=parent['direction']=='long'
+    stop=min(index+21,len(bars))
+    failure=next((k for k in range(index+1,stop)
+                  if (bars[k]['close']<parent['low'] if bull else bars[k]['close']>parent['high'])),None)
+    if failure is None:
+        return {'status':'no_close_failure_within_20_bars' if len(bars)-index-1>=20 else 'incomplete_failure_window',
+                'parent':parent,'features':None,'outcome':None}
+    broken=bars[failure]
+    old_wick=next(b for b in bars[index+1:failure+1]
+                  if (b['low']<=parent['low'] if bull else b['high']>=parent['high']))
+    f={'method':'hoshi-first-close-failure-inversion-1','parent':parent,
+       'direction':'short' if bull else 'long','low':parent['low'],'high':parent['high'],
+       'midpoint':parent['midpoint'],'old_wick_retirement':record(old_wick),'failure':record(broken),
+       'earliest_after_close':broken['close_time']+1,'provider_arrival_time':None,
+       'creator_parity_validated':False,'decision':'WAIT','win_probability':None,'orders_enabled':False}
+    future=bars[failure+1:failure+6]
+    if len(future)!=5:return {'status':'inverted','parent':parent,'features':f,'outcome':None}
+    contact=hold=invalid=None
+    long=f['direction']=='long'
+    for b in future:
+        overlap=b['low']<=f['high'] and b['high']>=f['low']
+        if overlap and contact is None:contact=record(b)
+        breached=b['close']<f['low'] if long else b['close']>f['high']
+        if breached:invalid=record(b);break
+        held=b['close']>=f['midpoint'] if long else b['close']<=f['midpoint']
+        if overlap and held and hold is None:hold=record(b)
+    return {'status':'inverted','parent':parent,'features':f,'outcome':{
+        'horizon_bars':5,'available_at':future[-1]['close_time']+1,'path':[record(b) for b in future],
+        'first_contact':contact,'first_contact_closing_hold':hold,'first_invalidating_close':invalid,
+        'raw_close_change_pct':(future[-1]['close']/broken['close']-1)*100,
+        'fill_known':False,'strategy_pnl':None}}
+
+
+def intersection(first,second):
+    if first['direction']==second['direction']:return None
+    low=max(first['low'],second['low']);high=min(first['high'],second['high'])
+    return {'low':low,'high':high,'midpoint':(low+high)/2} if low<high else None
+
+
+def balance_case(bars,index):
+    parent=geometry(bars,index);assert parent is not None
+    pair=None
+    for k in range(index+1,min(index+21,len(bars))):
+        later=geometry(bars,k)
+        overlap=intersection(parent,later) if later is not None else None
+        if overlap is not None:pair=(k,later,overlap);break
+    if pair is None:
+        return {'status':'no_opposite_gap_overlap_within_20_bars' if len(bars)-index-1>=20 else 'incomplete_pair_window',
+                'features':None,'outcome':None}
+    k,later,overlap=pair
+    f={'method':'hoshi-first-opposite-wick-gap-overlap-1','first':parent,'second':later,**overlap,
+       'earliest_after_close':later['earliest_after_close'],'provider_arrival_time':None,
+       'forming_bars_shared':later['a']['time']<=parent['c']['time'],
+       'directional_bias':None,'creator_parity_validated':False,'decision':'WAIT','win_probability':None}
+    future=bars[k+1:k+6]
+    if len(future)!=5:return {'status':'overlap_found','features':f,'outcome':None}
+    return {'status':'overlap_found','features':f,'outcome':{
+        'horizon_bars':5,'available_at':future[-1]['close_time']+1,'path':[record(b) for b in future],
+        'first_contact':next((record(b) for b in future if b['low']<=f['high'] and b['high']>=f['low']),None),
+        'first_close_below':next((record(b) for b in future if b['close']<f['low']),None),
+        'first_close_above':next((record(b) for b in future if b['close']>f['high']),None),
+        'fill_known':False,'strategy_pnl':None}}
+
+
+def inversion_balance_case(bars):
+    index=next((i for i in range(2,len(bars)) if geometry(bars,i) is not None),None)
+    return {'selection':'first_chronological_parent_then_first_close_failure_and_first_opposite_overlap',
+            'inversion':inversion_case(bars,index) if index is not None else None,
+            'balance':balance_case(bars,index) if index is not None else None,
+            'independent_holdout':False}
+
+
 def check_receipt(payload,root):
     assert payload["schema_version"]=="hoshi-v3-fvg-evidence-1"
     assert payload["data_license"]=="CC BY-NC-SA 4.0" and payload["source_file"]==SOURCE
@@ -64,4 +138,6 @@ def check_receipt(payload,root):
     assert len(payload["first_gap_cases"])==3
     for entry in payload["first_gap_cases"]:
         assert first_case(windows[entry["source_window_sha256"]])==entry["diagnostic"]
+    for entry in payload.get('inversion_balance_cases',[]):
+        assert inversion_balance_case(windows[entry['source_window_sha256']])==entry['diagnostic']
     return windows

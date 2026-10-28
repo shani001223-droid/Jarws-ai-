@@ -518,7 +518,40 @@
     },
     {
       "path": "knowledge_base/07_FVG_IMBALANCE/inversion_fvg_and_balanced_ranges.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 1985,
+      "sha256": "9b80816634c44a1a0a7d56d73084a2a24a54367e3ed527481bafc0571ded1bb4",
+      "source_review": {
+        "status": "bounded_original_inversion_balance_caption_passages_and_causal_cases_checked",
+        "primary_sources": [
+          {
+            "url": "https://www.youtube.com/watch?v=FgacYSN9QEo",
+            "title": "ICT Mentorship Core Content - Month 04 - ICT Fair Value Gaps FVG",
+            "channel_id": "UCtjxa77NqamhVC8atV85Rog",
+            "published_at_utc": "2022-09-10T19:00:04Z",
+            "duration": "PT17M57S",
+            "caption_language": "en",
+            "caption_sha256": "e8ba58a30449ffe2a82764354bc92bc09703f87371fbc0a82bc02ad87b2f63ba",
+            "caption_lines": 64,
+            "retrieval": "Original public YouTube captions via vidIQ; full track and unviewed charts not republished."
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=HhgWGduQZQY",
+            "title": "ICT 2024 Mentorship \\ How To Trade ICT FVGs Correctly \\ September 16, 2024",
+            "channel_id": "UCtjxa77NqamhVC8atV85Rog",
+            "published_at_utc": "2024-09-16T15:48:45Z",
+            "duration": "PT2H12M8S",
+            "caption_language": "en",
+            "caption_sha256": "070c53ecdbd629b9a439aa8d313fa1b2720c51b10231df9b49dff15b7923f549",
+            "caption_lines": 465,
+            "retrieval": "Original public YouTube captions via vidIQ; full track and unviewed charts not republished."
+          }
+        ],
+        "limitations": "Explicit original close-failure and wick-intersection conventions; selected 2024 source includes additional body-gap nuance, so exact creator parity remains false. Retrospective inspected captures, not independent holdout, actual fills or loss-recovery evidence.",
+        "reviewed_on": "2026-10-28",
+        "resolved_at_asia_karachi": "2026-10-28T09:54:17.015338+05:00"
+      }
     },
     {
       "path": "knowledge_base/07_FVG_IMBALANCE/displacement_mitigation_and_invalidations.md",
@@ -641,7 +674,7 @@
     {
       "path": "knowledge_base/07_FVG_IMBALANCE/fvg_observations_20261028.json",
       "kind": "fvg_cases",
-      "sha256": "d2b5096bafd30f7e14c4582332a0621793fd6d695762fa31afa231b4e3998375"
+      "sha256": "ff82d9cab6349bda5b9a3b9cc63e477ae36d5b52e9fd5461d68d287687df9fff"
     }
   ],
   "scope_history": [

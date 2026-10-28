@@ -353,5 +353,777 @@
         "independent_holdout": false
       }
     }
+  ],
+  "inversion_balance_cases": [
+    {
+      "source_window_sha256": "c830857cb8e96dbe1128df480468baca40e661f93f40d240b5739cd777a54405",
+      "diagnostic": {
+        "selection": "first_chronological_parent_then_first_close_failure_and_first_opposite_overlap",
+        "inversion": {
+          "status": "inverted",
+          "parent": {
+            "method": "hoshi-strict-outer-wick-gap-1",
+            "direction": "short",
+            "a": {
+              "time": 1684132200000,
+              "close_time": 1684132259999,
+              "open": 27512.28,
+              "high": 27544.1,
+              "low": 27495.5,
+              "close": 27497.62
+            },
+            "b": {
+              "time": 1684132260000,
+              "close_time": 1684132319999,
+              "open": 27497.61,
+              "high": 27514.86,
+              "low": 27470.01,
+              "close": 27470.02
+            },
+            "c": {
+              "time": 1684132320000,
+              "close_time": 1684132379999,
+              "open": 27470.01,
+              "high": 27488.58,
+              "low": 27448.94,
+              "close": 27482.98
+            },
+            "low": 27488.58,
+            "high": 27495.5,
+            "midpoint": 27492.04,
+            "width": 6.919999999998254,
+            "width_bps_of_c_close": 2.517922001179732,
+            "earliest_after_close": 1684132380000,
+            "provider_arrival_time": null,
+            "actual_untraded_prices_known": false,
+            "creator_parity_validated": false,
+            "decision": "WAIT",
+            "win_probability": null,
+            "orders_enabled": false
+          },
+          "features": {
+            "method": "hoshi-first-close-failure-inversion-1",
+            "parent": {
+              "method": "hoshi-strict-outer-wick-gap-1",
+              "direction": "short",
+              "a": {
+                "time": 1684132200000,
+                "close_time": 1684132259999,
+                "open": 27512.28,
+                "high": 27544.1,
+                "low": 27495.5,
+                "close": 27497.62
+              },
+              "b": {
+                "time": 1684132260000,
+                "close_time": 1684132319999,
+                "open": 27497.61,
+                "high": 27514.86,
+                "low": 27470.01,
+                "close": 27470.02
+              },
+              "c": {
+                "time": 1684132320000,
+                "close_time": 1684132379999,
+                "open": 27470.01,
+                "high": 27488.58,
+                "low": 27448.94,
+                "close": 27482.98
+              },
+              "low": 27488.58,
+              "high": 27495.5,
+              "midpoint": 27492.04,
+              "width": 6.919999999998254,
+              "width_bps_of_c_close": 2.517922001179732,
+              "earliest_after_close": 1684132380000,
+              "provider_arrival_time": null,
+              "actual_untraded_prices_known": false,
+              "creator_parity_validated": false,
+              "decision": "WAIT",
+              "win_probability": null,
+              "orders_enabled": false
+            },
+            "direction": "long",
+            "low": 27488.58,
+            "high": 27495.5,
+            "midpoint": 27492.04,
+            "old_wick_retirement": {
+              "time": 1684132380000,
+              "close_time": 1684132439999,
+              "open": 27482.98,
+              "high": 27498.48,
+              "low": 27477.0,
+              "close": 27498.47
+            },
+            "failure": {
+              "time": 1684132380000,
+              "close_time": 1684132439999,
+              "open": 27482.98,
+              "high": 27498.48,
+              "low": 27477.0,
+              "close": 27498.47
+            },
+            "earliest_after_close": 1684132440000,
+            "provider_arrival_time": null,
+            "creator_parity_validated": false,
+            "decision": "WAIT",
+            "win_probability": null,
+            "orders_enabled": false
+          },
+          "outcome": {
+            "horizon_bars": 5,
+            "available_at": 1684132740000,
+            "path": [
+              {
+                "time": 1684132440000,
+                "close_time": 1684132499999,
+                "open": 27498.47,
+                "high": 27504.18,
+                "low": 27491.52,
+                "close": 27491.53
+              },
+              {
+                "time": 1684132500000,
+                "close_time": 1684132559999,
+                "open": 27491.53,
+                "high": 27506.49,
+                "low": 27491.52,
+                "close": 27503.75
+              },
+              {
+                "time": 1684132560000,
+                "close_time": 1684132619999,
+                "open": 27503.75,
+                "high": 27503.76,
+                "low": 27457.65,
+                "close": 27479.57
+              },
+              {
+                "time": 1684132620000,
+                "close_time": 1684132679999,
+                "open": 27479.57,
+                "high": 27481.45,
+                "low": 27470.0,
+                "close": 27470.01
+              },
+              {
+                "time": 1684132680000,
+                "close_time": 1684132739999,
+                "open": 27470.0,
+                "high": 27489.34,
+                "low": 27464.02,
+                "close": 27467.12
+              }
+            ],
+            "first_contact": {
+              "time": 1684132440000,
+              "close_time": 1684132499999,
+              "open": 27498.47,
+              "high": 27504.18,
+              "low": 27491.52,
+              "close": 27491.53
+            },
+            "first_contact_closing_hold": {
+              "time": 1684132500000,
+              "close_time": 1684132559999,
+              "open": 27491.53,
+              "high": 27506.49,
+              "low": 27491.52,
+              "close": 27503.75
+            },
+            "first_invalidating_close": {
+              "time": 1684132560000,
+              "close_time": 1684132619999,
+              "open": 27503.75,
+              "high": 27503.76,
+              "low": 27457.65,
+              "close": 27479.57
+            },
+            "raw_close_change_pct": -0.11400634289835399,
+            "fill_known": false,
+            "strategy_pnl": null
+          }
+        },
+        "balance": {
+          "status": "overlap_found",
+          "features": {
+            "method": "hoshi-first-opposite-wick-gap-overlap-1",
+            "first": {
+              "method": "hoshi-strict-outer-wick-gap-1",
+              "direction": "short",
+              "a": {
+                "time": 1684132200000,
+                "close_time": 1684132259999,
+                "open": 27512.28,
+                "high": 27544.1,
+                "low": 27495.5,
+                "close": 27497.62
+              },
+              "b": {
+                "time": 1684132260000,
+                "close_time": 1684132319999,
+                "open": 27497.61,
+                "high": 27514.86,
+                "low": 27470.01,
+                "close": 27470.02
+              },
+              "c": {
+                "time": 1684132320000,
+                "close_time": 1684132379999,
+                "open": 27470.01,
+                "high": 27488.58,
+                "low": 27448.94,
+                "close": 27482.98
+              },
+              "low": 27488.58,
+              "high": 27495.5,
+              "midpoint": 27492.04,
+              "width": 6.919999999998254,
+              "width_bps_of_c_close": 2.517922001179732,
+              "earliest_after_close": 1684132380000,
+              "provider_arrival_time": null,
+              "actual_untraded_prices_known": false,
+              "creator_parity_validated": false,
+              "decision": "WAIT",
+              "win_probability": null,
+              "orders_enabled": false
+            },
+            "second": {
+              "method": "hoshi-strict-outer-wick-gap-1",
+              "direction": "long",
+              "a": {
+                "time": 1684132320000,
+                "close_time": 1684132379999,
+                "open": 27470.01,
+                "high": 27488.58,
+                "low": 27448.94,
+                "close": 27482.98
+              },
+              "b": {
+                "time": 1684132380000,
+                "close_time": 1684132439999,
+                "open": 27482.98,
+                "high": 27498.48,
+                "low": 27477.0,
+                "close": 27498.47
+              },
+              "c": {
+                "time": 1684132440000,
+                "close_time": 1684132499999,
+                "open": 27498.47,
+                "high": 27504.18,
+                "low": 27491.52,
+                "close": 27491.53
+              },
+              "low": 27488.58,
+              "high": 27491.52,
+              "midpoint": 27490.050000000003,
+              "width": 2.9399999999986903,
+              "width_bps_of_c_close": 1.069420290539919,
+              "earliest_after_close": 1684132500000,
+              "provider_arrival_time": null,
+              "actual_untraded_prices_known": false,
+              "creator_parity_validated": false,
+              "decision": "WAIT",
+              "win_probability": null,
+              "orders_enabled": false
+            },
+            "low": 27488.58,
+            "high": 27491.52,
+            "midpoint": 27490.050000000003,
+            "earliest_after_close": 1684132500000,
+            "provider_arrival_time": null,
+            "forming_bars_shared": true,
+            "directional_bias": null,
+            "creator_parity_validated": false,
+            "decision": "WAIT",
+            "win_probability": null
+          },
+          "outcome": {
+            "horizon_bars": 5,
+            "available_at": 1684132800000,
+            "path": [
+              {
+                "time": 1684132500000,
+                "close_time": 1684132559999,
+                "open": 27491.53,
+                "high": 27506.49,
+                "low": 27491.52,
+                "close": 27503.75
+              },
+              {
+                "time": 1684132560000,
+                "close_time": 1684132619999,
+                "open": 27503.75,
+                "high": 27503.76,
+                "low": 27457.65,
+                "close": 27479.57
+              },
+              {
+                "time": 1684132620000,
+                "close_time": 1684132679999,
+                "open": 27479.57,
+                "high": 27481.45,
+                "low": 27470.0,
+                "close": 27470.01
+              },
+              {
+                "time": 1684132680000,
+                "close_time": 1684132739999,
+                "open": 27470.0,
+                "high": 27489.34,
+                "low": 27464.02,
+                "close": 27467.12
+              },
+              {
+                "time": 1684132740000,
+                "close_time": 1684132799999,
+                "open": 27467.12,
+                "high": 27467.13,
+                "low": 27456.79,
+                "close": 27463.86
+              }
+            ],
+            "first_contact": {
+              "time": 1684132500000,
+              "close_time": 1684132559999,
+              "open": 27491.53,
+              "high": 27506.49,
+              "low": 27491.52,
+              "close": 27503.75
+            },
+            "first_close_below": {
+              "time": 1684132560000,
+              "close_time": 1684132619999,
+              "open": 27503.75,
+              "high": 27503.76,
+              "low": 27457.65,
+              "close": 27479.57
+            },
+            "first_close_above": {
+              "time": 1684132500000,
+              "close_time": 1684132559999,
+              "open": 27491.53,
+              "high": 27506.49,
+              "low": 27491.52,
+              "close": 27503.75
+            },
+            "fill_known": false,
+            "strategy_pnl": null
+          }
+        },
+        "independent_holdout": false
+      }
+    },
+    {
+      "source_window_sha256": "aff382cf41d418f5c6e61e1f0fdd049c96b0dd4cb3d5043207cdef4c434978b1",
+      "diagnostic": {
+        "selection": "first_chronological_parent_then_first_close_failure_and_first_opposite_overlap",
+        "inversion": {
+          "status": "inverted",
+          "parent": {
+            "method": "hoshi-strict-outer-wick-gap-1",
+            "direction": "short",
+            "a": {
+              "time": 1704465240000,
+              "close_time": 1704465299999,
+              "open": 43754.09,
+              "high": 43776.06,
+              "low": 43736.01,
+              "close": 43767.08
+            },
+            "b": {
+              "time": 1704465300000,
+              "close_time": 1704465359999,
+              "open": 43767.08,
+              "high": 43767.09,
+              "low": 43576.72,
+              "close": 43628.75
+            },
+            "c": {
+              "time": 1704465360000,
+              "close_time": 1704465419999,
+              "open": 43628.75,
+              "high": 43683.73,
+              "low": 43628.75,
+              "close": 43672.01
+            },
+            "low": 43683.73,
+            "high": 43736.01,
+            "midpoint": 43709.87,
+            "width": 52.279999999998836,
+            "width_bps_of_c_close": 11.971054229012777,
+            "earliest_after_close": 1704465420000,
+            "provider_arrival_time": null,
+            "actual_untraded_prices_known": false,
+            "creator_parity_validated": false,
+            "decision": "WAIT",
+            "win_probability": null,
+            "orders_enabled": false
+          },
+          "features": {
+            "method": "hoshi-first-close-failure-inversion-1",
+            "parent": {
+              "method": "hoshi-strict-outer-wick-gap-1",
+              "direction": "short",
+              "a": {
+                "time": 1704465240000,
+                "close_time": 1704465299999,
+                "open": 43754.09,
+                "high": 43776.06,
+                "low": 43736.01,
+                "close": 43767.08
+              },
+              "b": {
+                "time": 1704465300000,
+                "close_time": 1704465359999,
+                "open": 43767.08,
+                "high": 43767.09,
+                "low": 43576.72,
+                "close": 43628.75
+              },
+              "c": {
+                "time": 1704465360000,
+                "close_time": 1704465419999,
+                "open": 43628.75,
+                "high": 43683.73,
+                "low": 43628.75,
+                "close": 43672.01
+              },
+              "low": 43683.73,
+              "high": 43736.01,
+              "midpoint": 43709.87,
+              "width": 52.279999999998836,
+              "width_bps_of_c_close": 11.971054229012777,
+              "earliest_after_close": 1704465420000,
+              "provider_arrival_time": null,
+              "actual_untraded_prices_known": false,
+              "creator_parity_validated": false,
+              "decision": "WAIT",
+              "win_probability": null,
+              "orders_enabled": false
+            },
+            "direction": "long",
+            "low": 43683.73,
+            "high": 43736.01,
+            "midpoint": 43709.87,
+            "old_wick_retirement": {
+              "time": 1704465420000,
+              "close_time": 1704465479999,
+              "open": 43672.0,
+              "high": 43771.3,
+              "low": 43657.75,
+              "close": 43747.85
+            },
+            "failure": {
+              "time": 1704465420000,
+              "close_time": 1704465479999,
+              "open": 43672.0,
+              "high": 43771.3,
+              "low": 43657.75,
+              "close": 43747.85
+            },
+            "earliest_after_close": 1704465480000,
+            "provider_arrival_time": null,
+            "creator_parity_validated": false,
+            "decision": "WAIT",
+            "win_probability": null,
+            "orders_enabled": false
+          },
+          "outcome": {
+            "horizon_bars": 5,
+            "available_at": 1704465780000,
+            "path": [
+              {
+                "time": 1704465480000,
+                "close_time": 1704465539999,
+                "open": 43747.85,
+                "high": 43747.86,
+                "low": 43694.8,
+                "close": 43714.01
+              },
+              {
+                "time": 1704465540000,
+                "close_time": 1704465599999,
+                "open": 43714.01,
+                "high": 43731.1,
+                "low": 43687.0,
+                "close": 43687.0
+              },
+              {
+                "time": 1704465600000,
+                "close_time": 1704465659999,
+                "open": 43687.0,
+                "high": 43689.54,
+                "low": 43641.1,
+                "close": 43641.1
+              },
+              {
+                "time": 1704465660000,
+                "close_time": 1704465719999,
+                "open": 43641.11,
+                "high": 43661.99,
+                "low": 43637.23,
+                "close": 43642.23
+              },
+              {
+                "time": 1704465720000,
+                "close_time": 1704465779999,
+                "open": 43642.23,
+                "high": 43642.23,
+                "low": 43100.0,
+                "close": 43285.05
+              }
+            ],
+            "first_contact": {
+              "time": 1704465480000,
+              "close_time": 1704465539999,
+              "open": 43747.85,
+              "high": 43747.86,
+              "low": 43694.8,
+              "close": 43714.01
+            },
+            "first_contact_closing_hold": {
+              "time": 1704465480000,
+              "close_time": 1704465539999,
+              "open": 43747.85,
+              "high": 43747.86,
+              "low": 43694.8,
+              "close": 43714.01
+            },
+            "first_invalidating_close": {
+              "time": 1704465600000,
+              "close_time": 1704465659999,
+              "open": 43687.0,
+              "high": 43689.54,
+              "low": 43641.1,
+              "close": 43641.1
+            },
+            "raw_close_change_pct": -1.0578805587017293,
+            "fill_known": false,
+            "strategy_pnl": null
+          }
+        },
+        "balance": {
+          "status": "overlap_found",
+          "features": {
+            "method": "hoshi-first-opposite-wick-gap-overlap-1",
+            "first": {
+              "method": "hoshi-strict-outer-wick-gap-1",
+              "direction": "short",
+              "a": {
+                "time": 1704465240000,
+                "close_time": 1704465299999,
+                "open": 43754.09,
+                "high": 43776.06,
+                "low": 43736.01,
+                "close": 43767.08
+              },
+              "b": {
+                "time": 1704465300000,
+                "close_time": 1704465359999,
+                "open": 43767.08,
+                "high": 43767.09,
+                "low": 43576.72,
+                "close": 43628.75
+              },
+              "c": {
+                "time": 1704465360000,
+                "close_time": 1704465419999,
+                "open": 43628.75,
+                "high": 43683.73,
+                "low": 43628.75,
+                "close": 43672.01
+              },
+              "low": 43683.73,
+              "high": 43736.01,
+              "midpoint": 43709.87,
+              "width": 52.279999999998836,
+              "width_bps_of_c_close": 11.971054229012777,
+              "earliest_after_close": 1704465420000,
+              "provider_arrival_time": null,
+              "actual_untraded_prices_known": false,
+              "creator_parity_validated": false,
+              "decision": "WAIT",
+              "win_probability": null,
+              "orders_enabled": false
+            },
+            "second": {
+              "method": "hoshi-strict-outer-wick-gap-1",
+              "direction": "long",
+              "a": {
+                "time": 1704465360000,
+                "close_time": 1704465419999,
+                "open": 43628.75,
+                "high": 43683.73,
+                "low": 43628.75,
+                "close": 43672.01
+              },
+              "b": {
+                "time": 1704465420000,
+                "close_time": 1704465479999,
+                "open": 43672.0,
+                "high": 43771.3,
+                "low": 43657.75,
+                "close": 43747.85
+              },
+              "c": {
+                "time": 1704465480000,
+                "close_time": 1704465539999,
+                "open": 43747.85,
+                "high": 43747.86,
+                "low": 43694.8,
+                "close": 43714.01
+              },
+              "low": 43683.73,
+              "high": 43694.8,
+              "midpoint": 43689.265,
+              "width": 11.069999999999709,
+              "width_bps_of_c_close": 2.5323689133071317,
+              "earliest_after_close": 1704465540000,
+              "provider_arrival_time": null,
+              "actual_untraded_prices_known": false,
+              "creator_parity_validated": false,
+              "decision": "WAIT",
+              "win_probability": null,
+              "orders_enabled": false
+            },
+            "low": 43683.73,
+            "high": 43694.8,
+            "midpoint": 43689.265,
+            "earliest_after_close": 1704465540000,
+            "provider_arrival_time": null,
+            "forming_bars_shared": true,
+            "directional_bias": null,
+            "creator_parity_validated": false,
+            "decision": "WAIT",
+            "win_probability": null
+          },
+          "outcome": {
+            "horizon_bars": 5,
+            "available_at": 1704465840000,
+            "path": [
+              {
+                "time": 1704465540000,
+                "close_time": 1704465599999,
+                "open": 43714.01,
+                "high": 43731.1,
+                "low": 43687.0,
+                "close": 43687.0
+              },
+              {
+                "time": 1704465600000,
+                "close_time": 1704465659999,
+                "open": 43687.0,
+                "high": 43689.54,
+                "low": 43641.1,
+                "close": 43641.1
+              },
+              {
+                "time": 1704465660000,
+                "close_time": 1704465719999,
+                "open": 43641.11,
+                "high": 43661.99,
+                "low": 43637.23,
+                "close": 43642.23
+              },
+              {
+                "time": 1704465720000,
+                "close_time": 1704465779999,
+                "open": 43642.23,
+                "high": 43642.23,
+                "low": 43100.0,
+                "close": 43285.05
+              },
+              {
+                "time": 1704465780000,
+                "close_time": 1704465839999,
+                "open": 43285.05,
+                "high": 43541.93,
+                "low": 43285.05,
+                "close": 43503.98
+              }
+            ],
+            "first_contact": {
+              "time": 1704465540000,
+              "close_time": 1704465599999,
+              "open": 43714.01,
+              "high": 43731.1,
+              "low": 43687.0,
+              "close": 43687.0
+            },
+            "first_close_below": {
+              "time": 1704465600000,
+              "close_time": 1704465659999,
+              "open": 43687.0,
+              "high": 43689.54,
+              "low": 43641.1,
+              "close": 43641.1
+            },
+            "first_close_above": null,
+            "fill_known": false,
+            "strategy_pnl": null
+          }
+        },
+        "independent_holdout": false
+      }
+    },
+    {
+      "source_window_sha256": "36a388a683cdfc85821ad1a86aba710a632e1cf4758427df58e460bd4ed13d8e",
+      "diagnostic": {
+        "selection": "first_chronological_parent_then_first_close_failure_and_first_opposite_overlap",
+        "inversion": {
+          "status": "no_close_failure_within_20_bars",
+          "parent": {
+            "method": "hoshi-strict-outer-wick-gap-1",
+            "direction": "short",
+            "a": {
+              "time": 1723138200000,
+              "close_time": 1723138259999,
+              "open": 59775.91,
+              "high": 59821.12,
+              "low": 59708.25,
+              "close": 59708.26
+            },
+            "b": {
+              "time": 1723138260000,
+              "close_time": 1723138319999,
+              "open": 59708.27,
+              "high": 59714.22,
+              "low": 59642.22,
+              "close": 59642.23
+            },
+            "c": {
+              "time": 1723138320000,
+              "close_time": 1723138379999,
+              "open": 59642.23,
+              "high": 59681.63,
+              "low": 59639.26,
+              "close": 59660.67
+            },
+            "low": 59681.63,
+            "high": 59708.25,
+            "midpoint": 59694.94,
+            "width": 26.62000000000262,
+            "width_bps_of_c_close": 4.461900947475551,
+            "earliest_after_close": 1723138380000,
+            "provider_arrival_time": null,
+            "actual_untraded_prices_known": false,
+            "creator_parity_validated": false,
+            "decision": "WAIT",
+            "win_probability": null,
+            "orders_enabled": false
+          },
+          "features": null,
+          "outcome": null
+        },
+        "balance": {
+          "status": "no_opposite_gap_overlap_within_20_bars",
+          "features": null,
+          "outcome": null
+        },
+        "independent_holdout": false
+      }
+    }
   ]
 }

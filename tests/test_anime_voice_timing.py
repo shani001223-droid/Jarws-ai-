@@ -6,6 +6,8 @@ from io import BytesIO
 import json
 from pathlib import Path
 import shutil
+import subprocess
+import sys
 import tempfile
 import unittest
 import wave
@@ -115,6 +117,63 @@ class VoiceTimingTests(unittest.TestCase):
         self.assertEqual(result["voice_timing_handoff"]["plan"]["cues"][0]["text"], "سلام")
         self.assertFalse(result["hindi_urdu_voice_recorded"])
         self.assertFalse(result["uploaded"])
+
+    @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"),
+                         "FFmpeg and ffprobe required for CLI handoff")
+    def test_private_cli_voice_cues_and_nonoverwrite(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            args = [sys.executable, "-m", "scripts.render_hoshi_anime_animatic"]
+            for index, still in enumerate(self.stills):
+                path = root / f"shot{index}.png"
+                path.write_bytes(still)
+                args += ["--shot", str(path)]
+            for caption in self.captions:
+                args += ["--caption", caption]
+            storyboard_path = root / "storyboard.json"
+            storyboard_path.write_text(json.dumps(self.storyboard, ensure_ascii=False),
+                                       encoding="utf-8")
+            wav_path = root / "audio.wav"
+            wav_path.write_bytes(self.wav)
+            cues_path = root / "cues.json"
+            cues_path.write_text(json.dumps(self.cues, ensure_ascii=False), encoding="utf-8")
+            output_dir = root / "private-review"
+            args += [
+                "--storyboard-json", str(storyboard_path),
+                "--audio-wav", str(wav_path), "--audio-rights-attested",
+                "--voice-cues-json", str(cues_path), "--image-rights-attested",
+                "--out", str(output_dir)
+            ]
+            success = subprocess.run(args, capture_output=True, text=True, timeout=110)
+            self.assertEqual(success.returncode, 0, success.stderr)
+            manifest = json.loads((output_dir / "manifest.json").read_text(encoding="utf-8"))
+            self.assertEqual(manifest["voice_timing_handoff"]["plan"]["cues"][1]["text"],
+                             "नमस्ते")
+            self.assertFalse(manifest["voice_timing_handoff"]["lip_sync_generated"])
+            before = (output_dir / manifest["filename"]).read_bytes()
+            repeat = subprocess.run(args, capture_output=True, text=True, timeout=110)
+            self.assertNotEqual(repeat.returncode, 0)
+            self.assertEqual((output_dir / manifest["filename"]).read_bytes(), before)
+
+    def test_cli_rejects_voice_cues_without_storyboard_and_wav(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            args = [sys.executable, "-m", "scripts.render_hoshi_anime_animatic"]
+            for index, still in enumerate(self.stills):
+                path = root / f"shot{index}.png"
+                path.write_bytes(still)
+                args += ["--shot", str(path)]
+            for caption in self.captions:
+                args += ["--caption", caption]
+            cues_path = root / "cues.json"
+            cues_path.write_text(json.dumps(self.cues), encoding="utf-8")
+            dest = root / "should-not-exist"
+            args += ["--voice-cues-json", str(cues_path), "--image-rights-attested",
+                     "--out", str(dest)]
+            result = subprocess.run(args, capture_output=True, text=True, timeout=20)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("require both", result.stderr)
+            self.assertFalse(dest.exists())
 
 
 if __name__ == "__main__":

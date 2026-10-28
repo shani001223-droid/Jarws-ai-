@@ -310,3 +310,8 @@ Added `ict_mentorship_2023_2024.md` with 1934 substantive body words. Original c
 ## V3 source-specific clocks and explicit scope expansion — 28 October 2026
 
 Added `killzones_silver_bullet_power_of_three.md` (2065 substantive words), checked original primary captions/metadata and retained hashes without track republication. Distinct Forex versus Silver Bullet intervals, DST, closed-bar hour boundaries, first-candidate failures and overlap counts remain explicit. All 53 evidence regressions passed locally. Scope revision 3 adds pending detailed day/week session-opening-gap work: 24/50 (48.00%), not silently omitted or counted by the annual comparison. That existing chapter now names the pending topic and has refreshed word/hash receipts. Prior `2d773e9f04602f13c8a2066b4631a228731e0b2c` passed actual CI 40619595186. No runtime/orders/main/backup/identity/privacy/voice/Stop or unrelated task changes.
+
+
+## V3 OTE arithmetic and absent entries — 28 October 2026
+
+Added `ote_entries_and_failure_models.md` (2016 substantive words), checked original OTE Primer captions/public metadata and recorded its digest. The original fixed-wick adaptation is distinguished from creator body anchoring. Three actual dated five-minute windows contain no band contact; favorable raw endpoints are not fabricated fills or PnL. All 56 offline evidence tests passed locally, including prefix availability, exact band algebra and synthetic same-bar invalidation priority. Curriculum 25/50 (50.00%); session-opening-gap source/data topic, runtime/evaluation/release pending. Prior `f8d2a2748dfa657255b335f0a5ecd38ca0de8f37` passed actual CI 40619989851. No runtime/orders/main/backup/identity/privacy/voice/Stop or unrelated work changed.

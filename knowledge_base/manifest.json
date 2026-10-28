@@ -318,7 +318,28 @@
     },
     {
       "path": "knowledge_base/05_ICT_COMPLETE/ote_entries_and_failure_models.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2016,
+      "sha256": "27cde353b675d1da24b3c315d1cbd9bfb7d6dfde80483c1da086505d0f2a1e5f",
+      "source_review": {
+        "status": "bounded_original_caption_passages_and_creator_metadata_checked",
+        "reviewed_on": "2026-10-28",
+        "primary_sources": [
+          {
+            "url": "https://www.youtube.com/watch?v=Cg0-CFJOJvg",
+            "title": "OTE Primer - Intro To ICT Optimal Trade Entry",
+            "channel_id": "UCtjxa77NqamhVC8atV85Rog",
+            "published_at_utc": "2017-09-30T00:08:26Z",
+            "duration": "PT44M40S",
+            "caption_language": "en",
+            "caption_sha256": "1b9729712343485a0582723ef337177c644e8aeb6d45803614b8f3fb94d2af8b",
+            "caption_lines": 162,
+            "retrieval": "Original YouTube captions via vidIQ; full copyrighted track not republished."
+          }
+        ],
+        "limitations": "Original ratios briefly attributed; fixed pre-hour wick anchors are an explicit original adaptation. Creator body anchors/chart visuals and recognizer parity not claimed. All three real five-minute cases have no contact; no fills or profit are invented."
+      }
     },
     {
       "path": "knowledge_base/05_ICT_COMPLETE/session_opening_gaps_ndog_nwog_and_2024_context.md",
@@ -460,7 +481,7 @@
     {
       "path": "knowledge_base/05_ICT_COMPLETE/ict_intraday_observations_20261028.json",
       "kind": "ict_intraday",
-      "sha256": "1168785d444db6b9a05868e4268bd5f48fb1dadbdf2616f0e56756ac7e1c0fd5"
+      "sha256": "4e6b66fa819aa93c1b0aa7b10f76cce8716eb05039951b535d470d7bb5d9e602"
     }
   ],
   "scope_history": [

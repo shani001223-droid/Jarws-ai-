@@ -95,5 +95,38 @@ class V3ICTTests(unittest.TestCase):
         p["observations"][0]["context_case"]["features"]["low"]-=1
         with self.assertRaises(AssertionError):i.check_receipt(p)
 
+    def test_ote_anchors_are_prior_only_and_levels_are_explicit(self):
+        p=receipt()
+        for item,bars in zip(p["observations"],i.check_receipt(p)):
+            f=item["ote_case"]["features"]
+            self.assertEqual(i.ote_features(bars[:30]),f)
+            self.assertIsNone(i.ote_case(bars[:30])["outcome"])
+            self.assertLess(f["low_anchor"]["close_time"],f["earliest_after_close"])
+            self.assertLess(f["high_anchor"]["close_time"],f["earliest_after_close"])
+            self.assertAlmostEqual(f["band_high"]-f["band_low"],.17*f["range"])
+            self.assertFalse(f["creator_parity_validated"])
+
+    def test_ote_absence_is_not_filled_profit_or_forged_probability(self):
+        p=receipt();i.check_receipt(p)
+        for item in p["observations"]:
+            c=item["ote_case"]
+            self.assertIsNone(c["outcome"]["first_band_contact"])
+            self.assertFalse(c["outcome"]["observed_fill"])
+            self.assertIsNone(c["outcome"]["strategy_pnl"])
+            self.assertIsNone(c["features"]["win_probability"])
+        p["observations"][0]["ote_case"]["features"]["level_705"]+=1
+        with self.assertRaises(AssertionError):i.check_receipt(p)
+
+    def test_ote_same_bar_anchor_touch_overrides_closing_rejection(self):
+        bars=deepcopy(i.check_receipt(receipt())[1])
+        f=i.ote_features(bars)
+        # Synthetic outcome exercises lifecycle priority, not a historical case.
+        bars[30].update(low=f["invalidation_reference"],high=f["band_high"]+1,
+                        open=f["band_high"],close=f["band_high"])
+        c=i.ote_case(bars)
+        self.assertIsNotNone(c["outcome"]["first_band_contact"])
+        self.assertIsNotNone(c["outcome"]["first_anchor_touch_or_cross"])
+        self.assertIsNone(c["outcome"]["first_closing_rejection"])
+
 
 if __name__ == "__main__": unittest.main()

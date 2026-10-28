@@ -144,6 +144,50 @@ def context_case(bars):
         "strategy_pnl":None,"orders_enabled":False}}
 
 
+def ote_features(bars):
+    """Original fixed-pre-hour wick range; NOT exact creator OTE parity."""
+    base=context_features(bars)
+    prior=bars[:30]
+    low,high=base["low"],base["high"]
+    span=high-low
+    assert span>0
+    li=next(k for k,b in enumerate(prior) if b["low"]==low)
+    hi=next(k for k,b in enumerate(prior) if b["high"]==high)
+    assert li!=hi,"same-candle extreme order is unknown"
+    bull=li<hi
+    level=lambda q: high-q*span if bull else low+q*span
+    bounds=sorted((level(.62),level(.79)))
+    return {"method":"hoshi-frozen-wick-ote-1","direction":"long" if bull else "short",
+            "context":base,"low_anchor":record(prior[li]),"high_anchor":record(prior[hi]),
+            "anchor_selection":"first_global_extremes_of_fixed_prior_30_bars",
+            "range":span,"level_62":level(.62),"level_705":level(.705),"level_79":level(.79),
+            "band_low":bounds[0],"band_high":bounds[1],
+            "invalidation_reference":low if bull else high,
+            "earliest_after_close":base["earliest_after_close"],
+            "creator_parity_validated":False,"decision":"WAIT","win_probability":None}
+
+
+def ote_case(bars):
+    f=ote_features(bars)
+    future=bars[30:35]
+    if len(future)!=5:return {"features":f,"outcome":None}
+    bull=f["direction"]=="long"
+    contact=rejection=invalid=None
+    for b in future:
+        overlaps=b["low"]<=f["band_high"] and b["high"]>=f["band_low"]
+        if overlaps and contact is None:contact=record(b)
+        breached=b["low"]<=f["invalidation_reference"] if bull else b["high"]>=f["invalidation_reference"]
+        if breached:invalid=record(b);break
+        hold=b["close"]>=f["level_705"] if bull else b["close"]<=f["level_705"]
+        if overlaps and hold and rejection is None:rejection=record(b)
+    return {"features":f,"outcome":{
+        "horizon_bars":5,"available_at":future[-1]["close_time"]+1,
+        "path":[record(b) for b in future],"first_band_contact":contact,
+        "first_closing_rejection":rejection,"first_anchor_touch_or_cross":invalid,
+        "raw_close_change_pct":(future[-1]["close"]/f["context"]["last_prior_close"]-1)*100,
+        "observed_fill":False,"strategy_pnl":None,"orders_enabled":False}}
+
+
 def check_observation(item):
     assert item["symbol"]=="BTCUSDT" and item["interval"]=="1m" and item["venue"]=="Binance Spot"
     raw=item["response_body"]
@@ -162,6 +206,7 @@ def check_observation(item):
     assert fetched.utcoffset().total_seconds()==0 and fetched.timestamp()*1000>bars[-1]["close_time"]
     assert gap_scan(bars)==item["gap_scan"]
     if "context_case" in item:assert context_case(bars)==item["context_case"]
+    if "ote_case" in item:assert ote_case(bars)==item["ote_case"]
     return bars
 
 

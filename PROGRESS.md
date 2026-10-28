@@ -9,8 +9,8 @@ entire branch was already deployed. Production V2 remains a separate release.
 
 ## Current measured progress
 
-**Day 1: completed 24 of 50 planned knowledge chapters — 48.00%; 26 chapters,
-52.00% of the declared curriculum, remain.**
+**Day 1: completed 25 of 50 planned knowledge chapters — 50.00%; 25 chapters,
+50.00% of the declared curriculum, remain.**
 
 The denominator is the versioned, expandable file manifest in
 `knowledge_base/manifest.json`. Scope revision 2 expanded the initial 48
@@ -51,6 +51,7 @@ topics require an explicit manifest/progress revision, never silent omission.
 | `05_ICT_COMPLETE/ict_mentorship_2023_2024.md` | Source-checked; bounded original 2023/2024 source comparison, publication/event separation and three frozen pre-hour references; complete editions, futures opening gaps and independent new trials unclaimed |
 | `05_ICT_COMPLETE/killzones_silver_bullet_power_of_three.md` | Source-checked; exact original classic/Silver Bullet hour distinctions, DST and boundary rules, bounded Power of Three attribution and three real dated timing/failure cases |
 | `05_ICT_COMPLETE/session_opening_gaps_ndog_nwog_and_2024_context.md` | Pending explicit scope revision 3 addition; detailed session boundaries and genuine opening endpoints cannot be inferred from current spot envelopes |
+| `05_ICT_COMPLETE/ote_entries_and_failure_models.md` | Source-checked; original ratio attribution, explicit frozen-wick adaptation and three real dated missing-entry cases; arithmetic, contact, execution and probability remain distinct |
 | Remaining curriculum documents | Pending; no empty placeholder chapters counted as complete |
 | Brain loader and runtime knowledge bundle | Pending — new source chapters are not yet consumed by Hoshi |
 | 40/20/20/20 history/liquidity/structure/global-flow engine | Pending — weights will mean evidence coverage, not an invented win probability |
@@ -134,6 +135,8 @@ topics require an explicit manifest/progress revision, never silent omission.
 - **28 October, Day 1 (07:11 PKT):** completed `ict_mentorship_2023_2024.md` (1934 substantive words). Checked original 2023 Silver Bullet and selected 2024 Lecture 4 captions/creator metadata, with language and track digests retained. Separates publication from event/access time, source description from original hypotheses, and spot envelopes from unavailable futures opening-gap endpoints. Three replayed frozen pre-hour envelopes retain missing excursions, small boundary excess and adverse first-gap paths; reuse of the same 360 minute bars is explicit, not three new independent trials. Two added context/prefix/corruption regressions bring local passing evidence tests to 53. Prior [65c1cbc4](https://github.com/shani001223-droid/Jarws-ai-/commit/65c1cbc4cdd932a68d4eb46972ac35032c9c97cf) passed [actual CI 40619156102](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40619156102). Curriculum 23/49 (46.94%); next `killzones_silver_bullet_power_of_three.md`. This bounded chapter does not claim all annual mentorship content obtained, model training, runtime delivery or release.
 
 - **28 October, Day 1 (07:15 PKT):** completed `killzones_silver_bullet_power_of_three.md` (2065 substantive words). Original 2017 London/New York, 2022 Episode 9 and 2023 Silver Bullet captions/creator metadata establish source-specific hours and a bounded Power of Three comparison. Distinguishes 07:00–09:00 classic New York from 10:00–11:00 Silver Bullet, entry from later exit, half-open post-close windows, summer/winter offsets and absence/invalidations. The same three actual captures contain 22/15/12 eligible overlapping gaps, not trades or independent probability observations. All 53 local evidence tests passed. Prior [2d773e9f](https://github.com/shani001223-droid/Jarws-ai-/commit/2d773e9f04602f13c8a2066b4631a228731e0b2c) passed [actual CI 40619595186](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40619595186). **Scope revision 3 adds the genuinely missing detailed day/week session-opening-gap topic: 50 declared chapters, 24 source-checked (48.00%), 26 pending (52.00%).** The prior bounded annual comparison explicitly links this pending work; its corrected word/digest receipts are updated. Next `ote_entries_and_failure_models.md`, then the added session-gap chapter. Runtime, independent evaluation and final release remain pending.
+
+- **28 October, Day 1 (07:20 PKT):** completed `ote_entries_and_failure_models.md` (2016 substantive words). Checked the original 2017 OTE Primer captions/creator metadata, including its ratios and body-anchor distinction. Original `hoshi-frozen-wick-ote-1` uses only completed pre-hour bars with explicit anchor ordering, range algebra and five-minute lifecycle; all three genuine dated cases have no eligible band contact despite some favorable endpoints. Three new prefix/arithmetic/absence/same-bar-invalidation regressions bring the local passing evidence suite to 56. Prior [f8d2a274](https://github.com/shani001223-droid/Jarws-ai-/commit/f8d2a2748dfa657255b335f0a5ecd38ca0de8f37) passed [actual CI 40619989851](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40619989851). Curriculum 25/50 (50.00%), 25 pending. Next declared chapter is the explicit session-opening-gap expansion; its actual supported session endpoint data must be checked, not replaced by spot envelopes. Runtime/evaluation/release remain pending; these source diagnostics are not loaded knowledge or model training.
 
 ## Completion and release rules
 

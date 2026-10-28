@@ -210,6 +210,116 @@
           "strategy_pnl": null,
           "orders_enabled": false
         }
+      },
+      "ote_case": {
+        "features": {
+          "method": "hoshi-frozen-wick-ote-1",
+          "direction": "short",
+          "context": {
+            "method": "hoshi-prior-thirty-minute-envelope-1",
+            "prior_bars": 30,
+            "prior_start": 1684132200000,
+            "prior_end": 1684133999999,
+            "earliest_after_close": 1684134000000,
+            "provider_arrival_time": null,
+            "clock": {
+              "local_time": "2023-05-15T03:00:00-04:00",
+              "timezone": "America/New_York",
+              "active_windows": [
+                "silver_london"
+              ],
+              "weekday": 0
+            },
+            "window": "silver_london",
+            "low": 27405.0,
+            "high": 27544.1,
+            "midpoint": 27474.55,
+            "last_prior_close": 27475.63,
+            "is_day_or_week_opening_gap": false,
+            "directional_bias": null
+          },
+          "low_anchor": {
+            "time": 1684133580000,
+            "close_time": 1684133639999,
+            "open": 27445.9,
+            "high": 27445.91,
+            "low": 27405.0,
+            "close": 27422.56
+          },
+          "high_anchor": {
+            "time": 1684132200000,
+            "close_time": 1684132259999,
+            "open": 27512.28,
+            "high": 27544.1,
+            "low": 27495.5,
+            "close": 27497.62
+          },
+          "anchor_selection": "first_global_extremes_of_fixed_prior_30_bars",
+          "range": 139.09999999999854,
+          "level_62": 27491.242,
+          "level_705": 27503.0655,
+          "level_79": 27514.889,
+          "band_low": 27491.242,
+          "band_high": 27514.889,
+          "invalidation_reference": 27544.1,
+          "earliest_after_close": 1684134000000,
+          "creator_parity_validated": false,
+          "decision": "WAIT",
+          "win_probability": null
+        },
+        "outcome": {
+          "horizon_bars": 5,
+          "available_at": 1684134300000,
+          "path": [
+            {
+              "time": 1684134000000,
+              "close_time": 1684134059999,
+              "open": 27475.64,
+              "high": 27489.49,
+              "low": 27462.93,
+              "close": 27462.93
+            },
+            {
+              "time": 1684134060000,
+              "close_time": 1684134119999,
+              "open": 27462.93,
+              "high": 27466.76,
+              "low": 27460.71,
+              "close": 27463.07
+            },
+            {
+              "time": 1684134120000,
+              "close_time": 1684134179999,
+              "open": 27463.06,
+              "high": 27463.07,
+              "low": 27455.3,
+              "close": 27457.05
+            },
+            {
+              "time": 1684134180000,
+              "close_time": 1684134239999,
+              "open": 27457.04,
+              "high": 27457.05,
+              "low": 27451.74,
+              "close": 27454.62
+            },
+            {
+              "time": 1684134240000,
+              "close_time": 1684134299999,
+              "open": 27454.62,
+              "high": 27469.34,
+              "low": 27454.62,
+              "close": 27469.34
+            }
+          ],
+          "first_band_contact": null,
+          "first_closing_rejection": null,
+          "first_anchor_touch_or_cross": null,
+          "raw_close_change_pct": -0.02289301464607485,
+          "observed_fill": false,
+          "strategy_pnl": null,
+          "orders_enabled": false
+        }
       }
     },
     {
@@ -395,6 +505,116 @@
           "first_below_bar": null,
           "intrabar_crossing_time_known": false,
           "bias_selected_from_outcome": false,
+          "strategy_pnl": null,
+          "orders_enabled": false
+        }
+      },
+      "ote_case": {
+        "features": {
+          "method": "hoshi-frozen-wick-ote-1",
+          "direction": "long",
+          "context": {
+            "method": "hoshi-prior-thirty-minute-envelope-1",
+            "prior_bars": 30,
+            "prior_start": 1704465000000,
+            "prior_end": 1704466799999,
+            "earliest_after_close": 1704466800000,
+            "provider_arrival_time": null,
+            "clock": {
+              "local_time": "2024-01-05T10:00:00-05:00",
+              "timezone": "America/New_York",
+              "active_windows": [
+                "silver_am"
+              ],
+              "weekday": 4
+            },
+            "window": "silver_am",
+            "low": 43100.0,
+            "high": 43800.0,
+            "midpoint": 43450.0,
+            "last_prior_close": 43486.04,
+            "is_day_or_week_opening_gap": false,
+            "directional_bias": null
+          },
+          "low_anchor": {
+            "time": 1704465720000,
+            "close_time": 1704465779999,
+            "open": 43642.23,
+            "high": 43642.23,
+            "low": 43100.0,
+            "close": 43285.05
+          },
+          "high_anchor": {
+            "time": 1704466140000,
+            "close_time": 1704466199999,
+            "open": 43692.71,
+            "high": 43800.0,
+            "low": 43611.1,
+            "close": 43800.0
+          },
+          "anchor_selection": "first_global_extremes_of_fixed_prior_30_bars",
+          "range": 700.0,
+          "level_62": 43366.0,
+          "level_705": 43306.5,
+          "level_79": 43247.0,
+          "band_low": 43247.0,
+          "band_high": 43366.0,
+          "invalidation_reference": 43100.0,
+          "earliest_after_close": 1704466800000,
+          "creator_parity_validated": false,
+          "decision": "WAIT",
+          "win_probability": null
+        },
+        "outcome": {
+          "horizon_bars": 5,
+          "available_at": 1704467100000,
+          "path": [
+            {
+              "time": 1704466800000,
+              "close_time": 1704466859999,
+              "open": 43488.21,
+              "high": 43581.39,
+              "low": 43487.18,
+              "close": 43560.64
+            },
+            {
+              "time": 1704466860000,
+              "close_time": 1704466919999,
+              "open": 43560.64,
+              "high": 43633.11,
+              "low": 43502.03,
+              "close": 43624.09
+            },
+            {
+              "time": 1704466920000,
+              "close_time": 1704466979999,
+              "open": 43624.09,
+              "high": 43671.1,
+              "low": 43610.0,
+              "close": 43659.8
+            },
+            {
+              "time": 1704466980000,
+              "close_time": 1704467039999,
+              "open": 43659.81,
+              "high": 43690.45,
+              "low": 43619.34,
+              "close": 43689.99
+            },
+            {
+              "time": 1704467040000,
+              "close_time": 1704467099999,
+              "open": 43689.99,
+              "high": 43723.15,
+              "low": 43639.4,
+              "close": 43680.52
+            }
+          ],
+          "first_band_contact": null,
+          "first_closing_rejection": null,
+          "first_anchor_touch_or_cross": null,
+          "raw_close_change_pct": 0.44722398268501884,
+          "observed_fill": false,
           "strategy_pnl": null,
           "orders_enabled": false
         }
@@ -594,6 +814,116 @@
           },
           "intrabar_crossing_time_known": false,
           "bias_selected_from_outcome": false,
+          "strategy_pnl": null,
+          "orders_enabled": false
+        }
+      },
+      "ote_case": {
+        "features": {
+          "method": "hoshi-frozen-wick-ote-1",
+          "direction": "short",
+          "context": {
+            "method": "hoshi-prior-thirty-minute-envelope-1",
+            "prior_bars": 30,
+            "prior_start": 1723138200000,
+            "prior_end": 1723139999999,
+            "earliest_after_close": 1723140000000,
+            "provider_arrival_time": null,
+            "clock": {
+              "local_time": "2024-08-08T14:00:00-04:00",
+              "timezone": "America/New_York",
+              "active_windows": [
+                "silver_pm"
+              ],
+              "weekday": 3
+            },
+            "window": "silver_pm",
+            "low": 59437.77,
+            "high": 59821.12,
+            "midpoint": 59629.445,
+            "last_prior_close": 59469.88,
+            "is_day_or_week_opening_gap": false,
+            "directional_bias": null
+          },
+          "low_anchor": {
+            "time": 1723139940000,
+            "close_time": 1723139999999,
+            "open": 59480.04,
+            "high": 59480.04,
+            "low": 59437.77,
+            "close": 59469.88
+          },
+          "high_anchor": {
+            "time": 1723138200000,
+            "close_time": 1723138259999,
+            "open": 59775.91,
+            "high": 59821.12,
+            "low": 59708.25,
+            "close": 59708.26
+          },
+          "anchor_selection": "first_global_extremes_of_fixed_prior_30_bars",
+          "range": 383.3500000000058,
+          "level_62": 59675.447,
+          "level_705": 59708.03175,
+          "level_79": 59740.616500000004,
+          "band_low": 59675.447,
+          "band_high": 59740.616500000004,
+          "invalidation_reference": 59821.12,
+          "earliest_after_close": 1723140000000,
+          "creator_parity_validated": false,
+          "decision": "WAIT",
+          "win_probability": null
+        },
+        "outcome": {
+          "horizon_bars": 5,
+          "available_at": 1723140300000,
+          "path": [
+            {
+              "time": 1723140000000,
+              "close_time": 1723140059999,
+              "open": 59469.89,
+              "high": 59488.89,
+              "low": 59414.07,
+              "close": 59414.08
+            },
+            {
+              "time": 1723140060000,
+              "close_time": 1723140119999,
+              "open": 59414.08,
+              "high": 59498.34,
+              "low": 59409.1,
+              "close": 59498.34
+            },
+            {
+              "time": 1723140120000,
+              "close_time": 1723140179999,
+              "open": 59498.33,
+              "high": 59498.34,
+              "low": 59421.4,
+              "close": 59421.4
+            },
+            {
+              "time": 1723140180000,
+              "close_time": 1723140239999,
+              "open": 59421.41,
+              "high": 59457.76,
+              "low": 59417.48,
+              "close": 59453.59
+            },
+            {
+              "time": 1723140240000,
+              "close_time": 1723140299999,
+              "open": 59453.59,
+              "high": 59488.89,
+              "low": 59453.58,
+              "close": 59469.67
+            }
+          ],
+          "first_band_contact": null,
+          "first_closing_rejection": null,
+          "first_anchor_touch_or_cross": null,
+          "raw_close_change_pct": -0.000353119932305912,
+          "observed_fill": false,
           "strategy_pnl": null,
           "orders_enabled": false
         }

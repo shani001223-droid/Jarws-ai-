@@ -123,6 +123,57 @@ window, with costs and executable-price assumptions handled separately.
 The new chapter must not count three expiry groups, three clock labels
 or three documents as three completed priced gap examples.
 
+### Endpoint selection and the information clock
+
+The adjacent offline endpoint diagnostic now separates a transaction's event
+clock from the time its record actually became available. It selects the last
+eligible transaction in a specified pre-break window and the first in a
+specified post-reopen window, keeping nanoseconds and exact contract identity.
+Both windows are half-open: their left boundary belongs to the window and
+their right boundary does not. A transaction inside an asserted closure
+conflicts with that calendar assertion and prevents a result.
+
+This is an original normalized research format, not a newly implemented CME
+adapter. Its revision and cancellation operations illustrate a necessary
+research distinction; the current v2 layout alone does not establish that a
+vendor delivers those normalized operations or an original receipt clock.
+A future adapter would need checked source-specific correction semantics.
+Neither a file-order counter nor the date of today's download can be invented
+as the missing original arrival time. [3]
+
+A late correction must enter the information set only after its recorded
+arrival. Decisions made earlier retain the earlier record. A cancellation
+removes that trade from the eligible set, potentially changing which print
+is selected; it is not a transaction at a cancellation price. The diagnostic
+also rejects revision gaps, ambiguous exchange ordering and changes to an
+existing trade's identity or original event coordinates. These rules prevent
+an orderly-looking final tape from silently becoming a point-in-time replay.
+
+Coverage is a separate prerequisite. The diagnostic requires applicable
+calendar, complete adjacent windows, correction coverage and permitted
+research use to be explicitly asserted, with calendar and coverage clocks
+available by the decision. An assertion that a complete observation window
+was already known before it finished is inconsistent. These caller assertions
+are not independently certified permissions or proof of complete source data.
+Even when all assertions permit arithmetic, the result is uncertified research
+geometry: the decision remains WAIT, executable levels and win probability
+remain null, and orders remain disabled.
+
+Seventeen synthetic and retained-metadata tests exercise these distinctions.
+Their prices are invented arithmetic fixtures explicitly labelled synthetic;
+they are not additional historical cases. The actual retained ES metadata
+still lacks five required items: calendar verification, adjacent coverage,
+executed-trade completeness, original arrival and redistribution permission.
+The metadata-only preflight therefore produces no gap geometry and zero
+eligible opening-gap cases. No raw price file is accessed by that preflight.
+
+The current CME trading-hours page distinguishes executable OPEN from
+nonmatching PREOPEN, Paused and post-close/pre-open states. This fresh check
+supports the need to identify market state precisely, but its present-day
+2026/2027 schedules are not retrospectively substituted for the missing
+historical contract calendar. Maintenance boundaries alone remain insufficient
+to identify an actual first transaction. [5]
+
 ## Failure zones
 
 Clock substitution is an immediate failure. A modern close applied to an
@@ -274,3 +325,4 @@ this review's unsuccessful direct YouTube fetch.
 2. [CME Globex Notices, 14 September 2015 — Changes to Daily Maintenance Period](https://www.cmegroup.com/tools-information/lookups/advisories/electronic-trading/20150914.html).
 3. [CME Time and Sales layout and sample table](https://cmegroupclientsite.atlassian.net/wiki/spaces/EPICSANDBOX/pages/457223239/Time%2Band%2BSales), [the actual ES v2 part-file URL](https://www.cmegroup.com/files/download/xcme-tick-es-fut-20250312-part-00039-c000.csv) and the adjacent metadata-only `session_source_audit_20261028.json` receipt.
 4. [Original 2024 Mentorship Lecture 4, 8 August](https://www.youtube.com/watch?v=hdSscxZgE58): reused earlier bounded caption/creator-metadata check, digest `08f9a65787563119b3ee69ed772a22c6ddb85ebe834b7862bd6b0bad4ff3045f`; no new transcript, chart inspection or full-edition claim.
+5. [CME Group holiday and trading hours, current page checked 28 October 2026](https://www.cmegroup.com/trading-hours.html): market-state distinctions only, not a certified 2012, 2015 or 2025 session/holiday calendar. Original offline diagnostic: `scripts/v3_session_endpoint_evidence.py`; synthetic and actual metadata tests: `tests/test_v3_session_endpoint_evidence.py`.

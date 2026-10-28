@@ -347,7 +347,7 @@
       "scope_note": "Explicit expansion: original 2024 source introduces day/week session opening gaps distinct from three-candle FVG and arbitrary spot clock envelopes; requires checked original session boundaries, actual dated endpoints and failures, with unsupported data gaps retained.",
       "source_review": {
         "status": "draft_incomplete_priced_examples_calendars_availability_and_rights",
-        "last_rechecked_at_asia_karachi": "2026-10-28T14:03:32.490504+05:00",
+        "last_rechecked_at_asia_karachi": "2026-10-28T15:03:12.195106+05:00",
         "checked_sources": [
           {
             "url": "https://www.youtube.com/watch?v=hdSscxZgE58",
@@ -455,6 +455,11 @@
             "url": "https://www.youtube.com/watch?v=hdSscxZgE58",
             "checked_on": "2026-10-28",
             "result": "Fresh direct web open failed. Draft reuses only the previously recorded bounded caption/creator-metadata review and digest from ict_mentorship_2023_2024.md; no new transcript, full chart inspection or original feed/execution validation claimed."
+          },
+          {
+            "url": "https://www.cmegroup.com/trading-hours.html",
+            "checked_on": "2026-10-28",
+            "result": "Actually opened current page: OPEN matching is distinguished from PREOPEN, Paused and post-close/pre-open nonmatching states. Current 2026/2027 schedules are not certified historical 2012/2015/2025 calendars. No historical endpoint, full holiday calendar or original receipt clock obtained."
           }
         ],
         "remaining_requirement": "Still need verified permitted exact-contract historical session/holiday calendars and actual pre-break last/post-break first trades across three genuinely dated cases, complete adjacent-session/correction coverage, source availability evidence and applicable use/redistribution rights. Complete HTTP download of one sample part-file and three maturity identities do not satisfy those requirements. Portara one-date snippets do not certify complete tape coverage or sample-use rights. Continue only genuinely permitted independent source investigation; do not use settlement, adjusted continuous series, broker quotes or arbitrary 24/7 spot envelopes to manufacture completion. No all-free-data-unavailable claim.",
@@ -466,12 +471,39 @@
           "eligible_opening_gap_cases": 0,
           "new_synthetic_decoder_and_metadata_tests": 17,
           "raw_market_file_or_price_series_published": false,
-          "runtime_integration": false
+          "runtime_integration": false,
+          "endpoint_diagnostic": "scripts/v3_session_endpoint_evidence.py",
+          "endpoint_diagnostic_tests": "tests/test_v3_session_endpoint_evidence.py",
+          "new_synthetic_and_actual_metadata_endpoint_tests": 17,
+          "normalized_event_source_adapter_available": false,
+          "source_assertions_are_independent_certification": false,
+          "actual_metadata_preflight": {
+            "schema_version": "hoshi-v3-session-endpoint-diagnostic-1",
+            "study_status": "insufficient_evidence",
+            "reasons": [
+              "adjacent_session_coverage_verified",
+              "executed_trade_coverage_certified",
+              "original_historical_arrival_utc",
+              "redistribution_permission_verified",
+              "session_calendar_verified"
+            ],
+            "geometry": null,
+            "certified_historical_case": false,
+            "decision": "WAIT",
+            "entry": null,
+            "stop_loss": null,
+            "take_profit": null,
+            "win_probability": null,
+            "orders_enabled": false,
+            "evidence_scope": "caller-asserted-normalized-research-not-source-certification",
+            "source_sha256": "c62b5527f57079ee28c1a05184adf03f6cafea41bf3ed48c85c59f1b45a2fe51",
+            "eligible_opening_gap_case_count": 0
+          }
         },
         "draft_note": "Original substantive conceptual draft with three documented schedule/source-quality context cases; explicitly not the three required priced opening-gap examples. It is integrity checked but not source-complete, runtime eligible, loaded knowledge or training."
       },
-      "body_word_count": 2235,
-      "sha256": "ab543ad362b6a33ae7a56e40cb9968fed1a209b28d3be013ce54708bb4fd8716",
+      "body_word_count": 2675,
+      "sha256": "5b4ba40f8482450a55fa7f6af1e9f28622abfd09af5c7ccfc2c605b6d7390b40",
       "reviewed_on": "2026-10-28",
       "runtime_eligible": false,
       "completion_blockers": [

@@ -18,6 +18,7 @@ import wave
 from PIL import Image, ImageOps, UnidentifiedImageError
 
 from .anime_storyboard_handoff import bind_storyboard_handoff, StoryboardHandoffError
+from .anime_voice_timing import bind_voice_timing_handoff, VoiceTimingError
 
 
 class AnimePilotError(ValueError):
@@ -144,7 +145,8 @@ def render_private_animatic(stills: list[bytes] | tuple[bytes, ...],
                             audio_wav: bytes | None = None,
                             audio_rights_attested: bool = False,
                             camera_moves: list[str] | tuple[str, ...] | None = None,
-                            storyboard_handoff: dict | None = None) -> dict:
+                            storyboard_handoff: dict | None = None,
+                            voice_timing_plan: dict | None = None) -> dict:
     """Encode a private 30-second storyboard preview; never approve/publish it.
 
     Caller must attest rights to every still and optional soundtrack. No claim
@@ -176,6 +178,12 @@ def render_private_animatic(stills: list[bytes] | tuple[bytes, ...],
             handoff = bind_storyboard_handoff(
                 storyboard_handoff, stills, captions, camera_moves)
         except StoryboardHandoffError as exc:
+            raise AnimePilotError(str(exc)) from None
+    voice_timing = None
+    if voice_timing_plan is not None:
+        try:
+            voice_timing = bind_voice_timing_handoff(voice_timing_plan, handoff, audio_wav)
+        except VoiceTimingError as exc:
             raise AnimePilotError(str(exc)) from None
     ffmpeg, ffprobe = shutil.which("ffmpeg"), shutil.which("ffprobe")
     if not ffmpeg or not ffprobe:
@@ -231,6 +239,7 @@ def render_private_animatic(stills: list[bytes] | tuple[bytes, ...],
         "frame_rate": FPS,
         "camera_moves": list(camera_moves),
         "storyboard_handoff": handoff,
+        "voice_timing_handoff": voice_timing,
         "camera_motion_is_2d_still_reframing": any(m != "static" for m in camera_moves),
         "production_roles": list(ROLES),
         "stage": "private_storyboard_animatic_only",

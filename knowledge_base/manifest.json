@@ -1144,7 +1144,42 @@
     },
     {
       "path": "knowledge_base/10_TRADING_PSYCHOLOGY_AND_RISK/backtest_overfitting_and_validation.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2162,
+      "sha256": "4a58d354991cbd1ba3930ba2461090413c1318fc873e976c3e57f9ca870c800f",
+      "source_review": {
+        "status": "checked-primary-methodology-and-existing-real-source-ledgers",
+        "primary_sources": [
+          {
+            "url": "https://www.davidhbailey.com/dhbpapers/backtest-prob.pdf",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://onlinelibrary.wiley.com/doi/abs/10.1111/jofi.12365",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.fmg.ac.uk/publications/discussion-papers/data-snooping-technical-trading-rule-performance-and-bootstrap",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://github.com/binance/binance-public-data/blob/master/README.md",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://github.com/binance/binance-public-data/blob/master/TERMS_AND_CONDITIONS.md",
+            "checked": "2026-10-28"
+          }
+        ],
+        "limitations": [
+          "Three actual BTCUSDT minute windows were already inspected; reuse is explicit, never new independent trials or a newly held-out validation sample.",
+          "107 gaps/102 complete event outcomes contain censoring and overlap. Simulated trades, strategy PnL, account drawdown and calibrated win rate remain null; zero qualified holds is not a zero-trade strategy backtest.",
+          "PBO/Reality Check/post-publication research is briefly attributed; no PBO, CSCV, Reality Check or complete chronological market replay implementation is claimed. Original-arrival, actual cost/fill and production-rights gaps remain."
+        ],
+        "reviewed_on": "2026-10-28",
+        "resolved_at_asia_karachi": "2026-10-28T12:00:53.742505+05:00"
+      }
     },
     {
       "path": "knowledge_base/11_NEWS_TRADING/nfp_cpi_and_fomc.md",

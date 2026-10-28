@@ -290,7 +290,7 @@ def validate_episode_eight(script: dict) -> None:
 
 
 def episode_eight_script() -> dict:
-    """Return a fresh EP008 draft linked to the immutable EP006 revision."""
+    """Return a fresh EP008 draft linked to the immutable EP007 revision."""
     manifest = series_manifest()
     episode = manifest["episodes"][7]
     draft = {

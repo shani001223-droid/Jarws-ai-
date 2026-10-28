@@ -454,7 +454,30 @@
     },
     {
       "path": "knowledge_base/06_LIQUIDITY_GOD/liquidity_historical_cases_and_execution.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2013,
+      "sha256": "94b54afab6c57f4d038c6640510d048c871d1694ebbb56cb26a1257d3248710c",
+      "source_review": {
+        "status": "primary_execution_mechanics_and_genuine_barrier_paths_checked",
+        "primary_sources": [
+          {
+            "url": "https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/executing-order",
+            "checked": "Execution delay, quantity and changing price discussion."
+          },
+          {
+            "url": "https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-15",
+            "checked": "Stock stop activation versus actual execution, without venue parity."
+          },
+          {
+            "url": "https://developers.binance.com/docs/binance-spot-api-docs/filters",
+            "checked": "Price/lot/notional filter concepts, not historical snapshots."
+          }
+        ],
+        "limitations": "Original hypothetical long-only barriers and assumed cost/risk arithmetic; no entry/fill/strategy PnL or drawdown reconstructed. Three contrasting cases reuse inspected raw captures and are not independent holdout or runtime replay.",
+        "reviewed_on": "2026-10-28",
+        "resolved_at_asia_karachi": "2026-10-28T07:57:16.542786+05:00"
+      }
     },
     {
       "path": "knowledge_base/07_FVG_IMBALANCE/fvg_definition_detection_and_retests.md",
@@ -580,7 +603,7 @@
     {
       "path": "knowledge_base/06_LIQUIDITY_GOD/liquidity_observations_20261028.json",
       "kind": "liquidity_cases",
-      "sha256": "030448cdd94933fada0060649574184cb4e73efafdf4a091d3c9d552a6f3de53"
+      "sha256": "4abd1956e150a956f6081c3104b568932462d68c90bbc70111322e7a44e727b4"
     }
   ],
   "scope_history": [

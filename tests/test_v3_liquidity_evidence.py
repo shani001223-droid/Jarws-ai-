@@ -88,5 +88,40 @@ class V3LiquidityTests(unittest.TestCase):
         p["reclaim_cases"][0]["case"]["features"]["reference_age_bars"]+=1
         with self.assertRaises(AssertionError):l.check_receipt(p,ROOT)
 
+    def test_unfilled_cost_illustrations_bound_modeled_risk_and_cash(self):
+        for price in (1,4800,59769.13,1e12):
+            f=l.cost_illustration(price)
+            for row in f["cost_sensitivity"]:
+                self.assertLessEqual(row["modeled_stop_loss"],50+1e-10)
+                self.assertLessEqual(row["entry_cash_with_modeled_cost"],10000+1e-8)
+            self.assertGreater(f["cost_sensitivity"][0]["net_target_to_stop_loss_ratio"],
+                               f["cost_sensitivity"][-1]["net_target_to_stop_loss_ratio"])
+            self.assertIsNone(f["strategy_pnl"])
+        for invalid in (0,-1,float('nan'),float('inf'),True):
+            with self.assertRaises(AssertionError):l.cost_illustration(invalid)
+
+    def test_barriers_keep_ambiguity_and_do_not_invent_account_results(self):
+        p=receipt();w=l.check_receipt(p,ROOT)
+        cases=[e["case"] for e in p["execution_cases"]]
+        self.assertEqual([c["outcome"]["first_barrier_observation"]["classification"] for c in cases],
+                         ["ambiguous_both_barriers_same_bar","target_reference_only_first","stop_reference_only_first"])
+        for e in p["execution_cases"]:
+            f=e["case"]["features"];bars=w[e["source_window_sha256"]]
+            prefix=[b for b in bars if b["close_time"]<=f["event"]["close_time"]]
+            self.assertEqual(l.execution_features(prefix,f["event"]["date"]),f)
+            self.assertIsNone(l.execution_case(prefix,f["event"]["date"])["outcome"])
+            self.assertIsNone(e["case"]["outcome"]["drawdown"])
+        p["execution_cases"][0]["case"]["outcome"]["first_barrier_observation"]["classification"]="target_reference_only_first"
+        with self.assertRaises(AssertionError):l.check_receipt(p,ROOT)
+
+    def test_gap_open_is_not_filled_at_the_stop_reference(self):
+        p=receipt();w=l.check_receipt(p,ROOT);e=p["execution_cases"][2]
+        f=e["case"]["features"];bars=deepcopy(w[e["source_window_sha256"]])
+        k=next(k for k,b in enumerate(bars) if l.utc_day(b["time"])==f["event"]["date"])
+        bars[k+1]["open"]=.9*f["illustration"]["stop_reference"]
+        c=l.execution_case(bars,f["event"]["date"])
+        self.assertEqual(c["outcome"]["first_barrier_observation"]["classification"],"opens_at_or_beyond_stop_reference")
+        self.assertIsNone(c["outcome"]["strategy_pnl"])
+
 
 if __name__ == "__main__":unittest.main()

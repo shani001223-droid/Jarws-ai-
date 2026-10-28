@@ -347,7 +347,7 @@
       "scope_note": "Explicit expansion: original 2024 source introduces day/week session opening gaps distinct from three-candle FVG and arbitrary spot clock envelopes; requires checked original session boundaries, actual dated endpoints and failures, with unsupported data gaps retained.",
       "source_review": {
         "status": "pending_actual_session_endpoint_and_redistribution_evidence",
-        "last_rechecked_at_asia_karachi": "2026-10-28T07:27:06.550082+05:00",
+        "last_rechecked_at_asia_karachi": "2026-10-28T12:41:58.431829+05:00",
         "checked_sources": [
           {
             "url": "https://www.youtube.com/watch?v=hdSscxZgE58",
@@ -360,9 +360,34 @@
           {
             "url": "https://cmegroupclientsite.atlassian.net/wiki/spaces/EPICSANDBOX/pages/457319709/CME%2BDataMine%2BSupport",
             "result": "Primary FAQ checked: limited free historical/sample data may exist; exact suitable dated close/reopen samples and redistribution permission have not yet been verified. Do not claim data are unavailable everywhere."
+          },
+          {
+            "url": "https://cmegroupclientsite.atlassian.net/wiki/spaces/EPICSANDBOX/pages/457091894/Market%2BDepth",
+            "checked_on": "2026-10-28",
+            "result": "Official sample table actually opened. Gold 2 January 2020 and E-mini S&P 500 15 July 2013 sample links found; listed samples are not proof of three close/reopen pairs for a fixed contract. No endpoints, session calendar or complete coverage derived."
+          },
+          {
+            "url": "https://www.cmegroup.com/market-data/datamine-historical-data/files/xcec_md_gc_fut_20200102-r-00390.gz",
+            "checked_on": "2026-10-28",
+            "result": "Bounded unauthenticated HTTP range GET actually returned 206, application/x-gzip, bytes 0-8191/197558383; gzip header 1f8b. Only 8192 bytes read, not retained or committed. This establishes reachable public sample bytes, not a decoded contract identity, endpoint prices, completeness, original availability or permission to redistribute MD."
+          },
+          {
+            "url": "https://www.cmegroup.com/market-data/datamine-historical-data/files/xcme_md_es_fut_20130715-r-00020.gz",
+            "checked_on": "2026-10-28",
+            "result": "Bounded unauthenticated HTTP range GET actually returned 206, application/x-gzip, bytes 0-8191/39569455; gzip header 1f8b. Only 8192 bytes read, not retained or committed. Web reader unsupported gzip was not mistaken for unavailable data. No original last/first trade endpoints derived."
+          },
+          {
+            "url": "https://cmegroupclientsite.atlassian.net/wiki/spaces/EPICSANDBOX/pages/457319709/CME%2BDataMine%2BSupport",
+            "checked_on": "2026-10-28",
+            "result": "Primary FAQ re-read: limited free data/samples exist; external redistribution of historical End-of-Day/Time-and-Sales requires vendor registration, while the FAQ does not permit external BBO/MD redistribution. No registration, entitlement, purchase or permission was created; publicly reachable sample bytes are not treated as a publishing grant."
+          },
+          {
+            "url": "https://databento.com/blog/introduction-market-data-licensing",
+            "checked_on": "2026-10-28",
+            "result": "Primary vendor FAQ (2 October 2023) read including historical-data exceptions: historical access and redistribution are distinct; redistribution can require licensing. No account or credits activated, exact permitted public futures samples not obtained. This general FAQ is not a project-specific rights grant."
           }
         ],
-        "remaining_requirement": "Obtain a permitted primary or licensed exact-contract session calendar plus actual timestamped pre-break last trade and post-break first trade for three dated cases, raw receipts/point-in-time availability and applicable redistribution rights; otherwise keep chapter pending. Settlement/daily closes and arbitrary 24/7 spot envelopes are not equivalent endpoints. Continue independent pending chapters without paid access."
+        "remaining_requirement": "Still obtain permitted exact-contract dated calendars plus timestamped pre-break last and post-break first actual trades for three cases, original availability evidence and applicable redistribution rights. Public CME MD samples are reachable but have not supplied verified three endpoint pairs or a publishing grant. Continue checking official Time-and-Sales samples and other genuinely permitted sources without account creation, purchase, external messages or substituting settlement/continuous/24-7 spot values."
       }
     },
     {

@@ -18,6 +18,7 @@ on:
       - "android/**"
       - "tests/**"
       - "game-studio/**"
+      - "scripts/package_hoshi_game.py"
       - "index.html"
       - "sw.js"
       - "hoshi-*.js"
@@ -138,4 +139,18 @@ jobs:
         run: node tests/game-studio.e2e.cjs
       - name: Run Task 53 real-browser full-game and failure-path QA
         run: node tests/game-studio-qa.e2e.cjs
+      - name: Package and verify Task 54 offline web release
+        run: |
+          python scripts/package_hoshi_game.py --out game-release
+          python scripts/package_hoshi_game.py --verify game-release/Hoshi-Star-Trail-offline.zip
+          python -m unittest discover -s tests -p "test_hoshi_game_package.py" -v
+      - name: Run Task 54 actual offline file-browser release QA
+        run: node tests/game-studio-offline.e2e.cjs
+      - name: Upload private review-only offline game artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hoshi-star-trail-offline-web
+          path: game-release/Hoshi-Star-Trail-offline.zip
+          if-no-files-found: error
+          retention-days: 14
 

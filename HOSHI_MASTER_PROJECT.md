@@ -267,3 +267,14 @@ The original `HOSHI_ANIME_SERIES_BIBLE.md` and deterministic `cloud_backend/anim
 **Source/test verification:** full Python/Node/Playwright CI passed on `cbaf609d51237ae116c989b4c717e41c45daa6f2` at https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40643993457 ; real Docker/Uvicorn passed at https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40643993263 . Earlier intermediate missing-document CI failed and was fixed before acceptance. Only the **canonical roadmap** contains Task 55's completion checkbox and authoritative total.
 
 This is **not** a collection of independently reviewed scripts or 9,000 minutes of rendered media. All episodes remain outline-only; scripts, cast/voice licenses, storyboards, synchronized MP4s, QC and user approval are separate Tasks 56–60. Task 06 physical Realme Note 50 QA, Task 11 real OpenJarvis, Flora owner approvals and production release remain pending. No new app/repo, fake Room Life, purchases, external publishing, secrets, real trading or production merge/deploy.
+
+
+## Hoshi AI animated anime avatar (28 October 2026)
+
+User approved keeping anime Hoshi as the main assistant visual, replacing the static-only experience. **One canonical sub-plan:** [HOSHI_ANIMATED_AVATAR_PLAN.md](HOSHI_ANIMATED_AVATAR_PLAN.md) under existing roadmap Task 57; do not create a second project, 60-task board or duplicate automation.
+
+- **V1 built on development branch only:** `hoshi-anime-avatar.js`, `hoshi-anime-avatar.css`, `index.html` and `sw.js` introduce a visible 4×2 Hoshi expression portrait, bounded CSS sway, blink overlay, emotion/listen/think/speak state priority and speaking-state mouth fallback. Black home keeps microphone, Settings and Stop; other tools remain accessible.
+- **Verified:** 4 of 28 avatar subtasks at source/browser level (10, 14, 17, 19), with full CI https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40649425847 and Docker smoke https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40649433743 .
+- **Unverified:** layered Live2D-quality rig, accurate eye/mouth alignment on Realme Note 50, independently moving fox ears/hair, audio-amplitude/viseme lip sync, clothing-layer outfit swaps, phone performance, APK acceptance and production release. CSS mouth cycling must never be marketed as accurate lip sync. No paid tool, live user action or production merge was performed.
+
+This v1 does not independently complete canonical Task 57; track all 28 subtasks within the linked plan and only check the top-level roadmap task when every acceptance gate is truly satisfied.

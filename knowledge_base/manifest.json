@@ -718,7 +718,42 @@
     },
     {
       "path": "knowledge_base/08_INDICATORS_AND_ORDERFLOW/cvd_footprint_and_delta.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2144,
+      "sha256": "293a68157c9b898524e10b6ddbf9b86025d6e4fd9104a297dfe98298ea6de4ca",
+      "source_review": {
+        "status": "checked_primary_side_schema_provider_methods_and_actual_archive_trade_classification",
+        "primary_sources": [
+          {
+            "url": "https://developers.binance.com/en/docs/catalog/core-trading-spot-trading/api/rest-api/market",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://github.com/binance/binance-public-data",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://github.com/binance/binance-public-data/blob/master/TERMS_AND_CONDITIONS.md",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.sierrachart.com/index.php?ID=292&page=doc/StudiesReference.php",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.sierrachart.com/index.php?page=doc/NumbersBars.php",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.tradingview.com/support/solutions/43000725058-cumulative-volume-delta/",
+            "checked": "2026-10-28"
+          }
+        ],
+        "limitations": "Existing fixed minute archive cases, not new selected winners or independent holdout. Maker classification weights BTC quantity; buyer-taker base/quote independently reconcile with native kline fields. Minute-reset paths and one-USDT footprints retain both sides, event-ID ordered cumulative extrema and explicit 3x/.01 BTC research thresholds. Zero denominators remain null. Broader bar-end CVD sums have separately frozen anchors, not full-day intrabar paths. No depth, identity, liquidation, iceberg or absorption proof; no runtime, probability or executed PnL. Noncommercial CC BY-NC-SA 4.0 research only.",
+        "reviewed_on": "2026-10-28",
+        "resolved_at_asia_karachi": "2026-10-28T10:29:43.716682+05:00"
+      }
     },
     {
       "path": "knowledge_base/08_INDICATORS_AND_ORDERFLOW/dom_orderbooks_and_execution.md",
@@ -826,7 +861,7 @@
     {
       "path": "knowledge_base/08_INDICATORS_AND_ORDERFLOW/indicator_observations_20261028.json",
       "kind": "indicator_cases",
-      "sha256": "a9404b0ca934f715b1a80ee1efdf4fbc801da6b9d22587c7d961ff20f45ee35a"
+      "sha256": "795c44e62c334a85dfaac137311001ced4bf5623fb85b7598e4f98aae54b22cf"
     }
   ],
   "scope_history": [

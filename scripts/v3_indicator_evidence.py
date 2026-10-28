@@ -164,9 +164,74 @@ def volume_case(raw_rows,capture):
             'session_profile_available':False,'decision':'WAIT','win_probability':None,'orders_enabled':False}
 
 
+def classified_flow(trades,reset_time):
+    """Uses only given aggregate events; same timestamp events remain ID ordered."""
+    running=D(0);buy=sell=D(0);path=[]
+    low=high={'time':reset_time,'id':None,'cvd':'0'}
+    for t in trades:
+        if t['buyer_maker']:sell+=t['quantity'];running-=t['quantity']
+        else:buy+=t['quantity'];running+=t['quantity']
+        point={'time':t['time'],'id':t['id'],'cvd':str(running)};path.append(point)
+        if running<D(low['cvd']):low=point
+        if running>D(high['cvd']):high=point
+    assert buy+sell>0
+    return {'reset_time':reset_time,'reset_value':'0','quantity_unit':'BTC',
+            'buyer_taker_base':str(buy),'seller_taker_base':str(sell),'delta_base':str(running),
+            'delta_pct_of_base_volume':str(running/(buy+sell)*100),
+            'minimum_cvd':low,'maximum_cvd':high,'path':path}
+
+
+def footprint(trades,width='1'):
+    width=D(width);assert width.is_finite() and width>0
+    bins={}
+    for t in trades:
+        k=int((t['price']/width).to_integral_value(rounding=ROUND_FLOOR))
+        row=bins.setdefault(k,[D(0),D(0)])
+        row[1 if t['buyer_maker'] else 0]+=t['quantity']
+    rows=[]
+    for k,(buy,sell) in sorted(bins.items()):
+        sell_below=bins.get(k-1,[D(0),D(0)])[1]
+        buy_above=bins.get(k+1,[D(0),D(0)])[0]
+        br=buy/sell_below if sell_below>0 else None
+        sr=sell/buy_above if buy_above>0 else None
+        rows.append({'low_inclusive':str(k*width),'high_exclusive':str((k+1)*width),
+                     'buyer_taker_base':str(buy),'seller_taker_base':str(sell),'delta_base':str(buy-sell),
+                     'buy_to_seller_below_ratio':str(br) if br is not None else None,
+                     'sell_to_buyer_above_ratio':str(sr) if sr is not None else None,
+                     'buy_diagonal_research_flag':bool(buy>=D('.01') and sell_below>=D('.01') and br>=3),
+                     'sell_diagonal_research_flag':bool(sell>=D('.01') and buy_above>=D('.01') and sr>=3)})
+    return {'method':'hoshi-exchange-maker-classified-footprint-1','width_usdt':str(width),
+            'quantity_unit':'BTC','minimum_both_sides_btc':'.01','minimum_ratio':'3',
+            'zero_denominator_ratio':None,'rows':rows,
+            'buy_flag_count':sum(r['buy_diagonal_research_flag'] for r in rows),
+            'sell_flag_count':sum(r['sell_diagonal_research_flag'] for r in rows),
+            'vendor_parity_validated':False}
+
+
+def delta_case(raw_rows,capture):
+    volume_case(raw_rows,capture)  # Preserve the independent native-minute cross-check.
+    trades=parse_aggregate_csv(capture['response_body']);bar=raw_rows[60]
+    flow=classified_flow(trades,bar[0]);fp=footprint(trades)
+    assert D(flow['buyer_taker_base'])==D(bar[9])
+    quote_buy=sum((t['price']*t['quantity'] for t in trades if not t['buyer_maker']),D(0))
+    assert quote_buy==D(bar[10])
+    sign=1 if D(bar[4])>D(bar[1]) else -1 if D(bar[4])<D(bar[1]) else 0
+    return {'method':'hoshi-fixed-minute-classified-delta-case-1','bar_open_time':bar[0],
+            'earliest_after_close':bar[6]+1,'provider_arrival_time':None,
+            'flow':flow,'footprint_1_usdt':fp,
+            'capture_anchor_bar_delta_sum':str(sum((2*D(r[9])-D(r[5]) for r in raw_rows[:61]),D(0))),
+            'later_anchor_bar_delta_sum':str(sum((2*D(r[9])-D(r[5]) for r in raw_rows[30:61]),D(0))),
+            'whole_minute_candle_color_surrogate':str(sign*D(bar[5])),
+            'candle_color_surrogate_is_not_exchange_classified_delta':True,
+            'native_taker_buy_base_and_quote_match':True,'resting_depth_available':False,
+            'absorption_or_iceberg_identity_proven':False,'independent_holdout':False,
+            'decision':'WAIT','win_probability':None,'orders_enabled':False}
+
+
 def check_receipt(payload,root):
     assert payload['schema_version']=='hoshi-v3-indicator-evidence-1'
     assert payload['data_license']=='CC BY-NC-SA 4.0' and payload['source_file']==SOURCE
+    assert 'delta_cases' not in payload or 'volume_cases' in payload
     raw=(root/SOURCE).read_bytes()
     assert sha256(raw).hexdigest()==payload['source_file_sha256']
     source=json.loads(raw);checked=check_source(source,root)
@@ -182,4 +247,10 @@ def check_receipt(payload,root):
         raws={e['source_sha256']:json.loads(e['response_body']) for e in source['observations']}
         for entry in entries:
             assert volume_case(raws[entry['source_window_sha256']],entry['aggregate_capture'])==entry['diagnostic']
+        if 'delta_cases' in payload:
+            deltas=payload['delta_cases'];captures={e['source_window_sha256']:e['aggregate_capture'] for e in entries}
+            assert len(deltas)==len(windows) and {e['source_window_sha256'] for e in deltas}==set(windows)
+            for entry in deltas:
+                key=entry['source_window_sha256']
+                assert delta_case(raws[key],captures[key])==entry['diagnostic']
     return windows

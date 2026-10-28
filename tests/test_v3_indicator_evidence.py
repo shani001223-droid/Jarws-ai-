@@ -130,5 +130,63 @@ class V3IndicatorTests(unittest.TestCase):
             else:p['volume_cases'][2]=deepcopy(p['volume_cases'][0])
             with self.assertRaises(AssertionError):f.check_receipt(p,ROOT)
 
+    def test_exchange_classification_quantity_weight_and_event_prefix(self):
+        trades=[{'id':i,'time':i,'price':D(100),'quantity':D(q),'buyer_maker':maker}
+                for i,(q,maker) in enumerate(((2,True),(5,False),(1,True)),10)]
+        full=f.classified_flow(trades,9)
+        self.assertEqual(full['delta_base'],'2')
+        self.assertEqual(full['minimum_cvd']['cvd'],'-2')
+        self.assertEqual(full['maximum_cvd']['cvd'],'3')
+        self.assertEqual(f.classified_flow(trades[:2],9)['path'],full['path'][:2])
+        reversed_sides=deepcopy(trades)
+        for t in reversed_sides:t['buyer_maker']=not t['buyer_maker']
+        self.assertEqual(f.classified_flow(reversed_sides,9)['delta_base'],'-2')
+        p=receipt();f.check_receipt(p,ROOT)
+        for e in p['volume_cases']:
+            t=f.parse_aggregate_csv(e['aggregate_capture']['response_body'])
+            a=f.classified_flow(t,0);b=f.classified_flow(t[:20],0)
+            self.assertEqual(b['path'],a['path'][:20])
+
+    def test_footprint_conserves_signed_and_unsigned_volume_and_reset_context(self):
+        p=receipt();f.check_receipt(p,ROOT)
+        for e in p['delta_cases']:
+            d=e['diagnostic'];flow=d['flow'];rows=d['footprint_1_usdt']['rows']
+            buy=sum((D(r['buyer_taker_base']) for r in rows),D(0))
+            sell=sum((D(r['seller_taker_base']) for r in rows),D(0))
+            self.assertEqual(buy,D(flow['buyer_taker_base']))
+            self.assertEqual(sell,D(flow['seller_taker_base']))
+            self.assertEqual(sum((D(r['delta_base']) for r in rows),D(0)),buy-sell)
+            self.assertNotEqual(d['whole_minute_candle_color_surrogate'],flow['delta_base'])
+            self.assertFalse(d['resting_depth_available'])
+            self.assertFalse(d['absorption_or_iceberg_identity_proven'])
+            self.assertEqual(d['decision'],'WAIT')
+        jan=p['delta_cases'][1]['diagnostic']
+        self.assertLess(D(jan['capture_anchor_bar_delta_sum']),0)
+        self.assertGreater(D(jan['later_anchor_bar_delta_sum']),0)
+        self.assertLess(D(jan['flow']['delta_base']),0)
+
+    def test_zero_diagonal_denominator_and_tiny_opposing_quantity_are_not_flags(self):
+        t=[{'price':D(104),'quantity':D('.0001'),'buyer_maker':True},
+           {'price':D(105),'quantity':D(10),'buyer_maker':False}]
+        rows=f.footprint(t)['rows']
+        self.assertEqual(rows[1]['buy_to_seller_below_ratio'],'1.0E+5')
+        self.assertFalse(rows[1]['buy_diagonal_research_flag'])
+        self.assertIsNone(rows[0]['buy_to_seller_below_ratio'])
+        self.assertIsNone(rows[1]['sell_to_buyer_above_ratio'])
+
+    def test_rehashed_side_flip_and_missing_or_forged_delta_cases_rejected(self):
+        for kind in ('side','delta','omitted','duplicate','missing_source'):
+            p=receipt()
+            if kind=='side':
+                a=p['volume_cases'][0]['aggregate_capture'];lines=a['response_body'].splitlines(keepends=True)
+                fields=lines[0].strip().split(',');fields[6]='False' if fields[6]=='True' else 'True'
+                lines[0]=','.join(fields)+'\n';a['response_body']=''.join(lines)
+                a['subset_sha256']=sha256(a['response_body'].encode()).hexdigest()
+            elif kind=='delta':p['delta_cases'][0]['diagnostic']['flow']['delta_base']='999'
+            elif kind=='omitted':p['delta_cases'].pop()
+            elif kind=='duplicate':p['delta_cases'][2]=deepcopy(p['delta_cases'][0])
+            else:p.pop('volume_cases')
+            with self.assertRaises(AssertionError):f.check_receipt(p,ROOT)
+
 
 if __name__=='__main__':unittest.main()

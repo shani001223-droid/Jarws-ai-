@@ -1,0 +1,126 @@
+{
+  "schema_version": "hoshi-v3-vendor-sample-screening-1",
+  "use": "metadata-only-source-screening-not-priced-gap-cases-or-runtime",
+  "capture": {
+    "url": "https://hist.databento.com/v0/dataset/sample/download/glbx.mdp3/mbp-1?sample_type=futures",
+    "started_at_utc": "2026-10-28T10:49:18.594277+00:00",
+    "http": 200,
+    "content_type": "text/csv",
+    "content_length": null,
+    "content_disposition": "attachment; filename=\"databento_glbx.mdp3_mbp_1.csv\"",
+    "bytes": 350169102,
+    "sha256": "f004bc5d677837e05363fe294384d23723d82e505331325936c8b3144a34b252",
+    "complete_http_body": true,
+    "captured_at_utc": "2026-10-28T10:49:34.287195+00:00",
+    "raw_prices_published": false,
+    "permissions_verified": false
+  },
+  "observations": {
+    "header": [
+      "ts_recv",
+      "ts_event",
+      "rtype",
+      "publisher_id",
+      "instrument_id",
+      "action",
+      "side",
+      "depth",
+      "price",
+      "size",
+      "flags",
+      "ts_in_delta",
+      "sequence",
+      "bid_px_00",
+      "ask_px_00",
+      "bid_sz_00",
+      "ask_sz_00",
+      "bid_ct_00",
+      "ask_ct_00",
+      "symbol"
+    ],
+    "rows": 2185295,
+    "action_counts": {
+      "A": 1051555,
+      "C": 882448,
+      "T": 153819,
+      "M": 97473
+    },
+    "flag_counts": {
+      "168": 1,
+      "128": 2031475,
+      "0": 153819
+    },
+    "source_symbol": "ESZ5",
+    "provider_publisher_id": 1,
+    "provider_instrument_id": 294973,
+    "trade_record_rows": 153819,
+    "trade_record_date_counts": {
+      "2025-09-22": 153819
+    },
+    "event_window_utc": [
+      "2025-09-21T23:59:59.878773407Z",
+      "2025-09-22T15:59:59.913306999Z"
+    ],
+    "vendor_receive_window_utc": [
+      "2025-09-22T00:00:00.000000000Z",
+      "2025-09-22T15:59:59.913386615Z"
+    ],
+    "trade_record_event_window_utc": [
+      "2025-09-22T00:00:00.158384175Z",
+      "2025-09-22T15:59:59.870502389Z"
+    ],
+    "trade_record_event_regressions": 0,
+    "trade_record_receive_regressions": 0,
+    "flagged_trade_rows": {
+      "bad_receive_timestamp": 0,
+      "snapshot": 0,
+      "maybe_bad_book": 0
+    },
+    "first_record": {
+      "action": "A",
+      "flags": 168,
+      "event_utc": "2025-09-21T23:59:59.878773407Z",
+      "vendor_receive_utc": "2025-09-22T00:00:00.000000000Z"
+    }
+  },
+  "profiling_method": "Complete EOF Python csv.DictReader profile; independently checked all 20-column row widths, action/flag counts with AWK and complete source SHA256 with sha256sum. No source prices exported. Mechanical metadata checks do not replay the unbundled CSV.",
+  "source_quality": {
+    "metadata_validator_proves_origin": false,
+    "contract_definition_mapping_verified": false,
+    "historical_calendar_verified": false,
+    "adjacent_session_coverage_verified": false,
+    "correction_coverage_verified": false,
+    "vendor_capture_equals_hoshi_arrival": false,
+    "original_hoshi_arrival_utc": null,
+    "redistribution_permission_verified": false,
+    "price_gap_computed": false,
+    "actual_trade_prices_published": false,
+    "eligible_opening_gap_case_count": 0
+  },
+  "decision": "WAIT",
+  "entry": null,
+  "stop_loss": null,
+  "take_profit": null,
+  "win_probability": null,
+  "orders_enabled": false,
+  "checked_primary_sources": [
+    "https://databento.com/tick-data",
+    "https://databento.com/docs/schemas/mbp-1",
+    "https://databento.com/docs/conventions/common-fields-enums-types",
+    "https://databento.com/docs/datasets/glbx-mdp3",
+    "https://databento.com/blog/CME-history-extended-to-2010",
+    "https://databento.com/pricing",
+    "https://algoseek.com/futures-package/",
+    "https://algoseek.com/sandbox/",
+    "https://algoseek.com/licensing-faq/",
+    "https://www.cmegroup.com/market-data/browse-data/derived-data.html",
+    "https://www.cmegroup.com/files/download/information-license-agreement-schedule-2-sample.pdf"
+  ],
+  "limitations": [
+    "This full HTTP response is a bounded sample, not every exchange session, all adjacent files, historical holidays, corrections or three dated priced gap cases. Its 153819 action-T rows all have the same UTC date, 2025-09-22, and end before 16:00 UTC. No calendar-based endpoint pair or price-gap outcome was established.",
+    "The first record is an Add action with snapshot and bad-receive-time flags. It is not an executed trade or a genuine first-trade receipt. Add/Modify/Cancel actions describe order-book events; a book Cancel is not a correction or bust of an executed trade.",
+    "Vendor receive timestamps are distinct from original Hoshi arrival. A populated ts_recv field and nine printed decimal digits do not prove clock quality, actual original delivery or nanosecond source precision. The separately checked pre-2017 Databento backfill uses SendingTime and F_BAD_TS_RECV, not original packet capture clocks.",
+    "No raw CSV, trade-price rows, prices or price-gap arithmetic are published, included in a runtime bundle or used for training. Public sample access, general vendor historical-pricing statements and an unsigned CME sample agreement do not establish project-specific use/display/redistribution permission.",
+    "No login, account, free-credit activation, contact form, external message, agreement, purchase, new resource or deployment occurred. Raw source remains private offline scratch research only. Original three priced-case, calendar/coverage/availability and rights requirements remain unresolved; no global free-data-unavailability claim."
+  ]
+}

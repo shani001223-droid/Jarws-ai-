@@ -205,5 +205,92 @@ class SessionEvidenceTests(unittest.TestCase):
             evidence.check_receipt(item)
 
 
+class VendorSampleScreeningTests(unittest.TestCase):
+    @staticmethod
+    def actual():
+        root = Path(__file__).resolve().parents[1]
+        import json
+        return json.loads((root / "knowledge_base/05_ICT_COMPLETE/vendor_sample_screening_20261028.json").read_text())
+
+    def test_combined_flags_are_bitmasks_not_single_value_equalities(self):
+        result = evidence.vendor_flag_status("A", 168)
+        self.assertFalse(result["trade_record"])
+        self.assertTrue(result["snapshot"])
+        self.assertTrue(result["bad_receive_timestamp"])
+        self.assertFalse(result["possible_book_gap"])
+        self.assertFalse(result["proves_original_hoshi_arrival"])
+        self.assertTrue(evidence.vendor_flag_status("T", 136)["bad_receive_timestamp"])
+        self.assertTrue(evidence.vendor_flag_status("T", 172)["possible_book_gap"])
+        for flags in (True, -1, 256, "168"):
+            with self.subTest(flags=flags), self.assertRaises(ValueError):
+                evidence.vendor_flag_status("T", flags)
+
+    def test_book_cancel_is_not_an_executed_trade_bust_or_endpoint(self):
+        for action in ("A", "C", "M", "R"):
+            self.assertFalse(evidence.vendor_flag_status(action, 128)["trade_record"])
+        self.assertTrue(evidence.vendor_flag_status("T", 0)["trade_record"])
+        # Even an unflagged trade record cannot prove original app arrival.
+        self.assertFalse(evidence.vendor_flag_status("T", 0)["proves_original_hoshi_arrival"])
+        with self.assertRaises(ValueError):
+            evidence.vendor_flag_status("CANCEL_TRADE", 0)
+
+    def test_actual_receipt_has_one_trading_date_and_zero_certified_cases(self):
+        item = self.actual(); evidence.check_vendor_screening(item)
+        obs = item["observations"]
+        self.assertEqual(obs["rows"], 2185295)
+        self.assertEqual(obs["trade_record_rows"], 153819)
+        self.assertEqual(obs["trade_record_date_counts"], {"2025-09-22": 153819})
+        self.assertLess(obs["trade_record_event_window_utc"][1], "2025-09-22T16:00:00.000000000Z")
+        self.assertTrue(item["capture"]["complete_http_body"])
+        self.assertFalse(item["source_quality"]["adjacent_session_coverage_verified"])
+        self.assertEqual(item["source_quality"]["eligible_opening_gap_case_count"], 0)
+        self.assertEqual(item["decision"], "WAIT")
+        self.assertIsNone(item["win_probability"])
+
+    def test_metadata_cannot_promote_access_or_vendor_clocks_into_permission_or_arrival(self):
+        for key, value in (("redistribution_permission_verified", True),
+                           ("vendor_capture_equals_hoshi_arrival", True),
+                           ("original_hoshi_arrival_utc", "2025-09-22T00:00:00.000000000Z"),
+                           ("historical_calendar_verified", True), ("eligible_opening_gap_case_count", 3)):
+            item = self.actual(); item["source_quality"][key] = value
+            with self.subTest(key=key), self.assertRaises(AssertionError):
+                evidence.check_vendor_screening(item)
+        item = self.actual(); item["capture"]["permissions_verified"] = True
+        with self.assertRaises(AssertionError):
+            evidence.check_vendor_screening(item)
+
+    def test_counts_flags_and_first_snapshot_must_reconcile(self):
+        for field, value in (("rows", True), ("rows", 2185294), ("trade_record_rows", 153820),
+                             ("flag_counts", {"128": 2185295}),
+                             ("flagged_trade_rows", {"bad_receive_timestamp": 1, "snapshot": 0, "maybe_bad_book": 0})):
+            item = self.actual(); item["observations"][field] = value
+            with self.subTest(field=field), self.assertRaises(AssertionError):
+                evidence.check_vendor_screening(item)
+        item = self.actual(); item["observations"]["first_record"]["action"] = "T"
+        with self.assertRaises(AssertionError):
+            evidence.check_vendor_screening(item)
+
+    def test_temporal_corruption_and_impossible_dates_are_rejected(self):
+        for field, value in (("trade_record_event_window_utc", ["2025-09-22T16:00:00.000000000Z", "2025-09-22T00:00:00.000000000Z"]),
+                             ("vendor_receive_window_utc", ["2025-09-22T00:00:00.000000000Z", "2027-09-22T00:00:00.000000000Z"]),
+                             ("trade_record_date_counts", {"2025-02-30": 153819})):
+            item = self.actual(); item["observations"][field] = value
+            with self.subTest(field=field), self.assertRaises((AssertionError, ValueError)):
+                evidence.check_vendor_screening(item)
+        item = self.actual(); item["capture"]["captured_at_utc"] = "2026-10-28T10:49:34.287195999+00:00"
+        with self.assertRaises(AssertionError):
+            evidence.check_vendor_screening(item)
+
+    def test_price_signal_probability_and_unknown_payloads_are_not_metadata(self):
+        for field, value in (("entry", 100), ("win_probability", 0.92), ("decision", "SHORT"),
+                             ("orders_enabled", True), ("raw_prices", [100, 102])):
+            item = self.actual(); item[field] = value
+            with self.subTest(field=field), self.assertRaises(AssertionError):
+                evidence.check_vendor_screening(item)
+        item = self.actual(); item["observations"]["price_gap"] = 2
+        with self.assertRaises(AssertionError):
+            evidence.check_vendor_screening(item)
+
+
 if __name__ == "__main__":
     unittest.main()

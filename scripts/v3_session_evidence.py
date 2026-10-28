@@ -1,4 +1,4 @@
-"""Offline CME v2 sample audit; this is not a feed, calendar or gap strategy.
+"""Offline futures sample audits; not a feed, calendar or gap strategy.
 
 Primary layout checked 2026-10-28:
 https://cmegroupclientsite.atlassian.net/wiki/spaces/EPICSANDBOX/pages/457223239/Time%2Band%2BSales
@@ -7,6 +7,8 @@ A public ES part-file includes spreads as well as outright contracts. Preserve
 exact instrument identity and nanoseconds; never call a part-file's endpoints
 the exchange session's last/first trades. No prices are exported. Sample access
 does not establish redistribution permission or original historical arrival.
+The separate vendor-screening validator checks metadata counters and flags;
+it does not decode/replay an unbundled vendor tape or certify its provenance.
 """
 from __future__ import annotations
 
@@ -288,6 +290,123 @@ def check_receipt(payload: dict, root=None) -> None:
     assert usable + audit["non_outright_trade_rows"] + audit["unusable_trade_rows"] == reports.get("TRD", 0)
     assert (isinstance(payload["limitations"], list) and 1 <= len(payload["limitations"]) <= 20
             and all(isinstance(x, str) and 1 <= len(x) <= 2000 for x in payload["limitations"]))
+
+
+def vendor_flag_status(action: str, flags: int) -> dict:
+    """MBP-1 action/bit distinctions, not a clock or permission certificate.
+
+    Primary definitions checked 2026-10-28:
+    https://databento.com/docs/conventions/common-fields-enums-types
+    A book Cancel is NOT a correction/cancellation of an executed trade.
+    """
+    if action not in ("A", "C", "M", "R", "T") or type(flags) is not int or not 0 <= flags <= 255:
+        raise ValueError("invalid_mbp1_action_or_flags")
+    return {"trade_record": action == "T", "snapshot": bool(flags & 32),
+            "bad_receive_timestamp": bool(flags & 8), "possible_book_gap": bool(flags & 4),
+            "proves_original_hoshi_arrival": False}
+
+
+def check_vendor_screening(payload: dict, root=None) -> None:
+    """Mechanical checks only; the raw 350 MB public sample is not bundled."""
+    assert set(payload) == {"schema_version", "use", "capture", "observations", "profiling_method",
+                            "source_quality", "decision", "entry", "stop_loss", "take_profit",
+                            "win_probability", "orders_enabled", "checked_primary_sources", "limitations"}
+    assert payload["schema_version"] == "hoshi-v3-vendor-sample-screening-1"
+    assert payload["use"] == "metadata-only-source-screening-not-priced-gap-cases-or-runtime"
+    capture, obs, quality = payload["capture"], payload["observations"], payload["source_quality"]
+    assert set(capture) == {"url", "started_at_utc", "http", "content_type", "content_length",
+                            "content_disposition", "bytes", "sha256", "complete_http_body",
+                            "captured_at_utc", "raw_prices_published", "permissions_verified"}
+    assert capture["url"] == "https://hist.databento.com/v0/dataset/sample/download/glbx.mdp3/mbp-1?sample_type=futures"
+    assert type(capture["http"]) is int and capture["http"] == 200
+    assert capture["content_type"] == "text/csv" and capture["complete_http_body"] is True
+    assert capture["content_disposition"] == 'attachment; filename="databento_glbx.mdp3_mbp_1.csv"'
+    assert type(capture["bytes"]) is int and 0 < capture["bytes"] <= 512_000_000
+    assert capture["content_length"] is None or capture["content_length"] == str(capture["bytes"])
+    assert re.fullmatch(r"[a-f0-9]{64}", capture["sha256"])
+    assert capture["raw_prices_published"] is False and capture["permissions_verified"] is False
+    instants = []
+    for key in ("started_at_utc", "captured_at_utc"):
+        # Capture clocks are explicitly microsecond UTC metadata, not trade clocks.
+        assert re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}\+00:00", capture[key])
+        stamp = datetime.fromisoformat(capture[key])
+        instants.append(calendar.timegm(stamp.utctimetuple()) * 1_000_000_000 + stamp.microsecond * 1000)
+    assert instants[0] <= instants[1]
+    assert set(obs) == {"header", "rows", "action_counts", "flag_counts", "source_symbol",
+                        "provider_publisher_id", "provider_instrument_id", "trade_record_rows",
+                        "trade_record_date_counts", "event_window_utc", "vendor_receive_window_utc",
+                        "trade_record_event_window_utc", "trade_record_event_regressions",
+                        "trade_record_receive_regressions", "flagged_trade_rows", "first_record"}
+    assert obs["header"] == ["ts_recv", "ts_event", "rtype", "publisher_id", "instrument_id",
+                              "action", "side", "depth", "price", "size", "flags", "ts_in_delta",
+                              "sequence", "bid_px_00", "ask_px_00", "bid_sz_00", "ask_sz_00",
+                              "bid_ct_00", "ask_ct_00", "symbol"]
+    assert type(obs["rows"]) is int and 0 < obs["rows"] <= 5_000_000
+    assert re.fullmatch(r"ES[FGHJKMNQUVXZ]\d{1,2}", obs["source_symbol"])
+    for key in ("provider_publisher_id", "provider_instrument_id"):
+        assert type(obs[key]) is int and obs[key] > 0
+    for counts in (obs["action_counts"], obs["flag_counts"]):
+        assert counts and all(type(v) is int and 0 < v <= obs["rows"] for v in counts.values())
+        assert sum(counts.values()) == obs["rows"]
+    assert set(obs["action_counts"]) <= {"A", "C", "M", "R", "T"}
+    assert all(re.fullmatch(r"0|[1-9]\d{0,2}", k) and int(k) <= 255 for k in obs["flag_counts"])
+    assert type(obs["trade_record_rows"]) is int
+    assert 0 < obs["trade_record_rows"] == obs["action_counts"].get("T", 0)
+    days = obs["trade_record_date_counts"]
+    assert days and sum(days.values()) == obs["trade_record_rows"]
+    assert all(re.fullmatch(r"\d{4}-\d{2}-\d{2}", k) and type(v) is int and v > 0
+               for k, v in days.items())
+    for day in days:
+        datetime.fromisoformat(day)  # Reject a plausible-looking impossible civil date.
+    bounds = {}
+    for key in ("event_window_utc", "vendor_receive_window_utc", "trade_record_event_window_utc"):
+        assert isinstance(obs[key], list) and len(obs[key]) == 2
+        bounds[key] = tuple(timestamp_ns(x) for x in obs[key])
+        assert bounds[key][0] <= bounds[key][1] <= instants[1]
+    assert (bounds["event_window_utc"][0] <= bounds["trade_record_event_window_utc"][0]
+            <= bounds["trade_record_event_window_utc"][1] <= bounds["event_window_utc"][1])
+    assert min(days) == obs["trade_record_event_window_utc"][0][:10]
+    assert max(days) == obs["trade_record_event_window_utc"][1][:10]
+    for key in ("trade_record_event_regressions", "trade_record_receive_regressions"):
+        assert type(obs[key]) is int and 0 <= obs[key] < obs["trade_record_rows"]
+    assert set(obs["flagged_trade_rows"]) == {"bad_receive_timestamp", "snapshot", "maybe_bad_book"}
+    for label, mask in (("bad_receive_timestamp", 8), ("snapshot", 32), ("maybe_bad_book", 4)):
+        count = obs["flagged_trade_rows"][label]
+        assert type(count) is int and 0 <= count <= obs["trade_record_rows"]
+        assert count <= sum(v for k, v in obs["flag_counts"].items() if int(k) & mask)
+    first = obs["first_record"]
+    assert set(first) == {"action", "flags", "event_utc", "vendor_receive_utc"}
+    vendor_flag_status(first["action"], first["flags"])
+    assert obs["action_counts"].get(first["action"], 0) > 0
+    assert obs["flag_counts"].get(str(first["flags"]), 0) > 0
+    for label, mask in (("bad_receive_timestamp", 8), ("snapshot", 32), ("maybe_bad_book", 4)):
+        if first["flags"] & mask:
+            if first["action"] == "T":
+                assert obs["flagged_trade_rows"][label] >= 1
+            else:
+                assert obs["flagged_trade_rows"][label] < sum(
+                    v for k, v in obs["flag_counts"].items() if int(k) & mask)
+    for key, window in (("event_utc", "event_window_utc"), ("vendor_receive_utc", "vendor_receive_window_utc")):
+        assert bounds[window][0] <= timestamp_ns(first[key]) <= bounds[window][1]
+    assert set(quality) == {"metadata_validator_proves_origin", "contract_definition_mapping_verified",
+                            "historical_calendar_verified", "adjacent_session_coverage_verified",
+                            "correction_coverage_verified", "vendor_capture_equals_hoshi_arrival",
+                            "original_hoshi_arrival_utc", "redistribution_permission_verified",
+                            "price_gap_computed", "actual_trade_prices_published", "eligible_opening_gap_case_count"}
+    for key, value in quality.items():
+        if key == "original_hoshi_arrival_utc":
+            assert value is None
+        elif key == "eligible_opening_gap_case_count":
+            assert type(value) is int and value == 0
+        else:
+            assert value is False, key
+    assert payload["decision"] == "WAIT" and payload["orders_enabled"] is False
+    assert all(payload[key] is None for key in ("entry", "stop_loss", "take_profit", "win_probability"))
+    for key in ("limitations", "checked_primary_sources"):
+        assert (isinstance(payload[key], list) and 1 <= len(payload[key]) <= 20
+                and all(isinstance(x, str) and 1 <= len(x) <= 2500 for x in payload[key]))
+    assert all(x.startswith("https://") for x in payload["checked_primary_sources"])
+    assert isinstance(payload["profiling_method"], str) and 1 <= len(payload["profiling_method"]) <= 1000
 
 
 def main() -> None:

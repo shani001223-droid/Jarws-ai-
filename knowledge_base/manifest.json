@@ -347,7 +347,7 @@
       "scope_note": "Explicit expansion: original 2024 source introduces day/week session opening gaps distinct from three-candle FVG and arbitrary spot clock envelopes; requires checked original session boundaries, actual dated endpoints and failures, with unsupported data gaps retained.",
       "source_review": {
         "status": "draft_incomplete_priced_examples_calendars_availability_and_rights",
-        "last_rechecked_at_asia_karachi": "2026-10-28T15:03:12.195106+05:00",
+        "last_rechecked_at_asia_karachi": "2026-10-28T16:53:17.233925+05:00",
         "checked_sources": [
           {
             "url": "https://www.youtube.com/watch?v=hdSscxZgE58",
@@ -460,6 +460,66 @@
             "url": "https://www.cmegroup.com/trading-hours.html",
             "checked_on": "2026-10-28",
             "result": "Actually opened current page: OPEN matching is distinguished from PREOPEN, Paused and post-close/pre-open nonmatching states. Current 2026/2027 schedules are not certified historical 2012/2015/2025 calendars. No historical endpoint, full holiday calendar or original receipt clock obtained."
+          },
+          {
+            "url": "https://databento.com/tick-data",
+            "checked_on": "2026-10-28",
+            "result": "Actual primary page links public GLBX.MDP3 MBP-1 sample. Bounded prefix request ignored Range and returned HTTP 200; only 32768 bytes initially read, explicitly incomplete. A subsequent full EOF download was audited separately; no API key, account or credit activated."
+          },
+          {
+            "url": "https://hist.databento.com/v0/dataset/sample/download/glbx.mdp3/mbp-1?sample_type=futures",
+            "checked_on": "2026-10-28",
+            "result": "Actual full HTTP 200 CSV captured at 2026-10-28T10:49:34.287195+00:00, 350169102 bytes, SHA256 f004bc5d677837e05363fe294384d23723d82e505331325936c8b3144a34b252. Python CSV and independent AWK counters agree: 2185295 rows, 153819 Trade, 1051555 Add, 882448 Cancel, 97473 Modify. Only ESZ5/provider IDs 1 and 294973; all Trade dates 2025-09-22, event window 00:00:00.158384175 to 15:59:59.870502389 UTC. Not a complete session, adjacent daily close/reopen pair or three cases. Raw file/private prices excluded from repository and runtime; no price gap computed."
+          },
+          {
+            "url": "https://databento.com/docs/schemas/mbp-1",
+            "checked_on": "2026-10-28",
+            "result": "Primary schema fields actually read: MBP-1 includes book updates and Trade action; vendor capture time, event time and provider identity fields have distinct meanings. No source adapter or exchange-definition mapping is claimed."
+          },
+          {
+            "url": "https://databento.com/docs/conventions/common-fields-enums-types",
+            "checked_on": "2026-10-28",
+            "result": "Primary actions/flags table checked. First actual record Add flags168 combines event-end128, snapshot32 and bad-receive8; it is not an executed first trade. Book Cancel is not a trade bust. No original Hoshi arrival inferred from an unflagged vendor timestamp."
+          },
+          {
+            "url": "https://databento.com/blog/CME-history-extended-to-2010",
+            "checked_on": "2026-10-28",
+            "result": "Primary announcement dated 3 December 2024 checked: added legacy pre-21-May-2017 history uses SendingTime rather than original packet captures for event/receive timestamps, flagged F_BAD_TS_RECV. Publication date is separate from old observation dates."
+          },
+          {
+            "url": "https://databento.com/docs/datasets/glbx-mdp3",
+            "checked_on": "2026-10-28",
+            "result": "Primary MDP2 and timestamp sections actually read: pre-2017 receive clocks are not original captures and pre-20-November-2015 source timestamps have millisecond precision. Padded nanosecond fields are not proof of source precision or historical availability."
+          },
+          {
+            "url": "https://databento.com/pricing",
+            "checked_on": "2026-10-28",
+            "result": "Primary redistribution FAQ checked: rights depend on dataset and original publisher terms. General statements about most datasets after 24 hours do not establish a GLBX.MDP3 project-specific publishing grant. No account, plan, API request billed or credits activated."
+          },
+          {
+            "url": "https://algoseek.com/futures-package/",
+            "checked_on": "2026-10-28",
+            "result": "Primary package and sample/delivery links checked. Paid lease not purchased; general derived/internal-use terms not treated as a free project-specific publishing grant."
+          },
+          {
+            "url": "https://algoseek.com/sandbox/",
+            "checked_on": "2026-10-28",
+            "result": "Primary public page advertises no-card sandbox and sample exploration. No eligible three-case tape or applicable demo data entitlement obtained here; no account, agreement, application or contact created."
+          },
+          {
+            "url": "https://algoseek.com/licensing-faq/",
+            "checked_on": "2026-10-28",
+            "result": "Primary internal-use versus redistribution/product-display distinctions actually read. No classification declaration, exchange license or other agreement executed."
+          },
+          {
+            "url": "https://www.cmegroup.com/market-data/browse-data/derived-data.html",
+            "checked_on": "2026-10-28",
+            "result": "Primary page and linked sample license actually checked. Describes a licensing/onboarding process; no form sent or agreement executed."
+          },
+          {
+            "url": "https://www.cmegroup.com/files/download/information-license-agreement-schedule-2-sample.pdf",
+            "checked_on": "2026-10-28",
+            "result": "Actual two-page unsigned internal-use sample read, including limited extracts/consent provisions. It is a blank agreement template, not a license executed for Hoshi. A later repeated web-open failure does not erase the successful primary check or prove general unavailability."
           }
         ],
         "remaining_requirement": "Still need verified permitted exact-contract historical session/holiday calendars and actual pre-break last/post-break first trades across three genuinely dated cases, complete adjacent-session/correction coverage, source availability evidence and applicable use/redistribution rights. Complete HTTP download of one sample part-file and three maturity identities do not satisfy those requirements. Portara one-date snippets do not certify complete tape coverage or sample-use rights. Continue only genuinely permitted independent source investigation; do not use settlement, adjusted continuous series, broker quotes or arbitrary 24/7 spot envelopes to manufacture completion. No all-free-data-unavailable claim.",
@@ -498,12 +558,16 @@
             "evidence_scope": "caller-asserted-normalized-research-not-source-certification",
             "source_sha256": "c62b5527f57079ee28c1a05184adf03f6cafea41bf3ed48c85c59f1b45a2fe51",
             "eligible_opening_gap_case_count": 0
-          }
+          },
+          "vendor_sample_screening_receipt": "knowledge_base/05_ICT_COMPLETE/vendor_sample_screening_20261028.json",
+          "vendor_sample_source_rows_screened": 2185295,
+          "new_vendor_metadata_tests": 7,
+          "vendor_sample_certified_gap_cases": 0
         },
         "draft_note": "Original substantive conceptual draft with three documented schedule/source-quality context cases; explicitly not the three required priced opening-gap examples. It is integrity checked but not source-complete, runtime eligible, loaded knowledge or training."
       },
-      "body_word_count": 2675,
-      "sha256": "5b4ba40f8482450a55fa7f6af1e9f28622abfd09af5c7ccfc2c605b6d7390b40",
+      "body_word_count": 3180,
+      "sha256": "f6acaafdc09781854b16a7f29a47e70b9797ac1ed7425a9ed8a3a4a377f33146",
       "reviewed_on": "2026-10-28",
       "runtime_eligible": false,
       "completion_blockers": [
@@ -1585,6 +1649,11 @@
       "path": "knowledge_base/05_ICT_COMPLETE/session_source_audit_20261028.json",
       "kind": "session_source_audit",
       "sha256": "594ab5845fd62267f18b0c875f15716f98662e07ed5644194c9c3b1531c7a5a0"
+    },
+    {
+      "path": "knowledge_base/05_ICT_COMPLETE/vendor_sample_screening_20261028.json",
+      "kind": "vendor_sample_screening",
+      "sha256": "9e907ebb1cb9dfa1cbdb107bb80a30e84a6adf95bc916fa57a3545e9fdedd2a2"
     }
   ],
   "scope_history": [
@@ -1632,5 +1701,20 @@
       "introduced_at_asia_karachi": "2026-10-28T14:03:32.490504+05:00",
       "meaning": "Explicit incomplete drafts may retain useful verified prose without being counted complete or runtime eligible. Scope remains 50; priced examples, source quality and release criteria are unchanged."
     }
-  ]
+  ],
+  "continuation_state": {
+    "status": "blocked_on_required_source_evidence",
+    "recorded_at_asia_karachi": "2026-10-28T16:53:17.233925+05:00",
+    "affected_document": "knowledge_base/05_ICT_COMPLETE/session_opening_gaps_ndog_nwog_and_2024_context.md",
+    "completed_source_documents": 49,
+    "declared_source_documents": 50,
+    "dependency": "Three permitted genuinely dated same-contract executed pre-break last/post-break first pairs, applicable historical session/holiday calendars, complete adjacent/correction coverage and genuine source availability evidence. Current checked public samples and unsigned/general terms do not provide that complete package.",
+    "independent_work_delivered": "All 49 other declared chapters are source-checked. Existing offline sample decoders, endpoint diagnostic and new source screening do not replace missing historical inputs. Runtime integration follows source completion by the requested sequence.",
+    "resume_condition": "Qualifying permitted source evidence becomes available for review, or the user explicitly changes the requirement; do not silently drop the draft or reduce scope.",
+    "scope_not_reduced": true,
+    "runtime_release_and_merge_gates": "pending",
+    "current_v3_build_paused": true,
+    "pause_confirmed_at_asia_karachi": "2026-10-28T16:55:34.107665+05:00",
+    "other_hoshi_automations_changed": false
+  }
 }

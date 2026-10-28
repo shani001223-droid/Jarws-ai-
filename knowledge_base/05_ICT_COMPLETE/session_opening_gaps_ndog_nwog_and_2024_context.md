@@ -174,6 +174,49 @@ supports the need to identify market state precisely, but its present-day
 historical contract calendar. Maintenance boundaries alone remain insufficient
 to identify an actual first transaction. [5]
 
+### A complete sample can still omit the required session endpoints
+
+A further public Databento MBP-1 sample was actually downloaded on **28 October
+2026**, with a complete HTTP body of **350,169,102 bytes** and a retained
+SHA-256 receipt. Two independent whole-file counters agreed on **2,185,295
+records**: **1,051,555 Add**, **882,448 Cancel**, **97,473 Modify** and
+**153,819 Trade** records. The sample labels the instrument **ESZ5**, with
+provider publisher ID **1** and provider instrument ID **294973**. Those
+provider identifiers are retained without pretending that a separate historical
+exchange-definition mapping has been verified. [6,7]
+
+All Trade-record event dates are **22 September 2025**. Their observed event
+window is **00:00:00.158384175–15:59:59.870502389 UTC**; the final record of
+any action is at **15:59:59.913306999 UTC**. These are file bounds, not session
+boundaries. The downloaded sample does not establish an adjacent daily
+close/reopen pair. Neither a large record count nor reaching HTTP EOF supplies
+the missing portion of a session, three dated cases or a historical calendar.
+No gap price or return is computed or published from this screening.
+
+The first record is an **Add**, with flags **168**. The documented bit masks
+decompose that into **128 + 32 + 8**: event-end, snapshot and an unreliable
+receive timestamp. It is not the first executed trade. The **Cancel** action
+also describes a resting order-book change, not a bust or correction of an
+executed trade. Directly mapping that action to the earlier diagnostic's
+normalized trade-cancellation convention would corrupt the research. [7]
+
+A vendor capture clock is also different from Hoshi's original receipt clock.
+The actual sample's unflagged Trade records do not establish the latter.
+In a separate dated provenance warning, Databento's **3 December 2024**
+announcement explains that its added pre-**21 May 2017** history comes from
+legacy FIX/FAST files: both event and receive fields use the source sending
+timestamp, with a bad-receive-time flag. Current dataset documentation further
+notes millisecond source precision before **20 November 2015**. Printed
+nanosecond fields therefore cannot by themselves prove nanosecond observations
+or reconstruct unavailable historical packet arrival. The announcement's
+publication date is not an original trading-input date in 2012 or 2015. [8]
+
+The metadata-only receipt is checked for count, flag, clock and missing-evidence
+consistency. Those checks do not replay the unbundled CSV, prove its origin,
+create a license or certify a historical case. Seven new targeted regressions
+protect these distinctions. The three required priced cases remain missing;
+all source and runtime completion exclusions remain in force.
+
 ## Failure zones
 
 Clock substitution is an immediate failure. A modern close applied to an
@@ -312,6 +355,16 @@ Original availability evidence and applicable data-use/redistribution rights
 also remain unresolved. The three context cases above cannot be relabelled
 as those missing observations to manufacture completion.
 
+The further vendor sample and public licensing pages have not resolved this
+dependency. Databento describes redistribution as dataset-dependent, subject to
+publisher terms. Algoseek advertises a no-card sandbox, while its public license
+FAQ distinguishes internal use from redistribution and product display. An
+unsigned CME internal-use sample agreement is not an executed Hoshi permission.
+No account, agreement, contact request, free-credit activation or purchase was
+made. These observations do not assert that suitable free data are unavailable
+everywhere. They establish that the currently checked inputs still do not meet
+this chapter's unchanged completion gate. [9]
+
 ## Sources
 
 Original prose and arithmetic. Primary exchange notices and data-layout
@@ -326,3 +379,7 @@ this review's unsuccessful direct YouTube fetch.
 3. [CME Time and Sales layout and sample table](https://cmegroupclientsite.atlassian.net/wiki/spaces/EPICSANDBOX/pages/457223239/Time%2Band%2BSales), [the actual ES v2 part-file URL](https://www.cmegroup.com/files/download/xcme-tick-es-fut-20250312-part-00039-c000.csv) and the adjacent metadata-only `session_source_audit_20261028.json` receipt.
 4. [Original 2024 Mentorship Lecture 4, 8 August](https://www.youtube.com/watch?v=hdSscxZgE58): reused earlier bounded caption/creator-metadata check, digest `08f9a65787563119b3ee69ed772a22c6ddb85ebe834b7862bd6b0bad4ff3045f`; no new transcript, chart inspection or full-edition claim.
 5. [CME Group holiday and trading hours, current page checked 28 October 2026](https://www.cmegroup.com/trading-hours.html): market-state distinctions only, not a certified 2012, 2015 or 2025 session/holiday calendar. Original offline diagnostic: `scripts/v3_session_endpoint_evidence.py`; synthetic and actual metadata tests: `tests/test_v3_session_endpoint_evidence.py`.
+6. [Databento's public tick-data sample links](https://databento.com/tick-data) and [the actual GLBX.MDP3 MBP-1 futures sample](https://hist.databento.com/v0/dataset/sample/download/glbx.mdp3/mbp-1?sample_type=futures). The adjacent `vendor_sample_screening_20261028.json` records capture, counters, clock bounds and exclusions without raw prices.
+7. [Databento MBP-1 schema](https://databento.com/docs/schemas/mbp-1) and [common actions, flags and timestamp definitions](https://databento.com/docs/conventions/common-fields-enums-types), actually checked 28 October 2026.
+8. [Databento's 3 December 2024 history-extension announcement](https://databento.com/blog/CME-history-extended-to-2010) and [current GLBX.MDP3 dataset documentation, including MDP 2 limitations](https://databento.com/docs/datasets/glbx-mdp3). These explain provenance limitations, not an original Hoshi receipt or a verified trading example.
+9. [Databento redistribution FAQ](https://databento.com/pricing), [Algoseek sandbox description](https://algoseek.com/sandbox/), [Algoseek licensing FAQ](https://algoseek.com/licensing-faq/), [CME derived-data service page](https://www.cmegroup.com/market-data/browse-data/derived-data.html) and [unsigned internal-use sample agreement](https://www.cmegroup.com/files/download/information-license-agreement-schedule-2-sample.pdf). Public pages/forms are not project-specific entitlements; none was executed.

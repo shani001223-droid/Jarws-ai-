@@ -124,4 +124,6 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Run real-browser dashboard smoke tests
         run: node tests/dashboard.e2e.cjs
+      - name: Run real-browser Game Studio template smoke tests
+        run: node tests/game-studio.e2e.cjs
 

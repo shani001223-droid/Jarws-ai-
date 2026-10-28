@@ -53,8 +53,9 @@ async function main() {
       await save.check();
       assert.equal(await page.evaluate(()=>Boolean(localStorage.getItem("hoshi-star-trail-progress-v1"))),true);
       const tap=async(direction,count=1)=>{for(let n=0;n<count;n++)await page.locator('[data-dir="'+direction+'"]').click();};
+      const blockedStatus=await page.locator("#status").innerText();
       await tap("up");
-      assert.match(await page.locator("#status").innerText(),/0 moves/,"wall must not consume moves");
+      assert.equal(await page.locator("#status").innerText(),blockedStatus,"wall must not consume moves");
       await tap("down",2);
       await tap("right",2);
       assert.match(await page.locator("#status").innerText(),/0 stars baqi/);

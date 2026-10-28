@@ -9,7 +9,7 @@ import unittest
 from pathlib import Path
 
 from cloud_backend.anime_episode_nine import episode_nine_script, validate_episode_nine
-from cloud_backend.anime_episode_nine import episode_nine_script
+from cloud_backend.anime_episode_eight import episode_eight_script
 from cloud_backend.anime_series import series_manifest
 
 
@@ -23,13 +23,13 @@ def rehash(draft):
 class EpisodeNineTests(unittest.TestCase):
     def test_public_library_beat_and_provenance(self):
         draft = episode_nine_script()
-        outline = series_manifest()["episodes"][7]
+        outline = series_manifest()["episodes"][8]
         self.assertEqual(draft["episode_id"], "EP009")
         self.assertEqual(draft["episode_beat"], 4)
         self.assertEqual(draft["story_day"], 5)
         self.assertEqual(draft["source_event"], outline["event"])
         self.assertEqual(draft["source_handoff"], outline["handoff"])
-        self.assertEqual(draft["previous_episode_sha256"], episode_nine_script()["sha256"])
+        self.assertEqual(draft["previous_episode_sha256"], episode_eight_script()["sha256"])
         self.assertEqual(draft["source_outline_sha256"], series_manifest()["sha256"])
         self.assertEqual(len(draft["scenes"]), 8)
         self.assertEqual(sum(len(s["dialogue"]) for s in draft["scenes"]), 32)

@@ -82,7 +82,9 @@ Post-release test/document follow-up: [PR #28](https://github.com/shani001223-dr
 | Android APK/bridge | `android/app/src/main/java/com/valtron/jarvis/` | WebView, native mic/TTS, reminders, limited permitted accessibility |
 | Regression and browser tests | `tests/`, `.github/workflows/` | Unit, JS, Playwright and Android build checks |
 
-| Anime Studio EP001/EP002 editorial drafts (Task 56 partial) | `cloud_backend/anime_scripts.py`, `cloud_backend/anime_episode_two.py`, `scripts/export_hoshi_anime_episode_two.py` | Original Roman Urdu unreviewed scene drafts, pilot-linked EP002 continuity and digest; **not** paced 30-minute scripts, approved voice or media. See `HOSHI_ANIME_PILOT_EP001.md`, `HOSHI_ANIME_EP002.md` |\n\n## 4. What is real vs what still needs work
+| Anime Studio EP001/EP002 editorial drafts (Task 56 partial) | `cloud_backend/anime_scripts.py`, `cloud_backend/anime_episode_two.py`, `scripts/export_hoshi_anime_episode_two.py` | Original Roman Urdu unreviewed scene drafts, pilot-linked EP002 continuity and digest; **not** paced 30-minute scripts, approved voice or media. See `HOSHI_ANIME_PILOT_EP001.md`, `HOSHI_ANIME_EP002.md` |
+
+## 4. What is real vs what still needs work
 
 **Implemented at code/test level, depending on actual configuration:** chat/personality hints, Gemini/Groq/OpenRouter routing, optional Z.AI/Mistral/NVIDIA key-gated fallback adapters, text/Urdu speech and cancellation, basic phone actions with permission, reminders, consent-based local memory, read-only trading/public-data tools, arithmetic, product **feed/story PNG** ads and ZIP verification, structured goal planning.
 

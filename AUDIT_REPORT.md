@@ -275,3 +275,8 @@ Added `execution_and_zone_failure_cases.md` with 2212 substantive words and thre
 ## V3 BOS/CHoCH and displacement receipt — 28 October 2026
 
 Added `bos_choch_and_displacement.md` with 2057 substantive words and three actual dated BTCUSDT events whose later endpoints oppose the event direction. Original offline rules preserve prior-confirmed anchors, separate displacement, first-cross lifecycle, negative outcomes, unknown fills and null probability. Four added regressions bring passing local evidence tests to 34. Curriculum: 17/49 (34.69%); exact mitigation/breaker source gaps were rechecked and remain pending. Prior `cc582d291a1636a23a2cdec336d792e0a3385376` passed actual CI 40605872022. No runtime, main, backup, unrelated roadmap or identity/voice/privacy/Stop changes.
+
+
+## V3 premium/discount range receipt — 28 October 2026
+
+Added `premium_discount_and_dealing_ranges.md` with 2111 substantive words and three genuine dated BTCUSDT anchor comparisons. Outside/invalid coordinates, frozen bounds, alternative twenty-bar references and newly confirmed at-close anchors are distinct; discount is not intrinsic value or safety. All 37 offline evidence regressions passed locally. Curriculum: 18/49 (36.73%), with mitigation/breaker primary-source gap and runtime/release work pending. Prior `e25858195a46a0ef98ab803b2ef8f6da9c4edc1e` passed actual CI 40611483251. No source-response bytes, V2 runtime, main, backup or unrelated controls/roadmap changed.

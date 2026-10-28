@@ -149,7 +149,10 @@
     },
     {
       "path": "knowledge_base/04_SMC_COMPLETE/premium_discount_and_dealing_ranges.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2111,
+      "sha256": "c893f95c5b7c9a222f8c80bd008e133606a3de0dfd209c1e8e2953e67bbea607"
     },
     {
       "path": "knowledge_base/04_SMC_COMPLETE/smc_entry_models_and_invalidation.md",
@@ -305,7 +308,7 @@
     {
       "path": "knowledge_base/04_SMC_COMPLETE/smc_observations_20261028.json",
       "kind": "smc_cases",
-      "sha256": "9f33e948323d5860c71e24a925391b87ceb611476f1b6a4c0bded1c54c91d38a"
+      "sha256": "c199c7f7c73f06876dc5ee56515a336b245915669dc44d1367403374d26091a0"
     }
   ],
   "scope_history": [

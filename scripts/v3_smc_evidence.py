@@ -91,6 +91,63 @@ def structure_case(bars, event_date):
         "strategy_pnl": None, "fill_known": False}}
 
 
+def range_location(price, low, high):
+    if low is None or high is None or low >= high:
+        return {"status": "unavailable_or_invalid_range", "midpoint": None,
+                "position_fraction": None, "location": None, "inside_range": False}
+    midpoint = (low+high)/2
+    location = ("outside_below" if price < low else "outside_above" if price > high else
+                "discount" if price < midpoint else "premium" if price > midpoint else "equilibrium")
+    return {"status": "observed" if low <= price <= high else "outside_reference_range",
+            "midpoint": midpoint, "position_fraction": (price-low)/(high-low),
+            "location": location, "inside_range": low <= price <= high}
+
+
+def range_features(bars, event_date):
+    f = structure_features(bars, event_date)
+    i = next(i for i, b in enumerate(bars) if b["close_time"] == f["known_at"])
+    high, low = f["latest_known_high"], f["latest_known_low"]
+    price = f["event"]["close"]
+    result = {"method": "hoshi-prior-confirmed-dealing-range-1", "event": f["event"],
+              "known_at": f["known_at"], "high_anchor": high, "low_anchor": low,
+              "price": price, **range_location(price, low["price"] if low else None,
+                                                high["price"] if high else None),
+              "orders_enabled": False, "fundamental_value_known": False, "win_probability": None}
+    if i >= 20:
+        prior = bars[i-20:i]
+        lo, hi = min(b["low"] for b in prior), max(b["high"] for b in prior)
+        result["alternate_prior_20_range"] = {"low": lo, "high": hi, **range_location(price, lo, hi)}
+    else:
+        result["alternate_prior_20_range"] = None
+    close_known = pivots(bars[:i+1])
+    close_highs = [p for p in close_known if p["kind"] == "high"]
+    close_lows = [p for p in close_known if p["kind"] == "low"]
+    ch = close_highs[-1] if close_highs else None
+    cl = close_lows[-1] if close_lows else None
+    result["alternate_asof_close_anchors"] = {
+        "high_anchor": ch, "low_anchor": cl,
+        **range_location(price, cl["price"] if cl else None, ch["price"] if ch else None)}
+    return result
+
+
+def range_case(bars, event_date):
+    f = range_features(bars, event_date)
+    i = next(i for i, b in enumerate(bars) if b["close_time"] == f["known_at"])
+    future = bars[i+1:i+6]
+    if len(future) != 5 or f["status"] == "unavailable_or_invalid_range":
+        return {"features": f, "outcome_status": "incomplete_or_invalid_range", "outcome": None}
+    low, high = f["low_anchor"]["price"], f["high_anchor"]["price"]
+    below = next((b for b in future if b["close"] < low), None)
+    above = next((b for b in future if b["close"] > high), None)
+    return {"features": f, "outcome_status": "observed", "outcome": {
+        "available_at": future[-1]["close_time"], "horizon_bars": 5,
+        "path": [bar_record(b) for b in future],
+        "first_close_below_frozen_low": bar_record(below) if below else None,
+        "first_close_above_frozen_high": bar_record(above) if above else None,
+        "raw_close_change_pct": (future[-1]["close"]/f["price"]-1)*100,
+        "strategy_pnl": None, "fill_known": False}}
+
+
 def check_receipt(payload, root):
     assert payload["schema_version"] == "hoshi-v3-smc-evidence-1"
     assert payload["source_receipt"] == SOURCE
@@ -102,4 +159,7 @@ def check_receipt(payload, root):
     for entry in payload["structure_cases"]:
         f = entry["case"]["features"]
         assert structure_case(windows[entry["source_window_sha256"]], f["event"]["date"]) == entry["case"]
+    for entry in payload.get("range_cases", []):
+        f = entry["case"]["features"]
+        assert range_case(windows[entry["source_window_sha256"]], f["event"]["date"]) == entry["case"]
     return windows

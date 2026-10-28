@@ -59,6 +59,37 @@ class V3SMCTests(unittest.TestCase):
             with self.assertRaises(AssertionError):
                 s.check_receipt(p, ROOT)
 
+    def test_range_features_are_prefix_stable_and_outcomes_missing_at_event(self):
+        p = receipt(); windows = s.check_receipt(p, ROOT)
+        for entry in p["range_cases"]:
+            f = entry["case"]["features"]; bars = windows[entry["source_window_sha256"]]
+            prefix = [b for b in bars if b["close_time"] <= f["known_at"]]
+            self.assertEqual(s.range_features(prefix, f["event"]["date"]), f)
+            self.assertIsNone(s.range_case(prefix, f["event"]["date"])["outcome"])
+
+    def test_outside_or_invalid_ranges_do_not_become_discount_premium(self):
+        outside = s.range_location(250., 100., 200.)
+        self.assertEqual(outside["location"], "outside_above")
+        self.assertEqual(outside["position_fraction"], 1.5)
+        self.assertFalse(outside["inside_range"])
+        for low, high in ((None, 100.), (100., 100.), (101., 100.)):
+            invalid = s.range_location(100., low, high)
+            self.assertIsNone(invalid["position_fraction"])
+            self.assertIsNone(invalid["midpoint"])
+        self.assertEqual(s.range_location(150., 100., 200.)["location"], "equilibrium")
+
+    def test_same_close_changes_label_only_under_disclosed_anchor_policy(self):
+        p = receipt(); s.check_receipt(p, ROOT)
+        f = p["range_cases"][2]["case"]["features"]
+        self.assertEqual(f["event"]["date"], "2022-11-07")
+        self.assertEqual(f["location"], "premium")
+        alternate = f["alternate_asof_close_anchors"]
+        self.assertEqual(alternate["location"], "discount")
+        self.assertEqual(alternate["high_anchor"]["confirmed_at"], f["known_at"])
+        p["range_cases"][2]["case"]["features"]["midpoint"] += 1
+        with self.assertRaises(AssertionError):
+            s.check_receipt(p, ROOT)
+
 
 if __name__ == "__main__":
     unittest.main()

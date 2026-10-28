@@ -314,5 +314,382 @@
         }
       }
     }
+  ],
+  "range_cases": [
+    {
+      "source_window_sha256": "0a8fd6b6cee125cb5de8a199f86c88a5d9dacd572070a2f0999852154f688fea",
+      "case": {
+        "features": {
+          "method": "hoshi-prior-confirmed-dealing-range-1",
+          "event": {
+            "date": "2020-06-11",
+            "close_time": 1591919999999,
+            "open": 9885.22,
+            "high": 9964.0,
+            "low": 9113.0,
+            "close": 9280.4
+          },
+          "known_at": 1591919999999,
+          "high_anchor": {
+            "kind": "high",
+            "price": 10380.0,
+            "pivot_at": 1591055999999,
+            "confirmed_at": 1591228799999
+          },
+          "low_anchor": {
+            "kind": "low",
+            "price": 9372.46,
+            "pivot_at": 1591574399999,
+            "confirmed_at": 1591747199999
+          },
+          "price": 9280.4,
+          "status": "outside_reference_range",
+          "midpoint": 9876.23,
+          "position_fraction": -0.09137106219107868,
+          "location": "outside_below",
+          "inside_range": false,
+          "orders_enabled": false,
+          "fundamental_value_known": false,
+          "win_probability": null,
+          "alternate_prior_20_range": {
+            "low": 8642.72,
+            "high": 10380.0,
+            "status": "observed",
+            "midpoint": 9511.36,
+            "position_fraction": 0.36705654816725,
+            "location": "discount",
+            "inside_range": true
+          },
+          "alternate_asof_close_anchors": {
+            "high_anchor": {
+              "kind": "high",
+              "price": 10380.0,
+              "pivot_at": 1591055999999,
+              "confirmed_at": 1591228799999
+            },
+            "low_anchor": {
+              "kind": "low",
+              "price": 9372.46,
+              "pivot_at": 1591574399999,
+              "confirmed_at": 1591747199999
+            },
+            "status": "outside_reference_range",
+            "midpoint": 9876.23,
+            "position_fraction": -0.09137106219107868,
+            "location": "outside_below",
+            "inside_range": false
+          }
+        },
+        "outcome_status": "observed",
+        "outcome": {
+          "available_at": 1592351999999,
+          "horizon_bars": 5,
+          "path": [
+            {
+              "date": "2020-06-12",
+              "close_time": 1592006399999,
+              "open": 9278.88,
+              "high": 9557.12,
+              "low": 9232.51,
+              "close": 9465.13
+            },
+            {
+              "date": "2020-06-13",
+              "close_time": 1592092799999,
+              "open": 9464.96,
+              "high": 9494.73,
+              "low": 9351.0,
+              "close": 9473.34
+            },
+            {
+              "date": "2020-06-14",
+              "close_time": 1592179199999,
+              "open": 9473.34,
+              "high": 9480.99,
+              "low": 9245.0,
+              "close": 9342.1
+            },
+            {
+              "date": "2020-06-15",
+              "close_time": 1592265599999,
+              "open": 9342.1,
+              "high": 9495.0,
+              "low": 8910.45,
+              "close": 9426.02
+            },
+            {
+              "date": "2020-06-16",
+              "close_time": 1592351999999,
+              "open": 9426.05,
+              "high": 9589.0,
+              "low": 9373.09,
+              "close": 9525.59
+            }
+          ],
+          "first_close_below_frozen_low": {
+            "date": "2020-06-14",
+            "close_time": 1592179199999,
+            "open": 9473.34,
+            "high": 9480.99,
+            "low": 9245.0,
+            "close": 9342.1
+          },
+          "first_close_above_frozen_high": null,
+          "raw_close_change_pct": 2.642019740528423,
+          "strategy_pnl": null,
+          "fill_known": false
+        }
+      }
+    },
+    {
+      "source_window_sha256": "6d533be481380a79e5ee6ab85436cfa6bac8c5b50ae6ff2080b433901610c1ee",
+      "case": {
+        "features": {
+          "method": "hoshi-prior-confirmed-dealing-range-1",
+          "event": {
+            "date": "2021-08-10",
+            "close_time": 1628639999999,
+            "open": 46248.87,
+            "high": 46700.0,
+            "low": 44589.46,
+            "close": 45584.99
+          },
+          "known_at": 1628639999999,
+          "high_anchor": {
+            "kind": "high",
+            "price": 42599.0,
+            "pivot_at": 1627862399999,
+            "confirmed_at": 1628035199999
+          },
+          "low_anchor": {
+            "kind": "low",
+            "price": 37332.7,
+            "pivot_at": 1628207999999,
+            "confirmed_at": 1628380799999
+          },
+          "price": 45584.99,
+          "status": "outside_reference_range",
+          "midpoint": 39965.85,
+          "position_fraction": 1.5669996012380603,
+          "location": "outside_above",
+          "inside_range": false,
+          "orders_enabled": false,
+          "fundamental_value_known": false,
+          "win_probability": null,
+          "alternate_prior_20_range": {
+            "low": 29482.61,
+            "high": 46454.15,
+            "status": "observed",
+            "midpoint": 37968.380000000005,
+            "position_fraction": 0.9487872049324927,
+            "location": "premium",
+            "inside_range": true
+          },
+          "alternate_asof_close_anchors": {
+            "high_anchor": {
+              "kind": "high",
+              "price": 42599.0,
+              "pivot_at": 1627862399999,
+              "confirmed_at": 1628035199999
+            },
+            "low_anchor": {
+              "kind": "low",
+              "price": 37332.7,
+              "pivot_at": 1628207999999,
+              "confirmed_at": 1628380799999
+            },
+            "status": "outside_reference_range",
+            "midpoint": 39965.85,
+            "position_fraction": 1.5669996012380603,
+            "location": "outside_above",
+            "inside_range": false
+          }
+        },
+        "outcome_status": "observed",
+        "outcome": {
+          "available_at": 1629071999999,
+          "horizon_bars": 5,
+          "path": [
+            {
+              "date": "2021-08-11",
+              "close_time": 1628726399999,
+              "open": 45585.0,
+              "high": 46743.47,
+              "low": 45341.14,
+              "close": 45511.0
+            },
+            {
+              "date": "2021-08-12",
+              "close_time": 1628812799999,
+              "open": 45510.67,
+              "high": 46218.12,
+              "low": 43770.0,
+              "close": 44399.0
+            },
+            {
+              "date": "2021-08-13",
+              "close_time": 1628899199999,
+              "open": 44400.06,
+              "high": 47886.0,
+              "low": 44217.39,
+              "close": 47800.0
+            },
+            {
+              "date": "2021-08-14",
+              "close_time": 1628985599999,
+              "open": 47799.99,
+              "high": 48144.0,
+              "low": 45971.03,
+              "close": 47068.51
+            },
+            {
+              "date": "2021-08-15",
+              "close_time": 1629071999999,
+              "open": 47068.5,
+              "high": 47372.27,
+              "low": 45500.0,
+              "close": 46973.82
+            }
+          ],
+          "first_close_below_frozen_low": null,
+          "first_close_above_frozen_high": {
+            "date": "2021-08-11",
+            "close_time": 1628726399999,
+            "open": 45585.0,
+            "high": 46743.47,
+            "low": 45341.14,
+            "close": 45511.0
+          },
+          "raw_close_change_pct": 3.0466826909471667,
+          "strategy_pnl": null,
+          "fill_known": false
+        }
+      }
+    },
+    {
+      "source_window_sha256": "5860446413d27c8678d93b80ce791940ad4e06b76a512b6e1230f6b4ab19b74f",
+      "case": {
+        "features": {
+          "method": "hoshi-prior-confirmed-dealing-range-1",
+          "event": {
+            "date": "2022-11-07",
+            "close_time": 1667865599999,
+            "open": 20905.58,
+            "high": 21069.77,
+            "low": 20384.89,
+            "close": 20591.13
+          },
+          "known_at": 1667865599999,
+          "high_anchor": {
+            "kind": "high",
+            "price": 21085.0,
+            "pivot_at": 1667087999999,
+            "confirmed_at": 1667260799999
+          },
+          "low_anchor": {
+            "kind": "low",
+            "price": 20031.24,
+            "pivot_at": 1667519999999,
+            "confirmed_at": 1667692799999
+          },
+          "price": 20591.13,
+          "status": "observed",
+          "midpoint": 20558.120000000003,
+          "position_fraction": 0.5313259186152447,
+          "location": "premium",
+          "inside_range": true,
+          "orders_enabled": false,
+          "fundamental_value_known": false,
+          "win_probability": null,
+          "alternate_prior_20_range": {
+            "low": 18650.0,
+            "high": 21480.65,
+            "status": "observed",
+            "midpoint": 20065.325,
+            "position_fraction": 0.6857541554060022,
+            "location": "premium",
+            "inside_range": true
+          },
+          "alternate_asof_close_anchors": {
+            "high_anchor": {
+              "kind": "high",
+              "price": 21480.65,
+              "pivot_at": 1667692799999,
+              "confirmed_at": 1667865599999
+            },
+            "low_anchor": {
+              "kind": "low",
+              "price": 20031.24,
+              "pivot_at": 1667519999999,
+              "confirmed_at": 1667692799999
+            },
+            "status": "observed",
+            "midpoint": 20755.945,
+            "position_fraction": 0.3862882138249353,
+            "location": "discount",
+            "inside_range": true
+          }
+        },
+        "outcome_status": "observed",
+        "outcome": {
+          "available_at": 1668297599999,
+          "horizon_bars": 5,
+          "path": [
+            {
+              "date": "2022-11-08",
+              "close_time": 1667951999999,
+              "open": 20590.67,
+              "high": 20700.88,
+              "low": 17166.83,
+              "close": 18547.23
+            },
+            {
+              "date": "2022-11-09",
+              "close_time": 1668038399999,
+              "open": 18545.38,
+              "high": 18587.76,
+              "low": 15588.0,
+              "close": 15922.81
+            },
+            {
+              "date": "2022-11-10",
+              "close_time": 1668124799999,
+              "open": 15922.68,
+              "high": 18199.0,
+              "low": 15754.26,
+              "close": 17601.15
+            },
+            {
+              "date": "2022-11-11",
+              "close_time": 1668211199999,
+              "open": 17602.45,
+              "high": 17695.0,
+              "low": 16361.6,
+              "close": 17070.31
+            },
+            {
+              "date": "2022-11-12",
+              "close_time": 1668297599999,
+              "open": 17069.98,
+              "high": 17119.1,
+              "low": 16631.39,
+              "close": 16812.08
+            }
+          ],
+          "first_close_below_frozen_low": {
+            "date": "2022-11-08",
+            "close_time": 1667951999999,
+            "open": 20590.67,
+            "high": 20700.88,
+            "low": 17166.83,
+            "close": 18547.23
+          },
+          "first_close_above_frozen_high": null,
+          "raw_close_change_pct": -18.352805309859143,
+          "strategy_pnl": null,
+          "fill_known": false
+        }
+      }
+    }
   ]
 }

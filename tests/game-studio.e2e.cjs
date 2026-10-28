@@ -34,6 +34,16 @@ async function main() {
       assert.match(await page.locator("#status").innerText(),/Level 1: 1 stars/);
       await page.locator("#level").selectOption("6");
       assert.match(await page.locator("#status").innerText(),/Level 6: 3 stars/);
+      const animate=page.locator("#animate");
+      assert.equal(await animate.isEnabled(),true,"animation is available only by opt-in");
+      const before=await page.locator("#board").evaluate(canvas=>canvas.toDataURL());
+      await animate.click();
+      assert.equal(await animate.getAttribute("aria-pressed"),"true");
+      await page.waitForTimeout(180);
+      const after=await page.locator("#board").evaluate(canvas=>canvas.toDataURL());
+      assert.notEqual(after,before,"original star/portal artwork animates on request");
+      await animate.click();
+      assert.equal(await animate.getAttribute("aria-pressed"),"false");
       const board=await page.locator("#board").evaluate(canvas=>({
         width:canvas.width,height:canvas.height,
         sample:Array.from(canvas.getContext("2d").getImageData(175,175,1,1).data)
@@ -45,7 +55,17 @@ async function main() {
       assert.deepEqual(external,[]);
       await context.close();
     }
-    console.log("Task 50 Canvas preview: Chromium 320px/390px passed");
+    const reduced=await browser.newContext({viewport:{width:320,height:720},reducedMotion:"reduce"});
+    const reducedPage=await reduced.newPage();
+    const reducedErrors=[];
+    reducedPage.on("pageerror",error=>reducedErrors.push(error.message));
+    await reducedPage.goto("http://127.0.0.1:"+server.address().port+"/index.html",{waitUntil:"networkidle"});
+    assert.equal(await reducedPage.locator("#level").isEnabled(),true);
+    assert.equal(await reducedPage.locator("#animate").isDisabled(),true,"OS reduced motion prevents animation");
+    assert.equal(await reducedPage.locator("#animate").getAttribute("aria-pressed"),"false");
+    assert.deepEqual(reducedErrors,[]);
+    await reduced.close();
+    console.log("Task 50/51 Canvas preview and original opt-in animation: Chromium 320px/390px/reduced-motion passed");
   } finally {
     if(browser) await browser.close();
     await new Promise(resolve=>server.close(resolve));

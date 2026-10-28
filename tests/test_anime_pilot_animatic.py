@@ -46,6 +46,15 @@ class AnimePilotAnimaticTests(unittest.TestCase):
         self.assertIn(CAPTIONS[2], srt)
         self.assertNotIn("\\n", srt)
 
+    def test_hindi_urdu_utf8_subtitles_are_not_transliterated(self):
+        captions = ["یہ رات خاموش ہے۔", "आज एक नया राज़ सामने आया।",
+                    "Kal hum sach dhoondenge."]
+        encoded = pilot._captions_to_srt(captions)
+        decoded = encoded.decode("utf-8")
+        for line in captions:
+            self.assertIn(line, decoded)
+        self.assertEqual(decoded.count(" --> "), 3)
+
     def test_reject_rights_bypass_bad_assets_and_caption_injection(self):
         images = original_stills()
         for kwargs in (

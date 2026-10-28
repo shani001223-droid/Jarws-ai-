@@ -1006,7 +1006,46 @@
     },
     {
       "path": "knowledge_base/10_TRADING_PSYCHOLOGY_AND_RISK/position_sizing_and_loss_limits.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2286,
+      "sha256": "d8e738aa5a837d32bc6e272c4a035f6b817437294698a8bd97ff36945a5b8f6c",
+      "source_review": {
+        "status": "checked-primary-documents-and-existing-paper-risk-source",
+        "primary_sources": [
+          {
+            "url": "https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-15",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.snb.ch/public/asset/en/www-snb-ch/publications/communication/press-releases/2015/pre_20150115/publications0_en/pre_20150115.en.pdf",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.sec.gov/Archives/edgar/data/1053092/000095010318001572/dp86358_ex9901.htm",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.nasdaqtrader.com/TraderNews.aspx?id=ETA2018-13",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.cftc.gov/media/5296/InterimStaffReportNYMEX_WTICrudeOil/download",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.cftc.gov/PressRoom/PressReleases/8315-20",
+            "checked": "2026-10-28"
+          }
+        ],
+        "limitations": [
+          "Three actual dated policy/contract/settlement cases are not reconstructed customer trades. SNB intraday release/FX quotes, XIV stop fills/payment and customer PnL remain unavailable.",
+          "WTI is the May 2020 NYMEX contract, not spot; report publication 23 November is distinct from 20 April event/session. No unsupported futures execution enabled.",
+          "Sizing example inputs are explicitly synthetic, not historical chart prices; source chapter does not add a ledger, calibrate win rates or load runtime knowledge."
+        ],
+        "reviewed_on": "2026-10-28",
+        "resolved_at_asia_karachi": "2026-10-28T11:33:55.214796+05:00"
+      }
     },
     {
       "path": "knowledge_base/10_TRADING_PSYCHOLOGY_AND_RISK/kelly_portfolio_risk_and_ruin.md",

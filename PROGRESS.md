@@ -9,8 +9,8 @@ entire branch was already deployed. Production V2 remains a separate release.
 
 ## Current measured progress
 
-**Day 1: completed 41 of 50 planned knowledge chapters — 82.00%; 9 chapters,
-18.00% of the declared curriculum, remain.**
+**Day 1: completed 42 of 50 planned knowledge chapters — 84.00%; 8 chapters,
+16.00% of the declared curriculum, remain.**
 
 The denominator is the versioned, expandable file manifest in
 `knowledge_base/manifest.json`. Scope revision 2 expanded the initial 48
@@ -68,6 +68,7 @@ topics require an explicit manifest/progress revision, never silent omission.
 | `09_GLOBAL_MONEY_FLOW/bonds_yields_fed_and_interest_rates.md` | Source-checked; three genuine policy/rate windows, basis-point changes, curve and nominal-real proxies; policy/market divergences retained without invented bond returns |
 | `09_GLOBAL_MONEY_FLOW/cot_positioning_and_reporting_lags.md` | Source-checked; three genuine dated Gold Legacy futures-only comparisons, gross/net/open-interest accounting, denominator counterexamples and actual 2023 ION release lag; original arrival/vintage and price reactions remain missing |
 | `09_GLOBAL_MONEY_FLOW/btc_correlations_and_regime_changes.md` | Source-checked; three real BTCUSDT/macro comparisons, common-date spans and weekend handling; endpoint/correlation disagreement retained, no structural regime test or equity-data substitution |
+| `10_TRADING_PSYCHOLOGY_AND_RISK/position_sizing_and_loss_limits.md` | Source-checked; cost/cash/loss-budget algebra, stop-versus-fill limits and genuine 2015 SNB, 2018 XIV and 2020 May WTI cases; synthetic sizing separated from unavailable historical fills |
 | Remaining curriculum documents | Pending; no empty placeholder chapters counted as complete |
 | Benchmark data rights / point-in-time availability | Pending — new raw NASDAQCOM, ICE DXY and gold benchmark histories are not licensed by public page access; review earlier limited observations before data/runtime bundling |
 | Brain loader and runtime knowledge bundle | Pending — new source chapters are not yet consumed by Hoshi |
@@ -186,6 +187,8 @@ topics require an explicit manifest/progress revision, never silent omission.
 - **28 October, Day 1 (11:18 PKT):** completed `cot_positioning_and_reporting_lags.md` (2390 substantive words). Three actual Gold Legacy futures-only comparisons reproduce both open-interest identities, gross/net changes and 24-day 2023 measurement-to-release lag (21 days late). Retained two normalized-share increases despite falling net contracts. All 109 evidence tests passed; source/query/identity/count/release-clock corruption and missing availability stay rejected or unknown. No price-reaction, capital-flow or runtime claim. Prior [dee1262e](https://github.com/shani001223-droid/Jarws-ai-/commit/dee1262e4995aab468519846b3fb035b9b88744e) passed [actual CI 40642221494](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40642221494). Curriculum 40/50 (80.00%), 10 pending (20.00%). Runtime retrieval, weighted strategy, independent evaluation and exact-head final release remain pending; source chapters are not model training or loaded knowledge.
 
 - **28 October, Day 1 (11:24 PKT):** completed `btc_correlations_and_regime_changes.md` (2264 substantive words). Three actual Binance Spot BTCUSDT UTC windows now reproduce broad-dollar/WTI common-date correlations with nine/nine/five intervals, weekend spans and no forward fill. The 2022 BTC and dollar endpoints both rise despite negative paired correlation. BTC captures and derived facts retain noncommercial attribution/share-alike scope; no production/training claim. All 115 evidence tests passed, including prefix, timestamp-unit, venue, quote, OHLC and forged-summary checks. Global-money-flow family 4/4 source-checked; opening-gap data dependency and remaining risk/news chapters stay pending. Prior [b16822a4](https://github.com/shani001223-droid/Jarws-ai-/commit/b16822a4bc556b27646d52cc34142ccc698aa184) passed [actual CI 40643158154](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40643158154). Curriculum 41/50 (82.00%), 9 pending (18.00%). Runtime retrieval, weighted strategy, independent evaluation and exact-head final release remain pending; source chapters are not model training or loaded knowledge.
+
+- **28 October, Day 1 (11:33 PKT):** completed `position_sizing_and_loss_limits.md` (2286 substantive words). Documented fixed-fraction, cost/cash/reserve/daily-loss and gap distinctions with original synthetic arithmetic and three verified primary historical cases. XIV issuer expected dates are separated from the later Nasdaq halt notice; May WTI negative settlement is not spot. Existing paper-risk source reviewed and nine relevant backend tests passed in the prepared environment; the default Python initially lacked FastAPI, not a functional regression. All 115 V3 evidence tests passed. No new runtime or replay claim. Prior [d370d039](https://github.com/shani001223-droid/Jarws-ai-/commit/d370d0394fc75c39654dad737bc2b7ddd607db10) passed [actual CI 40643824884](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40643824884). Curriculum 42/50 (84.00%), 8 pending (16.00%). Runtime retrieval, weighted strategy, independent evaluation and exact-head final release remain pending; source chapters are not model training or loaded knowledge.
 
 ## Completion and release rules
 

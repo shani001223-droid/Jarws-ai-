@@ -4,6 +4,12 @@
 > Updated: 27 October 2026. This is a unified project map, **not** a declaration that unfinished features work. Keep every future Hoshi/JARVIS discussion, decision, code change, test, build and issue linked to this one repository and this one project file.
 
 
+## 29 October 2026 — offline Anime Studio camera-motion pilot (development, review only)
+
+The existing private 30-second animatic now supports three allowlisted 2D camera moves per shot: `static`, `push_in`, `pan_left`, `pan_right`. `cloud_backend/anime_pilot_animatic.py` uses fixed FFmpeg filter expressions; the operator CLI accepts exactly three optional `--camera-move` arguments, rejects arbitrary filter expressions, and records actual moves and 2D-only status in the non-overwriting manifest. The real MP4 regression decodes frames 1s and 9s into the first shot and proves that push-in changes image pixels. **This is still image reframing, not fluid character animation or a multi-agent voice system.** All stills require caller rights attestation; no external upload, keys, account actions, production deployment or publication.
+
+An intermediate Python CI failure revealed that the initial zoom expression reset every frame and produced visually identical output; it was fixed using FFmpeg's output frame counter `on`, and independently reproduced in a local FFmpeg probe. **Final source commit `f1792de84b0160c211360690db6f432f571fca40`:** [full Python/Node/Playwright CI 40767566836](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40767566836) and [Docker/Uvicorn 40767566943](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40767566943) passed. Task 58 remains unchecked, and the only canonical scoreboard stays **48/60**. Realme Note 50 playback, voice/lip-sync, character animation, visual quality and owner approval remain unverified.
+
 ## 29 October 2026 — owner-corrected unified delivery mission (development only)
 
 This section supersedes any suggestion that the main goal is to write 300 isolated anime scripts. **Hoshi is ONE private, mobile-first AI assistant with genuinely executable specialist workflows.** Keep the existing code, history, releases, 60-task scoreboard and sole development PR. Do not start a new app, repo, tracker or automation. The ten workstreams below are priorities/groupings, **not** ten new task scoreboards:

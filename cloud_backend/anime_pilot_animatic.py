@@ -17,6 +17,8 @@ import wave
 
 from PIL import Image, ImageOps, UnidentifiedImageError
 
+from .anime_storyboard_handoff import bind_storyboard_handoff, StoryboardHandoffError
+
 
 class AnimePilotError(ValueError):
     """Invalid or unverifiable private anime animatic input/output."""
@@ -141,7 +143,8 @@ def render_private_animatic(stills: list[bytes] | tuple[bytes, ...],
                             image_rights_attested: bool = False,
                             audio_wav: bytes | None = None,
                             audio_rights_attested: bool = False,
-                            camera_moves: list[str] | tuple[str, ...] | None = None) -> dict:
+                            camera_moves: list[str] | tuple[str, ...] | None = None,
+                            storyboard_handoff: dict | None = None) -> dict:
     """Encode a private 30-second storyboard preview; never approve/publish it.
 
     Caller must attest rights to every still and optional soundtrack. No claim
@@ -167,6 +170,13 @@ def render_private_animatic(stills: list[bytes] | tuple[bytes, ...],
     camera_moves = tuple(camera_moves)
     srt = _captions_to_srt(captions)
     images = [_image_to_frame(still) for still in stills]
+    handoff = None
+    if storyboard_handoff is not None:
+        try:
+            handoff = bind_storyboard_handoff(
+                storyboard_handoff, stills, captions, camera_moves)
+        except StoryboardHandoffError as exc:
+            raise AnimePilotError(str(exc)) from None
     ffmpeg, ffprobe = shutil.which("ffmpeg"), shutil.which("ffprobe")
     if not ffmpeg or not ffprobe:
         raise AnimePilotError("Offline FFmpeg and ffprobe are required.")
@@ -218,6 +228,7 @@ def render_private_animatic(stills: list[bytes] | tuple[bytes, ...],
         "resolution": [WIDTH, HEIGHT],
         "frame_rate": FPS,
         "camera_moves": list(camera_moves),
+        "storyboard_handoff": handoff,
         "camera_motion_is_2d_still_reframing": any(m != "static" for m in camera_moves),
         "production_roles": list(ROLES),
         "stage": "private_storyboard_animatic_only",

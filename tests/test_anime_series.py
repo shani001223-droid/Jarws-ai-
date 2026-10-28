@@ -88,6 +88,24 @@ class AnimeSeriesTests(unittest.TestCase):
         self.assertTrue(all("30" not in e["status"] for e in m["episodes"]))
         self.assertFalse(any("password" in str(e).lower() for e in m["episodes"]))
 
+    def test_cli_exports_real_300_entry_json_without_overwrite(self):
+        import subprocess
+        import sys
+        import tempfile
+        root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as folder:
+            out = Path(folder) / "chronology.json"
+            cmd = [sys.executable, "-m", "scripts.export_hoshi_anime_chronology", "--out", str(out)]
+            first = subprocess.run(cmd, cwd=root, capture_output=True, text=True, timeout=12)
+            self.assertEqual(first.returncode, 0, first.stderr)
+            payload = json.loads(out.read_text(encoding="utf-8"))
+            self.assertEqual(len(payload["episodes"]), 300)
+            self.assertEqual(payload["sha256"], series_manifest()["sha256"])
+            before = out.read_bytes()
+            second = subprocess.run(cmd, cwd=root, capture_output=True, text=True, timeout=12)
+            self.assertNotEqual(second.returncode, 0)
+            self.assertEqual(out.read_bytes(), before)
+
     def test_series_bible_has_consistency_and_future_task_gates(self):
         doc = (Path(__file__).resolve().parents[1] / "HOSHI_ANIME_SERIES_BIBLE.md").read_text(encoding="utf-8")
         for phrase in ("PROPOSED DESIGN ONLY", "300", "9,000", "Roman Urdu",

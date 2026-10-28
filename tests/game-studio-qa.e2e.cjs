@@ -95,7 +95,7 @@ async function main() {
     const deniedPage=await denied.newPage(),deniedErrors=[];
     deniedPage.on("pageerror",e=>deniedErrors.push(e.message));
     await deniedPage.goto(origin+"/index.html",{waitUntil:"networkidle"});
-    await deniedPage.locator("#save").check();
+    // The app intentionally unchecks immediately when storage is denied; Playwright.check()\n    // expects a lasting checked state and would misclassify this safe recovery as a crash.\n    await deniedPage.locator("#save").click();
     assert.equal(await deniedPage.locator("#save").isChecked(),false);
     assert.match(await deniedPage.locator("#status").innerText(),/storage unavailable/i);
     assert.equal(await deniedPage.locator('[data-dir="right"]').isEnabled(),true,"game stays playable");

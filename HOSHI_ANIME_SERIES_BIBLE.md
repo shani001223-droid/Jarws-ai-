@@ -44,7 +44,7 @@ The canonical machine-readable source is `cloud_backend/anime_series.py`, not a 
 
 Use `python -c "from cloud_backend.anime_series import series_manifest; m=series_manifest(); print(len(m['episodes']), m['sha256'])"` to regenerate the manifest in memory. The manifest is deterministic, UTF-8 JSON-serializable and includes a SHA-256 digest over canonical sorted JSON. `validate_series` checks episode count/order, arc and sequence boundaries, day progression, predecessor links, distinct beats, spoiler gates and truthful completion flags. Regression: `python -m unittest tests.test_anime_series -v` (or full `unittest discover`). No network or paid dependency is needed.
 
-**Do not treat a hash as creative approval or factual authenticity.** All generated entries have `status=outline_only`, `reviewed_scripts=0`, `rendered_episodes=0`, and `approval=proposed_not_owner_approved`. The generated 300 rows are concise continuity beats, not final screenplay dialogue or audiovisual assets.
+For a **real local 300-entry JSON file**, run `python -m scripts.export_hoshi_anime_chronology --out Hoshi-anime-chronology.json` from the repository root. The exporter uses exclusive creation and refuses to overwrite an existing file; the file is a private review artifact, not a video or published asset.\n\n**Do not treat a hash as creative approval or factual authenticity.** All generated entries have `status=outline_only`, `reviewed_scripts=0`, `rendered_episodes=0`, and `approval=proposed_not_owner_approved`. The generated 300 rows are concise continuity beats, not final screenplay dialogue or audiovisual assets.
 
 ## Future acceptance, not yet done
 

@@ -224,6 +224,8 @@ def render_private_animatic(stills: list[bytes] | tuple[bytes, ...],
         "video_sha256": hashlib.sha256(mp4).hexdigest(),
         "subtitles_sha256": hashlib.sha256(srt).hexdigest(),
         "source_image_sha256": [digest for _, digest in images],
+        "source_audio_sha256": (hashlib.sha256(audio_wav).hexdigest()
+                                if audio_wav is not None else None),
         "duration_seconds": DURATION_SECONDS,
         "resolution": [WIDTH, HEIGHT],
         "frame_rate": FPS,

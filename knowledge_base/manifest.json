@@ -1333,7 +1333,34 @@
     },
     {
       "path": "knowledge_base/11_NEWS_TRADING/news_execution_and_data_provenance.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2101,
+      "sha256": "1471dc371376f08870b8ea9fefa147de443e1af1f0d574f3371d673be88df356",
+      "source_review": {
+        "status": "checked_primary_publication_incidents_with_explicit_timing_and_market_data_gaps",
+        "primary_sources": [
+          {
+            "url": "https://www.cftc.gov/MarketReports/CommitmentsofTraders/HistoricalSpecialAnnouncements/index.htm",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.sec.gov/newsroom/speeches-statements/gensler-x-account",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.bls.gov/bls/early-data-release-05152024.htm",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.bls.gov/news.release/archives/cpi_05152024.htm",
+            "checked": "2026-10-28"
+          }
+        ],
+        "limitations": "Three documented availability/authenticity incidents, not measured price reactions or filled trades. COT report date 31 January 2023, original schedule 3 February and actual publication date 24 February are separate; exact intraday release/arrival and original per-market vintages are missing. SEC 12 January statement is retrospective evidence of 9 January events, not a 9 January input; no original local arrival or venue BTC tape captured. BLS describes an approximate early release of a subset, not an exact first upload/receipt for all files; stated 15 May 2024 08:30 ET clock is distinct. No newly captured price observations, causal estimates, live news adapter, runtime loading or probability calibration. Engineering requirements are proposed integration criteria, not delivered execution functionality.",
+        "reviewed_on": "2026-10-28",
+        "resolved_at_asia_karachi": "2026-10-28T12:37:43.383914+05:00"
+      }
     }
   ],
   "integration_gates": {

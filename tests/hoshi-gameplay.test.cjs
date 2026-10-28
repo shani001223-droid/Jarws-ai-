@@ -61,9 +61,9 @@ test("collectible is restored by undo; local progress unlocks only after winning
   let state=createGameState(validateManifest(manifest)[0]);
   state=moveGame(moveGame(state,"down"),"down");
   state=moveGame(moveGame(state,"right"),"right");
-  state=moveGame(state,"right");
   assert.equal(state.collected,1);
   assert.equal(undoGame(state).collected,0);
+  state=moveGame(state,"right");
   assert.equal(unlockProgress(DEFAULT_PROGRESS,state).highest_unlocked,1);
   state=moveGame(moveGame(state,"up"),"up");
   state=moveGame(moveGame(state,"right"),"right");

@@ -1,6 +1,6 @@
 # Hoshi Game Studio — Task 53 Gameplay, Crash and Performance QA
 
-**Status:** Automated tests committed on the existing development branch. **Do not mark Task 53 complete until GitHub Actions for the final code head is green.** This is not physical Realme Note 50 acceptance, an offline packaged release, or an Android APK.
+**Status:** Task 53 automated source/Chromium QA **verified** on code/test head `a0dfc40a7e3305bcfad65b0714d3e4803c1ffd93`. This is not physical Realme Note 50 acceptance, an offline packaged release, or an Android APK.
 
 ## Acceptance coverage
 
@@ -17,5 +17,7 @@ Automated source/Chromium tests cannot prove Realme Note 50 touch latency, memor
 
 ## Verification record
 
-- Code/test CI head: `446a95ef38ffcc1ed45bd3f9bdfd29a28e208817` — **await actual GitHub Actions conclusion**.
-- Do not update the canonical checkbox or completed-task count on the basis of a commit alone.
+- **Full Python/backend, Node and Playwright Chromium: passed** [GitHub Actions 40635360245](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40635360245).
+- **Docker backend/Uvicorn smoke: passed** [GitHub Actions 40635360247](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40635360247).
+- The first CI run failed on Playwright `.check()` because the application correctly unchecks the opt-in box on denied storage. A follow-up test edit accidentally inserted literal `\\n` inside a JavaScript comment and suppressed the intended action. Both test errors were fixed; the final green run exercises the actual denied-storage change event.
+- The **only** completion scoreboard is `HOSHI_60_TASK_MASTER_ROADMAP.md`: **46/60** after Task 53. Task 54 and real-device acceptance remain pending.

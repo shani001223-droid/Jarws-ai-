@@ -9,9 +9,16 @@ from __future__ import annotations
 import hashlib
 import json
 from copy import deepcopy
+from functools import lru_cache
 
 from cloud_backend.anime_episode_four import episode_four_script
 from cloud_backend.anime_series import series_manifest
+
+@lru_cache(maxsize=1)
+def _previous_episode_sha256() -> str:
+    """Cache only an immutable digest, never a mutable prior draft."""
+    return episode_four_script()["sha256"]
+
 
 EPISODE_ID = "EP005"
 SCENE_SECONDS = 225
@@ -228,7 +235,7 @@ def validate_episode_five(script: dict) -> None:
     expected = {
         "episode_id": EPISODE_ID,
         "previous_episode_id": "EP004",
-        "previous_episode_sha256": episode_four_script()["sha256"],
+        "previous_episode_sha256": _previous_episode_sha256(),
         "source_outline_sha256": manifest["sha256"],
         "story_day": episode["story_day"],
         "source_event": episode["event"],
@@ -277,7 +284,7 @@ def episode_five_script() -> dict:
     draft = {
         "episode_id": EPISODE_ID,
         "previous_episode_id": "EP004",
-        "previous_episode_sha256": episode_four_script()["sha256"],
+        "previous_episode_sha256": _previous_episode_sha256(),
         "source_outline_sha256": manifest["sha256"],
         "story_day": episode["story_day"],
         "source_event": episode["event"],

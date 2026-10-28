@@ -331,5 +331,271 @@
         }
       }
     }
+  ],
+  "reclaim_cases": [
+    {
+      "source_window_sha256": "0a8fd6b6cee125cb5de8a199f86c88a5d9dacd572070a2f0999852154f688fea",
+      "case": {
+        "features": {
+          "method": "hoshi-prior20-reclaim-1",
+          "kind": "high",
+          "event": {
+            "date": "2020-01-28",
+            "close_time": 1580255999999,
+            "open": 8907.57,
+            "high": 9400.0,
+            "low": 8862.4,
+            "close": 9374.21
+          },
+          "prior_start": "2020-01-08",
+          "prior_end": "2020-01-27",
+          "reference": 9198.98,
+          "reference_date": "2020-01-19",
+          "reference_age_bars": 9,
+          "age_units": "Binance UTC daily bars, including weekends",
+          "earliest_after_close": 1580256000000,
+          "provider_arrival_time": null,
+          "new_twenty_bar_extreme": true,
+          "same_day_closing_reclaim": false,
+          "same_day_age_gate": true,
+          "plus_one_setup": true,
+          "historical_tick_size_known": false,
+          "published_intraday_order_parity": false,
+          "institutional_intent_known": false,
+          "decision": "WAIT",
+          "win_probability": null
+        },
+        "outcome": {
+          "horizon_bars": 5,
+          "available_at": 1580688000000,
+          "path": [
+            {
+              "date": "2020-01-29",
+              "close_time": 1580342399999,
+              "open": 9375.34,
+              "high": 9449.24,
+              "low": 9216.0,
+              "close": 9301.53
+            },
+            {
+              "date": "2020-01-30",
+              "close_time": 1580428799999,
+              "open": 9301.57,
+              "high": 9578.0,
+              "low": 9204.44,
+              "close": 9513.21
+            },
+            {
+              "date": "2020-01-31",
+              "close_time": 1580515199999,
+              "open": 9511.52,
+              "high": 9530.22,
+              "low": 9210.01,
+              "close": 9352.89
+            },
+            {
+              "date": "2020-02-01",
+              "close_time": 1580601599999,
+              "open": 9351.71,
+              "high": 9464.53,
+              "low": 9281.0,
+              "close": 9384.61
+            },
+            {
+              "date": "2020-02-02",
+              "close_time": 1580687999999,
+              "open": 9384.41,
+              "high": 9477.03,
+              "low": 9120.0,
+              "close": 9331.51
+            }
+          ],
+          "next_day_reference_in_recorded_range": false,
+          "next_day_opens_beyond_entry_side": false,
+          "next_day_close_reclaims": false,
+          "raw_close_change_pct": -0.4555050505589131,
+          "same_bar_entry_stop_order_known": false,
+          "fill_known": false,
+          "strategy_pnl": null,
+          "orders_enabled": false
+        }
+      }
+    },
+    {
+      "source_window_sha256": "6d533be481380a79e5ee6ab85436cfa6bac8c5b50ae6ff2080b433901610c1ee",
+      "case": {
+        "features": {
+          "method": "hoshi-prior20-reclaim-1",
+          "kind": "high",
+          "event": {
+            "date": "2021-04-10",
+            "close_time": 1618099199999,
+            "open": 58142.55,
+            "high": 61500.0,
+            "low": 57900.01,
+            "close": 59769.13
+          },
+          "prior_start": "2021-03-21",
+          "prior_end": "2021-04-09",
+          "reference": 60200.0,
+          "reference_date": "2021-04-02",
+          "reference_age_bars": 8,
+          "age_units": "Binance UTC daily bars, including weekends",
+          "earliest_after_close": 1618099200000,
+          "provider_arrival_time": null,
+          "new_twenty_bar_extreme": true,
+          "same_day_closing_reclaim": true,
+          "same_day_age_gate": true,
+          "plus_one_setup": false,
+          "historical_tick_size_known": false,
+          "published_intraday_order_parity": false,
+          "institutional_intent_known": false,
+          "decision": "WAIT",
+          "win_probability": null
+        },
+        "outcome": {
+          "horizon_bars": 5,
+          "available_at": 1618531200000,
+          "path": [
+            {
+              "date": "2021-04-11",
+              "close_time": 1618185599999,
+              "open": 59769.13,
+              "high": 60699.0,
+              "low": 59232.52,
+              "close": 60002.43
+            },
+            {
+              "date": "2021-04-12",
+              "close_time": 1618271999999,
+              "open": 59998.8,
+              "high": 61300.0,
+              "low": 59350.59,
+              "close": 59860.0
+            },
+            {
+              "date": "2021-04-13",
+              "close_time": 1618358399999,
+              "open": 59860.01,
+              "high": 63777.77,
+              "low": 59805.15,
+              "close": 63575.0
+            },
+            {
+              "date": "2021-04-14",
+              "close_time": 1618444799999,
+              "open": 63575.01,
+              "high": 64854.0,
+              "low": 61301.0,
+              "close": 62959.53
+            },
+            {
+              "date": "2021-04-15",
+              "close_time": 1618531199999,
+              "open": 62959.53,
+              "high": 63800.0,
+              "low": 62020.0,
+              "close": 63159.98
+            }
+          ],
+          "next_day_reference_in_recorded_range": true,
+          "next_day_opens_beyond_entry_side": true,
+          "next_day_close_reclaims": true,
+          "raw_close_change_pct": 5.6732463731695715,
+          "same_bar_entry_stop_order_known": false,
+          "fill_known": false,
+          "strategy_pnl": null,
+          "orders_enabled": false
+        }
+      }
+    },
+    {
+      "source_window_sha256": "5860446413d27c8678d93b80ce791940ad4e06b76a512b6e1230f6b4ab19b74f",
+      "case": {
+        "features": {
+          "method": "hoshi-prior20-reclaim-1",
+          "kind": "low",
+          "event": {
+            "date": "2022-06-12",
+            "close_time": 1655078399999,
+            "open": 28424.71,
+            "high": 28544.96,
+            "low": 26560.0,
+            "close": 26574.53
+          },
+          "prior_start": "2022-05-23",
+          "prior_end": "2022-06-11",
+          "reference": 28019.56,
+          "reference_date": "2022-05-26",
+          "reference_age_bars": 17,
+          "age_units": "Binance UTC daily bars, including weekends",
+          "earliest_after_close": 1655078400000,
+          "provider_arrival_time": null,
+          "new_twenty_bar_extreme": true,
+          "same_day_closing_reclaim": false,
+          "same_day_age_gate": true,
+          "plus_one_setup": true,
+          "historical_tick_size_known": false,
+          "published_intraday_order_parity": false,
+          "institutional_intent_known": false,
+          "decision": "WAIT",
+          "win_probability": null
+        },
+        "outcome": {
+          "horizon_bars": 5,
+          "available_at": 1655510400000,
+          "path": [
+            {
+              "date": "2022-06-13",
+              "close_time": 1655164799999,
+              "open": 26574.53,
+              "high": 26895.84,
+              "low": 21925.77,
+              "close": 22487.41
+            },
+            {
+              "date": "2022-06-14",
+              "close_time": 1655251199999,
+              "open": 22485.27,
+              "high": 23362.88,
+              "low": 20846.0,
+              "close": 22136.41
+            },
+            {
+              "date": "2022-06-15",
+              "close_time": 1655337599999,
+              "open": 22136.42,
+              "high": 22800.0,
+              "low": 20111.62,
+              "close": 22583.72
+            },
+            {
+              "date": "2022-06-16",
+              "close_time": 1655423999999,
+              "open": 22583.72,
+              "high": 22995.73,
+              "low": 20232.0,
+              "close": 20401.31
+            },
+            {
+              "date": "2022-06-17",
+              "close_time": 1655510399999,
+              "open": 20400.6,
+              "high": 21365.43,
+              "low": 20246.66,
+              "close": 20468.81
+            }
+          ],
+          "next_day_reference_in_recorded_range": false,
+          "next_day_opens_beyond_entry_side": false,
+          "next_day_close_reclaims": false,
+          "raw_close_change_pct": -22.975834379761363,
+          "same_bar_entry_stop_order_known": false,
+          "fill_known": false,
+          "strategy_pnl": null,
+          "orders_enabled": false
+        }
+      }
+    }
   ]
 }

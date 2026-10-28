@@ -55,5 +55,38 @@ class V3LiquidityTests(unittest.TestCase):
             else:p["source_file_sha256"]="0"*64
             with self.assertRaises(AssertionError):l.check_receipt(p,ROOT)
 
+    def test_twenty_bar_reference_is_prior_only_and_outcomes_are_separate(self):
+        p=receipt();windows=l.check_receipt(p,ROOT)
+        for entry in p["reclaim_cases"]:
+            f=entry["case"]["features"];bars=windows[entry["source_window_sha256"]]
+            prefix=[b for b in bars if b["close_time"]<=f["event"]["close_time"]]
+            self.assertEqual(l.reclaim_features(prefix,f["event"]["date"],f["kind"]),f)
+            self.assertIsNone(l.reclaim_case(prefix,f["event"]["date"],f["kind"])["outcome"])
+            self.assertLess(f["reference_date"],f["event"]["date"])
+            self.assertFalse(f["published_intraday_order_parity"])
+
+    def test_plus_one_absence_and_same_day_reclaim_do_not_become_wins(self):
+        p=receipt();l.check_receipt(p,ROOT)
+        cases=[e["case"] for e in p["reclaim_cases"]]
+        for c in (cases[0],cases[2]):
+            self.assertTrue(c["features"]["plus_one_setup"])
+            self.assertFalse(c["outcome"]["next_day_reference_in_recorded_range"])
+            self.assertFalse(c["outcome"]["next_day_opens_beyond_entry_side"])
+        self.assertTrue(cases[1]["features"]["same_day_closing_reclaim"])
+        self.assertGreater(cases[1]["outcome"]["raw_close_change_pct"],0)
+        self.assertTrue(all(c["outcome"]["strategy_pnl"] is None for c in cases))
+
+    def test_tied_reference_uses_most_recent_day_and_rejects_forged_age(self):
+        p=receipt();w=l.check_receipt(p,ROOT)
+        e=p["reclaim_cases"][0];f=e["case"]["features"]
+        bars=deepcopy(w[e["source_window_sha256"]]);k=next(k for k,b in enumerate(bars) if l.utc_day(b["time"])==f["event"]["date"])
+        # Synthetic duplicate anchor tests tie policy, not a historical claim.
+        bars[k-1]["high"]=f["reference"]
+        tied=l.reclaim_features(bars,f["event"]["date"],"high")
+        self.assertEqual(tied["reference_age_bars"],1)
+        self.assertFalse(tied["same_day_age_gate"])
+        p["reclaim_cases"][0]["case"]["features"]["reference_age_bars"]+=1
+        with self.assertRaises(AssertionError):l.check_receipt(p,ROOT)
+
 
 if __name__ == "__main__":unittest.main()

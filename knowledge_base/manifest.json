@@ -389,9 +389,9 @@
     },
     {
       "path": "knowledge_base/06_LIQUIDITY_GOD/inducement_turtle_soup_and_reclaims.md",
-      "status": "pending",
+      "status": "source_checked",
       "source_review": {
-        "status": "pending_verified_original_turtle_soup_rules",
+        "status": "bounded_public_publisher_rules_checked",
         "last_rechecked_at_asia_karachi": "2026-10-28T07:33:49.891314+05:00",
         "attempts": [
           {
@@ -403,8 +403,25 @@
             "result": "No checked original rule text obtained. Third-party full-book mirrors/search excerpts were not adopted as primary technical evidence or copied into the curriculum."
           }
         ],
-        "remaining_requirement": "Obtain and check an authorized original author/publisher passage or original public lesson defining Turtle Soup versus Plus One, trigger offsets, lookback/age filters and invalidation. Separate generic original reclaim geometry from creator parity; supply three genuine dated examples. Keep combined chapter pending until that source gap is resolved; continue other independent items without purchases."
-      }
+        "remaining_requirement": "Earlier missing public-definition gap resolved through checked publisher lesson. Full book/chart parity, an exact ICT reinterpretation, historical contract tick sizes and intraday execution remain unclaimed. Hoshi's explicit closed-day diagnostic is original, not canonical order replication.",
+        "primary_sources": [
+          {
+            "url": "https://tradingmarkets.com/recent/todays_trading_lesson_from_tradingmarkets-649736",
+            "publication_date": "2004-09-09",
+            "byline": "TradingMarkets Editors",
+            "checked": "Publisher-side public lesson from Larry Connors co-founded TradingMarkets: same-day versus Plus One lookback/age/trigger/expiry/stop distinctions, briefly attributed."
+          },
+          {
+            "url": "https://store.tradingmarkets.com/products/street-smarts-immediate-download-selected-by-technical-analysis-of-stocks-and-commodities-magazine-as-one-of-the-classics-for-trading-books-written-in-the-20th-century",
+            "checked": "Publisher catalogue confirms authors and separate Turtle Soup/Plus One chapters; no purchase or promotional performance claim adopted."
+          }
+        ],
+        "reviewed_on": "2026-10-28",
+        "resolved_at_asia_karachi": "2026-10-28T07:51:09.262669+05:00"
+      },
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2011,
+      "sha256": "a2b21d8426af75cc158e7294d09f3bb6a3a6d1a9a46f8072b2c74c1f5db8c9a7"
     },
     {
       "path": "knowledge_base/06_LIQUIDITY_GOD/liquidity_voids_and_stop_events.md",
@@ -563,7 +580,7 @@
     {
       "path": "knowledge_base/06_LIQUIDITY_GOD/liquidity_observations_20261028.json",
       "kind": "liquidity_cases",
-      "sha256": "f683a687e304397cc00fcea8a617f65df9656228c1a0b754c493e0785599388b"
+      "sha256": "030448cdd94933fada0060649574184cb4e73efafdf4a091d3c9d552a6f3de53"
     }
   ],
   "scope_history": [

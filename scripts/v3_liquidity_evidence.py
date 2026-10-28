@@ -60,6 +60,47 @@ def cluster_case(bars,event_date,kind):
         "fill_known":False,"strategy_pnl":None,"orders_enabled":False}}
 
 
+def reclaim_features(bars,event_date,kind):
+    """Original closed-day proxy, not published intraday Turtle Soup fills."""
+    assert kind in ("high","low")
+    k=next(k for k,b in enumerate(bars) if utc_day(b["time"])==event_date)
+    assert k>=20
+    prior=bars[k-20:k];event=bars[k]
+    reference=(max if kind=="high" else min)(b[kind] for b in prior)
+    # Most recent tied occurrence prevents an older equal extreme inflating age.
+    anchor=max(j for j in range(k-20,k) if bars[j][kind]==reference)
+    age=k-anchor
+    excursion=event["high"]>reference if kind=="high" else event["low"]<reference
+    reclaimed=event["close"]<reference if kind=="high" else event["close"]>reference
+    return {"method":"hoshi-prior20-reclaim-1","kind":kind,"event":bar_record(event),
+            "prior_start":utc_day(prior[0]["time"]),"prior_end":utc_day(prior[-1]["time"]),
+            "reference":reference,"reference_date":utc_day(bars[anchor]["time"]),
+            "reference_age_bars":age,"age_units":"Binance UTC daily bars, including weekends",
+            "earliest_after_close":event["close_time"]+1,"provider_arrival_time":None,
+            "new_twenty_bar_extreme":excursion,"same_day_closing_reclaim":bool(excursion and reclaimed),
+            "same_day_age_gate":bool(excursion and age>=4),
+            "plus_one_setup":bool(excursion and age>=3 and not reclaimed),
+            "historical_tick_size_known":False,"published_intraday_order_parity":False,
+            "institutional_intent_known":False,"decision":"WAIT","win_probability":None}
+
+
+def reclaim_case(bars,event_date,kind):
+    f=reclaim_features(bars,event_date,kind)
+    k=next(k for k,b in enumerate(bars) if utc_day(b["time"])==event_date)
+    future=bars[k+1:k+6]
+    if len(future)!=5:return {"features":f,"outcome":None}
+    nxt=future[0];ref=f["reference"]
+    return {"features":f,"outcome":{
+        "horizon_bars":5,"available_at":future[-1]["close_time"]+1,
+        "path":[bar_record(b) for b in future],
+        "next_day_reference_in_recorded_range":nxt["low"]<=ref<=nxt["high"],
+        "next_day_opens_beyond_entry_side":nxt["open"]<ref if kind=="high" else nxt["open"]>ref,
+        "next_day_close_reclaims":nxt["close"]<ref if kind=="high" else nxt["close"]>ref,
+        "raw_close_change_pct":(future[-1]["close"]/f["event"]["close"]-1)*100,
+        "same_bar_entry_stop_order_known":False,"fill_known":False,
+        "strategy_pnl":None,"orders_enabled":False}}
+
+
 def check_receipt(payload,root):
     assert payload["schema_version"]=="hoshi-v3-liquidity-evidence-1"
     assert payload["data_license"]=="CC BY-NC-SA 4.0"
@@ -72,4 +113,7 @@ def check_receipt(payload,root):
     for entry in payload["cluster_cases"]:
         f=entry["case"]["features"]
         assert cluster_case(windows[entry["source_window_sha256"]],f["event"]["date"],f["kind"])==entry["case"]
+    for entry in payload.get("reclaim_cases",[]):
+        f=entry["case"]["features"]
+        assert reclaim_case(windows[entry["source_window_sha256"]],f["event"]["date"],f["kind"])==entry["case"]
     return windows

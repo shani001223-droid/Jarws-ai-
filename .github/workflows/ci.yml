@@ -124,6 +124,10 @@ jobs:
         run: node --check memory-privacy.js
       - name: Check service worker JavaScript syntax
         run: node --check sw.js
+      - name: Test Hoshi anime avatar timing and emotion states
+        run: node tests/hoshi-anime-avatar.test.cjs
+      - name: Check Hoshi anime avatar controller syntax
+        run: node --check hoshi-anime-avatar.js
       - name: Check dashboard inline JavaScript syntax
         run: |
           node -e 'const fs = require("node:fs"); const html = fs.readFileSync("index.html", "utf8"); const match = html.match(/<script>([\s\S]*?)<\/script>/i); if (!match) { throw new Error("No inline script found in index.html"); } new Function(match[1]); console.log("Dashboard JavaScript syntax: OK");'

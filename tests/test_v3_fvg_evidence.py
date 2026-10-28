@@ -102,5 +102,41 @@ class V3FVGTests(unittest.TestCase):
         p['inversion_balance_cases'][0]['diagnostic']['balance']['features']['low']+=1
         with self.assertRaises(AssertionError):f.check_receipt(p,ROOT)
 
+    def test_quality_baseline_origin_and_first_selection_are_prior_only(self):
+        p=receipt();w=f.check_receipt(p,ROOT)
+        for entry in p['quality_cases']:
+            d=entry['diagnostic'];features=d['case']['features'];bars=w[entry['source_window_sha256']]
+            i=next(i for i,b in enumerate(bars) if b['time']==features['gap']['c']['time'])
+            self.assertEqual(f.quality_features(bars[:i+1],i),features)
+            self.assertIsNone(f.quality_case(bars[:i+1],i)['outcome'])
+            self.assertEqual(f.first_quality_case(bars[:i+1])['case']['features'],features)
+            self.assertLess(features['baseline_end'],features['gap']['b']['time'])
+            self.assertLess(features['origin']['close_time'],features['gap']['b']['time'])
+            self.assertGreaterEqual(features['body_multiple'],1.5)
+            self.assertFalse(d['first_unfiltered_candidate']['features']['body_gate'])
+
+    def test_gap_wick_close_and_origin_failure_are_distinct(self):
+        p=receipt();f.check_receipt(p,ROOT)
+        cases=[e['diagnostic']['case'] for e in p['quality_cases']]
+        for c in cases:self.assertIsNone(c['features']['gap_origin_positive_intersection'])
+        first=cases[0]['outcome']
+        self.assertLess(first['first_gap_far_close']['time'],first['first_origin_closing_breach']['time'])
+        second=cases[1]['outcome']
+        self.assertIsNotNone(second['first_partial_gap_contact_hold_before_far_wick'])
+        self.assertLess(second['first_gap_far_wick']['time'],second['first_bar_overlapping_gap_and_origin']['time'])
+        self.assertIsNone(second['first_origin_closing_breach'])
+        self.assertIsNone(cases[2]['outcome']['first_bar_overlapping_gap_and_origin'])
+        self.assertTrue(all(c['outcome']['strategy_pnl'] is None for c in cases))
+
+    def test_zero_body_baseline_is_unknown_not_infinite_confirmation(self):
+        bars=[{'time':k*60000,'close_time':(k+1)*60000-1,'open':100,'high':101,'low':99,'close':100} for k in range(22)]
+        bars[20].update(open=100,high=106,low=100,close=105)
+        bars[21].update(open=105,high=106,low=104,close=105)
+        features=f.quality_features(bars,21)
+        self.assertIsNone(features['body_multiple'])
+        self.assertFalse(features['qualified_formation'])
+        p=receipt();p['quality_cases'][0]['diagnostic']['case']['features']['body_multiple']+=1
+        with self.assertRaises(AssertionError):f.check_receipt(p,ROOT)
+
 
 if __name__=='__main__':unittest.main()

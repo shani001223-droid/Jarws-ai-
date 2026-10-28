@@ -555,7 +555,44 @@
     },
     {
       "path": "knowledge_base/07_FVG_IMBALANCE/displacement_mitigation_and_invalidations.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 1984,
+      "sha256": "b47601f8ba85b8efd14737eb357bce0b2449e62f414fc94824cb2db4ed957f86",
+      "source_review": {
+        "status": "primary_project_formation_source_and_original_causal_minute_cases_checked",
+        "primary_sources": [
+          {
+            "url": "https://www.youtube.com/watch?v=FgacYSN9QEo",
+            "title": "ICT Mentorship Core Content - Month 04 - ICT Fair Value Gaps FVG",
+            "channel_id": "UCtjxa77NqamhVC8atV85Rog",
+            "published_at_utc": "2022-09-10T19:00:04Z",
+            "duration": "PT17M57S",
+            "caption_language": "en",
+            "caption_sha256": "e8ba58a30449ffe2a82764354bc92bc09703f87371fbc0a82bc02ad87b2f63ba",
+            "caption_lines": 64,
+            "retrieval": "Original public YouTube captions via vidIQ; full track and unviewed charts not republished."
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=HhgWGduQZQY",
+            "title": "ICT 2024 Mentorship \\ How To Trade ICT FVGs Correctly \\ September 16, 2024",
+            "channel_id": "UCtjxa77NqamhVC8atV85Rog",
+            "published_at_utc": "2024-09-16T15:48:45Z",
+            "duration": "PT2H12M8S",
+            "caption_language": "en",
+            "caption_sha256": "070c53ecdbd629b9a439aa8d313fa1b2720c51b10231df9b49dff15b7923f549",
+            "caption_lines": 465,
+            "retrieval": "Original public YouTube captions via vidIQ; full track and unviewed charts not republished."
+          },
+          {
+            "url": "https://github.com/shani001223-droid/Jarws-ai-/blob/fb34e359c752380a4740fb972cfadfd8e8eabfb9/cloud_backend/strategy_engine.py",
+            "checked": "Existing V2 formation arithmetic inspected locally against pinned source; minute diagnostics do not claim full runtime frame/context qualification."
+          }
+        ],
+        "limitations": "Original minute diagnostics retain distinct gap wick/close and origin-close lifecycles, unfiltered counterexamples and disjoint price intervals. No actual mitigation intent, same-price fill, fifteen-minute strategy eligibility or independent holdout claimed.",
+        "reviewed_on": "2026-10-28",
+        "resolved_at_asia_karachi": "2026-10-28T09:59:13.819419+05:00"
+      }
     },
     {
       "path": "knowledge_base/07_FVG_IMBALANCE/imbalance_event_studies_and_failures.md",
@@ -674,7 +711,7 @@
     {
       "path": "knowledge_base/07_FVG_IMBALANCE/fvg_observations_20261028.json",
       "kind": "fvg_cases",
-      "sha256": "ff82d9cab6349bda5b9a3b9cc63e477ae36d5b52e9fd5461d68d287687df9fff"
+      "sha256": "f84878bbafe1edf50ba70dd05393f91bdeb0f4daa0f47d87cfc9541d710d88c4"
     }
   ],
   "scope_history": [

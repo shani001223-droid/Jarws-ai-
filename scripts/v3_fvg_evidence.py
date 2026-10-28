@@ -5,6 +5,7 @@ feature uses only its completed A/B/C bars; future paths have separate clocks.
 """
 from hashlib import sha256
 import json
+import math
 
 from v3_ict_evidence import check_receipt as check_source, record
 
@@ -128,6 +129,74 @@ def inversion_balance_case(bars):
             'independent_holdout':False}
 
 
+def quality_features(bars,index):
+    """V2-style formation arithmetic on minutes, not full V2 qualification."""
+    assert index>=21
+    gap=geometry(bars,index);assert gap is not None
+    b=bars[index-1];prior=bars[index-21:index-1];recent=bars[index-6:index-1]
+    baseline=math.fsum(abs(x['close']-x['open']) for x in prior)/20
+    bull=gap['direction']=='long'
+    body=b['close']-b['open'] if bull else b['open']-b['close']
+    reference=max(x['high'] for x in recent) if bull else min(x['low'] for x in recent)
+    broke=b['close']>reference if bull else b['close']<reference
+    opposite=[x for x in recent if (x['close']<x['open'] if bull else x['close']>x['open'])]
+    origin=opposite[-1] if opposite else None
+    large=baseline>0 and body>=1.5*baseline
+    overlap=None
+    if origin is not None:
+        low=max(gap['low'],origin['low']);high=min(gap['high'],origin['high'])
+        if low<high:overlap={'low':low,'high':high}
+    return {'method':'hoshi-minute-gap-formation-quality-1','gap':gap,
+            'baseline_start':prior[0]['time'],'baseline_end':prior[-1]['close_time'],
+            'prior_body_mean':baseline,'directional_b_body':body,
+            'body_multiple':body/baseline if baseline>0 else None,
+            'body_gate':large,'five_bar_break_reference':reference,'break_gate':broke,
+            'origin':record(origin) if origin is not None else None,'origin_gate':origin is not None,
+            'gap_origin_positive_intersection':overlap,
+            'qualified_formation':bool(large and broke and origin is not None),
+            'earliest_after_close':gap['earliest_after_close'],'provider_arrival_time':None,
+            'full_v2_timeframe_or_strategy_qualification':False,'decision':'WAIT','win_probability':None}
+
+
+def quality_case(bars,index):
+    f=quality_features(bars,index);gap=f['gap'];origin=f['origin']
+    future=bars[index+1:index+6]
+    if len(future)!=5:return {'features':f,'outcome':None}
+    bull=gap['direction']=='long'
+    far=closing=origin_close=contact=joint=hold=None
+    for b in future:
+        touched=b['low']<=gap['high'] and b['high']>=gap['low']
+        origin_touched=bool(origin and b['low']<=origin['high'] and b['high']>=origin['low'])
+        wick=b['low']<=gap['low'] if bull else b['high']>=gap['high']
+        failed=b['close']<gap['low'] if bull else b['close']>gap['high']
+        origin_failed=bool(origin and (b['close']<origin['low'] if bull else b['close']>origin['high']))
+        if touched and contact is None:contact=record(b)
+        if touched and origin_touched and joint is None:joint=record(b)
+        if wick and far is None:far=record(b)
+        if failed and closing is None:closing=record(b)
+        if origin_failed and origin_close is None:origin_close=record(b)
+        held=b['close']>=gap['midpoint'] if bull else b['close']<=gap['midpoint']
+        if touched and held and far is None and hold is None:hold=record(b)
+    return {'features':f,'outcome':{
+        'horizon_bars':5,'available_at':future[-1]['close_time']+1,'path':[record(b) for b in future],
+        'first_gap_contact':contact,'first_gap_far_wick':far,'first_gap_far_close':closing,
+        'first_origin_closing_breach':origin_close,'first_bar_overlapping_gap_and_origin':joint,
+        'first_partial_gap_contact_hold_before_far_wick':hold,
+        'raw_close_change_pct':(future[-1]['close']/gap['c']['close']-1)*100,
+        'same_price_gap_origin_fill_proven':False,'fill_known':False,'strategy_pnl':None}}
+
+
+def first_quality_case(bars):
+    candidates=[i for i in range(21,len(bars)) if geometry(bars,i) is not None]
+    qualified=[i for i in candidates if quality_features(bars,i)['qualified_formation']]
+    return {'selection':'first_qualified_formation_without_future_outcome_condition',
+            'candidate_count':len(candidates),'qualified_count':len(qualified),
+            'qualified_c_open_times':[bars[i]['time'] for i in qualified],
+            'first_unfiltered_candidate':quality_case(bars,candidates[0]) if candidates else None,
+            'case':quality_case(bars,qualified[0]) if qualified else None,
+            'independent_holdout':False}
+
+
 def check_receipt(payload,root):
     assert payload["schema_version"]=="hoshi-v3-fvg-evidence-1"
     assert payload["data_license"]=="CC BY-NC-SA 4.0" and payload["source_file"]==SOURCE
@@ -140,4 +209,6 @@ def check_receipt(payload,root):
         assert first_case(windows[entry["source_window_sha256"]])==entry["diagnostic"]
     for entry in payload.get('inversion_balance_cases',[]):
         assert inversion_balance_case(windows[entry['source_window_sha256']])==entry['diagnostic']
+    for entry in payload.get('quality_cases',[]):
+        assert first_quality_case(windows[entry['source_window_sha256']])==entry['diagnostic']
     return windows

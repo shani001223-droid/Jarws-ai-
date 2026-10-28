@@ -258,3 +258,12 @@ an APK, phone installation, production deployment, owner-approved genre or
 proof of Realme Note 50 performance. Tasks 06/11, Flora owner approvals and
 Anime Studio 55–60 remain pending. No production merge/deploy or account
 changes are authorized.
+
+
+## Task 55 — proposed Anime Studio series bible (28 Oct 2026)
+
+The original `HOSHI_ANIME_SERIES_BIBLE.md` and deterministic `cloud_backend/anime_series.py` add a **proposed** 300-episode/30-minute *outline chronology* (10 arcs × 6 authored sequences × 5 beats) and a strict no-magic, finite-energy, evidence-based continuity rule set. `scripts/export_hoshi_anime_chronology.py` can create an actual UTF-8 JSON review artifact without overwriting an existing file. This is inside the ONE Hoshi repository and development PR #29. The existing separate 60-episode `Deewar Mein Dafan` concept and Hoshi assistant character assets were not replaced or reused without permission.
+
+**Source/test verification:** full Python/Node/Playwright CI passed on `cbaf609d51237ae116c989b4c717e41c45daa6f2` at https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40643993457 ; real Docker/Uvicorn passed at https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40643993263 . Earlier intermediate missing-document CI failed and was fixed before acceptance. Only the **canonical roadmap** contains Task 55's completion checkbox and authoritative total.
+
+This is **not** a collection of independently reviewed scripts or 9,000 minutes of rendered media. All episodes remain outline-only; scripts, cast/voice licenses, storyboards, synchronized MP4s, QC and user approval are separate Tasks 56–60. Task 06 physical Realme Note 50 QA, Task 11 real OpenJarvis, Flora owner approvals and production release remain pending. No new app/repo, fake Room Life, purchases, external publishing, secrets, real trading or production merge/deploy.

@@ -7,7 +7,7 @@ from hashlib import sha256
 import json
 import math
 
-from v3_ict_evidence import check_receipt as check_source, record
+from v3_ict_evidence import check_receipt as check_source, record, gap_features as clock_gap
 
 SOURCE="knowledge_base/05_ICT_COMPLETE/ict_intraday_observations_20261028.json"
 
@@ -197,6 +197,74 @@ def first_quality_case(bars):
             'independent_holdout':False}
 
 
+def first_joint_hold(bars,index,quality):
+    """First same-bar price-range/closing hold before gap/origin cancellation."""
+    gap=quality['gap'];origin=quality['origin'];bull=gap['direction']=='long'
+    if not quality['qualified_formation']:return None
+    for b in bars[index+1:index+6]:
+        far=b['low']<=gap['low'] if bull else b['high']>=gap['high']
+        origin_fail=b['close']<origin['low'] if bull else b['close']>origin['high']
+        if far or origin_fail:return None
+        overlap=b['low']<=gap['high'] and b['high']>=gap['low']
+        ob_overlap=b['low']<=origin['high'] and b['high']>=origin['low']
+        held=b['close']>=gap['midpoint'] if bull else b['close']<=gap['midpoint']
+        if overlap and ob_overlap and held:return record(b)
+    return None
+
+
+def study(bars):
+    ledger=[];origins={};complete_indices=[]
+    for i in range(2,len(bars)):
+        g=geometry(bars,i)
+        if g is None:continue
+        case=lifecycle(bars,i);out=case['outcome']
+        q=quality_features(bars,i) if i>=21 else None
+        quality={'status':'insufficient_pre_B_bars','qualified_formation':None}
+        if q is not None:
+            quality={k:q[k] for k in ('prior_body_mean','directional_b_body','body_multiple','body_gate',
+                                     'break_gate','origin_gate','qualified_formation')}
+            quality.update(status='observed',origin_time=q['origin']['time'] if q['origin'] else None)
+            if q['qualified_formation']:origins.setdefault(q['origin']['time'],[]).append(g['c']['time'])
+        signed=out['raw_close_change_pct']*(1 if g['direction']=='long' else -1) if out is not None else None
+        if out is not None:complete_indices.append(i)
+        ledger.append({'index':i,'features':g,'clock_eligible':bool(clock_gap(bars,i)['eligible_windows']),
+                       'quality':quality,'five_bar_outcome':out,'directional_endpoint_change_pct':signed,
+                       'first_joint_hold_before_cancellation':first_joint_hold(bars,i,q) if out is not None and q is not None else None})
+    complete=[x for x in ledger if x['five_bar_outcome'] is not None]
+    out=lambda x:x['five_bar_outcome']
+    pairs=sum(1 for n,i in enumerate(complete_indices) for j in complete_indices[n+1:] if 0<j-i<5)
+    same_bar=lambda x:bool(out(x)['first_contact'] and out(x)['first_far_boundary_touch_or_breach'] and
+                          out(x)['first_contact']['time']==out(x)['first_far_boundary_touch_or_breach']['time'])
+    sign_counts={key:sum(1 for x in complete if (x['directional_endpoint_change_pct']>0 if key=='positive' else
+                                               x['directional_endpoint_change_pct']<0 if key=='negative' else
+                                               x['directional_endpoint_change_pct']==0))
+                 for key in ('positive','negative','zero')}
+    return {'method':'hoshi-complete-bounded-minute-gap-ledger-1','bars':len(bars),
+            'three_bar_decisions':len(bars)-2,'strict_gap_count':len(ledger),
+            'non_gap_decisions':len(bars)-2-len(ledger),
+            'history_eligible_gap_count':sum(x['quality']['status']=='observed' for x in ledger),
+            'insufficient_warmup_gap_count':sum(x['quality']['status']!='observed' for x in ledger),
+            'qualified_formation_count':sum(x['quality']['qualified_formation'] is True for x in ledger),
+            'clock_eligible_gap_count':sum(x['clock_eligible'] for x in ledger),
+            'complete_five_bar_outcomes':len(complete),'incomplete_five_bar_outcomes':len(ledger)-len(complete),
+            'contact_count':sum(out(x)['first_contact'] is not None for x in complete),
+            'no_contact_count':sum(out(x)['first_contact'] is None for x in complete),
+            'partial_hold_before_retirement_count':sum(out(x)['first_partial_contact_closing_hold'] is not None for x in complete),
+            'far_boundary_touch_or_breach_count':sum(out(x)['first_far_boundary_touch_or_breach'] is not None for x in complete),
+            'same_bar_first_contact_and_retirement_count':sum(same_bar(x) for x in complete),
+            'qualified_joint_hold_before_cancellation_count':sum(x['first_joint_hold_before_cancellation'] is not None for x in ledger),
+            'directional_endpoint_sign_counts':sign_counts,
+            'positive_endpoint_without_contact_count':sum(x['directional_endpoint_change_pct']>0 and out(x)['first_contact'] is None for x in complete),
+            'positive_endpoint_after_same_bar_contact_retirement_count':sum(x['directional_endpoint_change_pct']>0 and same_bar(x) for x in complete),
+            'overlapping_complete_outcome_pairs':pairs,
+            'reused_qualified_origin_groups':[{'origin_time':k,'c_open_times':v} for k,v in origins.items() if len(v)>1],
+            'assumed_round_trip_friction_bps':30,
+            'gap_width_below_assumed_friction_count':sum(x['features']['width_bps_of_c_close']<30 for x in ledger),
+            'friction_is_hypothetical_not_measured_cost_or_pnl':True,
+            'ledger':ledger,'all_decisions_wait':True,'independent_holdout':False,
+            'simulated_trades':None,'strategy_pnl':None,'account_drawdown':None,'win_probability':None}
+
+
 def check_receipt(payload,root):
     assert payload["schema_version"]=="hoshi-v3-fvg-evidence-1"
     assert payload["data_license"]=="CC BY-NC-SA 4.0" and payload["source_file"]==SOURCE
@@ -211,4 +279,10 @@ def check_receipt(payload,root):
         assert inversion_balance_case(windows[entry['source_window_sha256']])==entry['diagnostic']
     for entry in payload.get('quality_cases',[]):
         assert first_quality_case(windows[entry['source_window_sha256']])==entry['diagnostic']
+    if 'studies' in payload:
+        entries=payload['studies']
+        assert len(entries)==len(windows)
+        assert {entry['source_window_sha256'] for entry in entries}==set(windows)
+        for entry in entries:
+            assert study(windows[entry['source_window_sha256']])==entry['study']
     return windows

@@ -138,5 +138,46 @@ class V3FVGTests(unittest.TestCase):
         p=receipt();p['quality_cases'][0]['diagnostic']['case']['features']['body_multiple']+=1
         with self.assertRaises(AssertionError):f.check_receipt(p,ROOT)
 
+    def test_study_preserves_complete_population_and_window_dependence(self):
+        p=receipt();windows=f.check_receipt(p,ROOT)
+        for entry in p['studies']:
+            s=entry['study'];bars=windows[entry['source_window_sha256']]
+            actual=[i for i in range(2,len(bars)) if f.geometry(bars,i) is not None]
+            self.assertEqual([x['index'] for x in s['ledger']],actual)
+            self.assertEqual(s['strict_gap_count']+s['non_gap_decisions'],len(bars)-2)
+            self.assertEqual(s['history_eligible_gap_count']+s['insufficient_warmup_gap_count'],len(actual))
+            self.assertEqual(s['qualified_formation_count'],f.first_quality_case(bars)['qualified_count'])
+            self.assertGreater(s['overlapping_complete_outcome_pairs'],0)
+            self.assertTrue(s['reused_qualified_origin_groups'])
+            self.assertFalse(s['independent_holdout'])
+
+    def test_study_features_are_prefix_stable_and_censored_tails_stay_unknown(self):
+        p=receipt();windows=f.check_receipt(p,ROOT)
+        for entry in p['studies']:
+            s=entry['study'];bars=windows[entry['source_window_sha256']]
+            for row in s['ledger']:
+                i=row['index'];at_confirmation=f.study(bars[:i+1])['ledger'][-1]
+                for key in ('features','clock_eligible','quality'):
+                    self.assertEqual(at_confirmation[key],row[key])
+                self.assertIsNone(at_confirmation['five_bar_outcome'])
+                if i+5>=len(bars):
+                    self.assertIsNone(row['five_bar_outcome'])
+                    self.assertIsNone(row['directional_endpoint_change_pct'])
+            self.assertGreater(s['incomplete_five_bar_outcomes'],0)
+            self.assertEqual(sum(s['directional_endpoint_sign_counts'].values()),s['complete_five_bar_outcomes'])
+            self.assertEqual(s['contact_count']+s['no_contact_count'],s['complete_five_bar_outcomes'])
+            self.assertIsNone(s['simulated_trades'])
+            self.assertIsNone(s['account_drawdown'])
+            self.assertIsNone(s['win_probability'])
+
+    def test_study_rejects_forged_summary_omitted_or_duplicate_windows(self):
+        for kind in ('summary','row','omitted','duplicate'):
+            p=receipt()
+            if kind=='summary':p['studies'][0]['study']['contact_count']+=1
+            elif kind=='row':p['studies'][0]['study']['ledger'][0]['features']['low']+=1
+            elif kind=='omitted':p['studies'].pop()
+            else:p['studies'][2]=deepcopy(p['studies'][0])
+            with self.assertRaises(AssertionError):f.check_receipt(p,ROOT)
+
 
 if __name__=='__main__':unittest.main()

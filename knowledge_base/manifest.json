@@ -596,7 +596,34 @@
     },
     {
       "path": "knowledge_base/07_FVG_IMBALANCE/imbalance_event_studies_and_failures.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2178,
+      "sha256": "a8263f26e3eb4aa379fce2becc0a5b459fc9621712b4a8267b82265292f53f54",
+      "source_review": {
+        "status": "checked_primary_schema_and_immutable_native_minute_population_with_replayed_original_method",
+        "primary_sources": [
+          {
+            "url": "https://developers.binance.com/en/docs/catalog/core-trading-spot-trading/api/rest-api/market",
+            "checked": "2026-10-28",
+            "scope": "Native kline schema, open/close clocks, UTC request boundaries; not historical execution"
+          },
+          {
+            "url": "https://www.davidhbailey.com/dhbpapers/backtest-prob.pdf",
+            "checked": "2026-10-28",
+            "version_date": "2015-02-27",
+            "scope": "Primary multiple-search/backtest-overfitting warning only; no PBO metric computed"
+          },
+          {
+            "url": "https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/types-orders",
+            "checked": "2026-10-28",
+            "scope": "Stock-order price/execution distinctions; not Binance fill rules"
+          }
+        ],
+        "limitations": "All 354 three-bar decisions in three previously inspected 120-minute spot captures; 107 gaps, 102 complete and five censored horizons; 44 positive endpoints are not wins; 23 have no gap contact and seven follow same-bar contact/retirement. 122 overlapping complete-outcome pairs and reused origins retained. All 107 gaps narrower than hypothetical 30 bps friction, not a measured historical fee claim. No independent holdout, fills, net PnL, account drawdown, creator parity or runtime integration; WAIT and null probability.",
+        "reviewed_on": "2026-10-28",
+        "resolved_at_asia_karachi": "2026-10-28T10:07:21.526227+05:00"
+      }
     },
     {
       "path": "knowledge_base/08_INDICATORS_AND_ORDERFLOW/trend_and_momentum_indicators.md",
@@ -711,7 +738,7 @@
     {
       "path": "knowledge_base/07_FVG_IMBALANCE/fvg_observations_20261028.json",
       "kind": "fvg_cases",
-      "sha256": "f84878bbafe1edf50ba70dd05393f91bdeb0f4daa0f47d87cfc9541d710d88c4"
+      "sha256": "1e077997c222b31912dc3724794d6373aa3086dee6145eb82f55ce702d8d6218"
     }
   ],
   "scope_history": [

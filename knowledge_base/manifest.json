@@ -757,7 +757,42 @@
     },
     {
       "path": "knowledge_base/08_INDICATORS_AND_ORDERFLOW/dom_orderbooks_and_execution.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2165,
+      "sha256": "62f9315ecfc9172c954b11396a035db13cf18fc7a0ab02d807036e1b3dd8faf2",
+      "source_review": {
+        "status": "checked_primary_feed_specifications_and_three_official_historical_investigations",
+        "primary_sources": [
+          {
+            "url": "https://raw.githubusercontent.com/binance/binance-spot-api-docs/master/web-socket-streams.md",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://developers.binance.com/en/docs/catalog/core-trading-spot-trading/api/ws-streams/~",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/types-orders",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.sec.gov/news/studies/2010/marketevents-report.pdf",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.federalreserve.gov/econres/notes/feds-notes/retrospective-the-agency-mbs-market-on-october-15-2014-20200924.html",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.bis.org/publications/sterling-flash-event-7-october-2016.pdf",
+            "checked": "2026-10-28"
+          }
+        ],
+        "limitations": "Report-based 2010 equity/E-mini, 2014 Treasury/MBS and 2016 sterling cases, not new independent trading trials or downloaded historical DOM replays. Missing raw historical depth, queue positions, synchronized retail arrival logs and executable-size fills remain explicit. The 2010 report clock is not certified into machine UTC. The 2014 ET window is converted with historical New York timezone; 2016 BST crosses to prior UTC date. Current Binance bootstrap/update/gap rules are documented without delivered adapter or historical parity. No exact fill, return, probability, intent or guaranteed recovery inferred.",
+        "reviewed_on": "2026-10-28",
+        "resolved_at_asia_karachi": "2026-10-28T10:36:01.581331+05:00"
+      }
     },
     {
       "path": "knowledge_base/09_GLOBAL_MONEY_FLOW/dollar_gold_oil_and_equity_links.md",

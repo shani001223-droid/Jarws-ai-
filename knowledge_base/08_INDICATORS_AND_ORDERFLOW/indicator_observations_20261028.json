@@ -1,0 +1,369 @@
+{
+  "schema_version": "hoshi-v3-indicator-evidence-1",
+  "data_license": "CC BY-NC-SA 4.0",
+  "source_file": "knowledge_base/05_ICT_COMPLETE/ict_intraday_observations_20261028.json",
+  "source_file_sha256": "4e6b66fa819aa93c1b0aa7b10f76cce8716eb05039951b535d470d7bb5d9e602",
+  "use": "Retrospective original arithmetic diagnostics only; not vendor parity, model training, runtime retrieval or independent validation. Historical event and capture clocks remain in the immutable source.",
+  "momentum_cases": [
+    {
+      "source_window_sha256": "c830857cb8e96dbe1128df480468baca40e661f93f40d240b5739cd777a54405",
+      "diagnostic": {
+        "selection": "fixed_zero_based_index_60_without_indicator_or_outcome_filter",
+        "features": {
+          "method": "hoshi-finite-seed-indicator-snapshot-1",
+          "bar": {
+            "time": 1684135800000,
+            "close_time": 1684135859999,
+            "open": 27447.48,
+            "high": 27463.23,
+            "low": 27447.47,
+            "close": 27453.59
+          },
+          "seed_start": 1684132200000,
+          "seed_bars": 61,
+          "sma20": 27455.066,
+          "ema20": 27450.484505120978,
+          "rsi14": 49.791357826410454,
+          "rsi_state": "between_30_and_70",
+          "macd12_26": -6.9164030940846715,
+          "signal9": -7.385889001726487,
+          "histogram": 0.46948590764181564,
+          "atr14": 13.291726553491069,
+          "stochastic_fast_k14": 72.21024258760272,
+          "roc12_pct": 0.01949123149607157,
+          "band20_population_sigma": 20.284122953679503,
+          "band20_lower": 27414.49775409264,
+          "band20_upper": 27495.634245907357,
+          "earliest_after_close": 1684135860000,
+          "provider_arrival_time": null,
+          "vendor_parity_validated": false,
+          "decision": "WAIT",
+          "win_probability": null,
+          "orders_enabled": false
+        },
+        "shorter_history_same_instant": {
+          "method": "hoshi-finite-seed-indicator-snapshot-1",
+          "bar": {
+            "time": 1684135800000,
+            "close_time": 1684135859999,
+            "open": 27447.48,
+            "high": 27463.23,
+            "low": 27447.47,
+            "close": 27453.59
+          },
+          "seed_start": 1684133400000,
+          "seed_bars": 41,
+          "sma20": 27455.066,
+          "ema20": 27449.926011311625,
+          "rsi14": 49.98536098921644,
+          "rsi_state": "between_30_and_70",
+          "macd12_26": -4.96565661700879,
+          "signal9": -4.313970254034549,
+          "histogram": -0.6516863629742407,
+          "atr14": 13.263897336284447,
+          "stochastic_fast_k14": 72.21024258760272,
+          "roc12_pct": 0.01949123149607157,
+          "band20_population_sigma": 20.284122953679503,
+          "band20_lower": 27414.49775409264,
+          "band20_upper": 27495.634245907357,
+          "earliest_after_close": 1684135860000,
+          "provider_arrival_time": null,
+          "vendor_parity_validated": false,
+          "decision": "WAIT",
+          "win_probability": null,
+          "orders_enabled": false
+        },
+        "outcome": {
+          "horizon_bars": 5,
+          "available_at": 1684136160000,
+          "path": [
+            {
+              "time": 1684135860000,
+              "close_time": 1684135919999,
+              "open": 27453.59,
+              "high": 27453.59,
+              "low": 27435.0,
+              "close": 27437.84
+            },
+            {
+              "time": 1684135920000,
+              "close_time": 1684135979999,
+              "open": 27437.84,
+              "high": 27439.97,
+              "low": 27436.0,
+              "close": 27439.97
+            },
+            {
+              "time": 1684135980000,
+              "close_time": 1684136039999,
+              "open": 27439.98,
+              "high": 27440.09,
+              "low": 27439.98,
+              "close": 27440.08
+            },
+            {
+              "time": 1684136040000,
+              "close_time": 1684136099999,
+              "open": 27440.08,
+              "high": 27440.09,
+              "low": 27432.27,
+              "close": 27439.67
+            },
+            {
+              "time": 1684136100000,
+              "close_time": 1684136159999,
+              "open": 27439.67,
+              "high": 27439.67,
+              "low": 27426.71,
+              "close": 27436.04
+            }
+          ],
+          "raw_close_change_pct": -0.06392606577135806,
+          "fill_known": false,
+          "strategy_pnl": null
+        },
+        "independent_holdout": false
+      }
+    },
+    {
+      "source_window_sha256": "aff382cf41d418f5c6e61e1f0fdd049c96b0dd4cb3d5043207cdef4c434978b1",
+      "diagnostic": {
+        "selection": "fixed_zero_based_index_60_without_indicator_or_outcome_filter",
+        "features": {
+          "method": "hoshi-finite-seed-indicator-snapshot-1",
+          "bar": {
+            "time": 1704468600000,
+            "close_time": 1704468659999,
+            "open": 43690.64,
+            "high": 43718.83,
+            "low": 43628.35,
+            "close": 43638.05
+          },
+          "seed_start": 1704465000000,
+          "seed_bars": 61,
+          "sma20": 43725.4375,
+          "ema20": 43710.309012325764,
+          "rsi14": 42.28491942238887,
+          "rsi_state": "between_30_and_70",
+          "macd12_26": 3.2319514899572823,
+          "signal9": 11.546363609934549,
+          "histogram": -8.314412119977266,
+          "atr14": 59.23711990314239,
+          "stochastic_fast_k14": 33.336256028058465,
+          "roc12_pct": -0.14891381921613434,
+          "band20_population_sigma": 53.179708148408885,
+          "band20_lower": 43619.078083703185,
+          "band20_upper": 43831.796916296815,
+          "earliest_after_close": 1704468660000,
+          "provider_arrival_time": null,
+          "vendor_parity_validated": false,
+          "decision": "WAIT",
+          "win_probability": null,
+          "orders_enabled": false
+        },
+        "shorter_history_same_instant": {
+          "method": "hoshi-finite-seed-indicator-snapshot-1",
+          "bar": {
+            "time": 1704468600000,
+            "close_time": 1704468659999,
+            "open": 43690.64,
+            "high": 43718.83,
+            "low": 43628.35,
+            "close": 43638.05
+          },
+          "seed_start": 1704466200000,
+          "seed_bars": 41,
+          "sma20": 43725.4375,
+          "ema20": 43707.91575148429,
+          "rsi14": 40.83909033719459,
+          "rsi_state": "between_30_and_70",
+          "macd12_26": 11.840007593295013,
+          "signal9": 25.023554550369095,
+          "histogram": -13.183546957074082,
+          "atr14": 56.328617513783065,
+          "stochastic_fast_k14": 33.336256028058465,
+          "roc12_pct": -0.14891381921613434,
+          "band20_population_sigma": 53.179708148408885,
+          "band20_lower": 43619.078083703185,
+          "band20_upper": 43831.796916296815,
+          "earliest_after_close": 1704468660000,
+          "provider_arrival_time": null,
+          "vendor_parity_validated": false,
+          "decision": "WAIT",
+          "win_probability": null,
+          "orders_enabled": false
+        },
+        "outcome": {
+          "horizon_bars": 5,
+          "available_at": 1704468960000,
+          "path": [
+            {
+              "time": 1704468660000,
+              "close_time": 1704468719999,
+              "open": 43638.06,
+              "high": 43718.99,
+              "low": 43631.1,
+              "close": 43698.04
+            },
+            {
+              "time": 1704468720000,
+              "close_time": 1704468779999,
+              "open": 43698.04,
+              "high": 43725.22,
+              "low": 43688.82,
+              "close": 43719.21
+            },
+            {
+              "time": 1704468780000,
+              "close_time": 1704468839999,
+              "open": 43719.21,
+              "high": 43743.68,
+              "low": 43711.1,
+              "close": 43743.68
+            },
+            {
+              "time": 1704468840000,
+              "close_time": 1704468899999,
+              "open": 43743.68,
+              "high": 43764.99,
+              "low": 43731.1,
+              "close": 43741.12
+            },
+            {
+              "time": 1704468900000,
+              "close_time": 1704468959999,
+              "open": 43741.11,
+              "high": 43748.19,
+              "low": 43724.0,
+              "close": 43731.11
+            }
+          ],
+          "raw_close_change_pct": 0.21325425861145053,
+          "fill_known": false,
+          "strategy_pnl": null
+        },
+        "independent_holdout": false
+      }
+    },
+    {
+      "source_window_sha256": "36a388a683cdfc85821ad1a86aba710a632e1cf4758427df58e460bd4ed13d8e",
+      "diagnostic": {
+        "selection": "fixed_zero_based_index_60_without_indicator_or_outcome_filter",
+        "features": {
+          "method": "hoshi-finite-seed-indicator-snapshot-1",
+          "bar": {
+            "time": 1723141800000,
+            "close_time": 1723141859999,
+            "open": 59561.26,
+            "high": 59615.04,
+            "low": 59556.01,
+            "close": 59607.46
+          },
+          "seed_start": 1723138200000,
+          "seed_bars": 61,
+          "sma20": 59496.0775,
+          "ema20": 59516.70515318327,
+          "rsi14": 59.79953020265408,
+          "rsi_state": "between_30_and_70",
+          "macd12_26": 23.27875966260035,
+          "signal9": 11.544810970553765,
+          "histogram": 11.733948692046585,
+          "atr14": 57.52745132754614,
+          "stochastic_fast_k14": 93.64682100399283,
+          "roc12_pct": 0.2435647397365459,
+          "band20_population_sigma": 61.369507646305735,
+          "band20_lower": 59373.33848470739,
+          "band20_upper": 59618.81651529261,
+          "earliest_after_close": 1723141860000,
+          "provider_arrival_time": null,
+          "vendor_parity_validated": false,
+          "decision": "WAIT",
+          "win_probability": null,
+          "orders_enabled": false
+        },
+        "shorter_history_same_instant": {
+          "method": "hoshi-finite-seed-indicator-snapshot-1",
+          "bar": {
+            "time": 1723141800000,
+            "close_time": 1723141859999,
+            "open": 59561.26,
+            "high": 59615.04,
+            "low": 59556.01,
+            "close": 59607.46
+          },
+          "seed_start": 1723139400000,
+          "seed_bars": 41,
+          "sma20": 59496.0775,
+          "ema20": 59518.87511901766,
+          "rsi14": 59.4394395467051,
+          "rsi_state": "between_30_and_70",
+          "macd12_26": 19.744343581565772,
+          "signal9": 6.022077482636666,
+          "histogram": 13.722266098929106,
+          "atr14": 57.72019531213959,
+          "stochastic_fast_k14": 93.64682100399283,
+          "roc12_pct": 0.2435647397365459,
+          "band20_population_sigma": 61.369507646305735,
+          "band20_lower": 59373.33848470739,
+          "band20_upper": 59618.81651529261,
+          "earliest_after_close": 1723141860000,
+          "provider_arrival_time": null,
+          "vendor_parity_validated": false,
+          "decision": "WAIT",
+          "win_probability": null,
+          "orders_enabled": false
+        },
+        "outcome": {
+          "horizon_bars": 5,
+          "available_at": 1723142160000,
+          "path": [
+            {
+              "time": 1723141860000,
+              "close_time": 1723141919999,
+              "open": 59607.45,
+              "high": 59629.14,
+              "low": 59602.5,
+              "close": 59625.18
+            },
+            {
+              "time": 1723141920000,
+              "close_time": 1723141979999,
+              "open": 59625.18,
+              "high": 59650.4,
+              "low": 59619.02,
+              "close": 59644.89
+            },
+            {
+              "time": 1723141980000,
+              "close_time": 1723142039999,
+              "open": 59644.9,
+              "high": 59644.9,
+              "low": 59606.67,
+              "close": 59609.59
+            },
+            {
+              "time": 1723142040000,
+              "close_time": 1723142099999,
+              "open": 59609.6,
+              "high": 59696.44,
+              "low": 59609.6,
+              "close": 59664.48
+            },
+            {
+              "time": 1723142100000,
+              "close_time": 1723142159999,
+              "open": 59664.48,
+              "high": 59684.21,
+              "low": 59629.22,
+              "close": 59650.78
+            }
+          ],
+          "raw_close_change_pct": 0.0726754671311225,
+          "fill_known": false,
+          "strategy_pnl": null
+        },
+        "independent_holdout": false
+      }
+    }
+  ]
+}

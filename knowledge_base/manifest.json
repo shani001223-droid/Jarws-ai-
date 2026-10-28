@@ -627,7 +627,54 @@
     },
     {
       "path": "knowledge_base/08_INDICATORS_AND_ORDERFLOW/trend_and_momentum_indicators.md",
-      "status": "pending"
+      "status": "source_checked",
+      "reviewed_on": "2026-10-28",
+      "body_word_count": 2248,
+      "sha256": "1ca85a3bd3b132a12d95c1cc0ebca03b0e321c86948220fa15456a7d5ed89cdf",
+      "source_review": {
+        "status": "checked_primary_implementation_and_provider_materials_with_native_minute_replay",
+        "primary_sources": [
+          {
+            "url": "https://raw.githubusercontent.com/TA-Lib/ta-lib/v0.6.4/src/ta_func/ta_RSI.c",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://raw.githubusercontent.com/TA-Lib/ta-lib/v0.6.4/src/ta_func/ta_EMA.c",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://raw.githubusercontent.com/TA-Lib/ta-lib/v0.6.4/src/ta_func/ta_ADX.c",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.fidelity.com/learning-center/trading-investing/technical-analysis/technical-indicator-guide/RSI",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.fidelity.com/learning-center/trading-investing/technical-analysis/technical-indicator-guide/macd",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.fidelity.com/learning-center/trading-investing/technical-analysis/technical-indicator-guide/atr",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.fidelity.com/learning-center/trading-investing/technical-analysis/technical-indicator-guide/fast-stochastic",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.bollingerbands.com/bollinger-band-rules",
+            "checked": "2026-10-28"
+          },
+          {
+            "url": "https://www.fidelity.com/viewpoints/active-investor/average-directional-index-ADX",
+            "checked": "2026-10-28"
+          }
+        ],
+        "limitations": "Three existing historical BTCUSDT spot minute captures, fixed index 60 without signal/outcome selection. Finite seeded original arithmetic, not TA-Lib/platform parity; shorter history flips the May MACD histogram sign. SMA/EMA, RSI, MACD, ROC, ATR, stochastic position and population-sigma bands replayed; ADX explained but no historical ADX value claimed. No untouched holdout, live quote, fills, strategy PnL, probability or runtime integration. Source timestamps are bar-open labels; post-close availability and unknown provider arrival are separate.",
+        "reviewed_on": "2026-10-28",
+        "resolved_at_asia_karachi": "2026-10-28T10:14:23.787341+05:00"
+      }
     },
     {
       "path": "knowledge_base/08_INDICATORS_AND_ORDERFLOW/vwap_and_volume_profile.md",
@@ -739,6 +786,11 @@
       "path": "knowledge_base/07_FVG_IMBALANCE/fvg_observations_20261028.json",
       "kind": "fvg_cases",
       "sha256": "1e077997c222b31912dc3724794d6373aa3086dee6145eb82f55ce702d8d6218"
+    },
+    {
+      "path": "knowledge_base/08_INDICATORS_AND_ORDERFLOW/indicator_observations_20261028.json",
+      "kind": "indicator_cases",
+      "sha256": "c13b545fa8c91d85dce6c440c6c523723019ec5fe974e0caefa971a0cf79f6eb"
     }
   ],
   "scope_history": [

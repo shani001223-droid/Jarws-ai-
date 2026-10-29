@@ -35,9 +35,15 @@ def bind_mouth_overlay(plan: object, sprites: object, voice_timing: object,
             or len(voice_timing["plan"]["cues"]) != 3
             or type(voice_timing.get("plan_sha256")) is not str
             or audio_energy.get("voice_timing_sha256") != voice_timing["plan_sha256"]
+            or type(voice_timing["plan"].get("audio_sha256")) is not str
+            or type(audio_energy.get("audio_sha256")) is not str
+            or audio_energy["audio_sha256"] != voice_timing["plan"]["audio_sha256"]
+            or type(audio_energy.get("schema_version")) is not int
+            or audio_energy["schema_version"] != 1
             or type(audio_energy.get("shots")) is not list
             or len(audio_energy["shots"]) != 3
-            or audio_energy.get("frame_rate") != 12):
+            or type(audio_energy.get("frame_rate")) is not int
+            or audio_energy["frame_rate"] != 12):
         raise MouthOverlayError("Bound voice timing and WAV energy are required.")
     bound = []
     for index, (entry, source, cue, activity) in enumerate(zip(
@@ -73,6 +79,11 @@ def bind_mouth_overlay(plan: object, sprites: object, voice_timing: object,
                     raise MouthOverlayError("Mouth sprite extends outside the frame.")
         except (UnidentifiedImageError, OSError, ValueError, Image.DecompressionBombError):
             raise MouthOverlayError("Mouth sprite could not be decoded safely.") from None
+        if (type(cue) is not dict or type(activity) is not dict
+                or type(cue.get("start_ms")) is not int
+                or type(cue.get("end_ms")) is not int
+                or not index * 10000 <= cue["start_ms"] < cue["end_ms"] <= (index + 1) * 10000):
+            raise MouthOverlayError("Bound dialogue cue interval is invalid.")
         windows = activity.get("energy_windows_ms")
         if type(windows) is not list or len(windows) > 120:
             raise MouthOverlayError("Invalid bounded audio activity windows.")
@@ -81,7 +92,7 @@ def bind_mouth_overlay(plan: object, sprites: object, voice_timing: object,
         for window in windows:
             if (type(window) is not list or len(window) != 2
                     or any(type(v) is not int for v in window)
-                    or not index * 10000 <= window[0] < window[1] <= (index + 1) * 10000
+                    or not cue["start_ms"] <= window[0] < window[1] <= cue["end_ms"]
                     or window[0] < previous):
                 raise MouthOverlayError("Audio activity windows must be ordered and in-shot.")
             normalized.append(list(window))

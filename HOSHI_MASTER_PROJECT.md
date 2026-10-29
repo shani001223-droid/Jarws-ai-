@@ -1,6 +1,6 @@
 # HOSHI AI — ONE MASTER PROJECT
 
-## 29 October 2026 — Task 59 selected-frame PNG preview export (PARTIAL; CI pending)
+## 29 October 2026 — Task 59 selected-frame PNG preview export (PARTIAL; source/CI verified)
 
 The **same one Hoshi project**, same existing branch and sole draft PR #29 now includes `cloud_backend/anime_thumbnail_export.py` and operator-only `scripts/export_hoshi_anime_thumbnail.py`. After an operator manually selects one of the three *actual decoded MP4* candidates, the new bounded offline stage **revalidates the original MP4, all three contact-sheet pixels/labels, the complete selection record and SHA-256 source evidence** before exporting a **real 1280×720 PNG** plus private provenance JSON in a fresh create-only directory. It uses the selected original 480×270 frame, upscaled with Lanczos; this does **not** create new image detail. It does not render Urdu/Devanagari typography or claim a finished thumbnail, independent source rights, reviewer identity, owner approval, upload or publication. The editorial note is a human attestation, **not cryptographically authenticated**. The existing master and sole 60-task roadmap remain the only project/scoreboard; corrected reusable Hindi/Urdu multi-agent Anime Studio mission, 30–60s private pilot and no fake Room Life/standalone 300-episode sprint remain unchanged.
 

@@ -4,7 +4,7 @@
 
 - Added `cloud_backend/anime_audio_energy.py` and `tests/test_anime_audio_energy.py`; the private 30-second MP4 renderer optionally emits a SHA-bound 12 FPS waveform-RMS activity handoff after operator voice-cue validation. Three speaker/shot windows are clamped to each supplied cue. All-zero WAV produces no active windows; altered audio hashes and invalid intervals fail closed. Existing real MP4/CLI test now checks the manifest's silence/identity/no-lip-sync flags.
 - This is **audio-energy timing metadata**, not transcription, phoneme alignment, mouth animation, synchronized Hindi/Urdu dubbing, rights verification, or actual 2D/3D character animation. Music/noise can produce energy windows. No external API, account write, upload, production deployment or phone QA.
-- **Verification pending at this checkpoint:** do not count the code as fully CI-verified until exact-head Python/Node/Playwright and Docker GitHub Actions both succeed. Task 59 remains unchecked; **48/60** remains the sole canonical scoreboard.
+- **Verified source/test/document head `6677fc410691964340142b05c78af6c60d77e47d`:** [full Python/Node/Playwright/Chromium CI passed](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40795760260) and [Docker/Uvicorn smoke passed](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40795760271). This establishes code/test verification only, not live Hindi/Urdu speech or lip-sync. Task 59 remains unchecked; **48/60** remains the sole canonical scoreboard.
 
 
 ## 29 October 2026 — voice-cue-timed SRT export (development, Task 59 partial)

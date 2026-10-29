@@ -93,10 +93,10 @@ def _voice_cues_to_srt(voice_timing: dict) -> bytes:
             return f"{hours:02d}:{minutes:02d}:{seconds:02d},{millis:03d}"
 
         blocks.append(
-            f'{index}\\n{timestamp(cue["start_ms"])} --> '
-            f'{timestamp(cue["end_ms"])}\\n{cue["text"]}\\n'
+            f'{index}\n{timestamp(cue["start_ms"])} --> '
+            f'{timestamp(cue["end_ms"])}\n{cue["text"]}\n'
         )
-    return ("\\n".join(blocks) + "\\n").encode("utf-8")
+    return ("\n".join(blocks) + "\n").encode("utf-8")
 
 
 def _validate_audio(audio: bytes) -> None:

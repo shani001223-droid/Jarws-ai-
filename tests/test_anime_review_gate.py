@@ -32,7 +32,7 @@ class PrivateReviewGateTests(unittest.TestCase):
         result = subprocess.run(
             ["ffmpeg", "-hide_banner", "-loglevel", "error", "-nostdin",
              "-f", "lavfi", "-i", "color=c=navy:s=480x270:r=12:d=30",
-             "-f", "lavfi", "-i", "anullsrc=r=16000:cl=mono",
+             "-f", "lavfi", "-i", "sine=frequency=440:sample_rate=16000:duration=30",
              "-t", "30", "-c:v", "libx264", "-preset", "ultrafast",
              "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "32k",
              "-shortest", "-y", str(target)],
@@ -106,6 +106,38 @@ class PrivateReviewGateTests(unittest.TestCase):
         self.assertFalse(result["lip_sync_independently_verified"])
         self.assertFalse(result["physical_phone_qa_verified"])
         self.assertEqual(self.record(verdict="needs_revision")["verdict"], "needs_revision")
+
+    def test_encoded_caption_energy_is_measured_not_speech_verified(self):
+        result = self.record()
+        qc = result["encoded_audio_subtitle_qc"]
+        self.assertEqual(qc["status"], "encoded_audio_energy_measured_not_speech_recognition")
+        self.assertEqual(len(qc["caption_windows"]), 3)
+        self.assertTrue(qc["all_caption_windows_have_audio_energy"])
+        self.assertFalse(qc["spoken_words_independently_verified"])
+        self.assertFalse(qc["speech_language_independently_verified"])
+        self.assertTrue(qc["music_or_noise_can_trigger"])
+
+    def test_silent_encoded_audio_blocks_private_pass_but_allows_revision(self):
+        with tempfile.TemporaryDirectory() as directory:
+            silent_path = Path(directory) / "silent.mp4"
+            result = subprocess.run(
+                ["ffmpeg", "-hide_banner", "-loglevel", "error", "-nostdin",
+                 "-i", str(Path(self.media_dir.name) / "real_private_draft.mp4"),
+                 "-af", "volume=0", "-c:v", "copy", "-c:a", "aac",
+                 "-b:a", "32k", "-y", str(silent_path)],
+                capture_output=True, timeout=30, check=False)
+            self.assertEqual(result.returncode, 0, result.stderr[:300])
+            silent_video = silent_path.read_bytes()
+        manifest = copy.deepcopy(self.manifest)
+        manifest["video_sha256"] = sha(silent_video)
+        manifest["mouth_visual_review"]["source_video_sha256"] = sha(silent_video)
+        with self.assertRaisesRegex(AnimeReviewGateError, "Silent caption interval"):
+            self.record(manifest=manifest, video=silent_video)
+        result = self.record(manifest=manifest, video=silent_video,
+                             verdict="needs_revision")
+        self.assertFalse(result["encoded_audio_subtitle_qc"][
+            "all_caption_windows_have_audio_energy"])
+        self.assertFalse(result["publication_permitted"])
 
     def test_rejects_uninspected_or_unbounded_review(self):
         for overrides in (dict(inspected=False), dict(inspected=1),

@@ -1,5 +1,12 @@
 # HOSHI — 60-Task Autonomous Development Roadmap
 
+## 29 October 2026 — Task 59 measurable decoded-frame review evidence (PARTIAL; not accepted)
+
+- Existing operator-only mouth review now includes decoded RGB frame SHA-256 and per-shot inside/outside-mouth-ROI pixel-change measurements between actual encoded active and quiet frames. If a shot lacks both kinds, it explicitly reports `not_comparable`. Pixel changes can arise from camera motion/background/compression and **are not evidence of correct anatomical mouth alignment or phoneme-level lip-sync**. Manual review and owner approval remain required; no automatic acceptance.
+- Source/test commits `26900ce5`, `98c285f2`; verify latest branch CI and Docker outcomes before marking source checks green. Physical Realme Note 50 QA, original Hindi/Urdu voice, true facial consistency, professional animation, release rights and production acceptance are still pending.
+- **Task 59 stays unchecked. Canonical scoreboard: 48/60, 12 pending.** Existing draft PR #29 only; no new repo, tracker, automation, deployment, external upload, purchase, key changes or real trading.
+
+
 ## 29 October 2026 — Task 59 exact decoded-frame review sampling (PARTIAL; verified code, not acceptance)
 
 - The same existing private Anime Studio mouth-review sheet now samples **actual 12 FPS encoded frame indices**, not arbitrary timestamps that might miss or falsely label a short mouth-activity interval. It distinguishes `active`, `quiet`, `no_activity`, `no_renderable_activity`, and `no_quiet_interval` without inventing a silent frame. The manifest carries exact `frame_index`, per-sample expected visibility and the explicit warning that metadata is not pixel-verified on arbitrary art. Real H.264/AAC regression checks synthetic mouth-open red pixels versus a quiet decoded frame; short sub-frame windows and all-active windows are covered.

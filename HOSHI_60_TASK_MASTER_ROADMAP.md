@@ -1,5 +1,10 @@
 # HOSHI — 60-Task Autonomous Development Roadmap
 
+## 29 October 2026 — Task 59 repeated AAC pulse rejection (PARTIAL; CI pending)
+
+- The **same existing Hoshi Anime Studio** now measures longest contiguous active 20ms decoded AAC frame run in each validated SRT window, requiring >=150ms plus >=5% active-frame occupancy and normalized RMS >=0.001 for a local `private_qc_pass`. The regression encodes a real 30-second H.264/AAC clip with fifteen isolated 80ms beeps per shot; even a high total activity fraction must not imply sustained dialogue. Source/test commits `ee43b068824b991fa58bd9b9049d2dda015d7dd3`, `7e03c7a7662cc33d6cfa51a856250701074d0829`. **Full Python/JS/Playwright and Docker CI pending for exact test head**; no verified claim yet. This is conservative acoustic occupancy, not speech recognition, phoneme alignment, actual Urdu/Hindi dialogue or human approval.
+- **Canonical checkbox count remains 48/60, 12 pending; Task 59 unchecked.** Code-complete for this narrow QC patch only; CI-verified pending; real-world verified no. Physical Realme Note 50, OpenJarvis server, approved Flora assets, original anime production and production acceptance remain blocked. Existing draft PR #29 only; no production merge/deploy, upload, purchases, secrets or trades.
+
 ## 29 October 2026 — Task 59 encoded AAC occupancy vs transient energy (PARTIAL; verified code, not production acceptance)
 
 - Existing private Anime Studio pilot: `cloud_backend/anime_audio_subtitle_qc.py` now decodes the actual H.264/AAC MP4 and records **20 ms per-frame audio activity fraction** alongside caption-window RMS. A local `private_qc_pass` requires both RMS ≥ 0.001 and at least 2% of caption frames at RMS ≥ 0.003; otherwise the reviewer may record `needs_revision` without fabricated audio acceptance. An 80 ms beep in each 10-second caption window can pass the former energy-only check but now fails the minimum occupancy gate. Real 30-second AAC remux regression, continuous-tone positive and muted-track negative cases are included. No ASR, new service, publishing or uploader.

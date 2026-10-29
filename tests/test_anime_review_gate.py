@@ -136,6 +136,10 @@ class PrivateReviewGateTests(unittest.TestCase):
         self.assertTrue(qc["music_or_noise_can_trigger"])
         self.assertTrue(qc["all_caption_windows_clear_of_possible_hard_clipping"])
         self.assertTrue(qc["hard_clipping_detection_is_conservative_not_proof"])
+        self.assertTrue(qc["all_caption_windows_clear_of_possible_dc_bias"])
+        self.assertTrue(qc["activity_uses_dc_removed_ac_rms"])
+        self.assertTrue(all(abs(w["dc_offset_normalized"]) < 0.05
+                            for w in qc["caption_windows"]))
         self.assertTrue(all(not w["possible_hard_clipping_detected"]
                             for w in qc["caption_windows"]))
 
@@ -180,6 +184,42 @@ class PrivateReviewGateTests(unittest.TestCase):
             self.assertTrue(window["possible_hard_clipping_detected"])
             self.assertGreater(window["near_full_scale_sample_fraction"], 0.10)
             self.assertGreater(window["decoded_rms"], 0.75)
+        self.assertFalse(review["publication_permitted"])
+
+    def test_encoded_constant_dc_is_not_accepted_as_dialogue(self):
+        # AAC can preserve a large constant offset. Raw RMS and even AAC
+        # encoding artifacts are NOT evidence of speech; a private pass must
+        # reject strong DC bias. This is an actual H.264/AAC remux, not a mock.
+        with tempfile.TemporaryDirectory() as directory:
+            video_path = Path(directory) / "dc_biased.mp4"
+            process = subprocess.run(
+                ["ffmpeg", "-hide_banner", "-loglevel", "error", "-nostdin",
+                 "-i", str(Path(self.media_dir.name) / "real_private_draft.mp4"),
+                 "-f", "lavfi", "-i", "aevalsrc=0.6:s=16000:d=30",
+                 "-map", "0:v:0", "-map", "1:a:0",
+                 "-c:v", "copy", "-c:a", "aac", "-b:a", "32k",
+                 "-t", "30", "-y", str(video_path)],
+                capture_output=True, timeout=30, check=False)
+            self.assertEqual(process.returncode, 0, process.stderr[:300])
+            encoded_video = video_path.read_bytes()
+            media_qc = _verify_review_media(video_path, shutil.which("ffprobe"))
+        manifest = copy.deepcopy(self.manifest)
+        manifest["video_sha256"] = sha(encoded_video)
+        manifest["mouth_visual_review"]["source_video_sha256"] = sha(encoded_video)
+        manifest["mouth_visual_review"]["media_qc"] = media_qc
+        with self.assertRaisesRegex(AnimeReviewGateError, "DC-biased AAC"):
+            self.record(manifest=manifest, video=encoded_video)
+        review = self.record(manifest=manifest, video=encoded_video,
+                             verdict="needs_revision")
+        qc = review["encoded_audio_subtitle_qc"]
+        self.assertFalse(qc["all_caption_windows_clear_of_possible_dc_bias"])
+        self.assertTrue(qc["activity_uses_dc_removed_ac_rms"])
+        self.assertTrue(qc["dc_bias_detection_is_conservative_not_speech_proof"])
+        for window in qc["caption_windows"]:
+            self.assertGreater(window["decoded_rms"], 0.5)
+            self.assertGreater(abs(window["dc_offset_normalized"]), 0.05)
+            self.assertTrue(window["possible_dc_bias_detected"])
+            self.assertIn("ac_rms_dc_removed", window)
         self.assertFalse(review["publication_permitted"])
 
     def test_brief_encoded_beeps_cannot_pass_as_sustained_caption_audio(self):

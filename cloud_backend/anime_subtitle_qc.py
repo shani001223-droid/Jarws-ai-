@@ -22,8 +22,13 @@ _TIMING = re.compile(
 
 
 def _digest_plan(plan: dict) -> str:
-    data = json.dumps(plan, ensure_ascii=False, sort_keys=True,
-                      separators=(",", ":"), allow_nan=False).encode("utf-8")
+    try:
+        data = json.dumps(plan, ensure_ascii=False, sort_keys=True,
+                          separators=(",", ":"), allow_nan=False).encode("utf-8")
+    except (ValueError, TypeError, UnicodeError):
+        raise AnimeSubtitleQCError("Noncanonical subtitle source plan.") from None
+    if len(data) > 12_000:
+        raise AnimeSubtitleQCError("Oversized subtitle source plan.")
     return hashlib.sha256(data).hexdigest()
 
 

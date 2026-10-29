@@ -160,6 +160,11 @@ class MouthSpritePreviewTests(unittest.TestCase):
         with self.assertRaises(MouthOverlayError):
             bind_mouth_overlay(self.plan, self.sprites, voice, altered,
                                rights_attested=True)
+        altered_voice = copy.deepcopy(voice)
+        altered_voice["plan"]["cues"][0] = None
+        with self.assertRaises(MouthOverlayError):
+            bind_mouth_overlay(self.plan, self.sprites, altered_voice, energy,
+                               rights_attested=True)
         altered = copy.deepcopy(energy)
         altered["frame_rate"] = True
         with self.assertRaises(MouthOverlayError):

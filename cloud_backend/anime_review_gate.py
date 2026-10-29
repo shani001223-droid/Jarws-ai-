@@ -16,6 +16,9 @@ from PIL import Image
 
 from cloud_backend.anime_visual_review import AnimeVisualReviewError, _verify_review_media
 from cloud_backend.anime_subtitle_qc import AnimeSubtitleQCError, validate_private_subtitles
+from cloud_backend.anime_audio_subtitle_qc import (
+    AnimeAudioSubtitleQCError, measure_encoded_caption_audio,
+)
 
 
 class AnimeReviewGateError(ValueError):
@@ -92,6 +95,20 @@ def record_private_review(manifest: dict, video: bytes, subtitles: bytes,
             "status", "codec", "audio_codec", "decoded_video_frames",
             "width", "height", "frame_rate", "duration_seconds")):
         raise AnimeReviewGateError("Manifest media-QC metadata differs from actual MP4.")
+    # Re-decode the *actual encoded AAC* and measure energy in each validated
+    # caption interval. A silent soundtrack cannot earn a private QC pass,
+    # although it may be recorded honestly as needs_revision. Energy can be
+    # music or noise; it is NOT independent proof of spoken Hindi/Urdu words.
+    try:
+        with TemporaryDirectory(prefix="hoshi-caption-audio-") as directory:
+            video_path = Path(directory) / "review.mp4"
+            video_path.write_bytes(video)
+            ffmpeg = shutil.which("ffmpeg")
+            audio_qc = measure_encoded_caption_audio(video_path, manifest, ffmpeg)
+    except (AnimeAudioSubtitleQCError, OSError):
+        raise AnimeReviewGateError("Independent encoded caption audio QC failed.") from None
+    if verdict == "private_qc_pass" and not audio_qc["all_caption_windows_have_audio_energy"]:
+        raise AnimeReviewGateError("Silent caption interval requires private revision.")
     try:
         with Image.open(BytesIO(sheet)) as image:
             if image.format != "PNG" or image.size != (1440, 592):
@@ -147,6 +164,7 @@ def record_private_review(manifest: dict, video: bytes, subtitles: bytes,
         "source_video_sha256": _sha(video),
         "source_subtitles_sha256": _sha(subtitles),
         "subtitle_qc": subtitle_qc,
+        "encoded_audio_subtitle_qc": audio_qc,
         "source_review_sheet_sha256": _sha(sheet),
         "owner_approved": False,
         "release_authorized": False,

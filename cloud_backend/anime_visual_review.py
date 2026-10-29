@@ -14,7 +14,7 @@ import shutil
 import subprocess
 import tempfile
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageChops, ImageDraw, ImageStat
 
 MAX_VIDEO_BYTES = 15_000_000
 MAX_FRAME_BYTES = 3_000_000
@@ -148,6 +148,41 @@ def _verify_review_media(path: Path, ffprobe: str) -> dict:
         raise AnimeVisualReviewError("Could not independently verify review MP4.") from None
 
 
+
+def _pair_pixel_evidence(active: Image.Image, quiet: Image.Image,
+                         rectangle: tuple[int, int, int, int]) -> dict:
+    """Measure actual decoded RGB differences, not anatomical alignment.
+
+    Camera pans, lighting, backgrounds and compression can all cause changes;
+    this metric must never be interpreted as proof of a correctly placed mouth.
+    """
+    if (active.mode != "RGB" or quiet.mode != "RGB"
+            or active.size != (FRAME_WIDTH, FRAME_HEIGHT)
+            or quiet.size != (FRAME_WIDTH, FRAME_HEIGHT)):
+        raise AnimeVisualReviewError("Comparable RGB decoded frames required.")
+    x, y, width, height = rectangle
+    if (any(type(v) is not int for v in rectangle)
+            or not 0 <= x < FRAME_WIDTH or not 0 <= y < FRAME_HEIGHT
+            or width < 1 or height < 1
+            or x + width > FRAME_WIDTH or y + height > FRAME_HEIGHT):
+        raise AnimeVisualReviewError("Invalid mouth ROI for pixel comparison.")
+    difference = ImageChops.difference(active, quiet)
+    full_sums = ImageStat.Stat(difference).sum
+    roi_sums = ImageStat.Stat(
+        difference.crop((x, y, x + width, y + height))).sum
+    roi_pixels = width * height
+    outside_pixels = FRAME_WIDTH * FRAME_HEIGHT - roi_pixels
+    roi_mean = sum(roi_sums) / (3 * roi_pixels)
+    outside_mean = ((sum(full_sums) - sum(roi_sums)) /
+                    (3 * outside_pixels)) if outside_pixels else 0.0
+    return {
+        "status": "sampled_pair_pixel_delta_not_alignment_proof",
+        "roi_mean_absolute_rgb_delta": round(roi_mean, 3),
+        "outside_roi_mean_absolute_rgb_delta": round(outside_mean, 3),
+        "roi_change_detected": roi_mean >= 10.0,
+        "frame_pair_is_not_lip_sync_or_alignment_proof": True,
+    }
+
 def build_mouth_review_sheet(video_mp4: bytes, mouth_overlay: dict,
                              *, ffmpeg_binary: str | None = None) -> dict:
     """Return an actual-frame PNG contact sheet plus manual-review metadata.
@@ -164,6 +199,7 @@ def build_mouth_review_sheet(video_mp4: bytes, mouth_overlay: dict,
         raise AnimeVisualReviewError("Local FFmpeg and ffprobe are required for visual review.")
     sheet = Image.new("RGB", (FRAME_WIDTH * 3, (FRAME_HEIGHT + 26) * 2), (12, 15, 24))
     draw = ImageDraw.Draw(sheet)
+    decoded_frames = []
     try:
         with tempfile.TemporaryDirectory(prefix="hoshi-mouth-review-") as directory:
             path = Path(directory) / "draft.mp4"
@@ -181,6 +217,8 @@ def build_mouth_review_sheet(video_mp4: bytes, mouth_overlay: dict,
                     if decoded.format != "PNG" or decoded.size != (FRAME_WIDTH, FRAME_HEIGHT):
                         raise AnimeVisualReviewError("Unexpected decoded review frame format.")
                     frame = decoded.convert("RGB")
+                decoded_frames.append(frame)
+                sample["decoded_frame_rgb_sha256"] = hashlib.sha256(frame.tobytes()).hexdigest()
                 col, row = idx // 2, idx % 2
                 left, top = col * FRAME_WIDTH, row * (FRAME_HEIGHT + 26)
                 sheet.paste(frame, (left, top + 26))
@@ -195,6 +233,23 @@ def build_mouth_review_sheet(video_mp4: bytes, mouth_overlay: dict,
         if isinstance(exc, AnimeVisualReviewError):
             raise
         raise AnimeVisualReviewError("Could not generate bounded visual review sheet.") from None
+    pixel_evidence = []
+    for shot_index in range(3):
+        active_sample, quiet_sample = samples[2 * shot_index:2 * shot_index + 2]
+        if (active_sample["sample_kind"] != "active"
+                or quiet_sample["sample_kind"] != "quiet"
+                or not active_sample["expected_sprite_visible"]
+                or quiet_sample["expected_sprite_visible"]):
+            evidence = {
+                "status": "not_comparable_no_active_and_quiet_encoded_frames",
+                "frame_pair_is_not_lip_sync_or_alignment_proof": True,
+            }
+        else:
+            evidence = _pair_pixel_evidence(
+                decoded_frames[2 * shot_index], decoded_frames[2 * shot_index + 1],
+                (active_sample["x"], active_sample["y"],
+                 active_sample["width"], active_sample["height"]))
+        pixel_evidence.append({"shot_id": active_sample["shot_id"], **evidence})
     stream = BytesIO()
     sheet.save(stream, format="PNG")
     png = stream.getvalue()
@@ -206,6 +261,8 @@ def build_mouth_review_sheet(video_mp4: bytes, mouth_overlay: dict,
                      ("x", "y", "width", "height")} for s in samples],
         "source_video_sha256": hashlib.sha256(video_mp4).hexdigest(),
         "media_qc": media_qc,
+        "decoded_frame_pair_pixel_evidence": pixel_evidence,
+        "pixel_evidence_is_not_visual_alignment_proof": True,
         "frame_sampling_basis": "exact_decoded_frame_index_12fps",
         "expected_visibility_is_metadata_not_pixel_verified": True,
         "review_source": "decoded_mp4_frames_with_operator_sprite_position_guides",

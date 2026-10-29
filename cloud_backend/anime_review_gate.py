@@ -107,6 +107,11 @@ def record_private_review(manifest: dict, video: bytes, subtitles: bytes,
             audio_qc = measure_encoded_caption_audio(video_path, manifest, ffmpeg)
     except (AnimeAudioSubtitleQCError, OSError):
         raise AnimeReviewGateError("Independent encoded caption audio QC failed.") from None
+    # Backing music can satisfy an energy heuristic even when no words are
+    # spoken. Until a separate voice-stem check exists, music-backed drafts
+    # cannot receive a private dialogue QC pass (revision is still recordable).
+    if verdict == "private_qc_pass" and manifest.get("source_music_sha256") is not None:
+        raise AnimeReviewGateError("Music-backed audio cannot establish independent dialogue QC; record needs_revision.")
     if verdict == "private_qc_pass" and not audio_qc["all_caption_windows_have_sustained_audio"]:
         raise AnimeReviewGateError("Silent caption interval or insufficient sustained audio requires private revision.")
     try:

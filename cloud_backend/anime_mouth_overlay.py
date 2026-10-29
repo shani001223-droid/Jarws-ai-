@@ -49,6 +49,12 @@ def bind_mouth_overlay(plan: object, sprites: object, voice_timing: object,
     for index, (entry, source, cue, activity) in enumerate(zip(
             plan["sprites"], sprites, voice_timing["plan"]["cues"],
             audio_energy["shots"])):
+        if (type(cue) is not dict or type(activity) is not dict
+                or type(cue.get("shot_id")) is not str
+                or type(cue.get("speaker_id")) is not str
+                or type(activity.get("shot_id")) is not str
+                or type(activity.get("speaker_id")) is not str):
+            raise MouthOverlayError("Bound voice cue or audio activity is invalid.")
         if type(entry) is not dict or set(entry) != {
                 "shot_id", "speaker_id", "png_sha256", "x", "y"}:
             raise MouthOverlayError("Mouth sprite entry schema is invalid.")

@@ -116,6 +116,10 @@ class VoiceTimingTests(unittest.TestCase):
                          result["source_audio_sha256"])
         self.assertEqual(result["voice_timing_handoff"]["plan"]["cues"][0]["text"], "سلام")
         self.assertFalse(result["hindi_urdu_voice_recorded"])
+        self.assertEqual(result["audio_energy_handoff"]["frames_analyzed"], 360)
+        self.assertEqual(result["audio_energy_handoff"]["active_frames"], 0)
+        self.assertEqual(result["audio_energy_handoff"]["audio_sha256"], result["source_audio_sha256"])
+        self.assertFalse(result["audio_energy_handoff"]["lip_sync_generated"])
         self.assertFalse(result["uploaded"])
         self.assertEqual(result["subtitle_timing_source"],
                          "operator_supplied_voice_cues_not_audio_verified")

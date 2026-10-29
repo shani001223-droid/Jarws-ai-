@@ -1,6 +1,6 @@
 # HOSHI AI — ONE MASTER PROJECT
 
-## 29 October 2026 — corrected consolidated mission and Task 59 repeated-burst audio QC (PARTIAL; CI pending)
+## 29 October 2026 — corrected consolidated mission and Task 59 repeated-burst audio QC (PARTIAL; source/CI verified)
 
 The **single existing Hoshi project** continues on `hoshi/dnd-foundation-20261026` under sole draft PR #29. This master file remains the canonical vision/architecture/safety record; `HOSHI_60_TASK_MASTER_ROADMAP.md` is the **only** checkbox scoreboard. The corrected Anime Studio mission is a reusable private multi-agent Hindi/Urdu production workflow (manager, original story, consistent characters/backgrounds, storyboard, animation/VFX, voice/lip-sync, original/licensed sound, editing, subtitles, thumbnails/SEO, QC and owner-approval-gated uploader), starting with a genuine offline 30–60-second pilot. No more standalone 300-episode screenplay generation merely to tick Task 56; no fake Room Life, duplicate project or tracker. Prioritize real voice/latency/Realme Note 50 QA, bounded authenticated jobs, privacy, approved Flora asset-to-MP4, and grounded game/trading checks. Do not auto-upload, publish, trade, purchase, change secrets, merge or deploy production.
 

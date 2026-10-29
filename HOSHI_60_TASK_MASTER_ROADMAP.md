@@ -1,5 +1,12 @@
 # HOSHI — 60-Task Autonomous Development Roadmap
 
+## 29 October 2026 — Task 59: offline WAV energy windows (PARTIAL, NOT ACCEPTED)
+
+- Added `cloud_backend/anime_audio_energy.py` and `tests/test_anime_audio_energy.py`; the private 30-second MP4 renderer optionally emits a SHA-bound 12 FPS waveform-RMS activity handoff after operator voice-cue validation. Three speaker/shot windows are clamped to each supplied cue. All-zero WAV produces no active windows; altered audio hashes and invalid intervals fail closed. Existing real MP4/CLI test now checks the manifest's silence/identity/no-lip-sync flags.
+- This is **audio-energy timing metadata**, not transcription, phoneme alignment, mouth animation, synchronized Hindi/Urdu dubbing, rights verification, or actual 2D/3D character animation. Music/noise can produce energy windows. No external API, account write, upload, production deployment or phone QA.
+- **Verification pending at this checkpoint:** do not count the code as fully CI-verified until exact-head Python/Node/Playwright and Docker GitHub Actions both succeed. Task 59 remains unchecked; **48/60** remains the sole canonical scoreboard.
+
+
 ## 29 October 2026 — voice-cue-timed SRT export (development, Task 59 partial)
 
 The same offline Anime Studio renderer now uses **validated operator-supplied voice cue intervals** to write the real UTF-8 SRT sidecar when `--voice-cues-json` is supplied with its required exact storyboard/WAV SHA bindings and rights attestations. Previously, subtitles were always displayed for whole 10-second shots even when operator voice cues occupied only part of each shot. The new SRT displays the original caption only within its corresponding verified-schema cue window, leaves gaps blank, preserves Hindi/Urdu/Roman Urdu Unicode and SHA-256 manifest integrity, and labels `subtitle_timing_source=operator_supplied_voice_cues_not_audio_verified`. Without a cue plan, the original fixed 10-second SRT remains unchanged. Real MP4/CLI integration and negative-input regression assertions were added to `tests/test_anime_voice_timing.py`.

@@ -13,7 +13,7 @@ import shutil
 import subprocess
 from tempfile import TemporaryDirectory
 
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageDraw, UnidentifiedImageError
 
 from cloud_backend.anime_thumbnail import (
     FRAME_INDICES, HEIGHT, MAX_VIDEO_BYTES, WIDTH, _verify_video,
@@ -84,6 +84,8 @@ def record_private_thumbnail_selection(manifest: dict, video_mp4: bytes,
         ffprobe, ffmpeg = shutil.which("ffprobe"), shutil.which("ffmpeg")
         if not ffprobe or not ffmpeg:
             raise AnimeThumbnailSelectionError("Local offline FFmpeg/ffprobe required.")
+        expected_sheet = Image.new("RGB", (WIDTH * 3, HEIGHT + 30), (12, 15, 24))
+        expected_draw = ImageDraw.Draw(expected_sheet)
         with TemporaryDirectory(prefix="hoshi-thumbnail-select-") as tmp:
             path = Path(tmp) / "draft.mp4"
             path.write_bytes(video_mp4)
@@ -105,10 +107,14 @@ def record_private_thumbnail_selection(manifest: dict, video_mp4: bytes,
                     frame = image.convert("RGB")
                     frame.load()
                 expected = _sha(frame.tobytes())
-                crop = sheet.crop((i * WIDTH, 30, (i + 1) * WIDTH, HEIGHT + 30))
-                if (entry["decoded_frame_rgb_sha256"] != expected
-                        or crop.tobytes() != frame.tobytes()):
-                    raise AnimeThumbnailSelectionError("Contact pixels differ from actual decoded video frames.")
+                expected_sheet.paste(frame, (i * WIDTH, 30))
+                expected_draw.text((i * WIDTH + 10, 9),
+                                   f"SHOT {i + 1} | frame {FRAME_INDICES[i]}",
+                                   fill=(240, 240, 240))
+                if entry["decoded_frame_rgb_sha256"] != expected:
+                    raise AnimeThumbnailSelectionError("Frame digest differs from actual decoded video.")
+            if sheet.tobytes() != expected_sheet.tobytes():
+                raise AnimeThumbnailSelectionError("Contact pixels or shot labels differ from actual decoded video.")
     except (OSError, subprocess.TimeoutExpired, AnimeThumbnailError,
             UnidentifiedImageError, SyntaxError, ValueError) as exc:
         if isinstance(exc, AnimeThumbnailSelectionError):

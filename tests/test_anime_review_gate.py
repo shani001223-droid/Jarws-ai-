@@ -167,6 +167,52 @@ class PrivateReviewGateTests(unittest.TestCase):
                             for w in qc["caption_windows"]))
         self.assertFalse(result["publication_permitted"])
 
+    def test_repeated_encoded_beeps_cannot_pass_as_dialogue_like_audio(self):
+        # Fifteen separated 80ms tones per caption exceed the 5% occupancy
+        # floor, but none lasts 150ms. Energy and occupancy alone must not
+        # manufacture a private pass. This is not actual speech recognition.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            wav_path = root / "repeated_beeps.wav"
+            video_path = root / "repeated_beeps.mp4"
+            pcm = array("h", [0]) * (30 * 16000)
+            for shot in range(3):
+                for pulse in range(15):
+                    start = int((shot * 10 + 0.5 + pulse * 0.6) * 16000)
+                    for i in range(1280):
+                        pcm[start + i] = int(
+                            11000 * math.sin(2 * math.pi * 440 * i / 16000))
+            with wave.open(str(wav_path), "wb") as output:
+                output.setnchannels(1)
+                output.setsampwidth(2)
+                output.setframerate(16000)
+                output.writeframes(pcm.tobytes())
+            process = subprocess.run(
+                ["ffmpeg", "-hide_banner", "-loglevel", "error", "-nostdin",
+                 "-i", str(Path(self.media_dir.name) / "real_private_draft.mp4"),
+                 "-i", str(wav_path), "-map", "0:v:0", "-map", "1:a:0",
+                 "-c:v", "copy", "-c:a", "aac", "-b:a", "32k",
+                 "-t", "30", "-y", str(video_path)],
+                capture_output=True, timeout=30, check=False)
+            self.assertEqual(process.returncode, 0, process.stderr[:300])
+            video = video_path.read_bytes()
+            qc_media = _verify_review_media(video_path, shutil.which("ffprobe"))
+        manifest = copy.deepcopy(self.manifest)
+        manifest["video_sha256"] = sha(video)
+        manifest["mouth_visual_review"]["source_video_sha256"] = sha(video)
+        manifest["mouth_visual_review"]["media_qc"] = qc_media
+        with self.assertRaisesRegex(AnimeReviewGateError, "insufficient sustained audio"):
+            self.record(manifest=manifest, video=video)
+        review = self.record(manifest=manifest, video=video, verdict="needs_revision")
+        audio = review["encoded_audio_subtitle_qc"]
+        self.assertFalse(audio["all_caption_windows_have_sustained_audio"])
+        self.assertEqual(audio["minimum_longest_contiguous_active_audio_ms"], 150)
+        for window in audio["caption_windows"]:
+            self.assertGreater(window["active_audio_frame_fraction"], 0.05)
+            self.assertLess(window["longest_contiguous_active_audio_ms"], 150)
+            self.assertTrue(window["audible_energy_detected"])
+            self.assertFalse(window["sustained_audio_detected"])
+
     def test_silent_encoded_audio_blocks_private_pass_but_allows_revision(self):
         with tempfile.TemporaryDirectory() as directory:
             silent_path = Path(directory) / "silent.mp4"

@@ -148,6 +148,9 @@ def render_private_titled_thumbnail(preview: dict, font_bytes: bytes, *,
         output = BytesIO()
         canvas.save(output, format="PNG")
         rendered = output.getvalue()
+    except AnimeThumbnailTitleError:
+        # Preserve deliberate fail-closed geometry/blank-ink errors for review.
+        raise
     except (OSError, ValueError, TypeError, UnidentifiedImageError,
             Image.DecompressionBombError):
         raise AnimeThumbnailTitleError("Local complex-text font or image render failed.") from None

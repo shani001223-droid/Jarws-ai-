@@ -27,6 +27,10 @@ MIN_ACTIVE_FRAME_FRACTION = 0.05
 # Repeated short beeps can exceed total frame occupancy without any
 # continuous dialogue-like interval. This is still only a signal heuristic.
 MIN_LONGEST_ACTIVE_RUN_MS = 150
+# Heavy near-full-scale plateaus can indicate a hard-limited/clipped mix.
+# This is a conservative audio-quality warning, NOT proof of clipping or speech.
+NEAR_FULL_SCALE_THRESHOLD = 0.99
+MAX_NEAR_FULL_SCALE_SAMPLE_FRACTION = 0.10
 
 
 def measure_encoded_caption_audio(video_path: Path, manifest: dict, ffmpeg: str) -> dict:
@@ -82,6 +86,13 @@ def measure_encoded_caption_audio(video_path: Path, manifest: dict, ffmpeg: str)
                 raise AnimeAudioSubtitleQCError("Empty decoded caption window.")
             rms = math.sqrt(sum(int(value) ** 2 for value in samples) /
                             len(samples)) / 32768.0
+            peak = max(abs(int(value)) for value in samples) / 32768.0
+            near_full_scale_fraction = sum(
+                abs(int(value)) >= NEAR_FULL_SCALE_THRESHOLD * 32768
+                for value in samples) / len(samples)
+            possible_hard_clipping = (
+                rms >= 0.75 and
+                near_full_scale_fraction >= MAX_NEAR_FULL_SCALE_SAMPLE_FRACTION)
             # Measure occupancy in independent 20 ms PCM frames so a single
             # high-amplitude transient cannot masquerade as sustained audio.
             frame_size = SAMPLE_RATE * ACTIVE_FRAME_MS // 1000
@@ -108,6 +119,9 @@ def measure_encoded_caption_audio(video_path: Path, manifest: dict, ffmpeg: str)
                 "start_ms": start_ms,
                 "end_ms": end_ms,
                 "decoded_rms": round(rms, 6),
+                "peak_normalized": round(peak, 6),
+                "near_full_scale_sample_fraction": round(near_full_scale_fraction, 4),
+                "possible_hard_clipping_detected": possible_hard_clipping,
                 "audible_energy_detected": rms >= AUDIBLE_RMS_THRESHOLD,
                 "active_audio_frame_fraction": round(active_fraction, 4),
                 "longest_contiguous_active_audio_ms": longest_active_run_ms,
@@ -121,11 +135,16 @@ def measure_encoded_caption_audio(video_path: Path, manifest: dict, ffmpeg: str)
             "active_frame_threshold_normalized_rms": ACTIVE_FRAME_RMS_THRESHOLD,
             "minimum_active_frame_fraction": MIN_ACTIVE_FRAME_FRACTION,
             "minimum_longest_contiguous_active_audio_ms": MIN_LONGEST_ACTIVE_RUN_MS,
+            "near_full_scale_threshold": NEAR_FULL_SCALE_THRESHOLD,
+            "maximum_near_full_scale_sample_fraction": MAX_NEAR_FULL_SCALE_SAMPLE_FRACTION,
             "caption_windows": windows_qc,
             "all_caption_windows_have_audio_energy": all(
                 item["audible_energy_detected"] for item in windows_qc),
             "all_caption_windows_have_sustained_audio": all(
                 item["sustained_audio_detected"] for item in windows_qc),
+            "all_caption_windows_clear_of_possible_hard_clipping": all(
+                not item["possible_hard_clipping_detected"] for item in windows_qc),
+            "hard_clipping_detection_is_conservative_not_proof": True,
             "spoken_words_independently_verified": False,
             "speech_language_independently_verified": False,
             "phoneme_sync_verified": False,

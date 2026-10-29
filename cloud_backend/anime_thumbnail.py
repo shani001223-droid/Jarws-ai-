@@ -11,6 +11,7 @@ import json
 from pathlib import Path
 import shutil
 import subprocess
+import unicodedata
 from tempfile import TemporaryDirectory
 
 from PIL import Image, ImageDraw, UnidentifiedImageError
@@ -24,13 +25,21 @@ WIDTH, HEIGHT, FPS = 480, 270, 12
 FRAME_INDICES = (60, 180, 300)
 MAX_VIDEO_BYTES = 15_000_000
 MAX_FRAME_BYTES = 3_000_000
-FORBIDDEN_TITLE_CHARS = "<>\u202e\u202d\u2066\u2067\u2068\u2069"
+# Reject escape-like text and direction/line controls that can mislead a human
+# reviewing title metadata. ZWNJ/ZWJ are retained for Urdu/Hindi shaping.
+FORBIDDEN_TITLE_CHARS = "<>\\\u202e\u202d\u2066\u2067\u2068\u2069"
+_ALLOWED_JOINERS = {"\u200c", "\u200d"}
 
 
 def _validate_title(title: str) -> None:
     if (type(title) is not str or not 1 <= len(title) <= 120
             or title != title.strip()
-            or any(ord(ch) < 32 or ch in FORBIDDEN_TITLE_CHARS for ch in title)):
+            or unicodedata.normalize("NFC", title) != title
+            or any(ch in FORBIDDEN_TITLE_CHARS
+                   or (unicodedata.category(ch).startswith("C")
+                       and ch not in _ALLOWED_JOINERS)
+                   or unicodedata.category(ch) in ("Zl", "Zp")
+                   for ch in title)):
         raise AnimeThumbnailError("Safe nonempty Hindi/Urdu/Roman Urdu title required.")
 
 

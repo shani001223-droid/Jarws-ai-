@@ -55,6 +55,8 @@ def _require_title_font_cmap(title: str, font_bytes: bytes) -> None:
                for codepoint in required):
             raise AnimeThumbnailTitleError(
                 "Font lacks required title characters; supply a licensed script-capable font.")
+    except AnimeThumbnailTitleError:
+        raise
     except (TTLibError, OSError, ValueError, TypeError, AssertionError):
         raise AnimeThumbnailTitleError("Invalid or unsupported local title font.") from None
     finally:

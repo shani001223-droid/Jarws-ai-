@@ -15,6 +15,7 @@ from tempfile import TemporaryDirectory
 from PIL import Image
 
 from cloud_backend.anime_visual_review import AnimeVisualReviewError, _verify_review_media
+from cloud_backend.anime_subtitle_qc import AnimeSubtitleQCError, validate_private_subtitles
 
 
 class AnimeReviewGateError(ValueError):
@@ -61,6 +62,12 @@ def record_private_review(manifest: dict, video: bytes, subtitles: bytes,
             or review.get("visual_alignment_verified") is not False
             or review.get("manual_review_required") is not True):
         raise AnimeReviewGateError("Draft hashes, review evidence or unapproved status mismatch.")
+    # The SRT hash alone does not prove captions or timestamps are meaningful:
+    # validate the exact bytes against the storyboard and operator cue digest.
+    try:
+        subtitle_qc = validate_private_subtitles(manifest, subtitles)
+    except AnimeSubtitleQCError:
+        raise AnimeReviewGateError("Private SRT does not match bound storyboard/cues.") from None
     qc = review.get("media_qc")
     if (type(qc) is not dict or qc.get("status") !=
             "independently_probed_media_not_visual_approval"
@@ -139,6 +146,7 @@ def record_private_review(manifest: dict, video: bytes, subtitles: bytes,
         "source_manifest_sha256": _sha(manifest_bytes),
         "source_video_sha256": _sha(video),
         "source_subtitles_sha256": _sha(subtitles),
+        "subtitle_qc": subtitle_qc,
         "source_review_sheet_sha256": _sha(sheet),
         "owner_approved": False,
         "release_authorized": False,

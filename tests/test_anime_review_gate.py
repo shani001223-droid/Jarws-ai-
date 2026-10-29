@@ -22,8 +22,27 @@ def sha(data):
 
 
 class PrivateReviewGateTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        # Real, local H.264/AAC media is necessary: the review gate must not
+        # accept an arbitrary byte string merely because its manifest hashes match.
+        cls.media_dir = tempfile.TemporaryDirectory(prefix="hoshi-qc-test-")
+        cls.addClassCleanup(cls.media_dir.cleanup)
+        target = Path(cls.media_dir.name) / "real_private_draft.mp4"
+        result = subprocess.run(
+            ["ffmpeg", "-hide_banner", "-loglevel", "error", "-nostdin",
+             "-f", "lavfi", "-i", "color=c=navy:s=480x270:r=12:d=30",
+             "-f", "lavfi", "-i", "anullsrc=r=16000:cl=mono",
+             "-t", "30", "-c:v", "libx264", "-preset", "ultrafast",
+             "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "32k",
+             "-shortest", "-y", str(target)],
+            capture_output=True, timeout=60, check=False)
+        if result.returncode:
+            raise AssertionError(f"Local real-media fixture failed: {result.stderr[:400]!r}")
+        cls.encoded_video = target.read_bytes()
+
     def setUp(self):
-        self.video = b"encoded-private-video" * 30
+        self.video = self.encoded_video
         self.srt = "1\n00:00:01,000 --> 00:00:02,000\nسلام\n".encode("utf-8")
         out = BytesIO()
         Image.new("RGB", (1440, 592), "navy").save(out, "PNG")
@@ -49,7 +68,8 @@ class PrivateReviewGateTests(unittest.TestCase):
                 "manual_review_required": True,
                 "media_qc": {"status": "independently_probed_media_not_visual_approval",
                              "codec": "h264", "audio_codec": "aac",
-                             "decoded_video_frames": 360, "width": 480, "height": 270},
+                             "decoded_video_frames": 360, "width": 480, "height": 270,
+                             "frame_rate": 12, "duration_seconds": 30.0},
                 "samples": samples, "decoded_frame_pair_pixel_evidence": evidence,
             },
         }
@@ -102,6 +122,20 @@ class PrivateReviewGateTests(unittest.TestCase):
             self.record(video=self.video + b"tampered")
         with self.assertRaises(AnimeReviewGateError):
             self.record(sheet=b"invalid PNG")
+
+    def test_rejects_fake_mp4_even_with_matching_sha_and_claimed_qc(self):
+        fake = b"this is not encoded MP4 data" * 30
+        forged = copy.deepcopy(self.manifest)
+        forged["video_sha256"] = sha(fake)
+        forged["mouth_visual_review"]["source_video_sha256"] = sha(fake)
+        with self.assertRaisesRegex(AnimeReviewGateError, "independent media verification"):
+            self.record(manifest=forged, video=fake)
+
+    def test_rejects_manifest_media_qc_spoof(self):
+        forged = copy.deepcopy(self.manifest)
+        forged["mouth_visual_review"]["media_qc"]["duration_seconds"] = 29.999
+        with self.assertRaisesRegex(AnimeReviewGateError, "metadata differs"):
+            self.record(manifest=forged)
 
     def test_comparison_gaps_are_explicit_and_missing_movement_blocks_pass(self):
         bad = copy.deepcopy(self.manifest)

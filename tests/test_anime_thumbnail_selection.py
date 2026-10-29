@@ -272,6 +272,19 @@ class PrivateThumbnailSelectionTests(unittest.TestCase):
                 render_private_titled_thumbnail(
                     forged, font, font_rights_attested=True)
 
+    def test_title_metadata_rejects_spoofing_but_preserves_urdu_hindi_joiners(self):
+        from cloud_backend.anime_thumbnail import AnimeThumbnailError, _validate_title
+        for unsafe in ("Unsafe\\nTitle", "Unsafe\nTitle", "Unsafe\u2028Title",
+                       "Unsafe\u2029Title", "Unsafe\u202aTitle",
+                       "Unsafe\u2060Title", "Unsafe\ud800Title",
+                       "Cafe\u0301", "Bad\x7fTitle"):
+            with self.subTest(unsafe=repr(unsafe)), self.assertRaises(AnimeThumbnailError):
+                _validate_title(unsafe)
+        for safe in ("نئی کہانی", "नई कहानी", "Raat Ki Kahani",
+                     "می\u200cخواهم", "क्\u200dष"):
+            with self.subTest(safe=safe):
+                _validate_title(safe)
+
     def test_titled_cli_real_mp4_create_only_and_no_upload(self):
         from PIL import features, ImageFont
         if not features.check("raqm"):

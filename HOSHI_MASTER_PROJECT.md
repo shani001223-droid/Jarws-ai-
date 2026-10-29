@@ -1,5 +1,12 @@
 # HOSHI AI — ONE MASTER PROJECT
 
+## 29 October 2026 — voice-cue-timed SRT export (development, Task 59 partial)
+
+The same offline Anime Studio renderer now uses **validated operator-supplied voice cue intervals** to write the real UTF-8 SRT sidecar when `--voice-cues-json` is supplied with its required exact storyboard/WAV SHA bindings and rights attestations. Previously, subtitles were always displayed for whole 10-second shots even when operator voice cues occupied only part of each shot. The new SRT displays the original caption only within its corresponding verified-schema cue window, leaves gaps blank, preserves Hindi/Urdu/Roman Urdu Unicode and SHA-256 manifest integrity, and labels `subtitle_timing_source=operator_supplied_voice_cues_not_audio_verified`. Without a cue plan, the original fixed 10-second SRT remains unchanged. Real MP4/CLI integration and negative-input regression assertions were added to `tests/test_anime_voice_timing.py`.
+
+**Scope:** this is real timed subtitle-file generation, **not** ASR, audio transcription, synthesized Hindi/Urdu speech, proof the WAV matches the words, mouth animation, visual character consistency, or finished anime. Task 59 remains unchecked, 48/60 canonical score unchanged. Verify the latest branch head's full CI and Docker checks before calling this code test-verified. No production merge/deploy, public upload, purchase, new repo/PR, or real trade.
+
+
 ## 29 October 2026 — private shot-by-shot voice cue timing handoff (development only)
 
 The existing Hoshi Anime Studio 30-second animatic accepts optional `--voice-cues-json` **only alongside** a validated `--storyboard-json`, caller-owned 30-second `--audio-wav`, and the existing explicit image/audio rights attestations. New `cloud_backend/anime_voice_timing.py` binds exactly three operator-authored voice cues to the exact WAV SHA-256, storyboard plan SHA-256, language, original caption text, shot ID, a referenced speaker/character ID and strict within-shot millisecond timing. This prevents stale audio, cross-shot/cross-character cue mismatches, out-of-window timings, and claims of successful automatic dubbing. The returned manifest includes `voice_timing_handoff` with `lip_sync_generated=false`, `voice_language_verified=false` and `owner_approved=false`. It **does not** analyze the WAV to prove that any words were spoken or lip-sync mouths; timestamps are operator-provided metadata only. This is a private offline render handoff, not a voice AI, account uploader, production release or real-device test.

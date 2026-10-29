@@ -178,6 +178,8 @@ def render_private_animatic(stills: list[bytes] | tuple[bytes, ...],
                             image_rights_attested: bool = False,
                             audio_wav: bytes | None = None,
                             audio_rights_attested: bool = False,
+                            music_wav: bytes | None = None,
+                            music_rights_attested: bool = False,
                             camera_moves: list[str] | tuple[str, ...] | None = None,
                             storyboard_handoff: dict | None = None,
                             voice_timing_plan: dict | None = None,
@@ -198,6 +200,12 @@ def render_private_animatic(stills: list[bytes] | tuple[bytes, ...],
         raise AnimePilotError("Audio and its explicit rights attestation must match.")
     if audio_wav is not None:
         _validate_audio(audio_wav)
+    if type(music_rights_attested) is not bool:
+        raise AnimePilotError("Music rights attestation must be boolean.")
+    if (music_wav is None) != (not music_rights_attested):
+        raise AnimePilotError("Music and its explicit rights attestation must match.")
+    if music_wav is not None:
+        _validate_audio(music_wav)
     if type(stills) not in (list, tuple) or len(stills) != 3:
         raise AnimePilotError("Exactly three original stills are required.")
     if camera_moves is None:
@@ -262,18 +270,37 @@ def render_private_animatic(stills: list[bytes] | tuple[bytes, ...],
                     sprite_path.write_bytes(source)
                     cmd += ["-loop", "1", "-framerate", str(FPS),
                             "-t", str(SHOT_SECONDS), "-i", str(sprite_path)]
+            audio_index = 6 if mouth_overlay is not None else 3
             if audio_wav is not None:
                 wav_path = root / "audio.wav"
                 wav_path.write_bytes(audio_wav)
                 cmd += ["-i", str(wav_path)]
-            cmd += ["-filter_complex", _camera_filter(camera_moves, mouth_overlay),
-                    "-map", "[v]"]
-            if audio_wav is not None:
-                cmd += ["-map", "6:a:0" if mouth_overlay is not None else "3:a:0"]
+            if music_wav is not None:
+                music_path = root / "original_music.wav"
+                music_path.write_bytes(music_wav)
+                cmd += ["-i", str(music_path)]
+            graph = _camera_filter(camera_moves, mouth_overlay)
+            # Music is an operator-owned, quiet backing track. It is not
+            # evidence of dialogue, rights clearance or a professional mix.
+            if music_wav is not None:
+                music_index = audio_index + int(audio_wav is not None)
+                if audio_wav is not None:
+                    graph += (f";[{audio_index}:a:0]volume=1.0[voice];"
+                              f"[{music_index}:a:0]volume=0.15[music];"
+                              "[voice][music]amix=inputs=2:duration=first:"
+                              "dropout_transition=0:normalize=0,"
+                              "alimiter=limit=0.95[a]")
+                else:
+                    graph += f";[{music_index}:a:0]volume=0.15[a]"
+            cmd += ["-filter_complex", graph, "-map", "[v]"]
+            if music_wav is not None:
+                cmd += ["-map", "[a]"]
+            elif audio_wav is not None:
+                cmd += ["-map", f"{audio_index}:a:0"]
             cmd += ["-frames:v", str(DURATION_SECONDS * FPS), "-r", str(FPS),
                     "-c:v", "libx264", "-threads", "2", "-preset", "ultrafast",
                     "-crf", "32", "-pix_fmt", "yuv420p"]
-            if audio_wav is None:
+            if audio_wav is None and music_wav is None:
                 cmd += ["-an"]
             else:
                 cmd += ["-c:a", "aac", "-b:a", "64k"]
@@ -284,7 +311,7 @@ def render_private_animatic(stills: list[bytes] | tuple[bytes, ...],
                 raise AnimePilotError("Offline animatic encoding failed.")
             if not 0 < output.stat().st_size <= MAX_MP4_BYTES:
                 raise AnimePilotError("Encoded MP4 exceeds the size limit.")
-            _probe(output, ffprobe, audio_wav is not None)
+            _probe(output, ffprobe, audio_wav is not None or music_wav is not None)
             mp4 = output.read_bytes()
     except (OSError, subprocess.TimeoutExpired):
         raise AnimePilotError("Offline encoding failed or timed out.") from None
@@ -298,6 +325,10 @@ def render_private_animatic(stills: list[bytes] | tuple[bytes, ...],
         "source_image_sha256": [digest for _, digest in images],
         "source_audio_sha256": (hashlib.sha256(audio_wav).hexdigest()
                                 if audio_wav is not None else None),
+        "source_music_sha256": (hashlib.sha256(music_wav).hexdigest()
+                                if music_wav is not None else None),
+        "music_gain": 0.15 if music_wav is not None else None,
+        "music_artistic_mix_verified": False,
         "duration_seconds": DURATION_SECONDS,
         "resolution": [WIDTH, HEIGHT],
         "frame_rate": FPS,
@@ -315,7 +346,10 @@ def render_private_animatic(stills: list[bytes] | tuple[bytes, ...],
         "full_character_animation": False,
         "hindi_urdu_voice_recorded": False,
         "subtitles_embedded": False,
-        "audio_status": ("caller_attested_wav_unverified" if audio_wav is not None
+        "audio_status": ("caller_attested_voice_and_music_wavs_unverified"
+                         if audio_wav is not None and music_wav is not None
+                         else "caller_attested_wav_unverified" if audio_wav is not None
+                         else "caller_attested_music_wav_unverified" if music_wav is not None
                          else "silent_no_music"),
         "source_rights_independently_verified": False,
         "owner_approved": False,

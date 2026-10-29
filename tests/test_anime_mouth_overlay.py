@@ -22,6 +22,8 @@ from cloud_backend.anime_mouth_overlay import (
     MouthOverlayError, bind_mouth_overlay, sprite_enable_expression,
 )
 from cloud_backend.anime_pilot_animatic import AnimePilotError, render_private_animatic
+from cloud_backend.anime_visual_review import (AnimeVisualReviewError,
+                                               build_mouth_review_sheet)
 from cloud_backend.anime_storyboard_handoff import bind_storyboard_handoff
 from cloud_backend.anime_voice_timing import bind_voice_timing_handoff
 
@@ -231,6 +233,91 @@ class MouthSpritePreviewTests(unittest.TestCase):
             self.assertNotEqual(completed.returncode, 0)
             self.assertIn("Mouth overlays require", completed.stderr)
             self.assertFalse((root / "not-created").exists())
+
+    @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"),
+                         "Real FFmpeg/ffprobe required")
+    def test_private_review_sheet_decodes_mp4_and_remains_unapproved(self):
+        rendered = render_private_animatic(
+            self.stills, self.captions, image_rights_attested=True,
+            audio_wav=self.wav, audio_rights_attested=True,
+            storyboard_handoff=self.storyboard, voice_timing_plan=self.cues,
+            mouth_overlay_plan=self.plan, mouth_sprites=self.sprites,
+            mouth_rights_attested=True)
+        review = build_mouth_review_sheet(
+            rendered["video_mp4"], rendered["mouth_overlay_handoff"])
+        self.assertEqual(review["source_video_sha256"], rendered["video_sha256"])
+        self.assertEqual(hashlib.sha256(review["png_bytes"]).hexdigest(),
+                         review["png_sha256"])
+        self.assertEqual(len(review["samples"]), 6)
+        self.assertEqual(review["samples"][0]["sample_kind"], "active")
+        self.assertEqual(review["samples"][1]["sample_kind"], "quiet")
+        self.assertEqual(review["samples"][2]["sample_kind"], "no_activity")
+        self.assertFalse(review["visual_alignment_verified"])
+        self.assertFalse(review["owner_approved"])
+        self.assertTrue(review["manual_review_required"])
+        with Image.open(BytesIO(review["png_bytes"])) as contact:
+            self.assertEqual(contact.size, (1440, 592))
+            self.assertEqual(contact.format, "PNG")
+
+    def test_review_rejects_bad_video_and_spoofed_coordinates(self):
+        voice, energy = self._bound()
+        bound = bind_mouth_overlay(self.plan, self.sprites, voice, energy,
+                                   rights_attested=True)
+        with self.assertRaises(AnimeVisualReviewError):
+            build_mouth_review_sheet(b"bad", bound)
+        for key, value in (("x", True), ("x", -1), ("width", 1000)):
+            bad = copy.deepcopy(bound)
+            bad["sprites"][0][key] = value
+            with self.subTest(key=key), self.assertRaises(AnimeVisualReviewError):
+                build_mouth_review_sheet(b"x" * 200, bad)
+        bad = copy.deepcopy(bound)
+        bad["sprites"][0]["energy_windows_ms"] = [[-1, 200]]
+        with self.assertRaises(AnimeVisualReviewError):
+            build_mouth_review_sheet(b"x" * 200, bad)
+
+    @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"),
+                         "Real FFmpeg/ffprobe required")
+    def test_cli_review_sheet_is_private_and_create_only(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            args = [sys.executable, "-m", "scripts.render_hoshi_anime_animatic"]
+            for index, still in enumerate(self.stills):
+                path = root / f"shot{index}.png"
+                path.write_bytes(still)
+                args.extend(["--shot", str(path)])
+            for caption in self.captions:
+                args.extend(["--caption", caption])
+            wav_path = root / "voice.wav"
+            wav_path.write_bytes(self.wav)
+            storyboard_path = root / "storyboard.json"
+            storyboard_path.write_text(json.dumps(self.storyboard), encoding="utf-8")
+            cues_path = root / "cues.json"
+            cues_path.write_text(json.dumps(self.cues), encoding="utf-8")
+            mouth_path = root / "mouth.json"
+            mouth_path.write_text(json.dumps(self.plan), encoding="utf-8")
+            args.extend(["--audio-wav", str(wav_path), "--audio-rights-attested",
+                         "--storyboard-json", str(storyboard_path),
+                         "--voice-cues-json", str(cues_path),
+                         "--mouth-overlay-json", str(mouth_path),
+                         "--mouth-rights-attested", "--image-rights-attested",
+                         "--mouth-review-sheet"])
+            for index, sprite in enumerate(self.sprites):
+                path = root / f"mouth{index}.png"
+                path.write_bytes(sprite)
+                args.extend(["--mouth-sprite", str(path)])
+            destination = root / "private-draft"
+            args.extend(["--out", str(destination)])
+            completed = subprocess.run(args, capture_output=True, text=True, timeout=110)
+            self.assertEqual(completed.returncode, 0, completed.stderr[:400])
+            png = (destination / "hoshi_mouth_review_DRAFT.png").read_bytes()
+            manifest = json.loads((destination / "manifest.json").read_text(encoding="utf-8"))
+            self.assertEqual(manifest["mouth_visual_review"]["png_sha256"],
+                             hashlib.sha256(png).hexdigest())
+            self.assertFalse(manifest["mouth_visual_review"]["owner_approved"])
+            self.assertFalse(manifest["mouth_visual_review"]["visual_alignment_verified"])
+            second = subprocess.run(args, capture_output=True, text=True, timeout=110)
+            self.assertNotEqual(second.returncode, 0)
+            self.assertEqual((destination / "hoshi_mouth_review_DRAFT.png").read_bytes(), png)
 
 
 if __name__ == "__main__":

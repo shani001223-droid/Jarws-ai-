@@ -120,9 +120,9 @@ class VoiceTimingTests(unittest.TestCase):
         self.assertEqual(result["subtitle_timing_source"],
                          "operator_supplied_voice_cues_not_audio_verified")
         subtitles = result["subtitles_srt"].decode("utf-8")
-        self.assertIn("00:00:01,000 --> 00:00:09,000\\nسلام", subtitles)
-        self.assertIn("00:00:11,000 --> 00:00:19,000\\nनमस्ते", subtitles)
-        self.assertIn("00:00:21,000 --> 00:00:29,000\\nPhir milenge", subtitles)
+        self.assertIn("00:00:01,000 --> 00:00:09,000\nسلام", subtitles)
+        self.assertIn("00:00:11,000 --> 00:00:19,000\nनमस्ते", subtitles)
+        self.assertIn("00:00:21,000 --> 00:00:29,000\nPhir milenge", subtitles)
         self.assertNotIn("00:00:00,000 --> 00:00:10,000", subtitles)
         self.assertEqual(hashlib.sha256(result["subtitles_srt"]).hexdigest(),
                          result["subtitles_sha256"])

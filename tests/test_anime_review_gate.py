@@ -43,7 +43,10 @@ class PrivateReviewGateTests(unittest.TestCase):
 
     def setUp(self):
         self.video = self.encoded_video
-        self.srt = "1\n00:00:01,000 --> 00:00:02,000\nسلام\n".encode("utf-8")
+        self.captions = ["سلام", "नमस्ते", "Phir milenge"]
+        self.srt = ("1\\n00:00:00,000 --> 00:00:10,000\\nسلام\\n\\n"
+                    "2\\n00:00:10,000 --> 00:00:20,000\\nनमस्ते\\n\\n"
+                    "3\\n00:00:20,000 --> 00:00:30,000\\nPhir milenge\\n\\n").encode("utf-8")
         out = BytesIO()
         Image.new("RGB", (1440, 592), "navy").save(out, "PNG")
         self.sheet = out.getvalue()
@@ -73,6 +76,16 @@ class PrivateReviewGateTests(unittest.TestCase):
                 "samples": samples, "decoded_frame_pair_pixel_evidence": evidence,
             },
         }
+        # Real renderer manifests carry a canonical storyboard digest; SRT
+        # bytes must match its captions, not merely a caller-edited SHA.
+        storyboard = {"schema_version": 1, "language": "ur",
+                      "shots": [{"shot_id": f"shot{i}", "caption": caption}
+                                for i, caption in enumerate(self.captions)]}
+        self.manifest["storyboard_handoff"] = {
+            "plan": storyboard, "plan_sha256": sha(json.dumps(
+                storyboard, ensure_ascii=False, sort_keys=True,
+                separators=(",", ":")).encode("utf-8"))}
+        self.manifest["subtitle_timing_source"] = "fixed_ten_second_shots"
         self.notes = ["Checked original mouth placement visually"] * 3
 
     def record(self, **overrides):
@@ -154,6 +167,61 @@ class PrivateReviewGateTests(unittest.TestCase):
             "sampled_pair_pixel_delta_not_alignment_proof")
         with self.assertRaises(AnimeReviewGateError):
             self.record(manifest=bad)
+
+    def test_subtitle_integrity_rejects_rehashed_forgery_and_bad_timing(self):
+        # An attacker can edit both the SRT and its manifest hashes; that is
+        # still not proof the captions match the bound source storyboard.
+        bad_variants = [
+            self.srt.replace("سلام".encode("utf-8"), b"forged"),
+            self.srt.replace(b"00:00:10,000", b"00:00:09,000"),
+            self.srt.replace(b"00:00:30,000", b"00:00:31,000"),
+            self.srt.replace(b"3\\n", b"4\\n"),
+            self.srt + b"4\\n00:00:30,000 --> 00:00:31,000\\nextra\\n\\n",
+            b"\\xff" + self.srt,
+        ]
+        for srt in bad_variants:
+            with self.subTest(srt=srt[:60]):
+                manifest = copy.deepcopy(self.manifest)
+                manifest["subtitles_sha256"] = sha(srt)
+                with self.assertRaisesRegex(AnimeReviewGateError, "SRT"):
+                    self.record(manifest=manifest, subtitles=srt)
+        forged = copy.deepcopy(self.manifest)
+        forged["storyboard_handoff"]["plan"]["shots"][0]["caption"] = "forged"
+        with self.assertRaisesRegex(AnimeReviewGateError, "SRT"):
+            self.record(manifest=forged)
+
+    def test_operator_cue_srt_is_exactly_bound_to_audio_and_storyboard(self):
+        manifest = copy.deepcopy(self.manifest)
+        cues = [{"shot_id": f"shot{i}", "speaker_id": "actor",
+                 "start_ms": i * 10000 + 1000,
+                 "end_ms": i * 10000 + 9000, "text": caption}
+                for i, caption in enumerate(self.captions)]
+        plan = {"schema_version": 1, "language": "ur",
+                "audio_sha256": "a" * 64,
+                "storyboard_sha256": manifest["storyboard_handoff"]["plan_sha256"],
+                "cues": cues}
+        manifest["source_audio_sha256"] = "a" * 64
+        manifest["voice_timing_handoff"] = {
+            "plan": plan, "plan_sha256": sha(json.dumps(
+                plan, ensure_ascii=False, sort_keys=True,
+                separators=(",", ":")).encode("utf-8"))}
+        manifest["subtitle_timing_source"] = "operator_supplied_voice_cues_not_audio_verified"
+        srt = ("1\\n00:00:01,000 --> 00:00:09,000\\nسلام\\n\\n"
+               "2\\n00:00:11,000 --> 00:00:19,000\\nनमस्ते\\n\\n"
+               "3\\n00:00:21,000 --> 00:00:29,000\\nPhir milenge\\n\\n").encode("utf-8")
+        manifest["subtitles_sha256"] = sha(srt)
+        record = self.record(manifest=manifest, subtitles=srt)
+        self.assertEqual(record["subtitle_qc"]["subtitle_blocks"], 3)
+        self.assertFalse(record["subtitle_qc"]["spoken_words_independently_verified"])
+        for mutation in ("audio_sha256", "storyboard_sha256", "plan_sha256"):
+            forged = copy.deepcopy(manifest)
+            if mutation == "plan_sha256":
+                forged["voice_timing_handoff"]["plan_sha256"] = "0" * 64
+            else:
+                forged["voice_timing_handoff"]["plan"][mutation] = "0" * 64
+            with self.subTest(mutation=mutation), self.assertRaisesRegex(
+                    AnimeReviewGateError, "SRT"):
+                self.record(manifest=forged, subtitles=srt)
 
     def test_cli_writes_only_create_only_private_review(self):
         with tempfile.TemporaryDirectory() as directory:

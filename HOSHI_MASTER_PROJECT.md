@@ -1,5 +1,12 @@
 # HOSHI AI — ONE MASTER PROJECT
 
+## 29 October 2026 — Task 59 fail-closed mouth timing integrity hardening (development only)
+
+The existing private Anime Studio mouth-sprite binder now rejects **cross-WAV SHA-256 mismatches** between its voice-cue plan and computed energy handoff, malformed voice/activity records, non-integer frame-rate spoofing and energy windows that fall outside the exact operator-supplied dialogue cue. Previously a manually tampered energy handoff could switch mouth sprites outside the speaker's cue or claim a different WAV. Regression tests cover wrong WAV digest, activity before/after a cue, malformed records and boolean frame rate. This is validation only: no automatic speech recognition, Hindi/Urdu voice generation, phoneme alignment, automatic face detection, device QA or verified character animation.
+
+**Source/test commit:** `15e140e0f5dbc558d9d8083ac87aedf4890ceaef`. CI and Docker outcomes must be checked on this exact commit before marking the patch test-verified; older green runs are not evidence for this change. **Task 59 remains unchecked and canonical 48/60 is unchanged.** Sole draft PR #29, no merge/deploy, account upload, purchase, secret changes or real trading.
+
+
 ## 29 October 2026 — actual private two-state mouth-sprite MP4 preview (Task 59 PARTIAL)
 
 The same **one existing** Hoshi Anime Studio pilot now has `cloud_backend/anime_mouth_overlay.py`. Operators can supply exactly three original, rights-attested, transparent RGBA mouth-open PNG sprites, explicit 480×270 frame coordinates and an exact-SHA-bound v1 mouth-overlay JSON through `--mouth-overlay-json`, three `--mouth-sprite` flags and `--mouth-rights-attested`. The existing storyboard, attested WAV, voice-cue plan and 12 FPS audio-energy windows must also validate. The offline FFmpeg renderer **actually switches each supplied mouth-open sprite on during energy windows and off outside them** in the private H.264/AAC 30-second MP4. Silent WAV produces no visible sprite activation. Wrong rights, hashes, character/shot IDs, malformed or opaque sprites, unsafe positions and mismatched plans fail closed. SHA-256 and unverified-status metadata are retained in the manifest; no public route or uploader is added.

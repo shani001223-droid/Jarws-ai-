@@ -249,6 +249,10 @@ class MouthSpritePreviewTests(unittest.TestCase):
         self.assertEqual(hashlib.sha256(review["png_bytes"]).hexdigest(),
                          review["png_sha256"])
         self.assertEqual(len(review["samples"]), 6)
+        self.assertEqual(review["media_qc"]["decoded_video_frames"], 360)
+        self.assertEqual(review["media_qc"]["audio_codec"], "aac")
+        self.assertEqual(review["media_qc"]["status"],
+                         "independently_probed_media_not_visual_approval")
         self.assertEqual(review["samples"][0]["sample_kind"], "active")
         self.assertEqual(review["samples"][1]["sample_kind"], "quiet")
         self.assertEqual(review["samples"][2]["sample_kind"], "no_activity")
@@ -258,6 +262,30 @@ class MouthSpritePreviewTests(unittest.TestCase):
         with Image.open(BytesIO(review["png_bytes"])) as contact:
             self.assertEqual(contact.size, (1440, 592))
             self.assertEqual(contact.format, "PNG")
+
+    @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"),
+                         "Real FFmpeg/ffprobe required")
+    def test_review_rejects_truncated_and_audio_free_real_mp4(self):
+        """Decoded sample frames do not make an arbitrary clip an approved pilot."""
+        voice, energy = self._bound()
+        bound = bind_mouth_overlay(self.plan, self.sprites, voice, energy,
+                                   rights_attested=True)
+        silent_video = render_private_animatic(
+            self.stills, self.captions, image_rights_attested=True)
+        with self.assertRaises(AnimeVisualReviewError):
+            build_mouth_review_sheet(silent_video["video_mp4"], bound)
+        with tempfile.TemporaryDirectory() as directory:
+            short = Path(directory) / "short.mp4"
+            completed = subprocess.run(
+                [shutil.which("ffmpeg"), "-v", "error", "-f", "lavfi",
+                 "-i", "color=c=blue:s=480x270:r=12:d=3",
+                 "-f", "lavfi", "-i", "anullsrc=r=16000:cl=mono",
+                 "-t", "3", "-c:v", "libx264", "-threads", "2",
+                 "-preset", "ultrafast", "-c:a", "aac", "-y", str(short)],
+                capture_output=True, timeout=30, check=False)
+            self.assertEqual(completed.returncode, 0, completed.stderr[:200])
+            with self.assertRaises(AnimeVisualReviewError):
+                build_mouth_review_sheet(short.read_bytes(), bound)
 
     def test_review_rejects_bad_video_and_spoofed_coordinates(self):
         voice, energy = self._bound()
@@ -315,6 +343,7 @@ class MouthSpritePreviewTests(unittest.TestCase):
                              hashlib.sha256(png).hexdigest())
             self.assertFalse(manifest["mouth_visual_review"]["owner_approved"])
             self.assertFalse(manifest["mouth_visual_review"]["visual_alignment_verified"])
+            self.assertEqual(manifest["mouth_visual_review"]["media_qc"]["decoded_video_frames"], 360)
             second = subprocess.run(args, capture_output=True, text=True, timeout=110)
             self.assertNotEqual(second.returncode, 0)
             self.assertEqual((destination / "hoshi_mouth_review_DRAFT.png").read_bytes(), png)

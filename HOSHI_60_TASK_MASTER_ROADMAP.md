@@ -3,7 +3,7 @@
 ## 29 October 2026 — Task 59 measurable decoded-frame review evidence (PARTIAL; not accepted)
 
 - Existing operator-only mouth review now includes decoded RGB frame SHA-256 and per-shot inside/outside-mouth-ROI pixel-change measurements between actual encoded active and quiet frames. If a shot lacks both kinds, it explicitly reports `not_comparable`. Pixel changes can arise from camera motion/background/compression and **are not evidence of correct anatomical mouth alignment or phoneme-level lip-sync**. Manual review and owner approval remain required; no automatic acceptance.
-- Source/test commits `26900ce5`, `98c285f2`; verify latest branch CI and Docker outcomes before marking source checks green. Physical Realme Note 50 QA, original Hindi/Urdu voice, true facial consistency, professional animation, release rights and production acceptance are still pending.
+- Source/test commits `26900ce5`, `98c285f2`; **source/test full Python/JS/Playwright CI passed** ([40830355119](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40830355119)) and **Docker/Uvicorn passed** ([40830355194](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40830355194)). The documentation-only head `80a15a4d` also passed [full CI](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40830386800) and [Docker](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40830386843). Physical Realme Note 50 QA, original Hindi/Urdu voice, true facial consistency, professional animation, release rights and production acceptance are still pending.
 - **Task 59 stays unchecked. Canonical scoreboard: 48/60, 12 pending.** Existing draft PR #29 only; no new repo, tracker, automation, deployment, external upload, purchase, key changes or real trading.
 
 

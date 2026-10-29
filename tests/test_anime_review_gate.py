@@ -134,6 +134,53 @@ class PrivateReviewGateTests(unittest.TestCase):
         self.assertFalse(qc["spoken_words_independently_verified"])
         self.assertFalse(qc["speech_language_independently_verified"])
         self.assertTrue(qc["music_or_noise_can_trigger"])
+        self.assertTrue(qc["all_caption_windows_clear_of_possible_hard_clipping"])
+        self.assertTrue(qc["hard_clipping_detection_is_conservative_not_proof"])
+        self.assertTrue(all(not w["possible_hard_clipping_detected"]
+                            for w in qc["caption_windows"]))
+
+    def test_heavily_saturated_encoded_aac_requires_private_revision(self):
+        # A full-scale square wave survives real AAC encoding with long
+        # near-rail plateaus. It has ample sustained energy but is unsuitable
+        # to approve as a clean dialogue mix. This does NOT recognize speech.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            wav_path = root / "hard_limited.wav"
+            video_path = root / "hard_limited.mp4"
+            pcm = array("h", [
+                32767 if math.sin(2 * math.pi * 440 * i / 16000) >= 0 else -32768
+                for i in range(30 * 16000)])
+            with wave.open(str(wav_path), "wb") as output:
+                output.setnchannels(1)
+                output.setsampwidth(2)
+                output.setframerate(16000)
+                output.writeframes(pcm.tobytes())
+            process = subprocess.run(
+                ["ffmpeg", "-hide_banner", "-loglevel", "error", "-nostdin",
+                 "-i", str(Path(self.media_dir.name) / "real_private_draft.mp4"),
+                 "-i", str(wav_path), "-map", "0:v:0", "-map", "1:a:0",
+                 "-c:v", "copy", "-c:a", "aac", "-b:a", "32k",
+                 "-t", "30", "-y", str(video_path)],
+                capture_output=True, timeout=30, check=False)
+            self.assertEqual(process.returncode, 0, process.stderr[:300])
+            encoded_video = video_path.read_bytes()
+            media_qc = _verify_review_media(video_path, shutil.which("ffprobe"))
+        manifest = copy.deepcopy(self.manifest)
+        manifest["video_sha256"] = sha(encoded_video)
+        manifest["mouth_visual_review"]["source_video_sha256"] = sha(encoded_video)
+        manifest["mouth_visual_review"]["media_qc"] = media_qc
+        with self.assertRaisesRegex(AnimeReviewGateError, "Possible hard-clipped AAC"):
+            self.record(manifest=manifest, video=encoded_video)
+        review = self.record(manifest=manifest, video=encoded_video,
+                             verdict="needs_revision")
+        audio = review["encoded_audio_subtitle_qc"]
+        self.assertTrue(audio["all_caption_windows_have_sustained_audio"])
+        self.assertFalse(audio["all_caption_windows_clear_of_possible_hard_clipping"])
+        for window in audio["caption_windows"]:
+            self.assertTrue(window["possible_hard_clipping_detected"])
+            self.assertGreater(window["near_full_scale_sample_fraction"], 0.10)
+            self.assertGreater(window["decoded_rms"], 0.75)
+        self.assertFalse(review["publication_permitted"])
 
     def test_brief_encoded_beeps_cannot_pass_as_sustained_caption_audio(self):
         # Three 80 ms tones raise each 10-second RMS well above the old

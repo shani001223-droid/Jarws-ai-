@@ -124,6 +124,12 @@ The same offline Anime Studio renderer now uses **validated operator-supplied vo
 - **Not completed:** actual original character art generation, image-to-image identity consistency, human storyboard approval, moving character animation, real Hindi/Urdu voice and lip-sync, 1080p professional visual quality, phone playback and publication rights. This is an offline 480×270, 12 FPS animatic, not an autonomous 24-agent production system. **Tasks 56–60 remain unchecked; sole canonical scoreboard stays 48/60.** PR #29 only; no production merge/deploy, paid compute, secrets, outside upload or real trading.
 
 
+### Task 59 — private thumbnail candidate selection checkpoint (29 October 2026; partial)
+
+- **Narrow implementation:** same existing offline 30-second H.264 pilot can now record a manual selection of one of three actual decoded thumbnail candidate frames, with a human note and explicit inspected-sheet attestation. The selection re-probes the actual video, independently re-decodes all three frames, verifies contact-sheet RGB pixels and SHA-256 provenance, and writes a create-only private JSON record. It never creates a final designed thumbnail, renders Hindi/Urdu title typography, publishes, grants owner approval, or clears artwork rights.
+- **Source/test commit:** `1f1bdb957009911925dbc67544d2f572694b0755`. Full Python/Node/Playwright and Docker CI checks **pending** at documentation time; do not infer success. Physical Realme Note 50, real original character animation, professional Hindi/Urdu voice and owner acceptance remain unverified.
+- **Only canonical scoreboard:** **48/60 checked; 12 pending; Task 59 unchecked.** Existing draft PR #29 remains the single successor; no production merge/deploy or external publication.
+
 **Status:** tasks are not presumed implemented. Checkmarks only for verified artifacts.
 **Updated:** 27 Oct 2026. **Release:** PR #24 is merged and V2 is live. Use the single current open successor on `hoshi/dnd-foundation-20261026`; check its actual state in GitHub. Post-release verification is recorded in PR #28 and `HOSHI_RELEASE_PRECHECK.md`. Task checkboxes below are unchanged by the release.
 **Rules:** work serially; after each task run relevant unit/E2E/security tests; repair failures before advancing; make no purchases; never execute live trades; ask for explicit approval on destructive or account-affecting changes.

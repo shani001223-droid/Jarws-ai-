@@ -19,6 +19,11 @@ class AnimeAudioSubtitleQCError(ValueError):
 
 SAMPLE_RATE = 16000
 AUDIBLE_RMS_THRESHOLD = 0.001
+# A brief click or beep can raise whole-window RMS. This is only a
+# conservative signal-coverage gate, never proof of speech or language.
+ACTIVE_FRAME_MS = 20
+ACTIVE_FRAME_RMS_THRESHOLD = 0.003
+MIN_ACTIVE_FRAME_FRACTION = 0.02
 
 
 def measure_encoded_caption_audio(video_path: Path, manifest: dict, ffmpeg: str) -> dict:
@@ -74,20 +79,41 @@ def measure_encoded_caption_audio(video_path: Path, manifest: dict, ffmpeg: str)
                 raise AnimeAudioSubtitleQCError("Empty decoded caption window.")
             rms = math.sqrt(sum(int(value) ** 2 for value in samples) /
                             len(samples)) / 32768.0
+            # Measure occupancy in independent 20 ms PCM frames so a single
+            # high-amplitude transient cannot masquerade as sustained audio.
+            frame_size = SAMPLE_RATE * ACTIVE_FRAME_MS // 1000
+            active_frames = 0
+            total_frames = 0
+            for offset in range(0, len(samples), frame_size):
+                frame = samples[offset:offset + frame_size]
+                frame_rms = math.sqrt(sum(int(v) ** 2 for v in frame) /
+                                      len(frame)) / 32768.0
+                active_frames += frame_rms >= ACTIVE_FRAME_RMS_THRESHOLD
+                total_frames += 1
+            active_fraction = active_frames / total_frames
+            sustained = (rms >= AUDIBLE_RMS_THRESHOLD and
+                         active_fraction >= MIN_ACTIVE_FRAME_FRACTION)
             windows_qc.append({
                 "shot_index": index + 1,
                 "start_ms": start_ms,
                 "end_ms": end_ms,
                 "decoded_rms": round(rms, 6),
                 "audible_energy_detected": rms >= AUDIBLE_RMS_THRESHOLD,
+                "active_audio_frame_fraction": round(active_fraction, 4),
+                "sustained_audio_detected": sustained,
             })
         return {
             "status": "encoded_audio_energy_measured_not_speech_recognition",
             "sample_rate_hz": SAMPLE_RATE,
             "threshold_normalized_rms": AUDIBLE_RMS_THRESHOLD,
+            "active_frame_ms": ACTIVE_FRAME_MS,
+            "active_frame_threshold_normalized_rms": ACTIVE_FRAME_RMS_THRESHOLD,
+            "minimum_active_frame_fraction": MIN_ACTIVE_FRAME_FRACTION,
             "caption_windows": windows_qc,
             "all_caption_windows_have_audio_energy": all(
                 item["audible_energy_detected"] for item in windows_qc),
+            "all_caption_windows_have_sustained_audio": all(
+                item["sustained_audio_detected"] for item in windows_qc),
             "spoken_words_independently_verified": False,
             "speech_language_independently_verified": False,
             "phoneme_sync_verified": False,

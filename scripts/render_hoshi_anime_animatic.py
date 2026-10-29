@@ -29,6 +29,7 @@ def main() -> int:
     parser.add_argument("--camera-move", action="append", choices=("static", "push_in", "pan_left", "pan_right"),
                         help="Optional 2D still camera move, once per shot (exactly 3)")
     parser.add_argument("--audio-wav", help="Optional local 30s mono 16-bit PCM WAV, 16/24kHz")
+    parser.add_argument("--music-wav", help="Optional original/licensed local 30s mono PCM WAV, mixed quietly under voice")
     parser.add_argument("--voice-cues-json", help="Optional operator-supplied v1 per-shot voice timing; requires storyboard and WAV")
     parser.add_argument("--mouth-overlay-json",
                         help="Optional v1 original mouth sprite positions and exact SHA-256")
@@ -44,6 +45,8 @@ def main() -> int:
                         help="Operator confirms rights to all mouth sprites; not phoneme lip-sync")
     parser.add_argument("--audio-rights-attested", action="store_true",
                         help="Operator confirms rights to the supplied WAV; does not verify dubbing")
+    parser.add_argument("--music-rights-attested", action="store_true",
+                        help="Operator confirms rights to the optional music WAV; no independent license verification")
     parser.add_argument("--image-rights-attested", action="store_true",
                         help="Operator confirms rights to all supplied stills")
     args = parser.parse_args()
@@ -55,6 +58,8 @@ def main() -> int:
         parser.error("Explicit --image-rights-attested is required.")
     if bool(args.audio_wav) != args.audio_rights_attested:
         parser.error("--audio-wav and --audio-rights-attested must be supplied together.")
+    if bool(args.music_wav) != args.music_rights_attested:
+        parser.error("--music-wav and --music-rights-attested must be supplied together.")
     if bool(args.thumbnail_candidates) != bool(args.thumbnail_title):
         parser.error("--thumbnail-candidates and --thumbnail-title must be supplied together.")
     if args.mouth_review_sheet and not args.mouth_overlay_json:
@@ -79,6 +84,12 @@ def main() -> int:
             if not audio_path.is_file() or not 44 <= audio_path.stat().st_size <= MAX_AUDIO_BYTES:
                 raise AnimePilotError("Local audio WAV missing or too large.")
             audio = audio_path.read_bytes()
+        music = None
+        if args.music_wav:
+            music_path = Path(args.music_wav)
+            if not music_path.is_file() or not 44 <= music_path.stat().st_size <= MAX_AUDIO_BYTES:
+                raise AnimePilotError("Local music WAV missing or too large.")
+            music = music_path.read_bytes()
         storyboard = None
         if args.storyboard_json:
             plan_path = Path(args.storyboard_json)
@@ -119,6 +130,7 @@ def main() -> int:
             images, args.caption, image_rights_attested=True,
             camera_moves=args.camera_move, storyboard_handoff=storyboard,
             audio_wav=audio, audio_rights_attested=args.audio_rights_attested,
+            music_wav=music, music_rights_attested=args.music_rights_attested,
             voice_timing_plan=voice_cues,
             mouth_overlay_plan=mouth_plan, mouth_sprites=mouth_sprites,
             mouth_rights_attested=args.mouth_rights_attested)

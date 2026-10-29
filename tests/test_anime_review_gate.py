@@ -44,9 +44,9 @@ class PrivateReviewGateTests(unittest.TestCase):
     def setUp(self):
         self.video = self.encoded_video
         self.captions = ["سلام", "नमस्ते", "Phir milenge"]
-        self.srt = ("1\\n00:00:00,000 --> 00:00:10,000\\nسلام\\n\\n"
-                    "2\\n00:00:10,000 --> 00:00:20,000\\nनमस्ते\\n\\n"
-                    "3\\n00:00:20,000 --> 00:00:30,000\\nPhir milenge\\n\\n").encode("utf-8")
+        self.srt = ("1\n00:00:00,000 --> 00:00:10,000\nسلام\n\n"
+                    "2\n00:00:10,000 --> 00:00:20,000\nनमस्ते\n\n"
+                    "3\n00:00:20,000 --> 00:00:30,000\nPhir milenge\n\n").encode("utf-8")
         out = BytesIO()
         Image.new("RGB", (1440, 592), "navy").save(out, "PNG")
         self.sheet = out.getvalue()
@@ -175,8 +175,8 @@ class PrivateReviewGateTests(unittest.TestCase):
             self.srt.replace("سلام".encode("utf-8"), b"forged"),
             self.srt.replace(b"00:00:10,000", b"00:00:09,000"),
             self.srt.replace(b"00:00:30,000", b"00:00:31,000"),
-            self.srt.replace(b"3\\n", b"4\\n"),
-            self.srt + b"4\\n00:00:30,000 --> 00:00:31,000\\nextra\\n\\n",
+            self.srt.replace(b"3\n", b"4\n"),
+            self.srt + b"4\n00:00:30,000 --> 00:00:31,000\nextra\n\n",
             b"\\xff" + self.srt,
         ]
         for srt in bad_variants:
@@ -206,9 +206,9 @@ class PrivateReviewGateTests(unittest.TestCase):
                 plan, ensure_ascii=False, sort_keys=True,
                 separators=(",", ":")).encode("utf-8"))}
         manifest["subtitle_timing_source"] = "operator_supplied_voice_cues_not_audio_verified"
-        srt = ("1\\n00:00:01,000 --> 00:00:09,000\\nسلام\\n\\n"
-               "2\\n00:00:11,000 --> 00:00:19,000\\nनमस्ते\\n\\n"
-               "3\\n00:00:21,000 --> 00:00:29,000\\nPhir milenge\\n\\n").encode("utf-8")
+        srt = ("1\n00:00:01,000 --> 00:00:09,000\nسلام\n\n"
+               "2\n00:00:11,000 --> 00:00:19,000\nनमस्ते\n\n"
+               "3\n00:00:21,000 --> 00:00:29,000\nPhir milenge\n\n").encode("utf-8")
         manifest["subtitles_sha256"] = sha(srt)
         record = self.record(manifest=manifest, subtitles=srt)
         self.assertEqual(record["subtitle_qc"]["subtitle_blocks"], 3)

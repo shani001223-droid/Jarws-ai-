@@ -11,6 +11,7 @@ from io import BytesIO
 import unicodedata
 
 from PIL import Image, ImageDraw, ImageFont, UnidentifiedImageError, features
+from fontTools.ttLib import TTFont, TTLibError
 
 from cloud_backend.anime_thumbnail import _validate_title, AnimeThumbnailError
 
@@ -31,6 +32,34 @@ def _script_direction(title: str) -> tuple[str, str]:
         raise AnimeThumbnailTitleError("Use one title script per draft for reliable direction.")
     return ("rtl", "urdu_arabic") if arabic else (
         ("ltr", "hindi_devanagari") if devanagari else ("ltr", "roman_urdu_latin"))
+
+
+
+def _require_title_font_cmap(title: str, font_bytes: bytes) -> None:
+    """Fail closed on missing Unicode characters before shaping a private draft.
+
+    A Unicode cmap proves that the selected font *maps* each required codepoint,
+    not that its GSUB/GPOS shaping, visual quality or licensing is acceptable.
+    Joiners U+200C/U+200D are formatting controls, not visible glyphs.
+    """
+    if font_bytes[:4] not in (b"\\x00\\x01\\x00\\x00", b"OTTO", b"true"):
+        raise AnimeThumbnailTitleError("Only bounded OpenType/TrueType fonts are supported.")
+    font = None
+    try:
+        font = TTFont(BytesIO(font_bytes), lazy=True)
+        cmap = font.getBestCmap()
+        if not cmap:
+            raise AnimeThumbnailTitleError("Font lacks a Unicode character map.")
+        required = {ord(char) for char in title if char not in ("\\u200c", "\\u200d")}
+        if any(not cmap.get(codepoint) or cmap[codepoint] == ".notdef"
+               for codepoint in required):
+            raise AnimeThumbnailTitleError(
+                "Font lacks required title characters; supply a licensed script-capable font.")
+    except (TTLibError, OSError, ValueError, TypeError, AssertionError):
+        raise AnimeThumbnailTitleError("Invalid or unsupported local title font.") from None
+    finally:
+        if font is not None:
+            font.close()
 
 
 def render_private_titled_thumbnail(preview: dict, font_bytes: bytes, *,
@@ -68,6 +97,7 @@ def render_private_titled_thumbnail(preview: dict, font_bytes: bytes, *,
         raise AnimeThumbnailTitleError("Bounded operator-owned/licensed font required.")
     if not features.check("raqm"):
         raise AnimeThumbnailTitleError("Pillow libraqm complex-text shaping is required.")
+    _require_title_font_cmap(title, font_bytes)
     try:
         with Image.open(BytesIO(png)) as source:
             if (source.format != "PNG" or source.size != (1280, 720)
@@ -118,6 +148,7 @@ def render_private_titled_thumbnail(preview: dict, font_bytes: bytes, *,
         "preview_resolution": [1280, 720],
         "upscaled_from_low_resolution": True,
         "typography_added": True,
+        "font_unicode_cmap_coverage_verified": True,
         "glyph_coverage_independently_verified": False,
         "font_rights_attested_not_independently_verified": True,
         "source_rights_independently_verified": False,

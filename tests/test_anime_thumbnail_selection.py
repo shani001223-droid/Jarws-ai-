@@ -40,7 +40,7 @@ class PrivateThumbnailSelectionTests(unittest.TestCase):
             original_stills(), ["Raat ki kahani", "Aaj ka safar", "Nayi subah"],
             image_rights_attested=True)
         thumbnails = build_private_thumbnail_candidates(
-            result["video_mp4"], title="نئی کہانی", rights_attested=True)
+            result["video_mp4"], title="نئی کتاب", rights_attested=True)
         cls.video = result["video_mp4"]
         cls.sheet = thumbnails["png_bytes"]
         cls.manifest = {k: v for k, v in result.items()
@@ -61,7 +61,7 @@ class PrivateThumbnailSelectionTests(unittest.TestCase):
         result = self.select()
         self.assertEqual(result["selected_frame_index"], 180)
         self.assertTrue(result["all_three_candidate_frames_independently_verified"])
-        self.assertEqual(result["title_utf8_not_rendered"], "نئی کہانی")
+        self.assertEqual(result["title_utf8_not_rendered"], "نئی کتاب")
         for key in ("owner_approved", "release_authorized",
                     "publication_permitted", "final_thumbnail_designed"):
             self.assertFalse(result[key])
@@ -146,7 +146,7 @@ class PrivateThumbnailSelectionTests(unittest.TestCase):
         self.assertEqual(result["source_frame_resolution"], [480, 270])
         self.assertTrue(result["upscaled_from_low_resolution"])
         self.assertEqual(result["selected_frame_index"], 180)
-        self.assertEqual(result["title_utf8_not_rendered"], "نئی کہانی")
+        self.assertEqual(result["title_utf8_not_rendered"], "نئی کتاب")
         with Image.open(BytesIO(self.sheet)) as sheet:
             expected = sheet.convert("RGB").crop((480, 30, 960, 300)).resize(
                 (1280, 720), Image.Resampling.LANCZOS)
@@ -226,9 +226,10 @@ class PrivateThumbnailSelectionTests(unittest.TestCase):
             self.manifest, self.video, self.sheet, self.select())
         result = render_private_titled_thumbnail(
             preview, self._local_font_bytes(), font_rights_attested=True)
-        self.assertEqual(result["title_utf8_rendered"], "نئی کہانی")
+        self.assertEqual(result["title_utf8_rendered"], "نئی کتاب")
         self.assertEqual(result["title_direction"], "rtl")
         self.assertEqual(result["font_shaping_engine"], "libraqm")
+        self.assertTrue(result["font_unicode_cmap_coverage_verified"])
         self.assertTrue(result["typography_added"])
         self.assertFalse(result["glyph_coverage_independently_verified"])
         self.assertFalse(result["owner_approved"])
@@ -239,13 +240,27 @@ class PrivateThumbnailSelectionTests(unittest.TestCase):
             self.assertEqual(rendered.size, (1280, 720))
             self.assertNotEqual(rendered.convert("RGB").tobytes(),
                                 Image.open(BytesIO(preview["png_bytes"])).convert("RGB").tobytes())
-        for text, direction in (("नई कहानी", "ltr"), ("Raat Ki Kahani", "ltr")):
+        for text, direction in (("می\u200cخواهم", "rtl"), ("Raat Ki Kahani", "ltr")):
             # Rendering exercise only: real CLI always derives title from verified manifest.
             sample = dict(preview, title_utf8_not_rendered=text)
             draft = render_private_titled_thumbnail(
                 sample, self._local_font_bytes(), font_rights_attested=True)
             self.assertEqual(draft["title_direction"], direction)
             self.assertFalse(draft["glyph_coverage_independently_verified"])
+
+    def test_missing_urdu_and_devanagari_font_glyphs_fail_closed(self):
+        from cloud_backend.anime_thumbnail_export import build_private_selected_thumbnail_preview
+        from cloud_backend.anime_thumbnail_title import (
+            AnimeThumbnailTitleError, render_private_titled_thumbnail)
+        preview = build_private_selected_thumbnail_preview(
+            self.manifest, self.video, self.sheet, self.select())
+        # DejaVu Sans has Arabic coverage but not Urdu U+06C1 or Devanagari.
+        for title in ("نئی کہانی", "नई कहानी"):
+            with self.subTest(title=title), self.assertRaisesRegex(
+                    AnimeThumbnailTitleError, "Font lacks required"):
+                render_private_titled_thumbnail(
+                    dict(preview, title_utf8_not_rendered=title),
+                    self._local_font_bytes(), font_rights_attested=True)
 
     def test_titled_draft_fails_closed_on_invalid_font_preview_or_rights(self):
         from PIL import features

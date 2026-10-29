@@ -8,8 +8,13 @@ from __future__ import annotations
 import hashlib
 from io import BytesIO
 import json
+from pathlib import Path
+import shutil
+from tempfile import TemporaryDirectory
 
 from PIL import Image
+
+from cloud_backend.anime_visual_review import AnimeVisualReviewError, _verify_review_media
 
 
 class AnimeReviewGateError(ValueError):
@@ -63,6 +68,23 @@ def record_private_review(manifest: dict, video: bytes, subtitles: bytes,
             or qc.get("decoded_video_frames") != 360
             or qc.get("width") != 480 or qc.get("height") != 270):
         raise AnimeReviewGateError("Independent encoded-media QC evidence missing.")
+    # The original manifest's media_qc field is caller-controlled JSON. Re-probe
+    # the exact submitted MP4 before allowing even a private editorial pass;
+    # a matching SHA alone does not prove the bytes are playable H.264/AAC.
+    try:
+        ffprobe = shutil.which("ffprobe")
+        if not ffprobe:
+            raise AnimeReviewGateError("Local ffprobe is required for private QC.")
+        with TemporaryDirectory(prefix="hoshi-private-qc-") as directory:
+            video_path = Path(directory) / "review.mp4"
+            video_path.write_bytes(video)
+            verified_media = _verify_review_media(video_path, ffprobe)
+    except (AnimeVisualReviewError, OSError):
+        raise AnimeReviewGateError("Submitted MP4 failed independent media verification.") from None
+    if any(qc.get(key) != verified_media[key] for key in (
+            "status", "codec", "audio_codec", "decoded_video_frames",
+            "width", "height", "frame_rate", "duration_seconds")):
+        raise AnimeReviewGateError("Manifest media-QC metadata differs from actual MP4.")
     try:
         with Image.open(BytesIO(sheet)) as image:
             if image.format != "PNG" or image.size != (1440, 592):

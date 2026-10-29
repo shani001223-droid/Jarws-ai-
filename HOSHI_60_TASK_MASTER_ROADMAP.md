@@ -1,5 +1,12 @@
 # HOSHI — 60-Task Autonomous Development Roadmap
 
+## 29 October 2026 — Task 59 fail-closed mouth timing integrity hardening (development only)
+
+The existing private Anime Studio mouth-sprite binder now rejects **cross-WAV SHA-256 mismatches** between its voice-cue plan and computed energy handoff, malformed voice/activity records, non-integer frame-rate spoofing and energy windows that fall outside the exact operator-supplied dialogue cue. Previously a manually tampered energy handoff could switch mouth sprites outside the speaker's cue or claim a different WAV. Regression tests cover wrong WAV digest, activity before/after a cue, malformed records and boolean frame rate. This is validation only: no automatic speech recognition, Hindi/Urdu voice generation, phoneme alignment, automatic face detection, device QA or verified character animation.
+
+**Source/test commit:** `15e140e0f5dbc558d9d8083ac87aedf4890ceaef`. CI and Docker outcomes must be checked on this exact commit before marking the patch test-verified; older green runs are not evidence for this change. **Task 59 remains unchecked and canonical 48/60 is unchanged.** Sole draft PR #29, no merge/deploy, account upload, purchase, secret changes or real trading.
+
+
 ## 29 October 2026 — Task 59: verified two-state mouth sprite in real MP4 (PARTIAL)
 
 - `cloud_backend/anime_mouth_overlay.py` validates three operator-owned transparent RGBA PNG mouth sprites (byte SHA-256, bounds, original rights attestation), explicit shot/speaker/position binding and previously validated WAV/voice-cue energy. `cloud_backend/anime_pilot_animatic.py` and `scripts/render_hoshi_anime_animatic.py` actually composite those sprites on/off during 12 FPS RMS activity in the private H.264/AAC animatic. The existing create-only CLI output and subtitle timing remain; no automatic posting or public endpoint.

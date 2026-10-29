@@ -1,5 +1,12 @@
 # HOSHI — 60-Task Autonomous Development Roadmap
 
+## 29 October 2026 — voice-cue-timed SRT export (development, Task 59 partial)
+
+The same offline Anime Studio renderer now uses **validated operator-supplied voice cue intervals** to write the real UTF-8 SRT sidecar when `--voice-cues-json` is supplied with its required exact storyboard/WAV SHA bindings and rights attestations. Previously, subtitles were always displayed for whole 10-second shots even when operator voice cues occupied only part of each shot. The new SRT displays the original caption only within its corresponding verified-schema cue window, leaves gaps blank, preserves Hindi/Urdu/Roman Urdu Unicode and SHA-256 manifest integrity, and labels `subtitle_timing_source=operator_supplied_voice_cues_not_audio_verified`. Without a cue plan, the original fixed 10-second SRT remains unchanged. Real MP4/CLI integration and negative-input regression assertions were added to `tests/test_anime_voice_timing.py`.
+
+**Scope:** this is real timed subtitle-file generation, **not** ASR, audio transcription, synthesized Hindi/Urdu speech, proof the WAV matches the words, mouth animation, visual character consistency, or finished anime. Task 59 remains unchecked, 48/60 canonical score unchanged. Verify the latest branch head's full CI and Docker checks before calling this code test-verified. No production merge/deploy, public upload, purchase, new repo/PR, or real trade.
+
+
 ## Task 59 — operator-supplied per-shot voice timing handoff (29 October 2026; PARTIAL)
 
 - Development-only `cloud_backend/anime_voice_timing.py` and optional CLI `--voice-cues-json` validate three caption-matching, character-bound, 200ms-minimum voice cue intervals within the correct 10-second storyboard shots. The plan must bind the exact caller-attested WAV SHA-256 and storyboard SHA-256; mismatched rights/media, IDs, timing, language and captions fail closed before encoding. Tests: `tests/test_anime_voice_timing.py`, including real FFmpeg H.264/AAC manifest verification where available.

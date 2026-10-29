@@ -112,6 +112,17 @@ class PrivateReviewGateTests(unittest.TestCase):
         self.assertFalse(result["physical_phone_qa_verified"])
         self.assertEqual(self.record(verdict="needs_revision")["verdict"], "needs_revision")
 
+    def test_music_backing_cannot_be_mistaken_for_verified_dialogue(self):
+        # A continuous music track passes energy/occupancy checks, but is
+        # not independent evidence of any Urdu/Hindi words being spoken.
+        manifest = copy.deepcopy(self.manifest)
+        manifest["source_music_sha256"] = "b" * 64
+        with self.assertRaisesRegex(AnimeReviewGateError, "Music-backed audio"):
+            self.record(manifest=manifest)
+        review = self.record(manifest=manifest, verdict="needs_revision")
+        self.assertEqual(review["verdict"], "needs_revision")
+        self.assertFalse(review["publication_permitted"])
+
     def test_encoded_caption_energy_is_measured_not_speech_verified(self):
         result = self.record()
         qc = result["encoded_audio_subtitle_qc"]

@@ -211,5 +211,103 @@ class PrivateThumbnailSelectionTests(unittest.TestCase):
             self.assertEqual(preview.read_bytes(), original_bytes)
 
 
+    def _local_font_bytes(self):
+        from PIL import ImageFont
+        font = ImageFont.truetype("DejaVuSans.ttf", 24)
+        return Path(font.path).read_bytes()
+
+    def test_private_titled_draft_renders_real_pixels_and_retains_release_denial(self):
+        from PIL import features
+        from cloud_backend.anime_thumbnail_export import build_private_selected_thumbnail_preview
+        from cloud_backend.anime_thumbnail_title import render_private_titled_thumbnail
+        if not features.check("raqm"):
+            self.skipTest("RAQM unavailable: must fail closed in production")
+        preview = build_private_selected_thumbnail_preview(
+            self.manifest, self.video, self.sheet, self.select())
+        result = render_private_titled_thumbnail(
+            preview, self._local_font_bytes(), font_rights_attested=True)
+        self.assertEqual(result["title_utf8_rendered"], "نئی کہانی")
+        self.assertEqual(result["title_direction"], "rtl")
+        self.assertEqual(result["font_shaping_engine"], "libraqm")
+        self.assertTrue(result["typography_added"])
+        self.assertFalse(result["glyph_coverage_independently_verified"])
+        self.assertFalse(result["owner_approved"])
+        self.assertFalse(result["publication_permitted"])
+        self.assertEqual(hashlib.sha256(result["png_bytes"]).hexdigest(),
+                         result["png_sha256"])
+        with Image.open(BytesIO(result["png_bytes"])) as rendered:
+            self.assertEqual(rendered.size, (1280, 720))
+            self.assertNotEqual(rendered.convert("RGB").tobytes(),
+                                Image.open(BytesIO(preview["png_bytes"])).convert("RGB").tobytes())
+        for text, direction in (("नई कहानी", "ltr"), ("Raat Ki Kahani", "ltr")):
+            # Rendering exercise only: real CLI always derives title from verified manifest.
+            sample = dict(preview, title_utf8_not_rendered=text)
+            draft = render_private_titled_thumbnail(
+                sample, self._local_font_bytes(), font_rights_attested=True)
+            self.assertEqual(draft["title_direction"], direction)
+            self.assertFalse(draft["glyph_coverage_independently_verified"])
+
+    def test_titled_draft_fails_closed_on_invalid_font_preview_or_rights(self):
+        from PIL import features
+        from cloud_backend.anime_thumbnail_export import build_private_selected_thumbnail_preview
+        from cloud_backend.anime_thumbnail_title import (
+            AnimeThumbnailTitleError, render_private_titled_thumbnail)
+        if not features.check("raqm"):
+            self.skipTest("RAQM unavailable: must fail closed in production")
+        preview = build_private_selected_thumbnail_preview(
+            self.manifest, self.video, self.sheet, self.select())
+        font = self._local_font_bytes()
+        for data, rights in ((b"not-a-font" * 200, True), (font, False),
+                             (b"x" * 8_000_001, True)):
+            with self.subTest(rights=rights, size=len(data)), self.assertRaises(
+                    AnimeThumbnailTitleError):
+                render_private_titled_thumbnail(
+                    preview, data, font_rights_attested=rights)
+        for changes in ({"owner_approved": True},
+                        {"png_sha256": "0" * 64},
+                        {"title_utf8_not_rendered": "Unsafe\\nTitle"},
+                        {"title_utf8_not_rendered": "हिंदी اردو"}):
+            forged = dict(preview, **changes)
+            with self.subTest(changes=changes), self.assertRaises(AnimeThumbnailTitleError):
+                render_private_titled_thumbnail(
+                    forged, font, font_rights_attested=True)
+
+    def test_titled_cli_real_mp4_create_only_and_no_upload(self):
+        from PIL import features, ImageFont
+        if not features.check("raqm"):
+            self.skipTest("RAQM unavailable: must fail closed in production")
+        with tempfile.TemporaryDirectory() as root:
+            directory = Path(root) / "pilot"
+            directory.mkdir()
+            (directory / "manifest.json").write_text(
+                json.dumps(self.manifest, ensure_ascii=False), encoding="utf-8")
+            (directory / "hoshi_anime_animatic_DRAFT.mp4").write_bytes(self.video)
+            (directory / "hoshi_thumbnail_candidates_DRAFT.png").write_bytes(self.sheet)
+            (directory / "hoshi_thumbnail_selection_PRIVATE.json").write_text(
+                json.dumps(self.select(), ensure_ascii=False), encoding="utf-8")
+            font = Path(root) / "local-operator-font.ttf"
+            font.write_bytes(self._local_font_bytes())
+            command = [sys.executable, "-m", "scripts.design_hoshi_anime_thumbnail",
+                       "--draft-dir", str(directory), "--font", str(font)]
+            without_rights = subprocess.run(command, capture_output=True, text=True, timeout=90)
+            self.assertNotEqual(without_rights.returncode, 0)
+            self.assertFalse((directory / "titled_thumbnail_PRIVATE_DRAFT").exists())
+            command.append("--font-rights-attested")
+            first = subprocess.run(command, capture_output=True, text=True, timeout=90)
+            self.assertEqual(first.returncode, 0, first.stderr)
+            target = directory / "titled_thumbnail_PRIVATE_DRAFT"
+            provenance = json.loads(
+                (target / "typography_provenance_PRIVATE.json").read_text(encoding="utf-8"))
+            png = target / provenance["filename"]
+            original_bytes = png.read_bytes()
+            self.assertEqual(hashlib.sha256(original_bytes).hexdigest(),
+                             provenance["png_sha256"])
+            self.assertFalse(provenance["publication_permitted"])
+            second = subprocess.run(command, capture_output=True, text=True, timeout=90)
+            self.assertNotEqual(second.returncode, 0)
+            self.assertEqual(png.read_bytes(), original_bytes)
+
+
+
 if __name__ == "__main__":
     unittest.main()

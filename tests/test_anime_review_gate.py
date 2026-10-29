@@ -1,0 +1,148 @@
+"""Fail-closed private human QC; hashes and review never authorize publication."""
+from __future__ import annotations
+
+import copy
+import hashlib
+from io import BytesIO
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+import unittest
+
+from PIL import Image
+
+from cloud_backend.anime_review_gate import AnimeReviewGateError, record_private_review
+
+
+def sha(data):
+    return hashlib.sha256(data).hexdigest()
+
+
+class PrivateReviewGateTests(unittest.TestCase):
+    def setUp(self):
+        self.video = b"encoded-private-video" * 30
+        self.srt = "1\n00:00:01,000 --> 00:00:02,000\nسلام\n".encode("utf-8")
+        out = BytesIO()
+        Image.new("RGB", (1440, 592), "navy").save(out, "PNG")
+        self.sheet = out.getvalue()
+        samples = []
+        evidence = []
+        for i in range(3):
+            for offset, kind in ((12, "active"), (24, "quiet")):
+                samples.append({"shot_id": f"shot{i}", "frame_index": i * 120 + offset,
+                                "sample_kind": kind,
+                                "expected_sprite_visible": kind == "active",
+                                "decoded_frame_rgb_sha256": "a" * 64})
+            evidence.append({"shot_id": f"shot{i}",
+                             "status": "sampled_pair_pixel_delta_not_alignment_proof",
+                             "roi_change_detected": True})
+        self.manifest = {
+            "stage": "private_storyboard_animatic_only", "actual_mp4_rendered": True,
+            "owner_approved": False, "published": False, "uploaded": False,
+            "video_sha256": sha(self.video), "subtitles_sha256": sha(self.srt),
+            "mouth_visual_review": {
+                "source_video_sha256": sha(self.video), "png_sha256": sha(self.sheet),
+                "owner_approved": False, "visual_alignment_verified": False,
+                "manual_review_required": True,
+                "media_qc": {"status": "independently_probed_media_not_visual_approval",
+                             "codec": "h264", "audio_codec": "aac",
+                             "decoded_video_frames": 360, "width": 480, "height": 270},
+                "samples": samples, "decoded_frame_pair_pixel_evidence": evidence,
+            },
+        }
+        self.notes = ["Checked original mouth placement visually"] * 3
+
+    def record(self, **overrides):
+        data = dict(manifest=self.manifest, video=self.video, subtitles=self.srt,
+                    sheet=self.sheet, verdict="private_qc_pass",
+                    shot_notes=self.notes, inspected=True)
+        data.update(overrides)
+        return record_private_review(**data)
+
+    def test_explicit_private_review_never_authorizes_release(self):
+        result = self.record()
+        self.assertEqual(result["verdict"], "private_qc_pass")
+        self.assertEqual(len(result["shot_notes"]), 3)
+        self.assertEqual(result["source_video_sha256"], sha(self.video))
+        self.assertFalse(result["owner_approved"])
+        self.assertFalse(result["release_authorized"])
+        self.assertFalse(result["publication_permitted"])
+        self.assertFalse(result["lip_sync_independently_verified"])
+        self.assertFalse(result["physical_phone_qa_verified"])
+        self.assertEqual(self.record(verdict="needs_revision")["verdict"], "needs_revision")
+
+    def test_rejects_uninspected_or_unbounded_review(self):
+        for overrides in (dict(inspected=False), dict(inspected=1),
+                          dict(verdict="publish"), dict(shot_notes=["short"] * 3),
+                          dict(shot_notes=["ok"] * 3),
+                          dict(shot_notes=["x" * 501] * 3),
+                          dict(shot_notes=["note one", "note two"])):
+            with self.subTest(overrides=overrides), self.assertRaises(AnimeReviewGateError):
+                self.record(**overrides)
+
+    def test_rejects_hash_tamper_and_false_owner_approval(self):
+        for key, value in (("video_sha256", "0" * 64),
+                           ("subtitles_sha256", "0" * 64),
+                           ("owner_approved", True), ("published", True)):
+            bad = copy.deepcopy(self.manifest)
+            bad[key] = value
+            with self.subTest(key=key), self.assertRaises(AnimeReviewGateError):
+                self.record(manifest=bad)
+        for key, value in (("png_sha256", "0" * 64),
+                           ("source_video_sha256", "0" * 64),
+                           ("visual_alignment_verified", True)):
+            bad = copy.deepcopy(self.manifest)
+            bad["mouth_visual_review"][key] = value
+            with self.subTest(key=key), self.assertRaises(AnimeReviewGateError):
+                self.record(manifest=bad)
+        with self.assertRaises(AnimeReviewGateError):
+            self.record(video=self.video + b"tampered")
+        with self.assertRaises(AnimeReviewGateError):
+            self.record(sheet=b"invalid PNG")
+
+    def test_comparison_gaps_are_explicit_and_missing_movement_blocks_pass(self):
+        bad = copy.deepcopy(self.manifest)
+        bad["mouth_visual_review"]["decoded_frame_pair_pixel_evidence"][0]["roi_change_detected"] = False
+        with self.assertRaises(AnimeReviewGateError):
+            self.record(manifest=bad)
+        self.assertEqual(self.record(manifest=bad, verdict="needs_revision")["verdict"],
+                         "needs_revision")
+        bad = copy.deepcopy(self.manifest)
+        bad["mouth_visual_review"]["samples"][0]["sample_kind"] = "no_activity"
+        bad["mouth_visual_review"]["samples"][0]["expected_sprite_visible"] = False
+        bad["mouth_visual_review"]["decoded_frame_pair_pixel_evidence"][0]["status"] = (
+            "not_comparable_no_active_and_quiet_encoded_frames")
+        self.assertEqual(self.record(manifest=bad)["verdict"], "private_qc_pass")
+        bad["mouth_visual_review"]["decoded_frame_pair_pixel_evidence"][0]["status"] = (
+            "sampled_pair_pixel_delta_not_alignment_proof")
+        with self.assertRaises(AnimeReviewGateError):
+            self.record(manifest=bad)
+
+    def test_cli_writes_only_create_only_private_review(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "manifest.json").write_text(json.dumps(self.manifest), encoding="utf-8")
+            (root / "hoshi_anime_animatic_DRAFT.mp4").write_bytes(self.video)
+            (root / "hoshi_anime_animatic_DRAFT.srt").write_bytes(self.srt)
+            (root / "hoshi_mouth_review_DRAFT.png").write_bytes(self.sheet)
+            cmd = [sys.executable, "-m", "scripts.review_hoshi_anime_pilot",
+                   "--draft-dir", str(root), "--verdict", "needs_revision",
+                   "--inspected-video-and-sheet"]
+            for note in self.notes:
+                cmd += ["--shot-note", note]
+            env = dict(os.environ, PYTHONPATH=str(Path(__file__).resolve().parents[1]))
+            first = subprocess.run(cmd, env=env, capture_output=True, text=True, timeout=10)
+            self.assertEqual(first.returncode, 0, first.stderr)
+            record = root / "hoshi_private_qc_review.json"
+            original = record.read_bytes()
+            self.assertFalse(json.loads(original)["publication_permitted"])
+            second = subprocess.run(cmd, env=env, capture_output=True, text=True, timeout=10)
+            self.assertNotEqual(second.returncode, 0)
+            self.assertEqual(record.read_bytes(), original)
+
+
+if __name__ == "__main__":
+    unittest.main()

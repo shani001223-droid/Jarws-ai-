@@ -115,7 +115,7 @@ class AnimePilotAnimaticTests(unittest.TestCase):
                                  "push-in must produce visibly different frames")
 
     def test_private_thumbnail_rejects_rights_bypass_unsafe_titles_and_fake_mp4(self):
-        for title in ("", " <bad>", "Hello\\nWorld", "bad\\u202econtrol", "x" * 121):
+        for title in ("", " <bad>", "Hello\nWorld", "bad\u202econtrol", "x" * 121):
             with self.subTest(title=title), self.assertRaises(AnimeThumbnailError):
                 build_private_thumbnail_candidates(b"fake" * 100, title=title,
                                                    rights_attested=True)

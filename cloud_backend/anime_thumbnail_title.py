@@ -42,7 +42,7 @@ def _require_title_font_cmap(title: str, font_bytes: bytes) -> None:
     not that its GSUB/GPOS shaping, visual quality or licensing is acceptable.
     Joiners U+200C/U+200D are formatting controls, not visible glyphs.
     """
-    if font_bytes[:4] not in (b"\\x00\\x01\\x00\\x00", b"OTTO", b"true"):
+    if font_bytes[:4] not in (b"\x00\x01\x00\x00", b"OTTO", b"true"):
         raise AnimeThumbnailTitleError("Only bounded OpenType/TrueType fonts are supported.")
     font = None
     try:
@@ -50,7 +50,7 @@ def _require_title_font_cmap(title: str, font_bytes: bytes) -> None:
         cmap = font.getBestCmap()
         if not cmap:
             raise AnimeThumbnailTitleError("Font lacks a Unicode character map.")
-        required = {ord(char) for char in title if char not in ("\\u200c", "\\u200d")}
+        required = {ord(char) for char in title if char not in ("\u200c", "\u200d")}
         if any(not cmap.get(codepoint) or cmap[codepoint] == ".notdef"
                for codepoint in required):
             raise AnimeThumbnailTitleError(

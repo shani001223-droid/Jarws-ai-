@@ -1,5 +1,12 @@
 # HOSHI AI — ONE MASTER PROJECT
 
+## 29 October 2026 — Anime Studio waveform-energy handoff (development only)
+
+The same existing private Anime Studio pilot now has `cloud_backend/anime_audio_energy.py`. After exact-byte, rights-attested WAV/storyboard/operator-cue validation, it computes deterministic 12 FPS RMS energy windows for each of three 10-second shots, clamped to the corresponding speaker/caption cue interval. A silent WAV yields **zero** active windows, not fabricated mouth movement. The private MP4 manifest carries `audio_energy_handoff` with the WAV SHA-256, bound voice-plan SHA-256, shot/speaker IDs, active energy windows and explicit `lip_sync_generated=false`. It is an optional local handoff; no new public route, uploads, accounts, model, paid service or user data storage.
+
+**Not lip-sync:** amplitude can reflect music/noise, not speech content, phonemes, facial landmarks or synchronized character-mouth animation. No Hindi/Urdu TTS, voice recognition, original character animation, production render, owner approval or physical Realme Note 50 acceptance is claimed. Source/test verification requires green full Python/Node/Playwright and Docker CI on the exact latest head; keep Task 59 unchecked and the canonical 48/60 count unchanged until its full acceptance. Existing PR #29 remains the sole review PR. No production merge or deployment.
+
+
 ## 29 October 2026 — voice-cue-timed SRT export (development, Task 59 partial)
 
 The same offline Anime Studio renderer now uses **validated operator-supplied voice cue intervals** to write the real UTF-8 SRT sidecar when `--voice-cues-json` is supplied with its required exact storyboard/WAV SHA bindings and rights attestations. Previously, subtitles were always displayed for whole 10-second shots even when operator voice cues occupied only part of each shot. The new SRT displays the original caption only within its corresponding verified-schema cue window, leaves gaps blank, preserves Hindi/Urdu/Roman Urdu Unicode and SHA-256 manifest integrity, and labels `subtitle_timing_source=operator_supplied_voice_cues_not_audio_verified`. Without a cue plan, the original fixed 10-second SRT remains unchanged. Real MP4/CLI integration and negative-input regression assertions were added to `tests/test_anime_voice_timing.py`.

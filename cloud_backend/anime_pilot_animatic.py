@@ -77,6 +77,28 @@ def _captions_to_srt(captions: tuple[str, ...] | list[str]) -> bytes:
     return ("\n".join(blocks) + "\n").encode("utf-8")
 
 
+def _voice_cues_to_srt(voice_timing: dict) -> bytes:
+    """Export operator-validated speech intervals, not inferred lip-sync.
+
+    The exact original caption is displayed only during its supplied cue window.
+    Silent gaps are intentionally left without subtitles. All intervals and
+    captions were validated by bind_voice_timing_handoff before this call.
+    """
+    blocks = []
+    for index, cue in enumerate(voice_timing["plan"]["cues"], 1):
+        def timestamp(ms: int) -> str:
+            hours, remainder = divmod(ms, 3_600_000)
+            minutes, remainder = divmod(remainder, 60_000)
+            seconds, millis = divmod(remainder, 1000)
+            return f"{hours:02d}:{minutes:02d}:{seconds:02d},{millis:03d}"
+
+        blocks.append(
+            f'{index}\\n{timestamp(cue["start_ms"])} --> '
+            f'{timestamp(cue["end_ms"])}\\n{cue["text"]}\\n'
+        )
+    return ("\\n".join(blocks) + "\\n").encode("utf-8")
+
+
 def _validate_audio(audio: bytes) -> None:
     if type(audio) is not bytes or not 44 <= len(audio) <= MAX_AUDIO_BYTES:
         raise AnimePilotError("Optional audio must be a bounded PCM WAV.")
@@ -185,6 +207,9 @@ def render_private_animatic(stills: list[bytes] | tuple[bytes, ...],
             voice_timing = bind_voice_timing_handoff(voice_timing_plan, handoff, audio_wav)
         except VoiceTimingError as exc:
             raise AnimePilotError(str(exc)) from None
+        # Match the actual SRT sidecar to validated operator cue intervals.
+        # This does not certify that the WAV contains the spoken words.
+        srt = _voice_cues_to_srt(voice_timing)
     ffmpeg, ffprobe = shutil.which("ffmpeg"), shutil.which("ffprobe")
     if not ffmpeg or not ffprobe:
         raise AnimePilotError("Offline FFmpeg and ffprobe are required.")
@@ -240,6 +265,8 @@ def render_private_animatic(stills: list[bytes] | tuple[bytes, ...],
         "camera_moves": list(camera_moves),
         "storyboard_handoff": handoff,
         "voice_timing_handoff": voice_timing,
+        "subtitle_timing_source": ("operator_supplied_voice_cues_not_audio_verified"
+                                   if voice_timing is not None else "fixed_ten_second_shots"),
         "camera_motion_is_2d_still_reframing": any(m != "static" for m in camera_moves),
         "production_roles": list(ROLES),
         "stage": "private_storyboard_animatic_only",

@@ -8,6 +8,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import shutil
 import sys
 import tempfile
 import unittest
@@ -15,6 +16,7 @@ import unittest
 from PIL import Image
 
 from cloud_backend.anime_review_gate import AnimeReviewGateError, record_private_review
+from cloud_backend.anime_visual_review import _verify_review_media
 
 
 def sha(data):
@@ -128,9 +130,11 @@ class PrivateReviewGateTests(unittest.TestCase):
                 capture_output=True, timeout=30, check=False)
             self.assertEqual(result.returncode, 0, result.stderr[:300])
             silent_video = silent_path.read_bytes()
+            silent_media_qc = _verify_review_media(silent_path, shutil.which("ffprobe"))
         manifest = copy.deepcopy(self.manifest)
         manifest["video_sha256"] = sha(silent_video)
         manifest["mouth_visual_review"]["source_video_sha256"] = sha(silent_video)
+        manifest["mouth_visual_review"]["media_qc"] = silent_media_qc
         with self.assertRaisesRegex(AnimeReviewGateError, "Silent caption interval"):
             self.record(manifest=manifest, video=silent_video)
         result = self.record(manifest=manifest, video=silent_video,

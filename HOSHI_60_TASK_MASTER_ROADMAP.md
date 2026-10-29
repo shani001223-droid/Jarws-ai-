@@ -1,5 +1,11 @@
 # HOSHI — 60-Task Autonomous Development Roadmap
 
+## 29 October 2026 — Task 59 real-media private QC revalidation (PARTIAL; CI verified)
+
+- At human-review decision time, `cloud_backend/anime_review_gate.py` now independently probes the **exact submitted MP4** instead of relying only on manifest hashes and a self-reported prior `media_qc` object. It checks real H.264/AAC streams, 480×270 resolution, 12 FPS, 360 decoded frames, duration and metadata agreement; forged encoded bytes with matching SHA-256 metadata and falsified QC duration fail closed. No publishing or owner approval is granted.
+- `tests/test_anime_review_gate.py` now generates a genuine local 30-second H.264/AAC fixture and adds forged-media and metadata-mismatch regressions. **Verified source/test head `7e37c0f8091e88f2f8b62364cff3e3b47315f2a9`:** [full Python/JS/Playwright CI passed](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40840503369) and [Docker/Uvicorn smoke passed](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40840503393). A predecessor code-only CI failed on obsolete synthetic fixture; the verified source/test head includes its correction. This is real media-structure QC, **not** validated original Hindi/Urdu speech, character alignment, professional lip-sync, source rights, reviewer identity, Realme Note 50 physical QA or owner production acceptance.
+- **Task 59 remains unchecked. Only canonical scoreboard: 48/60 checked, 12 pending.** Existing draft PR #29 only; no new repo/PR/tracker/automation, production merge/deploy, external upload, purchase, secret change or real trade.
+
 ## 29 October 2026 — Task 59 private human QC decision record (PARTIAL; CI verified)
 
 - Added a **real local, create-only human review step** to the existing offline Anime Studio pilot: `cloud_backend/anime_review_gate.py`, `scripts/review_hoshi_anime_pilot.py` and `tests/test_anime_review_gate.py`. Exact MP4/SRT/contact-sheet SHA-256 binding, three shot-specific notes, an explicit operator inspection attestation, a private verdict (`private_qc_pass` / `needs_revision`), decoded-frame review provenance, and rejection of no-change comparable mouth ROI are enforced. The QC record is a separate non-overwriting JSON artifact, not a new project or task tracker. No upload/publish path is introduced.

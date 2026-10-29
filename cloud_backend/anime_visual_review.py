@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from io import BytesIO
 import hashlib
+import json
 from pathlib import Path
 import shutil
 import subprocess
@@ -67,6 +68,50 @@ def _sample_times(overlay: dict) -> list[dict]:
     return samples
 
 
+def _verify_review_media(path: Path, ffprobe: str) -> dict:
+    """Independently decode-count the exact private pilot before showing samples.
+
+    Six sampled frames alone cannot prove that an arbitrary supplied video is
+    the expected 30-second H.264/AAC pilot. No inferred approval or lip sync.
+    """
+    try:
+        completed = subprocess.run(
+            [ffprobe, "-v", "error", "-count_frames", "-show_entries",
+             "stream=codec_type,codec_name,width,height,avg_frame_rate,nb_read_frames:"
+             "format=duration,format_name", "-of", "json", str(path)],
+            capture_output=True, timeout=25, check=False,
+        )
+        if completed.returncode != 0 or not 1 <= len(completed.stdout) <= 16000:
+            raise AnimeVisualReviewError("Private review MP4 probe failed.")
+        info = json.loads(completed.stdout)
+        streams = info["streams"]
+        if type(streams) is not list or len(streams) != 2:
+            raise AnimeVisualReviewError("Review requires exactly one video and AAC audio stream.")
+        video = [item for item in streams if item.get("codec_type") == "video"]
+        audio = [item for item in streams if item.get("codec_type") == "audio"]
+        duration = float(info["format"]["duration"])
+        if (len(video) != 1 or len(audio) != 1
+                or video[0].get("codec_name") != "h264"
+                or audio[0].get("codec_name") != "aac"
+                or (video[0].get("width"), video[0].get("height")) !=
+                (FRAME_WIDTH, FRAME_HEIGHT)
+                or video[0].get("avg_frame_rate") != "12/1"
+                or video[0].get("nb_read_frames") != "360"
+                or "mp4" not in info["format"].get("format_name", "")
+                or not 29.8 <= duration <= 30.3):
+            raise AnimeVisualReviewError("Review MP4 codec, frame count or duration mismatch.")
+        return {
+            "codec": "h264", "audio_codec": "aac",
+            "width": FRAME_WIDTH, "height": FRAME_HEIGHT,
+            "frame_rate": 12, "decoded_video_frames": 360,
+            "duration_seconds": round(duration, 3),
+            "status": "independently_probed_media_not_visual_approval",
+        }
+    except (OSError, subprocess.TimeoutExpired, ValueError, KeyError, TypeError,
+            AttributeError, IndexError):
+        raise AnimeVisualReviewError("Could not independently verify review MP4.") from None
+
+
 def build_mouth_review_sheet(video_mp4: bytes, mouth_overlay: dict,
                              *, ffmpeg_binary: str | None = None) -> dict:
     """Return an actual-frame PNG contact sheet plus manual-review metadata.
@@ -78,14 +123,16 @@ def build_mouth_review_sheet(video_mp4: bytes, mouth_overlay: dict,
         raise AnimeVisualReviewError("Bounded encoded MP4 bytes required.")
     samples = _sample_times(mouth_overlay)
     ffmpeg = ffmpeg_binary or shutil.which("ffmpeg")
-    if not ffmpeg:
-        raise AnimeVisualReviewError("Local FFmpeg is required for visual review.")
+    ffprobe = shutil.which("ffprobe")
+    if not ffmpeg or not ffprobe:
+        raise AnimeVisualReviewError("Local FFmpeg and ffprobe are required for visual review.")
     sheet = Image.new("RGB", (FRAME_WIDTH * 3, (FRAME_HEIGHT + 26) * 2), (12, 15, 24))
     draw = ImageDraw.Draw(sheet)
     try:
         with tempfile.TemporaryDirectory(prefix="hoshi-mouth-review-") as directory:
             path = Path(directory) / "draft.mp4"
             path.write_bytes(video_mp4)
+            media_qc = _verify_review_media(path, ffprobe)
             for idx, sample in enumerate(samples):
                 command = [ffmpeg, "-hide_banner", "-loglevel", "error", "-nostdin",
                            "-ss", f'{sample["time_ms"] / 1000:.3f}', "-i", str(path),
@@ -121,6 +168,7 @@ def build_mouth_review_sheet(video_mp4: bytes, mouth_overlay: dict,
         "samples": [{k: v for k, v in s.items() if k not in
                      ("x", "y", "width", "height")} for s in samples],
         "source_video_sha256": hashlib.sha256(video_mp4).hexdigest(),
+        "media_qc": media_qc,
         "review_source": "decoded_mp4_frames_with_operator_sprite_position_guides",
         "visual_alignment_verified": False,
         "owner_approved": False,

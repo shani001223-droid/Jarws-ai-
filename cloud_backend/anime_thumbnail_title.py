@@ -107,24 +107,44 @@ def render_private_titled_thumbnail(preview: dict, font_bytes: bytes, *,
                 raise AnimeThumbnailTitleError("Unexpected selected preview dimensions or format.")
             source.load()
             canvas = source.convert("RGBA")
+        # Measure at the exact final RAQM anchor, including the stroke. Measuring
+        # at (0, 0) with Pillow's default anchor can miss real clipping for RTL
+        # scripts with nontrivial bearings and ascenders/descenders.
+        safe_area = (80, 554, 1200, 705)  # inset inside the dark lower band
+        anchor = (640, 630)
         font = None
+        layout_box = None
+        selected_font_size = None
         for size in range(88, 29, -2):
             candidate = ImageFont.truetype(BytesIO(font_bytes), size=size,
                                            layout_engine=ImageFont.Layout.RAQM)
             box = ImageDraw.Draw(canvas).textbbox(
-                (0, 0), title, font=candidate, direction=direction, stroke_width=2)
-            if 0 < box[2] - box[0] <= 1120 and 0 < box[3] - box[1] <= 124:
-                font = candidate
+                anchor, title, font=candidate, anchor="mm",
+                direction=direction, stroke_width=2)
+            if (box[0] >= safe_area[0] and box[1] >= safe_area[1]
+                    and box[2] <= safe_area[2] and box[3] <= safe_area[3]
+                    and box[2] > box[0] and box[3] > box[1]):
+                font, layout_box, selected_font_size = candidate, box, size
                 break
         if font is None:
             raise AnimeThumbnailTitleError("Title does not fit the safe design area.")
+        # Draw text separately from the opaque title band so an empty/blank
+        # glyph outline cannot be mistaken for successfully rendered lettering.
+        text_layer = Image.new("RGBA", canvas.size, (0, 0, 0, 0))
+        ImageDraw.Draw(text_layer).text(
+            anchor, title, font=font, anchor="mm", direction=direction,
+            fill=(255, 255, 255, 255), stroke_width=2,
+            stroke_fill=(4, 7, 14, 255))
+        ink_box = text_layer.getchannel("A").getbbox()
+        if (ink_box is None or ink_box[0] < safe_area[0]
+                or ink_box[1] < safe_area[1] or ink_box[2] > safe_area[2]
+                or ink_box[3] > safe_area[3]):
+            raise AnimeThumbnailTitleError("Title ink is blank or outside safe design area.")
         overlay = Image.new("RGBA", canvas.size, (0, 0, 0, 0))
-        draw = ImageDraw.Draw(overlay)
-        draw.rectangle((0, 540, 1279, 719), fill=(8, 13, 25, 215))
-        draw.text((640, 630), title, font=font, anchor="mm", direction=direction,
-                  fill=(255, 255, 255, 255), stroke_width=2,
-                  stroke_fill=(4, 7, 14, 255))
-        canvas = Image.alpha_composite(canvas, overlay).convert("RGB")
+        ImageDraw.Draw(overlay).rectangle(
+            (0, 540, 1279, 719), fill=(8, 13, 25, 215))
+        canvas = Image.alpha_composite(
+            Image.alpha_composite(canvas, overlay), text_layer).convert("RGB")
         output = BytesIO()
         canvas.save(output, format="PNG")
         rendered = output.getvalue()
@@ -147,6 +167,11 @@ def render_private_titled_thumbnail(preview: dict, font_bytes: bytes, *,
         "title_script_hint": script,
         "font_sha256": _sha(font_bytes),
         "font_shaping_engine": "libraqm",
+        "title_font_size_px": selected_font_size,
+        "title_layout_bbox_px": list(layout_box),
+        "title_ink_bbox_px": list(ink_box),
+        "title_safe_area_px": list(safe_area),
+        "title_ink_presence_and_safe_bounds_checked": True,
         "preview_resolution": [1280, 720],
         "upscaled_from_low_resolution": True,
         "typography_added": True,

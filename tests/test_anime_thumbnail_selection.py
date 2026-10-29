@@ -262,6 +262,41 @@ class PrivateThumbnailSelectionTests(unittest.TestCase):
                     dict(preview, title_utf8_not_rendered=title),
                     self._local_font_bytes(), font_rights_attested=True)
 
+    def test_titled_ink_is_nonblank_and_inside_actual_raqm_anchor_bounds(self):
+        from PIL import features
+        from cloud_backend.anime_thumbnail_export import build_private_selected_thumbnail_preview
+        from cloud_backend.anime_thumbnail_title import (
+            AnimeThumbnailTitleError, render_private_titled_thumbnail)
+        if not features.check("raqm"):
+            self.skipTest("RAQM unavailable: must fail closed in production")
+        preview = build_private_selected_thumbnail_preview(
+            self.manifest, self.video, self.sheet, self.select())
+        font = self._local_font_bytes()
+        for title in ("نئی کتاب", "W" * 30):
+            with self.subTest(title=title):
+                draft = render_private_titled_thumbnail(
+                    dict(preview, title_utf8_not_rendered=title),
+                    font, font_rights_attested=True)
+                self.assertTrue(draft["title_ink_presence_and_safe_bounds_checked"])
+                left, top, right, bottom = draft["title_ink_bbox_px"]
+                x0, y0, x1, y1 = draft["title_safe_area_px"]
+                self.assertLess(left, right)
+                self.assertLess(top, bottom)
+                self.assertGreaterEqual(left, x0)
+                self.assertGreaterEqual(top, y0)
+                self.assertLessEqual(right, x1)
+                self.assertLessEqual(bottom, y1)
+                self.assertGreaterEqual(draft["title_font_size_px"], 30)
+                self.assertLessEqual(draft["title_font_size_px"], 88)
+                self.assertEqual(len(draft["title_layout_bbox_px"]), 4)
+                self.assertFalse(draft["publication_permitted"])
+        # 80 very wide letters cannot fit even at the minimum font size.
+        # A partially clipped title must fail rather than be silently exported.
+        with self.assertRaisesRegex(AnimeThumbnailTitleError, "safe design area"):
+            render_private_titled_thumbnail(
+                dict(preview, title_utf8_not_rendered="W" * 80),
+                font, font_rights_attested=True)
+
     def test_titled_draft_fails_closed_on_invalid_font_preview_or_rights(self):
         from PIL import features
         from cloud_backend.anime_thumbnail_export import build_private_selected_thumbnail_preview

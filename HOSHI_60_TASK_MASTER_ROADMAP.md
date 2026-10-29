@@ -1,5 +1,11 @@
 # HOSHI — 60-Task Autonomous Development Roadmap
 
+## 29 October 2026 — Task 59 private human QC decision record (PARTIAL; CI pending)
+
+- Added a **real local, create-only human review step** to the existing offline Anime Studio pilot: `cloud_backend/anime_review_gate.py`, `scripts/review_hoshi_anime_pilot.py` and `tests/test_anime_review_gate.py`. Exact MP4/SRT/contact-sheet SHA-256 binding, three shot-specific notes, an explicit operator inspection attestation, a private verdict (`private_qc_pass` / `needs_revision`), decoded-frame review provenance, and rejection of no-change comparable mouth ROI are enforced. The QC record is a separate non-overwriting JSON artifact, not a new project or task tracker. No upload/publish path is introduced.
+- **Acceptance boundaries:** five focused unit/CLI tests passed locally. GitHub full Python/JS/Playwright and Docker CI must be checked on the final branch head; never claim pending checks passed. The record does **not** independently verify reviewer identity, artistic quality, actual Hindi/Urdu words, phoneme lip-sync, source rights, owner approval, physical Realme Note 50 playback or production readiness. It always records `owner_approved=false`, `release_authorized=false`, `publication_permitted=false`.
+- **Task 59 remains unchecked; canonical scoreboard stays 48/60, 12 pending.** Existing draft PR #29 only. No merge/deploy, external publication, purchase, secret changes or live trades.
+
 ## 29 October 2026 — Task 59 measurable decoded-frame review evidence (PARTIAL; not accepted)
 
 - Existing operator-only mouth review now includes decoded RGB frame SHA-256 and per-shot inside/outside-mouth-ROI pixel-change measurements between actual encoded active and quiet frames. If a shot lacks both kinds, it explicitly reports `not_comparable`. Pixel changes can arise from camera motion/background/compression and **are not evidence of correct anatomical mouth alignment or phoneme-level lip-sync**. Manual review and owner approval remain required; no automatic acceptance.

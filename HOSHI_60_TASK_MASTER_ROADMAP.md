@@ -1,5 +1,12 @@
 # HOSHI — 60-Task Autonomous Development Roadmap
 
+## 29 October 2026 — Task 59: verified two-state mouth sprite in real MP4 (PARTIAL)
+
+- `cloud_backend/anime_mouth_overlay.py` validates three operator-owned transparent RGBA PNG mouth sprites (byte SHA-256, bounds, original rights attestation), explicit shot/speaker/position binding and previously validated WAV/voice-cue energy. `cloud_backend/anime_pilot_animatic.py` and `scripts/render_hoshi_anime_animatic.py` actually composite those sprites on/off during 12 FPS RMS activity in the private H.264/AAC animatic. The existing create-only CLI output and subtitle timing remain; no automatic posting or public endpoint.
+- `tests/test_anime_mouth_overlay.py` covers invalid rights, speaker, hashes, positions and files, silent WAV, and real decoded MP4 frames demonstrating an audible-window sprite appears then disappears. **Source/test head `4cee8c22fa3e441ab13d631b5c2a33396ec0e940`:** [full Python/Node/Playwright checks succeeded](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40801158360); [Docker/Uvicorn smoke succeeded](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40801158382).
+- **Not accepted:** This is only an operator-positioned two-state sprite overlay driven by audio energy, **not** verified speech, phoneme alignment, professional lip-sync, generated Hindi/Urdu voices, automatic character art, full animation, visual QC, physical Realme Note 50 playback or production acceptance. Noise/music may activate sprites. **Task 59 unchecked; canonical 48/60 unchanged.** Existing draft PR #29 only, no release or publication.
+
+
 ## 29 October 2026 — Task 59: offline WAV energy windows (PARTIAL, NOT ACCEPTED)
 
 - Added `cloud_backend/anime_audio_energy.py` and `tests/test_anime_audio_energy.py`; the private 30-second MP4 renderer optionally emits a SHA-bound 12 FPS waveform-RMS activity handoff after operator voice-cue validation. Three speaker/shot windows are clamped to each supplied cue. All-zero WAV produces no active windows; altered audio hashes and invalid intervals fail closed. Existing real MP4/CLI test now checks the manifest's silence/identity/no-lip-sync flags.

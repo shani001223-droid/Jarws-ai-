@@ -20,6 +20,8 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 from .anime_storyboard_handoff import bind_storyboard_handoff, StoryboardHandoffError
 from .anime_voice_timing import bind_voice_timing_handoff, VoiceTimingError
 from .anime_audio_energy import build_audio_energy_handoff, AudioEnergyError
+from .anime_mouth_overlay import (bind_mouth_overlay, sprite_enable_expression,
+                                  MouthOverlayError)
 
 
 class AnimePilotError(ValueError):
@@ -140,11 +142,12 @@ def _probe(path: Path, ffprobe: str, with_audio: bool) -> None:
         raise AnimePilotError("Could not independently verify MP4.") from None
 
 
-def _camera_filter(moves: tuple[str, ...]) -> str:
+def _camera_filter(moves: tuple[str, ...], mouth_overlay: dict | None = None) -> str:
     """Allowlisted FFmpeg 2D still reframing; never interpolate character motion."""
     segments = []
     for index, move in enumerate(moves):
-        source, target = f"[{index}:v]", f"[shot{index}]"
+        source = f"[{index}:v]"
+        target = f"[shot{index}base]" if mouth_overlay is not None else f"[shot{index}]"
         if move == "static":
             effect = "setpts=PTS-STARTPTS"
         elif move == "push_in":
@@ -158,6 +161,14 @@ def _camera_filter(moves: tuple[str, ...]) -> str:
                       f"y='(ih-ih/zoom)/2':d=1:s={WIDTH}x{HEIGHT}:"
                       f"fps={FPS},setpts=PTS-STARTPTS")
         segments.append(f"{source}{effect}{target}")
+    if mouth_overlay is not None:
+        for index, sprite in enumerate(mouth_overlay["sprites"]):
+            enable = sprite_enable_expression(index, sprite["energy_windows_ms"])
+            segments.append(
+                f"[shot{index}base][{index + 3}:v]overlay="
+                f"x={sprite['x']}:y={sprite['y']}:"
+                f"enable='{enable}':shortest=1:format=auto[shot{index}]"
+            )
     segments.append("[shot0][shot1][shot2]concat=n=3:v=1:a=0,format=yuv420p[v]")
     return ";".join(segments)
 
@@ -169,7 +180,10 @@ def render_private_animatic(stills: list[bytes] | tuple[bytes, ...],
                             audio_rights_attested: bool = False,
                             camera_moves: list[str] | tuple[str, ...] | None = None,
                             storyboard_handoff: dict | None = None,
-                            voice_timing_plan: dict | None = None) -> dict:
+                            voice_timing_plan: dict | None = None,
+                            mouth_overlay_plan: dict | None = None,
+                            mouth_sprites: list[bytes] | tuple[bytes, ...] | None = None,
+                            mouth_rights_attested: bool = False) -> dict:
     """Encode a private 30-second storyboard preview; never approve/publish it.
 
     Caller must attest rights to every still and optional soundtrack. No claim
@@ -218,6 +232,17 @@ def render_private_animatic(stills: list[bytes] | tuple[bytes, ...],
             audio_energy = build_audio_energy_handoff(audio_wav, voice_timing)
         except AudioEnergyError as exc:
             raise AnimePilotError(str(exc)) from None
+    mouth_overlay = None
+    if type(mouth_rights_attested) is not bool:
+        raise AnimePilotError("Mouth sprite rights attestation must be boolean.")
+    if (mouth_overlay_plan is not None or mouth_sprites is not None
+            or mouth_rights_attested):
+        try:
+            mouth_overlay = bind_mouth_overlay(
+                mouth_overlay_plan, mouth_sprites, voice_timing, audio_energy,
+                rights_attested=mouth_rights_attested)
+        except MouthOverlayError as exc:
+            raise AnimePilotError(str(exc)) from None
     ffmpeg, ffprobe = shutil.which("ffmpeg"), shutil.which("ffprobe")
     if not ffmpeg or not ffprobe:
         raise AnimePilotError("Offline FFmpeg and ffprobe are required.")
@@ -231,14 +256,20 @@ def render_private_animatic(stills: list[bytes] | tuple[bytes, ...],
                 frame.save(path, format="PNG")
                 cmd += ["-loop", "1", "-framerate", str(FPS),
                         "-t", str(SHOT_SECONDS), "-i", str(path)]
+            if mouth_overlay is not None:
+                for index, source in enumerate(mouth_sprites):
+                    sprite_path = root / f"mouth{index}.png"
+                    sprite_path.write_bytes(source)
+                    cmd += ["-loop", "1", "-framerate", str(FPS),
+                            "-t", str(SHOT_SECONDS), "-i", str(sprite_path)]
             if audio_wav is not None:
                 wav_path = root / "audio.wav"
                 wav_path.write_bytes(audio_wav)
                 cmd += ["-i", str(wav_path)]
-            cmd += ["-filter_complex", _camera_filter(camera_moves),
+            cmd += ["-filter_complex", _camera_filter(camera_moves, mouth_overlay),
                     "-map", "[v]"]
             if audio_wav is not None:
-                cmd += ["-map", "3:a:0"]
+                cmd += ["-map", "6:a:0" if mouth_overlay is not None else "3:a:0"]
             cmd += ["-frames:v", str(DURATION_SECONDS * FPS), "-r", str(FPS),
                     "-c:v", "libx264", "-threads", "2", "-preset", "ultrafast",
                     "-crf", "32", "-pix_fmt", "yuv420p"]
@@ -274,6 +305,7 @@ def render_private_animatic(stills: list[bytes] | tuple[bytes, ...],
         "storyboard_handoff": handoff,
         "voice_timing_handoff": voice_timing,
         "audio_energy_handoff": audio_energy,
+        "mouth_overlay_handoff": mouth_overlay,
         "subtitle_timing_source": ("operator_supplied_voice_cues_not_audio_verified"
                                    if voice_timing is not None else "fixed_ten_second_shots"),
         "camera_motion_is_2d_still_reframing": any(m != "static" for m in camera_moves),

@@ -13,6 +13,8 @@ from cloud_backend.anime_pilot_animatic import (
     AnimePilotError, MAX_IMAGE_BYTES, MAX_AUDIO_BYTES, render_private_animatic,
 )
 from cloud_backend.anime_mouth_overlay import MAX_SPRITE_BYTES
+from cloud_backend.anime_visual_review import (build_mouth_review_sheet,
+                                               AnimeVisualReviewError)
 
 
 def main() -> int:
@@ -30,6 +32,8 @@ def main() -> int:
                         help="Optional v1 original mouth sprite positions and exact SHA-256")
     parser.add_argument("--mouth-sprite", action="append",
                         help="Optional original transparent mouth-open RGBA PNG, exactly 3")
+    parser.add_argument("--mouth-review-sheet", action="store_true",
+                        help="Export a private decoded-frame PNG contact sheet for manual mouth placement review")
     parser.add_argument("--mouth-rights-attested", action="store_true",
                         help="Operator confirms rights to all mouth sprites; not phoneme lip-sync")
     parser.add_argument("--audio-rights-attested", action="store_true",
@@ -45,6 +49,8 @@ def main() -> int:
         parser.error("Explicit --image-rights-attested is required.")
     if bool(args.audio_wav) != args.audio_rights_attested:
         parser.error("--audio-wav and --audio-rights-attested must be supplied together.")
+    if args.mouth_review_sheet and not args.mouth_overlay_json:
+        parser.error("--mouth-review-sheet requires the complete mouth-overlay input.")
     if (args.mouth_overlay_json is not None or args.mouth_sprite is not None
             or args.mouth_rights_attested):
         if (not args.mouth_overlay_json or args.mouth_sprite is None
@@ -108,6 +114,13 @@ def main() -> int:
             voice_timing_plan=voice_cues,
             mouth_overlay_plan=mouth_plan, mouth_sprites=mouth_sprites,
             mouth_rights_attested=args.mouth_rights_attested)
+        review = None
+        if args.mouth_review_sheet:
+            try:
+                review = build_mouth_review_sheet(
+                    output["video_mp4"], output["mouth_overlay_handoff"])
+            except AnimeVisualReviewError as exc:
+                raise AnimePilotError(str(exc)) from None
         destination = Path(args.out)
         destination.mkdir(parents=False, exist_ok=False)
         try:
@@ -116,6 +129,10 @@ def main() -> int:
                 output["subtitles_srt"])
             metadata = {k: v for k, v in output.items()
                         if k not in ("video_mp4", "subtitles_srt")}
+            if review is not None:
+                (destination / review["filename"]).write_bytes(review["png_bytes"])
+                metadata["mouth_visual_review"] = {
+                    k: v for k, v in review.items() if k != "png_bytes"}
             (destination / "manifest.json").write_text(
                 json.dumps(metadata, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
                 encoding="utf-8")

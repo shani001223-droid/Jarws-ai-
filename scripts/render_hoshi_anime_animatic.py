@@ -13,6 +13,8 @@ from cloud_backend.anime_pilot_animatic import (
     AnimePilotError, MAX_IMAGE_BYTES, MAX_AUDIO_BYTES, render_private_animatic,
 )
 from cloud_backend.anime_mouth_overlay import MAX_SPRITE_BYTES
+from cloud_backend.anime_thumbnail import (build_private_thumbnail_candidates,
+                                           AnimeThumbnailError)
 from cloud_backend.anime_visual_review import (build_mouth_review_sheet,
                                                AnimeVisualReviewError)
 
@@ -32,6 +34,10 @@ def main() -> int:
                         help="Optional v1 original mouth sprite positions and exact SHA-256")
     parser.add_argument("--mouth-sprite", action="append",
                         help="Optional original transparent mouth-open RGBA PNG, exactly 3")
+    parser.add_argument("--thumbnail-candidates", action="store_true",
+                        help="Export three actual decoded MP4 thumbnail frame candidates (private draft)")
+    parser.add_argument("--thumbnail-title",
+                        help="UTF-8 Hindi/Urdu/Roman Urdu title for thumbnail metadata, not rendered text")
     parser.add_argument("--mouth-review-sheet", action="store_true",
                         help="Export a private decoded-frame PNG contact sheet for manual mouth placement review")
     parser.add_argument("--mouth-rights-attested", action="store_true",
@@ -49,6 +55,8 @@ def main() -> int:
         parser.error("Explicit --image-rights-attested is required.")
     if bool(args.audio_wav) != args.audio_rights_attested:
         parser.error("--audio-wav and --audio-rights-attested must be supplied together.")
+    if bool(args.thumbnail_candidates) != bool(args.thumbnail_title):
+        parser.error("--thumbnail-candidates and --thumbnail-title must be supplied together.")
     if args.mouth_review_sheet and not args.mouth_overlay_json:
         parser.error("--mouth-review-sheet requires the complete mouth-overlay input.")
     if (args.mouth_overlay_json is not None or args.mouth_sprite is not None
@@ -121,6 +129,14 @@ def main() -> int:
                     output["video_mp4"], output["mouth_overlay_handoff"])
             except AnimeVisualReviewError as exc:
                 raise AnimePilotError(str(exc)) from None
+        thumbnails = None
+        if args.thumbnail_candidates:
+            try:
+                thumbnails = build_private_thumbnail_candidates(
+                    output["video_mp4"], title=args.thumbnail_title,
+                    rights_attested=args.image_rights_attested)
+            except AnimeThumbnailError as exc:
+                raise AnimePilotError(str(exc)) from None
         destination = Path(args.out)
         destination.mkdir(parents=False, exist_ok=False)
         try:
@@ -133,6 +149,10 @@ def main() -> int:
                 (destination / review["filename"]).write_bytes(review["png_bytes"])
                 metadata["mouth_visual_review"] = {
                     k: v for k, v in review.items() if k != "png_bytes"}
+            if thumbnails is not None:
+                (destination / thumbnails["filename"]).write_bytes(thumbnails["png_bytes"])
+                metadata["thumbnail_candidates"] = {
+                    k: v for k, v in thumbnails.items() if k != "png_bytes"}
             (destination / "manifest.json").write_text(
                 json.dumps(metadata, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
                 encoding="utf-8")

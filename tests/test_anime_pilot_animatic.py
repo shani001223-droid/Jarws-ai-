@@ -16,6 +16,8 @@ from unittest.mock import patch
 from PIL import Image, ImageDraw, ImageChops
 
 from cloud_backend import anime_pilot_animatic as pilot
+from cloud_backend.anime_thumbnail import (build_private_thumbnail_candidates,
+                                           AnimeThumbnailError)
 
 
 def original_stills():
@@ -112,6 +114,20 @@ class AnimePilotAnimaticTests(unittest.TestCase):
             self.assertIsNotNone(difference.getbbox(),
                                  "push-in must produce visibly different frames")
 
+    def test_private_thumbnail_rejects_rights_bypass_unsafe_titles_and_fake_mp4(self):
+        for title in ("", " <bad>", "Hello\\nWorld", "bad\\u202econtrol", "x" * 121):
+            with self.subTest(title=title), self.assertRaises(AnimeThumbnailError):
+                build_private_thumbnail_candidates(b"fake" * 100, title=title,
+                                                   rights_attested=True)
+        for rights in (False, 1, None):
+            with self.subTest(rights=rights), self.assertRaisesRegex(
+                    AnimeThumbnailError, "rights"):
+                build_private_thumbnail_candidates(b"fake" * 100, title="اصل کہانی",
+                                                   rights_attested=rights)
+        with self.assertRaises(AnimeThumbnailError):
+            build_private_thumbnail_candidates(b"fake" * 100,
+                                               title="एक नई कहानी", rights_attested=True)
+
     def test_missing_ffmpeg_fails_closed(self):
         with patch.object(pilot.shutil, "which", return_value=None):
             with self.assertRaisesRegex(pilot.AnimePilotError, "FFmpeg"):
@@ -159,7 +175,8 @@ class AnimePilotAnimaticTests(unittest.TestCase):
                 cmd += ["--shot", str(path)]
             for caption in CAPTIONS:
                 cmd += ["--caption", caption]
-            cmd += ["--image-rights-attested", "--out", str(out)]
+            cmd += ["--image-rights-attested", "--thumbnail-candidates",
+                    "--thumbnail-title", "ایک نئی کہانی / नई कहानी", "--out", str(out)]
             for move in ("push_in", "pan_left", "pan_right"):
                 cmd += ["--camera-move", move]
             first = subprocess.run(cmd, text=True, capture_output=True, timeout=110)
@@ -168,13 +185,30 @@ class AnimePilotAnimaticTests(unittest.TestCase):
             self.assertFalse(manifest["owner_approved"])
             self.assertTrue(manifest["actual_mp4_rendered"])
             self.assertEqual(manifest["camera_moves"], ["push_in", "pan_left", "pan_right"])
+            thumbnail = manifest["thumbnail_candidates"]
+            candidate_png = (out / thumbnail["filename"]).read_bytes()
+            self.assertEqual(hashlib.sha256(candidate_png).hexdigest(),
+                             thumbnail["png_sha256"])
+            with Image.open(BytesIO(candidate_png)) as candidate_sheet:
+                self.assertEqual(candidate_sheet.size, (1440, 300))
+            self.assertEqual([x["frame_index"] for x in thumbnail["candidate_frames"]],
+                             [60, 180, 300])
+            self.assertEqual(thumbnail["title_utf8_not_rendered"],
+                             "ایک نئی کہانی / नई कहानी")
+            self.assertFalse(thumbnail["typography_added"])
+            self.assertFalse(thumbnail["candidate_selected"])
+            self.assertFalse(thumbnail["owner_approved"])
+            self.assertFalse(thumbnail["publication_permitted"])
             mp4 = (out / manifest["filename"]).read_bytes()
+            self.assertEqual(thumbnail["source_video_sha256"],
+                             hashlib.sha256(mp4).hexdigest())
             self.assertEqual(hashlib.sha256(mp4).hexdigest(), manifest["video_sha256"])
             self.assertEqual((out / "hoshi_anime_animatic_DRAFT.srt").read_bytes(),
                              pilot._captions_to_srt(CAPTIONS))
             second = subprocess.run(cmd, text=True, capture_output=True, timeout=110)
             self.assertNotEqual(second.returncode, 0)
             self.assertEqual((out / manifest["filename"]).read_bytes(), mp4)
+            self.assertEqual((out / thumbnail["filename"]).read_bytes(), candidate_png)
 
 
 if __name__ == "__main__":

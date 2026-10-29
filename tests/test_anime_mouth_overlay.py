@@ -137,6 +137,35 @@ class MouthSpritePreviewTests(unittest.TestCase):
                 storyboard_handoff=self.storyboard, voice_timing_plan=self.cues,
                 mouth_overlay_plan=self.plan, mouth_sprites=self.sprites)
 
+    def test_rejects_cross_audio_binding_and_out_of_cue_activity(self):
+        """No mouth animation may be attributed to a different WAV or silent gap."""
+        voice, energy = self._bound()
+        altered = copy.deepcopy(energy)
+        altered["audio_sha256"] = "f" * 64
+        with self.assertRaises(MouthOverlayError):
+            bind_mouth_overlay(self.plan, self.sprites, voice, altered,
+                               rights_attested=True)
+        altered = copy.deepcopy(energy)
+        altered["shots"][0]["energy_windows_ms"] = [[0, 100]]
+        with self.assertRaises(MouthOverlayError):
+            bind_mouth_overlay(self.plan, self.sprites, voice, altered,
+                               rights_attested=True)
+        altered = copy.deepcopy(energy)
+        altered["shots"][0]["energy_windows_ms"] = [[9500, 9700]]
+        with self.assertRaises(MouthOverlayError):
+            bind_mouth_overlay(self.plan, self.sprites, voice, altered,
+                               rights_attested=True)
+        altered = copy.deepcopy(energy)
+        altered["shots"][0] = None
+        with self.assertRaises(MouthOverlayError):
+            bind_mouth_overlay(self.plan, self.sprites, voice, altered,
+                               rights_attested=True)
+        altered = copy.deepcopy(energy)
+        altered["frame_rate"] = True
+        with self.assertRaises(MouthOverlayError):
+            bind_mouth_overlay(self.plan, self.sprites, voice, altered,
+                               rights_attested=True)
+
     @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"),
                          "Real FFmpeg/ffprobe required")
     def test_real_mp4_has_visible_energy_gated_sprite_not_permanent_overlay(self):

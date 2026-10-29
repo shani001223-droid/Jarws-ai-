@@ -114,6 +114,12 @@ def record_private_review(manifest: dict, video: bytes, subtitles: bytes,
         raise AnimeReviewGateError("Music-backed audio cannot establish independent dialogue QC; record needs_revision.")
     if verdict == "private_qc_pass" and not audio_qc["all_caption_windows_have_sustained_audio"]:
         raise AnimeReviewGateError("Silent caption interval or insufficient sustained audio requires private revision.")
+    # A heavily saturated encoded soundtrack can obscure dialogue. This
+    # conservative signal-only warning requires a human revision; it does
+    # not independently diagnose clipping, voice identity or pronunciation.
+    if verdict == "private_qc_pass" and not audio_qc[
+            "all_caption_windows_clear_of_possible_hard_clipping"]:
+        raise AnimeReviewGateError("Possible hard-clipped AAC soundtrack requires private revision.")
     try:
         with Image.open(BytesIO(sheet)) as image:
             if image.format != "PNG" or image.size != (1440, 592):

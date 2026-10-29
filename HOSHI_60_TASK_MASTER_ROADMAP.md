@@ -1,5 +1,11 @@
 # HOSHI — 60-Task Autonomous Development Roadmap
 
+## 29 October 2026 — Task 59 exact decoded-frame review sampling (PARTIAL; verified code, not acceptance)
+
+- The same existing private Anime Studio mouth-review sheet now samples **actual 12 FPS encoded frame indices**, not arbitrary timestamps that might miss or falsely label a short mouth-activity interval. It distinguishes `active`, `quiet`, `no_activity`, `no_renderable_activity`, and `no_quiet_interval` without inventing a silent frame. The manifest carries exact `frame_index`, per-sample expected visibility and the explicit warning that metadata is not pixel-verified on arbitrary art. Real H.264/AAC regression checks synthetic mouth-open red pixels versus a quiet decoded frame; short sub-frame windows and all-active windows are covered.
+- **Source/test commit `9a982f24fd9c398cb36d5e8a9637a2f80c8b7d3d`:** [full Python/backend, Node/JS and Playwright CI passed](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40821656295); [Docker/Uvicorn smoke passed](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/40821656319). This is test-verified **frame extraction and synthetic visual gating**, not real character facial alignment, phoneme lip-sync, Urdu/Hindi voice quality, professional animation, owner approval, production acceptance or physical Realme Note 50 playback.
+- **Canonical scoreboard unchanged: 48/60 checked, 12 pending.** Task 59 remains unchecked. Existing sole draft PR #29 only; no new repository, tracker, automation, external publication, production merge/deploy, paid service, secret change or live trade.
+
 ## 29 October 2026 — Task 59 independent MP4 integrity QC (PARTIAL, not accepted)
 
 - The existing private Anime Studio decoded-frame mouth placement sheet now fails closed unless independent ffprobe decoding confirms exactly one H.264 480×270 / 12 FPS / 360-frame 30-second video stream and exactly one AAC audio stream. `media_qc` is bound to the review manifest, with manual placement and owner approval still **false**. Real negative tests reject a short H.264/AAC clip and an audio-free 30-second MP4; no external media, accounts or keys are used.

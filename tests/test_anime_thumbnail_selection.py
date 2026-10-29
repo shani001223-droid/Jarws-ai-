@@ -137,5 +137,80 @@ class PrivateThumbnailSelectionTests(unittest.TestCase):
             self.assertEqual(path.read_bytes(), original)
 
 
+    def test_selected_frame_preview_is_actual_verified_video_crop(self):
+        from cloud_backend.anime_thumbnail_export import build_private_selected_thumbnail_preview
+        selection = self.select(selected_shot=2)
+        result = build_private_selected_thumbnail_preview(
+            self.manifest, self.video, self.sheet, selection)
+        self.assertEqual(result["preview_resolution"], [1280, 720])
+        self.assertEqual(result["source_frame_resolution"], [480, 270])
+        self.assertTrue(result["upscaled_from_low_resolution"])
+        self.assertEqual(result["selected_frame_index"], 180)
+        self.assertEqual(result["title_utf8_not_rendered"], "نئی کہانی")
+        with Image.open(BytesIO(self.sheet)) as sheet:
+            expected = sheet.convert("RGB").crop((480, 30, 960, 300)).resize(
+                (1280, 720), Image.Resampling.LANCZOS)
+        with Image.open(BytesIO(result["png_bytes"])) as actual:
+            self.assertEqual(actual.format, "PNG")
+            self.assertEqual(actual.size, (1280, 720))
+            self.assertEqual(actual.convert("RGB").tobytes(), expected.tobytes())
+        self.assertEqual(hashlib.sha256(result["png_bytes"]).hexdigest(),
+                         result["png_sha256"])
+        for flag in ("typography_added", "final_thumbnail_designed",
+                     "owner_approved", "release_authorized", "publication_permitted"):
+            self.assertFalse(result[flag])
+
+    def test_preview_rejects_forged_or_mismatched_selection(self):
+        from cloud_backend.anime_thumbnail_export import (
+            AnimeThumbnailExportError, build_private_selected_thumbnail_preview)
+        original = self.select()
+        for field, replacement in (
+            ("selected_frame_index", 60),
+            ("source_video_sha256", "0" * 64),
+            ("editor_note", "A different unauthorized editorial choice."),
+            ("owner_approved", True),
+            ("publication_permitted", True),
+        ):
+            forged = copy.deepcopy(original)
+            forged[field] = replacement
+            with self.subTest(field=field), self.assertRaises(AnimeThumbnailExportError):
+                build_private_selected_thumbnail_preview(
+                    self.manifest, self.video, self.sheet, forged)
+        with self.assertRaises(AnimeThumbnailExportError):
+            build_private_selected_thumbnail_preview(
+                self.manifest, self.video, self.sheet, {"selected_shot": 1})
+        with self.assertRaises(AnimeThumbnailExportError):
+            build_private_selected_thumbnail_preview(
+                self.manifest, self.video, b"fake-png" * 100, original)
+
+    def test_preview_cli_create_only_no_final_or_upload(self):
+        with tempfile.TemporaryDirectory() as root:
+            directory = Path(root) / "pilot"
+            directory.mkdir()
+            (directory / "manifest.json").write_text(
+                json.dumps(self.manifest, ensure_ascii=False), encoding="utf-8")
+            (directory / "hoshi_anime_animatic_DRAFT.mp4").write_bytes(self.video)
+            (directory / "hoshi_thumbnail_candidates_DRAFT.png").write_bytes(self.sheet)
+            (directory / "hoshi_thumbnail_selection_PRIVATE.json").write_text(
+                json.dumps(self.select(selected_shot=1), ensure_ascii=False),
+                encoding="utf-8")
+            command = [sys.executable, "-m", "scripts.export_hoshi_anime_thumbnail",
+                       "--draft-dir", str(directory)]
+            first = subprocess.run(command, capture_output=True, text=True, timeout=90)
+            self.assertEqual(first.returncode, 0, first.stderr)
+            target = directory / "selected_thumbnail_PRIVATE_DRAFT"
+            preview = target / "hoshi_selected_thumbnail_DRAFT.png"
+            provenance = json.loads(
+                (target / "preview_provenance_PRIVATE.json").read_text(encoding="utf-8"))
+            original_bytes = preview.read_bytes()
+            self.assertEqual(provenance["selected_shot"], 1)
+            self.assertEqual(provenance["png_sha256"],
+                             hashlib.sha256(original_bytes).hexdigest())
+            self.assertFalse(provenance["publication_permitted"])
+            second = subprocess.run(command, capture_output=True, text=True, timeout=90)
+            self.assertNotEqual(second.returncode, 0)
+            self.assertEqual(preview.read_bytes(), original_bytes)
+
+
 if __name__ == "__main__":
     unittest.main()

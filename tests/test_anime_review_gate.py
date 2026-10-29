@@ -2,7 +2,10 @@
 from __future__ import annotations
 
 import copy
+from array import array
 import hashlib
+import math
+import wave
 from io import BytesIO
 import json
 import os
@@ -115,9 +118,54 @@ class PrivateReviewGateTests(unittest.TestCase):
         self.assertEqual(qc["status"], "encoded_audio_energy_measured_not_speech_recognition")
         self.assertEqual(len(qc["caption_windows"]), 3)
         self.assertTrue(qc["all_caption_windows_have_audio_energy"])
+        self.assertTrue(qc["all_caption_windows_have_sustained_audio"])
+        self.assertTrue(all(w["sustained_audio_detected"] for w in qc["caption_windows"]))
         self.assertFalse(qc["spoken_words_independently_verified"])
         self.assertFalse(qc["speech_language_independently_verified"])
         self.assertTrue(qc["music_or_noise_can_trigger"])
+
+    def test_brief_encoded_beeps_cannot_pass_as_sustained_caption_audio(self):
+        # Three 80 ms tones raise each 10-second RMS well above the old
+        # energy-only threshold. They are not credible sustained dialogue.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            wav_path = root / "brief_beeps.wav"
+            sparse_path = root / "sparse.mp4"
+            pcm = array("h", [0]) * (30 * 16000)
+            for second in (1, 11, 21):
+                for i in range(1280):
+                    pcm[second * 16000 + i] = int(
+                        11000 * math.sin(2 * math.pi * 440 * i / 16000))
+            with wave.open(str(wav_path), "wb") as output:
+                output.setnchannels(1)
+                output.setsampwidth(2)
+                output.setframerate(16000)
+                output.writeframes(pcm.tobytes())
+            process = subprocess.run(
+                ["ffmpeg", "-hide_banner", "-loglevel", "error", "-nostdin",
+                 "-i", str(Path(self.media_dir.name) / "real_private_draft.mp4"),
+                 "-i", str(wav_path), "-map", "0:v:0", "-map", "1:a:0",
+                 "-c:v", "copy", "-c:a", "aac", "-b:a", "32k",
+                 "-t", "30", "-y", str(sparse_path)],
+                capture_output=True, timeout=30, check=False)
+            self.assertEqual(process.returncode, 0, process.stderr[:300])
+            sparse_video = sparse_path.read_bytes()
+            sparse_media_qc = _verify_review_media(
+                sparse_path, shutil.which("ffprobe"))
+        manifest = copy.deepcopy(self.manifest)
+        manifest["video_sha256"] = sha(sparse_video)
+        manifest["mouth_visual_review"]["source_video_sha256"] = sha(sparse_video)
+        manifest["mouth_visual_review"]["media_qc"] = sparse_media_qc
+        with self.assertRaisesRegex(AnimeReviewGateError, "insufficient sustained audio"):
+            self.record(manifest=manifest, video=sparse_video)
+        result = self.record(manifest=manifest, video=sparse_video,
+                             verdict="needs_revision")
+        qc = result["encoded_audio_subtitle_qc"]
+        self.assertTrue(qc["all_caption_windows_have_audio_energy"])
+        self.assertFalse(qc["all_caption_windows_have_sustained_audio"])
+        self.assertTrue(all(not w["sustained_audio_detected"]
+                            for w in qc["caption_windows"]))
+        self.assertFalse(result["publication_permitted"])
 
     def test_silent_encoded_audio_blocks_private_pass_but_allows_revision(self):
         with tempfile.TemporaryDirectory() as directory:

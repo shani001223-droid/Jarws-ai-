@@ -26,6 +26,13 @@ class AnimeVisualReviewError(ValueError):
 
 
 def _sample_times(overlay: dict) -> list[dict]:
+    """Select *decodable* 12 FPS frames, never a sub-frame activity midpoint.
+
+    The renderer gates sprites on FFmpeg's frame timestamps. Sampling arbitrary
+    milliseconds can falsely label a frame active when no encoded frame ever
+    intersects a very short energy window. Every sample below is an exact
+    decoded frame index from the 360-frame pilot.
+    """
     if (type(overlay) is not dict or type(overlay.get("sprites")) is not list
             or len(overlay["sprites"]) != 3):
         raise AnimeVisualReviewError("Three validated mouth-overlay shots required.")
@@ -33,7 +40,9 @@ def _sample_times(overlay: dict) -> list[dict]:
     for index, sprite in enumerate(overlay["sprites"]):
         if (type(sprite) is not dict
                 or type(sprite.get("shot_id")) is not str
+                or not 1 <= len(sprite["shot_id"]) <= 64
                 or type(sprite.get("speaker_id")) is not str
+                or not 1 <= len(sprite["speaker_id"]) <= 64
                 or any(type(sprite.get(key)) is not int for key in
                        ("x", "y", "width", "height"))
                 or not 0 <= sprite["x"] < FRAME_WIDTH
@@ -54,17 +63,44 @@ def _sample_times(overlay: dict) -> list[dict]:
                     or window[0] < previous):
                 raise AnimeVisualReviewError("Invalid mouth activity windows.")
             previous = window[1]
-        active = (sum(windows[0]) // 2 if windows else index * 10000 + 5000)
-        quiet = next((index * 10000 + offset for offset in range(250, 10000, 250)
-                      if not any(start <= index * 10000 + offset < end
-                                 for start, end in windows)), None)
-        for kind, ms in (("active" if windows else "no_activity", active),
-                         ("quiet" if quiet is not None else "no_quiet_interval",
-                          quiet if quiet is not None else index * 10000 + 9750)):
-            samples.append({"shot_id": sprite["shot_id"], "speaker_id": sprite["speaker_id"],
-                            "sample_kind": kind, "time_ms": ms,
-                            "x": sprite["x"], "y": sprite["y"],
-                            "width": sprite["width"], "height": sprite["height"]})
+
+        # Exact presentation timestamps for the 120 frames of this 10s shot.
+        # Use fractional milliseconds for interval tests, never rounded values.
+        frames = [(index * 120 + offset, index * 10000 + offset * 1000 / 12)
+                  for offset in range(120)]
+        active_frames = [(frame, ms) for frame, ms in frames
+                         if any(start <= ms < end for start, end in windows)]
+        quiet_frames = [(frame, ms) for frame, ms in frames
+                        if not any(start <= ms < end for start, end in windows)]
+        if active_frames:
+            active_frame = active_frames[len(active_frames) // 2][0]
+            active_kind = "active"
+        else:
+            active_frame = index * 120 + 60
+            active_kind = "no_renderable_activity" if windows else "no_activity"
+        if quiet_frames:
+            if active_frames:
+                quiet_frame = min(quiet_frames, key=lambda item:
+                                  (abs(item[0] - active_frame), item[0]))[0]
+            else:
+                quiet_frame = quiet_frames[0][0]
+            quiet_kind = "quiet"
+        else:
+            quiet_frame = index * 120 + 119
+            quiet_kind = "no_quiet_interval"
+
+        for kind, frame in ((active_kind, active_frame), (quiet_kind, quiet_frame)):
+            local_ms = (frame - index * 120) * 1000 / 12
+            absolute_ms = index * 10000 + local_ms
+            visible = any(start <= absolute_ms < end for start, end in windows)
+            samples.append({
+                "shot_id": sprite["shot_id"], "speaker_id": sprite["speaker_id"],
+                "sample_kind": kind, "frame_index": frame,
+                "time_ms": round(absolute_ms),
+                "expected_sprite_visible": visible,
+                "x": sprite["x"], "y": sprite["y"],
+                "width": sprite["width"], "height": sprite["height"],
+            })
     return samples
 
 
@@ -135,7 +171,8 @@ def build_mouth_review_sheet(video_mp4: bytes, mouth_overlay: dict,
             media_qc = _verify_review_media(path, ffprobe)
             for idx, sample in enumerate(samples):
                 command = [ffmpeg, "-hide_banner", "-loglevel", "error", "-nostdin",
-                           "-ss", f'{sample["time_ms"] / 1000:.3f}', "-i", str(path),
+                           "-i", str(path),
+                           "-vf", f'select=eq(n\\,{sample["frame_index"]})',
                            "-frames:v", "1", "-f", "image2pipe", "-vcodec", "png", "-"]
                 proc = subprocess.run(command, capture_output=True, timeout=15, check=False)
                 if (proc.returncode != 0 or not 100 <= len(proc.stdout) <= MAX_FRAME_BYTES):
@@ -169,6 +206,8 @@ def build_mouth_review_sheet(video_mp4: bytes, mouth_overlay: dict,
                      ("x", "y", "width", "height")} for s in samples],
         "source_video_sha256": hashlib.sha256(video_mp4).hexdigest(),
         "media_qc": media_qc,
+        "frame_sampling_basis": "exact_decoded_frame_index_12fps",
+        "expected_visibility_is_metadata_not_pixel_verified": True,
         "review_source": "decoded_mp4_frames_with_operator_sprite_position_guides",
         "visual_alignment_verified": False,
         "owner_approved": False,

@@ -143,5 +143,94 @@ class SubtitleVisualReviewTests(unittest.TestCase):
                 (target / "hoshi_subtitle_review_PRIVATE_DRAFT.png").read_bytes()))
 
 
+    def test_real_encoded_private_burnin_cue_gaps_and_fail_closed(self):
+        from io import BytesIO
+        from PIL import ImageStat
+        from cloud_backend.anime_subtitle_burnin import (
+            AnimeSubtitleBurninError, render_private_subtitled_pilot,
+        )
+        cues = []
+        for i, caption in enumerate(self.captions):
+            cues.append({"shot_id": f"shot{i}", "text": caption,
+                         "start_ms": i * 10000 + 2000,
+                         "end_ms": i * 10000 + 4000})
+        plan = {
+            "schema_version": 1,
+            "storyboard_sha256": self.manifest["storyboard_handoff"]["plan_sha256"],
+            "audio_sha256": "a" * 64,
+            "cues": cues,
+        }
+        manifest = copy.deepcopy(self.manifest)
+        manifest["source_audio_sha256"] = "a" * 64
+        manifest["subtitle_timing_source"] = "operator_supplied_voice_cues_not_audio_verified"
+        manifest["voice_timing_handoff"] = {
+            "plan": plan,
+            "plan_sha256": digest(json.dumps(
+                plan, ensure_ascii=False, sort_keys=True,
+                separators=(",", ":")).encode("utf-8")),
+        }
+        srt = "".join(
+            f"{i+1}\\n00:00:{i*10+2:02d},000 --> 00:00:{i*10+4:02d},000\\n"
+            f"{caption}\\n\\n"
+            for i, caption in enumerate(self.captions)).encode("utf-8")
+        manifest["subtitles_sha256"] = digest(srt)
+        kwargs = dict(manifest=manifest, video=self.video, subtitles=srt,
+                      font_bytes=self.font, font_rights_attested=True)
+        result = render_private_subtitled_pilot(**kwargs)
+        self.assertEqual(result["video_sha256"], digest(result["video_mp4"]))
+        self.assertEqual(result["cue_windows_ms"],
+                         [[2000, 4000], [12000, 14000], [22000, 24000]])
+        self.assertTrue(result["subtitles_embedded_in_video"])
+        self.assertEqual(result["media_qc"]["frame_count"], 360)
+        self.assertEqual(result["media_qc"]["audio_codec"], "aac")
+        self.assertFalse(result["spoken_words_independently_verified"])
+        self.assertFalse(result["owner_approved"])
+        self.assertFalse(result["publication_permitted"])
+        with tempfile.TemporaryDirectory() as directory:
+            video = Path(directory) / "captioned.mp4"
+            video.write_bytes(result["video_mp4"])
+            def decoded_frame(index):
+                command = ["ffmpeg", "-hide_banner", "-loglevel", "error",
+                           "-nostdin", "-i", str(video),
+                           "-vf", f"select=eq(n\\\\,{index})", "-frames:v", "1",
+                           "-f", "image2pipe", "-vcodec", "png", "-"]
+                output = subprocess.run(command, capture_output=True,
+                                        timeout=20, check=False)
+                self.assertEqual(output.returncode, 0, output.stderr[:300])
+                with Image.open(BytesIO(output.stdout)) as picture:
+                    return picture.convert("RGB").copy()
+            # One second is outside all cues; three seconds is inside shot 1.
+            quiet, spoken = decoded_frame(12), decoded_frame(36)
+            self.assertLess(max(ImageStat.Stat(quiet.crop((30, 220, 450, 260))).extrema[0]), 90)
+            self.assertGreater(max(ImageStat.Stat(spoken.crop((30, 220, 450, 260))).extrema[0]), 150)
+        with self.assertRaises(AnimeSubtitleBurninError):
+            render_private_subtitled_pilot(**(kwargs | {"font_rights_attested": False}))
+        with self.assertRaises(AnimeSubtitleBurninError):
+            render_private_subtitled_pilot(**(kwargs | {"video": self.video + b"fake"}))
+
+    def test_private_burnin_cli_create_only(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "manifest.json").write_text(
+                json.dumps(self.manifest, ensure_ascii=False), encoding="utf-8")
+            (root / "hoshi_anime_animatic_DRAFT.mp4").write_bytes(self.video)
+            (root / "hoshi_anime_animatic_DRAFT.srt").write_bytes(self.srt)
+            command = [sys.executable, "-m", "scripts.burn_hoshi_anime_subtitles",
+                       "--draft-dir", str(root), "--font", str(self.font_path),
+                       "--font-rights-attested"]
+            first = subprocess.run(command, capture_output=True, timeout=160)
+            self.assertEqual(first.returncode, 0, first.stderr[:500])
+            target = root / "subtitle_burnin_PRIVATE_DRAFT"
+            meta = json.loads((target / "subtitle_burnin_provenance_PRIVATE.json")
+                              .read_text(encoding="utf-8"))
+            self.assertEqual(meta["video_sha256"], digest(
+                (target / meta["filename"]).read_bytes()))
+            self.assertFalse(meta["release_authorized"])
+            second = subprocess.run(command, capture_output=True, timeout=160)
+            self.assertNotEqual(second.returncode, 0)
+            self.assertFalse((root / "manifest.json").read_text(
+                encoding="utf-8").find('"owner_approved": true') >= 0)
+
+
 if __name__ == "__main__":
     unittest.main()

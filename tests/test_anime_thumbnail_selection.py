@@ -86,6 +86,20 @@ class PrivateThumbnailSelectionTests(unittest.TestCase):
         with self.assertRaisesRegex(AnimeThumbnailSelectionError, "Contact pixels"):
             self.select(manifest=fake_manifest, sheet=fake_sheet)
 
+    def test_reject_rehashed_forged_shot_label(self):
+        # A misleading header could trick a reviewer even if the image crop is genuine.
+        with Image.open(BytesIO(self.sheet)) as image:
+            edited = image.convert("RGB")
+        edited.putpixel((12, 10), (255, 0, 0))
+        output = BytesIO()
+        edited.save(output, format="PNG")
+        fake_sheet = output.getvalue()
+        fake_manifest = copy.deepcopy(self.manifest)
+        fake_manifest["thumbnail_candidates"]["png_sha256"] = hashlib.sha256(
+            fake_sheet).hexdigest()
+        with self.assertRaisesRegex(AnimeThumbnailSelectionError, "shot labels"):
+            self.select(manifest=fake_manifest, sheet=fake_sheet)
+
     def test_reject_rehashed_forged_frame_metadata_and_media(self):
         fake = copy.deepcopy(self.manifest)
         fake["thumbnail_candidates"]["candidate_frames"][0][

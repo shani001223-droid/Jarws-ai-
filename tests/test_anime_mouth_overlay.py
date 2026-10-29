@@ -23,7 +23,7 @@ from cloud_backend.anime_mouth_overlay import (
 )
 from cloud_backend.anime_pilot_animatic import AnimePilotError, render_private_animatic
 from cloud_backend.anime_visual_review import (AnimeVisualReviewError,
-                                               build_mouth_review_sheet)
+                                               build_mouth_review_sheet, _sample_times)
 from cloud_backend.anime_storyboard_handoff import bind_storyboard_handoff
 from cloud_backend.anime_voice_timing import bind_voice_timing_handoff
 
@@ -234,6 +234,36 @@ class MouthSpritePreviewTests(unittest.TestCase):
             self.assertIn("Mouth overlays require", completed.stderr)
             self.assertFalse((root / "not-created").exists())
 
+    def test_review_samples_are_actual_12fps_frames_not_arbitrary_midpoints(self):
+        voice, energy = self._bound()
+        bound = bind_mouth_overlay(self.plan, self.sprites, voice, energy,
+                                   rights_attested=True)
+        samples = _sample_times(bound)
+        self.assertEqual(len(samples), 6)
+        self.assertEqual(samples[0]["frame_index"], 24)
+        self.assertTrue(samples[0]["expected_sprite_visible"])
+        self.assertFalse(samples[1]["expected_sprite_visible"])
+        for sample in samples:
+            self.assertTrue(0 <= sample["frame_index"] < 360)
+            self.assertEqual(sample["time_ms"],
+                             round(sample["frame_index"] * 1000 / 12))
+
+        # The 79ms window is between two frame presentation timestamps.
+        # It must never be described as an actual rendered mouth-open frame.
+        subframe = copy.deepcopy(bound)
+        subframe["sprites"][0]["energy_windows_ms"] = [[1001, 1080]]
+        missed = _sample_times(subframe)
+        self.assertEqual(missed[0]["sample_kind"], "no_renderable_activity")
+        self.assertFalse(missed[0]["expected_sprite_visible"])
+        self.assertEqual(missed[1]["sample_kind"], "quiet")
+
+        # No false claim of a silent/quiet sample when all 120 frames are active.
+        always = copy.deepcopy(bound)
+        always["sprites"][0]["energy_windows_ms"] = [[0, 10000]]
+        covered = _sample_times(always)
+        self.assertEqual(covered[1]["sample_kind"], "no_quiet_interval")
+        self.assertTrue(covered[1]["expected_sprite_visible"])
+
     @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"),
                          "Real FFmpeg/ffprobe required")
     def test_private_review_sheet_decodes_mp4_and_remains_unapproved(self):
@@ -256,12 +286,23 @@ class MouthSpritePreviewTests(unittest.TestCase):
         self.assertEqual(review["samples"][0]["sample_kind"], "active")
         self.assertEqual(review["samples"][1]["sample_kind"], "quiet")
         self.assertEqual(review["samples"][2]["sample_kind"], "no_activity")
+        self.assertEqual(review["frame_sampling_basis"],
+                         "exact_decoded_frame_index_12fps")
+        self.assertTrue(review["expected_visibility_is_metadata_not_pixel_verified"])
+        self.assertTrue(review["samples"][0]["expected_sprite_visible"])
+        self.assertFalse(review["samples"][1]["expected_sprite_visible"])
         self.assertFalse(review["visual_alignment_verified"])
         self.assertFalse(review["owner_approved"])
         self.assertTrue(review["manual_review_required"])
         with Image.open(BytesIO(review["png_bytes"])) as contact:
             self.assertEqual(contact.size, (1440, 592))
             self.assertEqual(contact.format, "PNG")
+            # The actual decoded active frame shows red mouth pixels; the
+            # selected quiet frame shows the original blue background.
+            active = contact.getpixel((216, 26 + 138))
+            quiet = contact.getpixel((216, 296 + 26 + 138))
+            self.assertGreater(active[0], quiet[0] + 80)
+            self.assertGreater(quiet[2], active[2] + 30)
 
     @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"),
                          "Real FFmpeg/ffprobe required")

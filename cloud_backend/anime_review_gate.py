@@ -107,8 +107,8 @@ def record_private_review(manifest: dict, video: bytes, subtitles: bytes,
             audio_qc = measure_encoded_caption_audio(video_path, manifest, ffmpeg)
     except (AnimeAudioSubtitleQCError, OSError):
         raise AnimeReviewGateError("Independent encoded caption audio QC failed.") from None
-    if verdict == "private_qc_pass" and not audio_qc["all_caption_windows_have_audio_energy"]:
-        raise AnimeReviewGateError("Silent caption interval requires private revision.")
+    if verdict == "private_qc_pass" and not audio_qc["all_caption_windows_have_sustained_audio"]:
+        raise AnimeReviewGateError("Silent caption interval or insufficient sustained audio requires private revision.")
     try:
         with Image.open(BytesIO(sheet)) as image:
             if image.format != "PNG" or image.size != (1440, 592):

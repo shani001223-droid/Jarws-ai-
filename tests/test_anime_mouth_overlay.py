@@ -23,7 +23,8 @@ from cloud_backend.anime_mouth_overlay import (
 )
 from cloud_backend.anime_pilot_animatic import AnimePilotError, render_private_animatic
 from cloud_backend.anime_visual_review import (AnimeVisualReviewError,
-                                               build_mouth_review_sheet, _sample_times)
+                                               build_mouth_review_sheet, _sample_times,
+                                               _pair_pixel_evidence)
 from cloud_backend.anime_storyboard_handoff import bind_storyboard_handoff
 from cloud_backend.anime_voice_timing import bind_voice_timing_handoff
 
@@ -234,6 +235,26 @@ class MouthSpritePreviewTests(unittest.TestCase):
             self.assertIn("Mouth overlays require", completed.stderr)
             self.assertFalse((root / "not-created").exists())
 
+    def test_pair_pixel_evidence_is_bounded_and_never_auto_approves(self):
+        still = Image.new("RGB", (480, 270), (20, 30, 40))
+        active = still.copy()
+        ImageDraw.Draw(active).rectangle((200, 130, 231, 145),
+                                         fill=(245, 20, 20))
+        changed = _pair_pixel_evidence(active, still, (200, 130, 32, 16))
+        self.assertEqual(changed["status"],
+                         "sampled_pair_pixel_delta_not_alignment_proof")
+        self.assertTrue(changed["roi_change_detected"])
+        self.assertGreater(changed["roi_mean_absolute_rgb_delta"], 10)
+        self.assertEqual(changed["outside_roi_mean_absolute_rgb_delta"], 0)
+        self.assertTrue(changed["frame_pair_is_not_lip_sync_or_alignment_proof"])
+        identical = _pair_pixel_evidence(still, still, (200, 130, 32, 16))
+        self.assertFalse(identical["roi_change_detected"])
+        self.assertEqual(identical["roi_mean_absolute_rgb_delta"], 0)
+        for invalid in [(True, 130, 32, 16), (470, 130, 32, 16),
+                        (200, 130, 0, 16)]:
+            with self.subTest(invalid=invalid), self.assertRaises(AnimeVisualReviewError):
+                _pair_pixel_evidence(active, still, invalid)
+
     def test_review_samples_are_actual_12fps_frames_not_arbitrary_midpoints(self):
         voice, energy = self._bound()
         bound = bind_mouth_overlay(self.plan, self.sprites, voice, energy,
@@ -283,6 +304,16 @@ class MouthSpritePreviewTests(unittest.TestCase):
         self.assertEqual(review["media_qc"]["audio_codec"], "aac")
         self.assertEqual(review["media_qc"]["status"],
                          "independently_probed_media_not_visual_approval")
+        self.assertEqual(len(review["decoded_frame_pair_pixel_evidence"]), 3)
+        first = review["decoded_frame_pair_pixel_evidence"][0]
+        self.assertEqual(first["status"],
+                         "sampled_pair_pixel_delta_not_alignment_proof")
+        self.assertTrue(first["roi_change_detected"])
+        self.assertGreater(first["roi_mean_absolute_rgb_delta"], 10)
+        self.assertTrue(review["pixel_evidence_is_not_visual_alignment_proof"])
+        self.assertEqual(review["decoded_frame_pair_pixel_evidence"][1]["status"],
+                         "not_comparable_no_active_and_quiet_encoded_frames")
+        self.assertEqual(len(review["samples"][0]["decoded_frame_rgb_sha256"]), 64)
         self.assertEqual(review["samples"][0]["sample_kind"], "active")
         self.assertEqual(review["samples"][1]["sample_kind"], "quiet")
         self.assertEqual(review["samples"][2]["sample_kind"], "no_activity")

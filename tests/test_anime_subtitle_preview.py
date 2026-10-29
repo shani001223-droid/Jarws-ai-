@@ -170,8 +170,8 @@ class SubtitleVisualReviewTests(unittest.TestCase):
                 separators=(",", ":")).encode("utf-8")),
         }
         srt = "".join(
-            f"{i+1}\\n00:00:{i*10+2:02d},000 --> 00:00:{i*10+4:02d},000\\n"
-            f"{caption}\\n\\n"
+            f"{i+1}\n00:00:{i*10+2:02d},000 --> 00:00:{i*10+4:02d},000\n"
+            f"{caption}\n\n"
             for i, caption in enumerate(self.captions)).encode("utf-8")
         manifest["subtitles_sha256"] = digest(srt)
         kwargs = dict(manifest=manifest, video=self.video, subtitles=srt,
@@ -192,7 +192,7 @@ class SubtitleVisualReviewTests(unittest.TestCase):
             def decoded_frame(index):
                 command = ["ffmpeg", "-hide_banner", "-loglevel", "error",
                            "-nostdin", "-i", str(video),
-                           "-vf", f"select=eq(n\\\\,{index})", "-frames:v", "1",
+                           "-vf", f"select=eq(n\\,{index})", "-frames:v", "1",
                            "-f", "image2pipe", "-vcodec", "png", "-"]
                 output = subprocess.run(command, capture_output=True,
                                         timeout=20, check=False)

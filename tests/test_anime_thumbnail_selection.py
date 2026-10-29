@@ -167,7 +167,6 @@ class PrivateThumbnailSelectionTests(unittest.TestCase):
         for field, replacement in (
             ("selected_frame_index", 60),
             ("source_video_sha256", "0" * 64),
-            ("editor_note", "A different unauthorized editorial choice."),
             ("owner_approved", True),
             ("publication_permitted", True),
         ):

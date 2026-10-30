@@ -520,7 +520,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:part,style}),signal
     });
     if(!response.ok)throw new Error('Urdu voice provider unavailable');
-    const blob=await response.blob();if(!blob.size)throw new Error('Empty Urdu audio');return blob;
+    return window.HoshiSpeechPipeline.readBoundedAudio(response,2_000_000);
    });
   }
   const files=window.HoshiSpeechPipeline.queue(segments,requestPart,()=>request.id===speechSequence&&!controller.signal.aborted);

@@ -66,7 +66,9 @@ def _image(data: bytes, size: tuple[int, int] | None = None,
     try:
         with Image.open(BytesIO(data)) as opened:
             if (opened.format != "PNG" or opened.mode != "RGB"
-                    or getattr(opened, "n_frames", 1) != 1 or opened.info
+                    or getattr(opened, "n_frames", 1) != 1
+                    or (opened.info and not (allow_decoder_aspect
+                                            and set(opened.info) <= {"aspect"}))
                     or (size is not None and opened.size != size)):
                 raise FloraPrivateBundleError("Unexpected PNG format, metadata or dimensions.")
             opened.load()

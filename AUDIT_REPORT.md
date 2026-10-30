@@ -257,3 +257,9 @@ is an availability limit, not a verified live signal. The local execution
 environment subsequently became unavailable; remaining browser/source checks
 are therefore performed in actual GitHub CI. The new desk is still not
 production-deployed, V3 is still source-blocked and real orders remain disabled.
+
+## 31 October 2026 — manual public spot historical capture (CODE only; CI and live availability pending)
+
+Trading-only addition on the same development branch and sole draft PR #29: `scripts/capture_spot_history.py` performs **manual, read-only**, bounded Binance Spot BTC/ETH USDT 15m history capture and an independent Kraken Spot USD **latest-20-closed-bar** comparison using the existing quality gate. Only 240–500 contiguous validated closed Binance candles are emitted in the exact local JSON shape accepted by `scripts.evaluate_trading_paper`. The separately emitted stderr receipt includes source fetch times, SHA-256 matching the evaluator's candle hash and explicit scope/limitations. Fixed HTTPS allowlists, eight-second request timeouts, 1 MB response caps, no redirects, no credentials, no orders, and sanitized WAIT on unavailable/invalid providers. No background scanner, paid service, automatic publication or file writes. The 20-bar check does **not** authenticate earlier history, and a hash is **not** a signed exchange attestation.
+
+**Code-complete:** pending commit SHA from this atomic source/test/document update. **CI-verified:** pending exact-head full Python/Node/Playwright and Docker checks; do not mark successful before actual results. **Real market/paper evidence:** no actual successful live provider response or independent forward-paper result established by mocked regression fixtures. **Production/device:** not deployed or physically tested on Realme Note 50. Historical roadmap **48/60** and V3 **49/50 source-only** unchanged; non-trading development deferred.

@@ -193,6 +193,15 @@ class SubtitleVisualReviewTests(unittest.TestCase):
         self.assertTrue(result["audio_review_human_listening_required"])
         self.assertEqual(len(result["audio_review_wavs"]), 3)
         self.assertEqual(len(result["audio_review_samples"]), 3)
+        self.assertEqual(result["audio_waveform_status"],
+                         "actual_encoded_aac_waveform_human_review_only")
+        self.assertEqual(result["audio_waveform_sha256"],
+                         digest(result["audio_waveform_png"]))
+        self.assertEqual(result["audio_waveform_resolution"], [1440, 660])
+        self.assertEqual(len(result["audio_waveform_samples"]), 3)
+        with Image.open(BytesIO(result["audio_waveform_png"])) as waveform:
+            self.assertEqual(waveform.size, (1440, 660))
+        self.assertTrue(result["audio_waveform_human_review_required"])
         for index, clip in enumerate(result["audio_review_wavs"]):
             record = result["audio_review_samples"][index]
             self.assertEqual(record["filename"], clip["filename"])
@@ -265,6 +274,9 @@ class SubtitleVisualReviewTests(unittest.TestCase):
             self.assertEqual(len(meta["visual_evidence_samples"]), 3)
             self.assertEqual(len(meta["audio_review_samples"]), 3)
             self.assertNotIn("audio_review_wavs", meta)
+            self.assertNotIn("audio_waveform_png", meta)
+            self.assertEqual(meta["audio_waveform_sha256"], digest(
+                (target / meta["audio_waveform_filename"]).read_bytes()))
             for record in meta["audio_review_samples"]:
                 self.assertEqual(record["wav_sha256"], digest(
                     (target / record["filename"]).read_bytes()))

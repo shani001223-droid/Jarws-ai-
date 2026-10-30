@@ -26,8 +26,8 @@ test('Stop Speaking cancels all outstanding segment fetches',async()=>{
  const a=p.withClipTimeout(parent.signal,500,load);
  const b=p.withClipTimeout(parent.signal,500,load);
  parent.abort();
- await assert.rejects(a,/stopped/);
- await assert.rejects(b,/stopped/);
+ await assert.rejects(a,/cancelled/);
+ await assert.rejects(b,/cancelled/);
  assert.equal(stopped,2);
 });
 test('an already cancelled speech session never fetches a new clip',async()=>{
@@ -38,6 +38,36 @@ test('an already cancelled speech session never fetches a new clip',async()=>{
   calls++;return Promise.resolve('must not load');
  }),/cancelled/);
  assert.equal(calls,0);
+});
+
+test('a non-cooperative WebView loader cannot hang the first Urdu phrase forever',async()=>{
+ const parent=new AbortController();
+ let signal;
+ const start=Date.now();
+ await assert.rejects(p.withClipTimeout(parent.signal,15,s=>{
+  signal=s;
+  return new Promise(()=>{});
+ }),/timed out/);
+ assert.equal(signal.aborted,true);
+ assert.equal(parent.signal.aborted,false);
+ assert.ok(Date.now()-start<1000,'deadline should settle even without loader cooperation');
+});
+test('Stop Speaking settles a non-cooperative loader immediately',async()=>{
+ const parent=new AbortController();
+ const clip=p.withClipTimeout(parent.signal,1000,()=>new Promise(()=>{}));
+ parent.abort();
+ await assert.rejects(clip,/cancelled/);
+});
+test('late success or failure after a timeout cannot override the settled result',async()=>{
+ let finish,fail;
+ const late=p.withClipTimeout(null,10,()=>new Promise((resolve,reject)=>{finish=resolve;fail=reject}));
+ await assert.rejects(late,/timed out/);
+ finish('late audio');fail(Error('late provider error'));
+ await Promise.resolve();
+});
+test('synchronous loader errors and invalid deadlines fail safely',async()=>{
+ await assert.rejects(p.withClipTimeout(null,50,()=>{throw Error('bad loader')}),/bad loader/);
+ await assert.rejects(p.withClipTimeout(null,0,()=>Promise.resolve('audio')),/Invalid speech clip timeout/);
 });
 
 test('empty and short messages do not create extra requests',()=>{assert.deepEqual(p.split(' '),[]);assert.deepEqual(p.split('جی، میں یہاں ہوں۔'),['جی، میں یہاں ہوں۔']);});

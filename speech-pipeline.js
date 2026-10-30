@@ -12,24 +12,41 @@
   }
   return parts;
  }
- // Each MP3 clip has its own timeout/abort signal. A slow prefetch must not
- // cancel a different clip that is already playing. Stop Speaking still
- // propagates through the shared parent signal to every outstanding clip.
- async function withClipTimeout(parentSignal,timeoutMs,load){
+ // Clip deadlines must settle even if a WebView/network adapter ignores AbortSignal.
+ // Aborting one prefetch must not abort its siblings; the shared parent still
+ // cancels all child requests when the user presses Stop Speaking.
+ function withClipTimeout(parentSignal,timeoutMs,load){
+  if(!Number.isFinite(timeoutMs)||timeoutMs<=0)return Promise.reject(new RangeError('Invalid speech clip timeout'));
+  if(typeof load!=='function')return Promise.reject(new TypeError('Speech clip loader is required'));
   const controller=new AbortController();
-  const abort=()=>controller.abort();
-  if(parentSignal){
-   if(parentSignal.aborted)abort();
-   else parentSignal.addEventListener('abort',abort,{once:true});
-  }
-  const timer=setTimeout(abort,timeoutMs);
-  try{
-   if(controller.signal.aborted)throw new Error('Speech clip cancelled');
-   return await load(controller.signal);
-  }finally{
-   clearTimeout(timer);
-   if(parentSignal)parentSignal.removeEventListener('abort',abort);
-  }
+  return new Promise((resolve,reject)=>{
+   let settled=false,timer=null;
+   const cleanup=()=>{
+    if(timer!==null)clearTimeout(timer);
+    if(parentSignal)parentSignal.removeEventListener('abort',onParentAbort);
+   };
+   const settle=(callback,value)=>{
+    if(settled)return;
+    settled=true;cleanup();callback(value);
+   };
+   const cancel=reason=>{
+    if(!controller.signal.aborted)controller.abort();
+    settle(reject,new Error(reason));
+   };
+   const onParentAbort=()=>cancel('Speech clip cancelled');
+   if(parentSignal){
+    if(parentSignal.aborted){onParentAbort();return;}
+    parentSignal.addEventListener('abort',onParentAbort,{once:true});
+   }
+   timer=setTimeout(()=>cancel('Speech clip timed out'),timeoutMs);
+   try{
+    // Both fulfillment and rejection handlers are always attached, so a late
+    // loader failure after timeout cannot become an unhandled rejection.
+    Promise.resolve(load(controller.signal)).then(
+     value=>settle(resolve,value),error=>settle(reject,error)
+    );
+   }catch(error){settle(reject,error);}
+  });
  }
  function queue(parts,load,isCurrent=()=>true){
   const pending=new Map();

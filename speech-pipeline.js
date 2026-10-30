@@ -63,5 +63,40 @@
    clear(){closed=true;pending.clear()}
   };
  }
- const api={split,queue,withClipTimeout};if(root)root.HoshiSpeechPipeline=api;if(typeof module!=='undefined')module.exports=api;
+
+ // Stream encoded Urdu MP3 with a hard client-side byte budget. A misleading
+ // Content-Length must not let a response exhaust a small Android WebView.
+ // The Blob fallback exists for older WebViews without ReadableStream support.
+ async function readBoundedAudio(response,maxBytes=2_000_000){
+  if(!Number.isSafeInteger(maxBytes)||maxBytes<1)throw new RangeError('Invalid Urdu audio size limit');
+  if(!response||typeof response.blob!=='function')throw new TypeError('Invalid Urdu audio response');
+  const raw=response.headers&&typeof response.headers.get==='function'?response.headers.get('content-length'):null;
+  if(raw!==null&&raw!==''){
+   const value=String(raw).trim();
+   if(!/^\d+$/.test(value)||Number(value)>maxBytes)throw new Error('Urdu audio exceeds size limit');
+  }
+  if(response.body&&typeof response.body.getReader==='function'){
+   const reader=response.body.getReader();const chunks=[];let total=0,finished=false;
+   try{
+    while(true){
+     const {done,value}=await reader.read();
+     if(done){finished=true;break;}
+     if(!(value instanceof Uint8Array))throw new Error('Invalid Urdu audio chunk');
+     total+=value.byteLength;
+     if(total>maxBytes)throw new Error('Urdu audio exceeds size limit');
+     chunks.push(value);
+    }
+   }finally{
+    if(!finished){try{const cancelled=reader.cancel();if(cancelled&&typeof cancelled.catch==='function')cancelled.catch(()=>{});}catch(_){}}
+    try{reader.releaseLock()}catch(_){}
+   }
+   if(!total)throw new Error('Empty Urdu audio');
+   return new Blob(chunks,{type:'audio/mpeg'});
+  }
+  const blob=await response.blob();
+  if(!blob||!blob.size)throw new Error('Empty Urdu audio');
+  if(blob.size>maxBytes)throw new Error('Urdu audio exceeds size limit');
+  return blob;
+ }
+ const api={split,queue,withClipTimeout,readBoundedAudio};if(root)root.HoshiSpeechPipeline=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window!=='undefined'?window:null);

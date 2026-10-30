@@ -289,6 +289,24 @@ class SubtitleVisualReviewTests(unittest.TestCase):
             for record in meta["audio_review_samples"]:
                 self.assertEqual(record["wav_sha256"], digest(
                     (target / record["filename"]).read_bytes()))
+            # Independent encoded-frame sampling: an unchanged source MP4
+            # cannot masquerade as captioned video, even with matching hashes.
+            from cloud_backend.anime_private_review_verify import (
+                AnimePrivateBundleError, _verify_sampled_caption_gating,
+            )
+            windows = [(i * 10000, (i + 1) * 10000, text)
+                       for i, text in enumerate(self.captions)]
+            captioned = target / meta["filename"]
+            source = root / "hoshi_anime_animatic_DRAFT.mp4"
+            _verify_sampled_caption_gating("ffmpeg", source, captioned, windows)
+            with self.assertRaisesRegex(AnimePrivateBundleError, "ink absent"):
+                _verify_sampled_caption_gating("ffmpeg", source, source, windows)
+            # Pretending the captions are only present at 2-4 seconds must
+            # fail: the real encoded overlay is visible at the shot's start.
+            shifted = [(i * 10000 + 2000, i * 10000 + 4000, text)
+                       for i, text in enumerate(self.captions)]
+            with self.assertRaisesRegex(AnimePrivateBundleError, "leaks"):
+                _verify_sampled_caption_gating("ffmpeg", source, captioned, shifted)
             # Verify the actual saved media, captions, HTML and AAC-derived
             # evidence before human review; never infer speech/owner approval.
             verify = [sys.executable, "-m",

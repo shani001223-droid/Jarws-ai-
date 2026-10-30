@@ -1,6 +1,11 @@
 """Causal 15m chronological paper replay; no fabricated live market results."""
 from dataclasses import replace
+import json
 import math
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
 import unittest
 from unittest.mock import patch
 
@@ -74,9 +79,9 @@ class ChronologicalEvaluationTests(unittest.TestCase):
         for symbol, strategy in (("SOLUSDT", "trend_pullback"), ("BTCUSDT", "buy")):
             with self.assertRaises(ev.PaperEvaluationError):
                 ev.evaluate_chronological(self.bars, symbol, strategy)
-        with self.assertRaises(ev.PaperEvaluationError):
-            ev.evaluate_chronological(self.bars, "BTCUSDT", "trend_pullback",
-                                      SimulationConfig(equity=True))
+        # The existing SimulationConfig constructor itself rejects bool equity.
+        with self.assertRaises(ValueError):
+            SimulationConfig(equity=True)
         with self.assertRaises(ev.PaperEvaluationError):
             ev.evaluate_chronological(self.bars, "BTCUSDT", "trend_pullback",
                                       config=object())
@@ -87,6 +92,34 @@ class ChronologicalEvaluationTests(unittest.TestCase):
         changed[80] = replace(changed[80], volume=changed[80].volume + 1)
         modified = ev.evaluate_chronological(changed, "BTCUSDT", "breakout_retest")
         self.assertNotEqual(original["input_candle_sha256"], modified["input_candle_sha256"])
+
+    def test_offline_cli_real_json_contract_and_fail_closed_input(self):
+        # Actual local CLI execution; synthetic fixtures are NOT real venue data.
+        rows = [[b.time, b.open, b.high, b.low, b.close, b.volume, b.close_time]
+                for b in self.bars]
+        root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "candles.json"
+            source.write_text(json.dumps({"symbol": "BTCUSDT", "interval": "15m",
+                                          "candles": rows}), encoding="utf-8")
+            run = subprocess.run([sys.executable, "-m", "scripts.evaluate_trading_paper",
+                                  "--input", str(source), "--strategy", "trend_pullback"],
+                                 cwd=root, capture_output=True, text=True, timeout=30)
+            self.assertEqual(run.returncode, 0, run.stderr)
+            result = json.loads(run.stdout)
+            self.assertEqual(result["split"]["holdout_scored_bars"], 90)
+            self.assertFalse(result["orders_enabled"])
+            self.assertEqual(result["input_provenance"], "operator_supplied_unverified")
+            self.assertEqual(sorted(p.name for p in Path(tmp).iterdir()), ["candles.json"])
+            rows[10][6] += 1  # forged close timestamp
+            source.write_text(json.dumps({"symbol": "BTCUSDT", "interval": "15m",
+                                          "candles": rows}), encoding="utf-8")
+            bad = subprocess.run([sys.executable, "-m", "scripts.evaluate_trading_paper",
+                                  "--input", str(source)],
+                                 cwd=root, capture_output=True, text=True, timeout=30)
+            self.assertEqual(bad.returncode, 2)
+            self.assertEqual(bad.stdout, "")
+            self.assertNotIn(str(source), bad.stderr)
 
 
 if __name__ == "__main__":

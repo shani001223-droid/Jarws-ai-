@@ -74,3 +74,38 @@ test('synchronous loader errors and invalid deadlines fail safely',async()=>{
 });
 
 test('empty and short messages do not create extra requests',()=>{assert.deepEqual(p.split(' '),[]);assert.deepEqual(p.split('جی، میں یہاں ہوں۔'),['جی، میں یہاں ہوں۔']);});
+
+test('consumed Urdu MP3 blobs can be released without losing the next prefetched clip',async()=>{
+ const calls=[];
+ const q=p.queue(['first','second','third'],async part=>{
+  calls.push(part);
+  return {part,bytes:new Uint8Array(1024)};
+ });
+ const first=await q.get(0);
+ assert.equal((await q.get(0)),first,'unreleased clip must share the same cached object');
+ const next=q.get(1);
+ q.release(0);
+ assert.equal((await next).part,'second');
+ assert.deepEqual(calls,['first','second']);
+ q.clear();
+ assert.equal(await q.get(2),null,'closed speech session cannot request more audio');
+ assert.deepEqual(calls,['first','second']);
+});
+test('Stop Speaking closes a queue before deferred prefetch starts',async()=>{
+ let calls=0;
+ const q=p.queue(['next'],()=>{calls++;return 'audio'});
+ const waiting=q.get(0);
+ q.clear();
+ assert.equal(await waiting,null);
+ assert.equal(await q.get(0),null);
+ assert.equal(calls,0);
+});
+test('invalid segment indices do not schedule audio work',async()=>{
+ let calls=0;
+ const q=p.queue(['one'],()=>{calls++;return 'audio'});
+ for(const index of [-1,0.5,NaN,Infinity,1]){
+  assert.equal(await q.get(index),null);
+ }
+ assert.equal(calls,0);
+ q.clear();
+});

@@ -34,6 +34,9 @@ class QualityUnitTests(unittest.TestCase):
                 self.assertEqual(result["binance_last_quote_volume_usdt"], 1000)
                 self.assertEqual(result["kraken_last_base_volume"], 10)
                 self.assertEqual(result["last_closed_at"], b[-2][6])
+                self.assertEqual(result["cross_checked_closed_bars"], 20)
+                self.assertEqual(result["max_last_twenty_close_difference_pct"], 0)
+                self.assertEqual(result["max_last_three_close_difference_pct"], 0)
                 self.assertFalse(result["orders_enabled"])
 
     def test_numeric_string_close_time_does_not_break_quote_volume_selection(self):
@@ -80,6 +83,31 @@ class QualityUnitTests(unittest.TestCase):
         with self.assertRaises(mq.MarketDataQualityError):
             mq.verify_spot_market("BTCUSDT", "15m", b, k, NOW+3_600_000,
                                   (NOW+3_600_000)//1000, (NOW+3_600_000)//1000)
+
+    def test_rejects_older_cross_venue_disagreement_outside_last_three(self):
+        # Both venues agree at the latest three bars; an earlier divergence
+        # within the last 20 must still invalidate the market-quality claim.
+        b, k = fixtures()
+        k["result"]["XXBTZUSD"][-12][2] = "106"
+        k["result"]["XXBTZUSD"][-12][4] = "105"
+        self.assertEqual(k["result"]["XXBTZUSD"][-2][4], "100")
+        with self.assertRaisesRegex(mq.MarketDataQualityError,
+                                    "cross_source_price_disagreement"):
+            mq.verify_spot_market("BTCUSDT", "15m", b, k, NOW,
+                                  NOW//1000, NOW//1000)
+
+    def test_future_or_invalid_provider_fetch_times_fail_closed(self):
+        for stamp in (NOW//1000 + 6, NOW//1000 + 600, True, 1.5, -1):
+            with self.subTest(stamp=stamp):
+                b, k = fixtures()
+                with self.assertRaises(mq.MarketDataQualityError):
+                    mq.verify_spot_market("BTCUSDT", "15m", b, k, NOW,
+                                          stamp, stamp)
+        b, k = fixtures()
+        # A small server-clock skew is permitted; exact bounds are tested.
+        result = mq.verify_spot_market("BTCUSDT", "15m", b, k, NOW,
+                                       NOW//1000 + 5, NOW//1000)
+        self.assertEqual(result["cross_checked_closed_bars"], 20)
 
     def test_rejects_bad_kraken_schema_and_zero_recent_volume(self):
         b, k = fixtures()

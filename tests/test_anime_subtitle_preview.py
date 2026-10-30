@@ -314,6 +314,36 @@ class SubtitleVisualReviewTests(unittest.TestCase):
             rejected = subprocess.run(verify, capture_output=True, timeout=20)
             self.assertNotEqual(rejected.returncode, 0)
             clip.write_bytes(clip_bytes)
+            # An attacker can re-hash a different valid PNG in the JSON.
+            # The verifier must compare decoded source/encoded MP4 pixels,
+            # not merely trust a self-consistent metadata hash.
+            from io import BytesIO
+            visual = target / meta["visual_evidence_filename"]
+            visual_bytes = visual.read_bytes()
+            provenance = target / "subtitle_burnin_provenance_PRIVATE.json"
+            provenance_bytes = provenance.read_bytes()
+            with Image.open(BytesIO(visual_bytes)) as original:
+                changed = original.convert("RGB")
+                changed.putpixel((1, 1), (255, 0, 0))
+                changed.save(visual, format="PNG")
+            forged = dict(meta)
+            forged["visual_evidence_sha256"] = digest(visual.read_bytes())
+            provenance.write_text(json.dumps(forged, ensure_ascii=False),
+                                  encoding="utf-8")
+            rejected = subprocess.run(verify, capture_output=True, timeout=70)
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertIn(b"Comparison pixels", rejected.stderr)
+            visual.write_bytes(visual_bytes)
+            provenance.write_bytes(provenance_bytes)
+
+            forged = copy.deepcopy(meta)
+            forged["visual_evidence_samples"][0]["decoded_frame_index"] = 13
+            provenance.write_text(json.dumps(forged, ensure_ascii=False),
+                                  encoding="utf-8")
+            rejected = subprocess.run(verify, capture_output=True, timeout=70)
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertIn(b"Invalid encoded comparison cue", rejected.stderr)
+            provenance.write_bytes(provenance_bytes)
             (target / "unexpected.txt").write_text("not an approved review asset")
             rejected = subprocess.run(verify, capture_output=True, timeout=70)
             self.assertNotEqual(rejected.returncode, 0)

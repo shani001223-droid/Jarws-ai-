@@ -28,9 +28,11 @@ async function run(){
   let browser;
   try{
     browser=await chromium.launch({headless:true});const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,acceptDownloads:true});
-    let mode="wait",requests=0,release=null;const errors=[];
-    await context.route("https://**",async route=>{
-      if(!route.request().url().startsWith("https://jarws-ai-2.onrender.com/api/trading/desk?")){await route.abort();return;}
+    let mode="wait",requests=0,release=null;const errors=[],requestPaths=[];
+    await context.route("**/*",async route=>{
+      const target=new URL(route.request().url());requestPaths.push(target.origin+target.pathname);
+      if(["127.0.0.1","localhost"].includes(target.hostname)){await route.continue();return;}
+      if(target.origin!=="https://jarws-ai-2.onrender.com"||target.pathname!=="/api/trading/desk"){await route.abort();return;}
       requests++;assert.equal(route.request().method(),"GET");const selected=mode;
       if(selected==="delayed")await new Promise(resolve=>{release=resolve;});
       try{await route.fulfill({status:selected==="error"?503:200,headers:{"Access-Control-Allow-Origin":"*","Content-Type":"application/json"},body:JSON.stringify(body(selected))});}catch(_){}
@@ -42,7 +44,7 @@ async function run(){
     assert.equal(await page.locator("#decision").textContent(),"WAIT");assert.equal(await page.locator("#save").isDisabled(),true);
     await page.locator("#analyze").click();await page.waitForFunction(()=>!document.querySelector("#analyze").disabled);
     const initialState=await page.evaluate(({data})=>{let validation;try{HoshiTradingDesk.validate(data,{symbol:"BTCUSDT",equity_usdt:100,risk_pct:.5,fee_bps:10,slippage_bps:5});validation="passed";}catch(e){validation=e.message;}return {status:document.querySelector("#status").textContent,validation};},{data:body("wait")});
-    assert.equal(await page.locator("#snapshot").isVisible(),true,JSON.stringify({initialState,requests,errors,browserMessages}));assert.equal(await page.locator("#decision").textContent(),"WAIT");assert.equal(await page.locator("#plan").isVisible(),false);
+    assert.equal(await page.locator("#snapshot").isVisible(),true,JSON.stringify({initialState,requests,requestPaths,errors,browserMessages}));assert.equal(await page.locator("#decision").textContent(),"WAIT");assert.equal(await page.locator("#plan").isVisible(),false);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
     mode="plan";await page.locator("#analyze").click();await page.waitForFunction(()=>document.querySelector("#decision").textContent==="PAPER PLAN");
     assert.equal(await page.locator("#plan").isVisible(),true);assert.equal(await page.locator("#save").isDisabled(),true);
@@ -51,8 +53,8 @@ async function run(){
     const download=page.waitForEvent("download");await page.locator("#export").click();const stream=await(await download).createReadStream();let exported="";for await(const part of stream)exported+=part;assert.equal(JSON.parse(exported).entries.length,1);
     await page.locator("#delete").click();assert.equal(await page.evaluate(()=>localStorage.getItem("hoshiTradingJournalV1")),null);
     for(const bad of ["forged","stale","error"]){mode=bad;await page.locator("#analyze").click();await page.waitForFunction(()=>document.querySelector("#status").textContent.includes("Data verify"));assert.equal(await page.locator("#plan").isVisible(),false);assert.equal(await page.locator("#decision").textContent(),"WAIT");}
-    mode="delayed";await page.locator("#analyze").click();while(!release)await new Promise(r=>setTimeout(r,10));await page.locator("#stop").click();release();await page.waitForTimeout(100);assert.equal(await page.locator("#snapshot").isVisible(),false);
-    release=null;await page.locator("#analyze").click();while(!release)await new Promise(r=>setTimeout(r,10));await page.locator("#symbol").selectOption("ETHUSDT");release();await page.waitForTimeout(100);assert.equal(await page.locator("#snapshot").isVisible(),false);await page.locator("#symbol").selectOption("BTCUSDT");
+    mode="delayed";await page.locator("#analyze").click();{const until=Date.now()+6000;while(!release&&Date.now()<until)await new Promise(r=>setTimeout(r,10));assert.ok(release,JSON.stringify({requests,requestPaths,status:await page.locator("#status").textContent()}));}await page.locator("#stop").click();release();await page.waitForTimeout(100);assert.equal(await page.locator("#snapshot").isVisible(),false);
+    release=null;await page.locator("#analyze").click();{const until=Date.now()+6000;while(!release&&Date.now()<until)await new Promise(r=>setTimeout(r,10));assert.ok(release,JSON.stringify({requests,requestPaths,status:await page.locator("#status").textContent()}));}await page.locator("#symbol").selectOption("ETHUSDT");release();await page.waitForTimeout(100);assert.equal(await page.locator("#snapshot").isVisible(),false);await page.locator("#symbol").selectOption("BTCUSDT");
     mode="expiry";await page.locator("#analyze").click();await page.waitForFunction(()=>document.querySelector("#decision").textContent==="PAPER PLAN");await page.waitForFunction(()=>document.querySelector("#status").textContent.includes("expire"));assert.equal(await page.locator("#levels").textContent(),"");
     // Use the REAL service worker: a trading navigation must not poison index.
     await page.evaluate(async()=>{await navigator.serviceWorker.register("/sw.js");await navigator.serviceWorker.ready;});
@@ -61,7 +63,7 @@ async function run(){
     await page.waitForFunction(async expected=>{const cache=await caches.open("hoshi-shell-v36"),r=await cache.match(new URL("/index.html",location.origin).href);return r&&await r.text()===expected;},mainSource);
     await page.waitForTimeout(200);
     assert.equal(await page.evaluate(async()=>{const r=await(await caches.open("hoshi-shell-v36")).match(new URL("/index.html",location.origin).href);return r.text();}),mainSource);
-    await context.setOffline(true);await context.unroute("https://**");await page.reload();await page.locator("#analyze").click();await page.waitForFunction(()=>document.querySelector("#status").textContent.includes("Data verify"));assert.equal(await page.locator("#plan").isVisible(),false);
+    await context.setOffline(true);await context.unroute("**/*");await page.reload();await page.locator("#analyze").click();await page.waitForFunction(()=>document.querySelector("#status").textContent.includes("Data verify"));assert.equal(await page.locator("#plan").isVisible(),false);
     assert.deepEqual(errors,[]);console.log("Trading desk Chromium mobile: WAIT/plan, tampering, Stop/races, expiry, consent/export/delete and real SW offline checks passed.");
   }finally{if(browser)await browser.close();await new Promise(resolve=>server.close(resolve));}
 }

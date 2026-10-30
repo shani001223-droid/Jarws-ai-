@@ -122,5 +122,88 @@ class FloraPrivatePhotoIntakeTests(unittest.TestCase):
             self.assertEqual(before, {p.name: p.read_bytes() for p in out.iterdir()})
 
 
+    def test_private_cli_one_step_real_silent_mp4_with_hash_bound_photo(self):
+        """Operator can produce an actual private MP4 without a second script."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "original_with_exif.jpg"
+            original = _jpeg_with_exif()
+            source.write_bytes(original)
+            out = root / "private"
+            out.mkdir()
+            args = [
+                sys.executable, "-m", "scripts.prepare_flora_private_photo",
+                "--photo", str(source), "--mime", "image/jpeg",
+                "--product-id", "gold_kit", "--output-dir", str(out),
+                "--rights-attested", "--render-video", "--placement", "story",
+            ]
+            completed = subprocess.run(args, capture_output=True, text=True, timeout=90)
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            summary = json.loads(completed.stdout)
+            self.assertFalse(summary["publication_permitted"])
+            self.assertFalse(summary["owner_approved"])
+            names = {
+                "flora_gold_kit_PRIVATE_photo.png",
+                "flora_gold_kit_PRIVATE_photo_provenance.json",
+                "flora_gold_kit_story_DRAFT.png",
+                "flora_gold_kit_story_DRAFT.mp4",
+            }
+            self.assertEqual({p.name for p in out.iterdir()}, names)
+            provenance = json.loads(
+                (out / "flora_gold_kit_PRIVATE_photo_provenance.json").read_text()
+            )
+            render = provenance["private_render"]
+            self.assertEqual(render["audio_status"], "silent_no_music")
+            self.assertFalse(render["publication_permitted"])
+            self.assertFalse(render["owner_approved"])
+            self.assertFalse(render["photo_rights_independently_verified"])
+            self.assertFalse(render["current_price_independently_verified"])
+            self.assertTrue(render["ffprobe_verified_locally"])
+            self.assertEqual(
+                provenance["sanitized_photo_sha256"],
+                hashlib.sha256((out / "flora_gold_kit_PRIVATE_photo.png").read_bytes()).hexdigest(),
+            )
+            for kind, filename in (("poster", "flora_gold_kit_story_DRAFT.png"),
+                                   ("video", "flora_gold_kit_story_DRAFT.mp4")):
+                self.assertEqual(
+                    render[kind + "_sha256"],
+                    hashlib.sha256((out / filename).read_bytes()).hexdigest(),
+                )
+            self.assertEqual(summary["video_sha256"], render["video_sha256"])
+            self.assertNotIn("original_with_exif.jpg",
+                             (out / "flora_gold_kit_PRIVATE_photo_provenance.json").read_text())
+            self.assertNotIn(b"PRIVATE CAMERA IDENTIFIER",
+                             (out / "flora_gold_kit_PRIVATE_photo.png").read_bytes())
+            probed = subprocess.run([
+                "ffprobe", "-v", "error", "-show_entries",
+                "stream=codec_name,codec_type:format=duration",
+                "-of", "json", str(out / "flora_gold_kit_story_DRAFT.mp4"),
+            ], capture_output=True, text=True, timeout=15, check=True)
+            streams = json.loads(probed.stdout)["streams"]
+            self.assertEqual([(s["codec_type"], s["codec_name"]) for s in streams],
+                             [("video", "h264")])
+            before = {p.name: p.read_bytes() for p in out.iterdir()}
+            repeat = subprocess.run(args, capture_output=True, text=True, timeout=90)
+            self.assertNotEqual(repeat.returncode, 0)
+            self.assertEqual(before, {p.name: p.read_bytes() for p in out.iterdir()})
+            self.assertEqual(source.read_bytes(), original)
+
+    def test_private_cli_invalid_photo_never_leaves_partial_video(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "broken.jpg"
+            source.write_bytes(_jpeg_with_exif()[:250])
+            out = root / "private"
+            out.mkdir()
+            result = subprocess.run([
+                sys.executable, "-m", "scripts.prepare_flora_private_photo",
+                "--photo", str(source), "--mime", "image/jpeg",
+                "--product-id", "shampoo", "--output-dir", str(out),
+                "--rights-attested", "--render-video",
+            ], capture_output=True, text=True, timeout=25)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual(list(out.iterdir()), [])
+
+
 if __name__ == "__main__":
     unittest.main()

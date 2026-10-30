@@ -188,7 +188,9 @@ def verify_private_review_bundle(directory: Path) -> dict:
         if regenerated != visual or decoded_records != records:
             raise AnimePrivateBundleError(
                 "Comparison pixels differ from actual encoded MP4 frames.")
-        _verify_sampled_caption_gating(\n            ffmpeg, root.parent / SOURCE_VIDEO, root / VIDEO, windows)\n        samples = meta.get("audio_review_samples")
+        _verify_sampled_caption_gating(
+            ffmpeg, root.parent / SOURCE_VIDEO, root / VIDEO, windows)
+        samples = meta.get("audio_review_samples")
         if type(samples) is not list or len(samples) not in (0, 3):
             raise AnimePrivateBundleError("Invalid private AAC cue list.")
         clips = []

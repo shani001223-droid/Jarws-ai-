@@ -1,5 +1,12 @@
 # HOSHI — 60-Task Autonomous Development Roadmap
 
+## 30 October 2026 — voice/phone memory: release consumed MP3 clips (PARTIAL; CI verified)
+
+- **Same existing Hoshi branch and sole draft PR #29.** `speech-pipeline.js` now exposes `release(index)` and `clear()`: `index.html` drops cached encoded audio after its Blob URL takes ownership and closes the queue on stop/completion. This avoids retaining all previous clips in a long reply and blocks deferred prefetch after Stop Speaking. Next-clip prefetch, parent/child abort behavior, first-phrase priority and Urdu text fallback remain. New Node regressions check dedup before release, next-clip preservation, no deferred loads after clear and invalid index rejection.
+- **Code-complete:** source/test `4161cd911028e33477d7dea62627266abe2a80ac`. **CI-verified:** [full Python/backend, JS and Playwright Chromium](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/41088747992) and [Docker/Uvicorn](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/41088747975) passed on that exact head. **Real-world/owner verified: no**: no measured physical Realme Note 50 RAM savings, natural Urdu voice acceptance, live draft deployment or 0.10-second latency guarantee. No Android-native code changes.
+- **Only canonical checkbox scoreboard remains 48/60 checked, 12 pending.** Task 06 physical phone QA and Task 11 real OpenJarvis remain unchecked; real Flora media/owner approval, original Hindi/Urdu Anime Studio pilot and human rights/voice/visual acceptance are pending. Corrected mission is reusable multi-agent original Hindi/Urdu Anime Studio with private offline 30–60s pilot, not standalone screenplay churn. Render primary services still deploy released V2; no new project/PR/automation, fake Room Life, merge/deploy, outside publication, purchase, secret change or real trading.
+
+
 ## 30 October 2026 — Task 15/16 follow-up: non-cooperative Urdu clip deadline (PARTIAL; CI verified)
 
 - **Same original Hoshi branch and sole draft PR #29.** `speech-pipeline.js` now rejects each Urdu MP3 clip at its own deadline even when a network/WebView loader ignores AbortSignal; the old abort-only timer could leave a Promise pending forever and stall spoken replies. Parent Stop Speaking still cancels every child without cancelling sibling clips on an individual timeout. Late success/failure is handled, abort listeners/timers are removed, and the existing visible text fallback remains available. No new endpoint/provider/permissions, automatic upload or fake Room Life.

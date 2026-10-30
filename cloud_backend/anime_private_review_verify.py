@@ -23,6 +23,7 @@ from cloud_backend.anime_private_review_page import (
 )
 from cloud_backend.anime_subtitle_burnin import (
     AnimeSubtitleBurninError, _encoded_comparison_evidence,
+    _encoded_cue_audio_evidence,
 )
 from cloud_backend.anime_subtitle_preview import _srt_windows
 from cloud_backend.anime_thumbnail import AnimeThumbnailError, _verify_video
@@ -159,6 +160,19 @@ def verify_private_review_bundle(directory: Path) -> dict:
             _match_hash(data, sample.get("wav_sha256"), name)
             clips.append({"filename": name, "wav_bytes": data})
             expected.add(name)
+        # Hashes and a regenerated waveform only prove the saved WAVs agree
+        # with saved JSON. Independently decode the actual captioned MP4 AAC
+        # and compare the exact listening bytes and cue metadata, so a forged
+        # WAV with rewritten local hashes cannot masquerade as encoded speech.
+        regenerated_clips, regenerated_samples = _encoded_cue_audio_evidence(
+            ffmpeg, root / VIDEO, windows, actual_qc["audio_codec"])
+        if (regenerated_samples != samples
+                or len(regenerated_clips) != len(clips)
+                or any(a["filename"] != b["filename"]
+                       or a["wav_bytes"] != b["wav_bytes"]
+                       for a, b in zip(regenerated_clips, clips))):
+            raise AnimePrivateBundleError(
+                "AAC listening clips differ from actual encoded MP4 audio.")
         waveform = build_encoded_audio_waveform(clips, samples)
         if waveform["status"] != meta.get("audio_waveform_status"):
             raise AnimePrivateBundleError("Waveform status differs from actual audio.")

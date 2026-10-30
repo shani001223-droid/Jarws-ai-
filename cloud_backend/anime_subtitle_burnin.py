@@ -12,6 +12,7 @@ from pathlib import Path
 import shutil
 import subprocess
 from tempfile import TemporaryDirectory
+import wave
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -90,6 +91,65 @@ def _encoded_comparison_evidence(ffmpeg: str, source: Path, output: Path,
     if not 100 <= len(evidence) <= 8_000_000:
         raise AnimeSubtitleBurninError("Private comparison PNG exceeds size limit.")
     return evidence, comparisons
+
+
+def _encoded_cue_audio_evidence(
+    ffmpeg: str, output: Path, windows: list[tuple[int, int, str]],
+    audio_codec: str,
+) -> tuple[list[dict], list[dict]]:
+    """Export bounded WAV listening clips from the *encoded* MP4 AAC track.
+
+    Include 250 ms on either side of each caption, clipped to the 30s pilot.
+    This is a human review handoff, never ASR, speech or lip-sync verification.
+    A silent MP4 must not be given fabricated audio evidence.
+    """
+    if audio_codec != "aac":
+        return [], []
+    if len(windows) != 3:
+        raise AnimeSubtitleBurninError("Three validated audio cues required.")
+    clips, samples = [], []
+    for index, (start, end, _) in enumerate(windows):
+        first, last = max(0, start - 250), min(30000, end + 250)
+        first_sample, last_sample = first * 16, last * 16
+        if last_sample <= first_sample:
+            raise AnimeSubtitleBurninError("Invalid private audio review interval.")
+        result = subprocess.run(
+            [ffmpeg, "-hide_banner", "-loglevel", "error", "-nostdin",
+             "-i", str(output), "-map", "0:a:0", "-vn",
+             "-af", ("aresample=16000,atrim=start_sample="
+                     f"{first_sample}:end_sample={last_sample},"
+                     "asetpts=PTS-STARTPTS"),
+             "-ac", "1", "-c:a", "pcm_s16le", "-f", "s16le", "-"],
+            capture_output=True, timeout=25, check=False)
+        expected_bytes = (last_sample - first_sample) * 2
+        if (result.returncode or len(result.stdout) % 2
+                or not max(1, expected_bytes - 3200) <= len(result.stdout)
+                <= expected_bytes + 640):
+            raise AnimeSubtitleBurninError("Encoded AAC cue listening clip unavailable.")
+        buffer = BytesIO()
+        with wave.open(buffer, "wb") as writer:
+            writer.setnchannels(1)
+            writer.setsampwidth(2)
+            writer.setframerate(16000)
+            writer.writeframes(result.stdout)
+        wav = buffer.getvalue()
+        if not 44 <= len(wav) <= 750_000:
+            raise AnimeSubtitleBurninError("Private WAV review clip exceeds limit.")
+        filename = f"hoshi_cue_{index + 1}_PRIVATE_REVIEW.wav"
+        clips.append({"filename": filename, "wav_bytes": wav})
+        samples.append({
+            "shot_index": index + 1, "filename": filename,
+            "cue_start_ms": start, "cue_end_ms": end,
+            "excerpt_start_ms": first, "excerpt_end_ms_requested": last,
+            "decoded_pcm_sample_count": len(result.stdout) // 2,
+            "sample_rate_hz": 16000, "channels": 1,
+            "sample_width_bytes": 2, "wav_sha256": _sha(wav),
+            "decoded_from_actual_captioned_mp4_aac": True,
+            "human_listening_review_required": True,
+            "spoken_words_independently_verified": False,
+            "phoneme_sync_verified": False,
+        })
+    return clips, samples
 
 
 def render_private_subtitled_pilot(manifest: dict, video: bytes,
@@ -187,6 +247,8 @@ def render_private_subtitled_pilot(manifest: dict, video: bytes,
                 raise AnimeSubtitleBurninError("Original AAC stream not preserved.")
             comparison_png, comparisons = _encoded_comparison_evidence(
                 ffmpeg, source, output, review["samples"])
+            audio_review_wavs, audio_review_samples = _encoded_cue_audio_evidence(
+                ffmpeg, output, windows, media_qc["audio_codec"])
     except AnimeSubtitleBurninError:
         raise
     except (OSError, subprocess.TimeoutExpired, AnimeThumbnailError, ValueError,
@@ -203,6 +265,10 @@ def render_private_subtitled_pilot(manifest: dict, video: bytes,
         "visual_evidence_samples": comparisons,
         "visual_evidence_decoded_from_both_mp4s": True,
         "visual_evidence_human_review_required": True,
+        "audio_review_wavs": audio_review_wavs,
+        "audio_review_samples": audio_review_samples,
+        "audio_review_decoded_from_actual_encoded_aac": bool(audio_review_samples),
+        "audio_review_human_listening_required": True,
         "caption_ink_independently_machine_verified": False,
         "source_video_sha256": _sha(video),
         "source_subtitles_sha256": _sha(subtitles),

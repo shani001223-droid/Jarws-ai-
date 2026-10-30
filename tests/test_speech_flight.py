@@ -62,9 +62,10 @@ class SpeechFlightTests(unittest.IsolatedAsyncioTestCase):
         waiter.cancel()
         with self.assertRaises(asyncio.CancelledError):
             await waiter
-        await asyncio.wait_for(stopped.wait(), 1)
+        # A new request must not attach to the cancelled in-flight task.
         self.assertEqual(await cache.get(
             KEY, lambda: asyncio.sleep(0, result=b"retry")), b"retry")
+        await asyncio.wait_for(stopped.wait(), 1)
 
     async def test_expiry_failure_and_capacity(self):
         now = [100.0]

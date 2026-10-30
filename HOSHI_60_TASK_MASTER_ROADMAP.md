@@ -1,5 +1,11 @@
 # HOSHI — 60-Task Autonomous Development Roadmap
 
+## 30 October 2026 — Tasks 43/45/46 Flora private encoded-MP4 three-frame guard (PARTIAL; CI verified)
+
+- Same original Hoshi repository, development branch and **one existing draft PR #29**. The offline, read-only private Flora verifier now decodes actual encoded H.264 frames at **0.6, 1.5 and 2.4 seconds**, rejecting a rehashed MP4 with an altered beginning/end even if the saved midpoint still matches its DRAFT poster. Real FFmpeg regression forges black early frames, updates the local SHA-256 provenance and requires explicit visual-mismatch rejection; original media passes after restoration. No network upload, approval, posting or publication.
+- **Code-complete:** sampled visual guard at `f4e3a3062b60e97282308e5aabb795f513450e4b`. **CI-verified:** [full Python/backend, JS and Playwright Chromium](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/41050205812) and [Docker/Uvicorn](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/41050205800) passed on that exact source/test head. **Real-world/owner verified: no.** Sampled frames do not establish genuine Flora imagery, independent rights, current price/stock, licensed audio or human approval.
+- **Sole canonical 60-checkbox scoreboard remains 48 checked / 12 pending; Tasks 43, 45 and 46 stay unchecked.** Task 06 physical Realme Note 50 QA, Task 11 real OpenJarvis, and the reusable original Hindi/Urdu Anime Studio private 30–60s pilot still need real-world acceptance. No duplicate tracker/repo/PR/automation, fake Room Life, production merge/deploy, outside publication, purchase, secret change or real trading.
+
 ## 30 October 2026 — Tasks 43/45/46 private Flora MP4 decoded-frame verifier (PARTIAL; CI verified)
 
 - Same **one Hoshi repo/branch and sole draft PR #29**: a new offline read-only `scripts.verify_flora_private_bundle` checks the actual four-file owner-photo draft, fixed filenames, no symlinks/unexpected files, 0600-style private permissions, bounded PNG/JSON/MP4 bytes, SHA-256 linkage and unapproved flags. It independently FFprobes the encoded silent H.264 MP4 and decodes a midpoint frame to compare against the saved poster, rejecting a rehashed but unrelated poster. No upload, external account action, approval, new service or overwrite.

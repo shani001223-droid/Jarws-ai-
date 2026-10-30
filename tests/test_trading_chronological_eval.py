@@ -43,7 +43,7 @@ class ChronologicalEvaluationTests(unittest.TestCase):
         self.assertIsNone(result["holdout"]["win_rate_pct"])
 
     def test_negative_results_are_not_suppressed(self):
-        def fake_backtest(bars, strategy, cfg):
+        def fake_backtest(bars, strategy, cfg, *, entry_not_before=None):
             return {"trade_count": 1, "net_pnl": -3.5,
                     "win_rate_pct": 0.0, "trades": [{
                         "entry_time": bars[64].time if len(bars) > 64 else bars[0].time,
@@ -161,7 +161,7 @@ class ChronologicalEvaluationTests(unittest.TestCase):
                              "unavailable_config_exceeds_engine_bounds")
 
     def test_rolling_negative_gap_outcomes_preserved(self):
-        def losing_backtest(bars, strategy, cfg):
+        def losing_backtest(bars, strategy, cfg, *, entry_not_before=None):
             return {"trade_count": 1, "net_pnl": -4.25,
                     "trades": [{"entry_time": bars[64].time, "net_pnl": -4.25,
                                 "reason": "gap_stop"}], "input_candles": ["hidden"]}
@@ -175,7 +175,7 @@ class ChronologicalEvaluationTests(unittest.TestCase):
 
     def test_rolling_rejects_warmup_trade_from_engine(self):
         calls = [0]
-        def premature_backtest(bars, strategy, cfg):
+        def premature_backtest(bars, strategy, cfg, *, entry_not_before=None):
             calls[0] += 1
             # First two calls are primary train/holdout; the third is a rolling
             # window, whose last warmup bar must never count as an entry.
@@ -187,6 +187,43 @@ class ChronologicalEvaluationTests(unittest.TestCase):
             with self.assertRaisesRegex(ev.PaperEvaluationError, "lookahead_or_warmup_trade"):
                 ev.evaluate_rolling_robustness(self.bars, "BTCUSDT", "trend_pullback")
 
+
+
+    def test_warmup_entry_boundary_prevents_hidden_positions_and_retains_scored_losses(self):
+        from cloud_backend import trading_research as tr
+        # Deterministic synthetic candles, NOT independent market evidence.
+        flat = [replace(b, open=100, high=101, low=99, close=100, volume=10)
+                for b in self.bars]
+        with patch.object(tr, "setup", return_value={"stop": 99.5, "reference_entry": 100}):
+            result = ev.evaluate_rolling_robustness(flat, "BTCUSDT", "trend_pullback")
+        self.assertGreater(result["holdout"]["trade_count"], 0)
+        self.assertLess(result["holdout"]["net_pnl"], 0)
+        self.assertTrue(all(t["entry_time"] >= flat[210].time
+                            for t in result["holdout"]["trades"]))
+        for window in result["rolling_robustness"]["windows"]:
+            for scenario in (window["baseline"], window["double_costs"]):
+                self.assertGreater(scenario["trade_count"], 0)
+                self.assertLess(scenario["net_pnl"], 0)
+                self.assertTrue(all(t["entry_time"] >= window["first_scored_entry_at"]
+                                    for t in scenario["trades"]))
+
+    def test_engine_scored_boundary_does_not_carry_stale_warmup_signal(self):
+        from cloud_backend import trading_research as tr
+        flat = [replace(b, open=100, high=101, low=99, close=100, volume=10)
+                for b in self.bars[:125]]
+        cutoff = flat[64].time
+        # Signal only on warmup bar 63; entry is allowed at first scored open.
+        with patch.object(tr, "setup", return_value={"stop": 95, "reference_entry": 100}):
+            scored = tr.backtest(flat, "trend_pullback", SimulationConfig(),
+                                 entry_not_before=cutoff)
+        self.assertEqual(scored["trades"][0]["entry_time"], cutoff)
+        self.assertEqual(scored["initial_equity"], 1000)
+        self.assertTrue(all(t["entry_time"] >= cutoff for t in scored["trades"]))
+        for invalid in (True, cutoff + 1, flat[0].time - 900_000,
+                        flat[-1].time + 900_000):
+            with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                tr.backtest(flat, "trend_pullback", SimulationConfig(),
+                            entry_not_before=invalid)
 
 
 if __name__ == "__main__":

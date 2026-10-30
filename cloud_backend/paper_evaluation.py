@@ -72,9 +72,10 @@ def evaluate_chronological(bars, symbol: str, strategy: str,
     split = len(candles) * 7 // 10
     if split < WARMUP_BARS or len(candles) - split < WARMUP_BARS:
         raise PaperEvaluationError("insufficient_holdout")
-    train = backtest(candles[:split], strategy, cfg)
-    holdout = backtest(candles[split - WARMUP_BARS:], strategy, cfg)
     first_holdout = candles[split].time
+    train = backtest(candles[:split], strategy, cfg)
+    holdout = backtest(candles[split - WARMUP_BARS:], strategy, cfg,
+                       entry_not_before=first_holdout)
     if any(t["entry_time"] < first_holdout for t in holdout["trades"]):
         raise PaperEvaluationError("lookahead_or_warmup_trade")
     payload = json.dumps([asdict(b) for b in candles], sort_keys=True,
@@ -105,7 +106,7 @@ def evaluate_chronological(bars, symbol: str, strategy: str,
             "Operator-supplied candles are NOT authenticated or cross-venue verified.",
             "One fixed chronological holdout on one short sample is not independent replication.",
             "The existing 15m research rule is NOT the 3-timeframe V2 desk or V3 engine.",
-            "Prior 64 closed bars are context only; no warmup entry is scored.",
+            "Prior 64 closed bars are context only; warmup entries are prohibited at the engine boundary.",
             "No optimization, resampling, survivorship correction or multiple-testing correction.",
             "Next-open fills, fixed fees/slippage and stop-first ambiguous bars; real gaps, liquidity and impact can be worse.",
             "Zero and negative results are retained; no profit, win-rate or forward-performance guarantee.",
@@ -136,8 +137,9 @@ def evaluate_rolling_robustness(bars, symbol: str, strategy: str,
         end = len(candles) * (n + 1) // 5
         first_scored = candles[start].time
         segment = candles[start - WARMUP_BARS:end]
-        base = backtest(segment, strategy, cfg)
-        stressed = backtest(segment, strategy, stress_cfg) if stress_cfg else None
+        base = backtest(segment, strategy, cfg, entry_not_before=first_scored)
+        stressed = (backtest(segment, strategy, stress_cfg,
+                             entry_not_before=first_scored) if stress_cfg else None)
         for scenario in (base, stressed):
             if scenario is not None and any(
                     t["entry_time"] < first_scored for t in scenario["trades"]):

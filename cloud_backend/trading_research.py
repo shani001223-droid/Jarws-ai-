@@ -186,7 +186,7 @@ def risk_size(cash, entry, stop, day_loss, cfg):
     return min(budget/per_unit, cash/(entry*(1+fee)))
 
 
-def backtest(bars, strategy, cfg):
+def backtest(bars, strategy, cfg, *, entry_not_before=None):
     """Bounded, single-position, long-only exploratory test on supplied history.
 
     Uses 15m rules only (NOT the multi-timeframe research filter). Fees/slippage
@@ -195,12 +195,23 @@ def backtest(bars, strategy, cfg):
     """
     if strategy not in STRATEGIES or not 64 <= len(bars) <= 500:
         raise ValueError("Invalid test input")
+    # Warmup bars may form signals, but must never open or finance positions.
+    # The last warmup close may still signal an entry at the first scored open.
+    if entry_not_before is not None and (
+            type(entry_not_before) is not int
+            or entry_not_before % INTERVALS["15m"]
+            or not bars[0].time <= entry_not_before <= bars[-1].time):
+        raise ValueError("Invalid scored-entry boundary")
     cash, peak, max_dd = cfg.equity, cfg.equity, 0.0
     fee, slip = cfg.fee_bps/10_000, cfg.slippage_bps/10_000
     position, pending = None, None
     trades, day_losses, cooldown_until = [], {}, -1
     for i, b in enumerate(bars):
         day = b.time // 86_400_000
+        # Expire any warmup-only pending signal at its very next bar. Never
+        # carry a stale warmup signal forward across the scoring boundary.
+        if pending and entry_not_before is not None and b.time < entry_not_before:
+            pending = None
         if pending and not position:
             entry = b.open*(1+slip)
             # Revalidate risk after a price gap; a gapped invalid setup is skipped.

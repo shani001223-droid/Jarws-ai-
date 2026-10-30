@@ -525,7 +525,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
   }
   const files=window.HoshiSpeechPipeline.queue(segments,requestPart,()=>request.id===speechSequence&&!controller.signal.aborted);
   const audio=$('hoshiAudio');
-  const stopLoading=()=>{controller.abort();if(speechAudioController===controller)speechAudioController=null};
+  const stopLoading=()=>{files.clear();controller.abort();if(speechAudioController===controller)speechAudioController=null};
   async function playPart(index){
    if(request.id!==speechSequence){stopLoading();return}
    const blob=await files.get(index);
@@ -533,7 +533,7 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
    if(!blob){setSpeaking(false);setStatus('URDU AUDIO UNAVAILABLE · REPLY IS SHOWN IN CHAT');stopLoading();return}
    if(index+1<segments.length)void files.get(index+1);
    if(speechAudioUrl){URL.revokeObjectURL(speechAudioUrl);speechAudioUrl=null}
-   speechAudioUrl=URL.createObjectURL(blob);audio.src=speechAudioUrl;audio.hidden=false;
+   speechAudioUrl=URL.createObjectURL(blob);files.release(index);audio.src=speechAudioUrl;audio.hidden=false;
    audio.onplaying=()=>{
     if(request.id===speechSequence){
      $('nightAudioRetry').hidden=true;setSpeaking(true);

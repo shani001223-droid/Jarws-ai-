@@ -111,3 +111,67 @@ def evaluate_chronological(bars, symbol: str, strategy: str,
             "Zero and negative results are retained; no profit, win-rate or forward-performance guarantee.",
         ],
     }
+
+
+def evaluate_rolling_robustness(bars, symbol: str, strategy: str,
+                                config: SimulationConfig | None = None) -> dict:
+    """Optional fixed-window/cost stress study on the SAME unverified input.
+
+    The 40-60%, 60-80% and 80-100% windows do not overlap in scored bars.
+    Each has exactly 64 prior closed bars of warmup, and a separate cash/risk
+    reset. This is a robustness diagnostic, NOT independent venue/forward proof.
+    """
+    report = evaluate_chronological(bars, symbol, strategy, config)
+    candles = _checked(bars)
+    cfg = SimulationConfig() if config is None else config
+    stress_available = cfg.fee_bps <= 50 and cfg.slippage_bps <= 50
+    stress_cfg = (SimulationConfig(**{
+        **asdict(cfg),
+        "fee_bps": cfg.fee_bps * 2,
+        "slippage_bps": cfg.slippage_bps * 2,
+    }) if stress_available else None)
+    windows = []
+    for n in range(2, 5):
+        start = len(candles) * n // 5
+        end = len(candles) * (n + 1) // 5
+        first_scored = candles[start].time
+        segment = candles[start - WARMUP_BARS:end]
+        base = backtest(segment, strategy, cfg)
+        stressed = backtest(segment, strategy, stress_cfg) if stress_cfg else None
+        for scenario in (base, stressed):
+            if scenario is not None and any(
+                    t["entry_time"] < first_scored for t in scenario["trades"]):
+                raise PaperEvaluationError("lookahead_or_warmup_trade")
+        windows.append({
+            "window_index": n - 1,
+            "first_scored_entry_at": first_scored,
+            "last_scored_close_at": candles[end - 1].close_time,
+            "scored_bars": end - start,
+            "prior_warmup_bars": WARMUP_BARS,
+            "baseline": {k: v for k, v in base.items() if k != "input_candles"},
+            "double_costs": ({k: v for k, v in stressed.items()
+                              if k != "input_candles"} if stressed else None),
+            "double_costs_status": ("evaluated" if stressed is not None
+                                    else "unavailable_config_exceeds_engine_bounds"),
+            "baseline_no_trades": base["trade_count"] == 0,
+            "double_costs_no_trades": (stressed["trade_count"] == 0
+                                       if stressed is not None else None),
+        })
+    report["rolling_robustness"] = {
+        "status": "exploratory_same_series_not_independent",
+        "windows": windows,
+        "scored_windows": 3,
+        "independent_venue_verified": False,
+        "forward_verified": False,
+        "cost_scenario": ("double_fee_and_slippage" if stress_available
+                          else "unavailable_engine_limits"),
+        "limitations": [
+            "All windows use the same operator-supplied unverified series.",
+            "Scored windows are disjoint but share earlier history; no independent data.",
+            "Each window resets cash, daily loss state and open positions; never sum returns as a continuous account.",
+            "The primary 70/30 holdout overlaps later rolling windows; not independent confirmations.",
+            "Double-cost stress is omitted, not silently capped, when fees or slippage exceed engine bounds.",
+            "Zero trades, losses, adverse gaps and drawdown are retained; no profitable or forward result is implied.",
+        ],
+    }
+    return report

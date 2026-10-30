@@ -289,6 +289,37 @@ class SubtitleVisualReviewTests(unittest.TestCase):
             for record in meta["audio_review_samples"]:
                 self.assertEqual(record["wav_sha256"], digest(
                     (target / record["filename"]).read_bytes()))
+            # Verify the actual saved media, captions, HTML and AAC-derived
+            # evidence before human review; never infer speech/owner approval.
+            verify = [sys.executable, "-m",
+                      "scripts.verify_hoshi_anime_private_review",
+                      "--draft-dir", str(root)]
+            checked = subprocess.run(verify, capture_output=True, timeout=70)
+            self.assertEqual(checked.returncode, 0, checked.stderr[:500])
+            report = json.loads(checked.stdout)
+            self.assertEqual(report["status"],
+                             "private_bundle_bytes_and_mp4_verified_human_review_pending")
+            self.assertFalse(report["owner_approved"])
+            self.assertFalse(report["speech_or_lip_sync_verified"])
+            self.assertEqual(report["file_count"], 8)
+            page = target / meta["review_page_filename"]
+            page_bytes = page.read_bytes()
+            page.write_bytes(page_bytes + b"<!-- forged -->")
+            rejected = subprocess.run(verify, capture_output=True, timeout=20)
+            self.assertNotEqual(rejected.returncode, 0)
+            page.write_bytes(page_bytes)
+            clip = target / meta["audio_review_samples"][0]["filename"]
+            clip_bytes = clip.read_bytes()
+            clip.write_bytes(clip_bytes + b"tamper")
+            rejected = subprocess.run(verify, capture_output=True, timeout=20)
+            self.assertNotEqual(rejected.returncode, 0)
+            clip.write_bytes(clip_bytes)
+            (target / "unexpected.txt").write_text("not an approved review asset")
+            rejected = subprocess.run(verify, capture_output=True, timeout=70)
+            self.assertNotEqual(rejected.returncode, 0)
+            (target / "unexpected.txt").unlink()
+            checked_again = subprocess.run(verify, capture_output=True, timeout=70)
+            self.assertEqual(checked_again.returncode, 0, checked_again.stderr[:500])
             second = subprocess.run(command, capture_output=True, timeout=160)
             self.assertNotEqual(second.returncode, 0)
             self.assertFalse((root / "manifest.json").read_text(

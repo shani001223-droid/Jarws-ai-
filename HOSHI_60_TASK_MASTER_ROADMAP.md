@@ -1,5 +1,12 @@
 # HOSHI — 60-Task Autonomous Development Roadmap
 
+## 30 October 2026 — Task 15/16 mobile Urdu MP3 response byte cap (PARTIAL; CI pending)
+
+- **One existing repo/branch, sole draft PR #29.** `speech-pipeline.js` now streams at most 2,000,000 bytes per online Urdu MP3 clip and `index.html` uses the bounded reader instead of unlimited `Response.blob()`. Reject oversized/malformed declared lengths, enforce actual bytes when headers lie, cancel excessive streams, reject empty clips and size-check the Blob fallback on older Android WebViews. The visible Roman Urdu chat fallback, Stop Speaking, per-clip 22-second deadlines and free-first voice provider remain intact. No new service, phone permission or external publication.
+- **Code-complete:** `db1750031213852aba4a89aea0539f7944bb9913`; six equivalent local Node 20 regressions passed. **GitHub CI not yet verified:** [full Python/JS/Playwright queued](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/41102153163), [Docker queued](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/41102153336). **Real-world/owner verified: no**: older WebView Blob fallback may still temporarily buffer a large response; actual Realme Note 50 RAM, Urdu voice quality and latency are unmeasured. No production deployment.
+- **Sole canonical checkbox scoreboard unchanged: 48/60 checked, 12 pending.** Task 06 real phone QA, Task 11 real OpenJarvis, genuine Flora rights/owner approval, original Hindi/Urdu multi-agent Anime Studio offline 30–60s pilot acceptance and game/trading real-world evidence remain pending. No screenplay churn, fake Room Life, duplicate project/PR/automation, merge/deploy, upload, purchase, secrets or real trading.
+
+
 ## 30 October 2026 — voice/phone memory: release consumed MP3 clips (PARTIAL; CI verified)
 
 - **Same existing Hoshi branch and sole draft PR #29.** `speech-pipeline.js` now exposes `release(index)` and `clear()`: `index.html` drops cached encoded audio after its Blob URL takes ownership and closes the queue on stop/completion. This avoids retaining all previous clips in a long reply and blocks deferred prefetch after Stop Speaking. Next-clip prefetch, parent/child abort behavior, first-phrase priority and Urdu text fallback remain. New Node regressions check dedup before release, next-clip preservation, no deferred loads after clear and invalid index rejection.

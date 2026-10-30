@@ -1,0 +1,93 @@
+"""Causal 15m chronological paper replay; no fabricated live market results."""
+from dataclasses import replace
+import math
+import unittest
+from unittest.mock import patch
+
+from cloud_backend import paper_evaluation as ev
+from cloud_backend.trading_research import Candle, SimulationConfig
+from test_paper_risk import history
+
+
+class ChronologicalEvaluationTests(unittest.TestCase):
+    def setUp(self):
+        self.bars = history("15m", count=300)
+
+    def test_fixed_holdout_is_causal_and_exportable(self):
+        result = ev.evaluate_chronological(self.bars, "BTCUSDT", "trend_pullback")
+        self.assertEqual(result["split"]["training_bars"], 210)
+        self.assertEqual(result["split"]["holdout_scored_bars"], 90)
+        self.assertEqual(result["split"]["holdout_prior_warmup_bars"], 64)
+        self.assertEqual(result["split"]["holdout_first_entry_earliest_at"], self.bars[210].time)
+        self.assertEqual(len(result["input_candle_sha256"]), 64)
+        self.assertFalse(result["orders_enabled"])
+        self.assertFalse(result["independent_venue_verified"])
+        self.assertIsNone(result["win_probability"])
+        self.assertEqual(result["input_provenance"], "operator_supplied_unverified")
+        self.assertNotIn("input_candles", result["holdout"])
+        self.assertTrue(all(t["entry_time"] >= self.bars[210].time
+                            for t in result["holdout"]["trades"]))
+
+    def test_no_trade_outcome_is_preserved(self):
+        flat = [replace(b, open=100, high=100.1, low=99.9, close=100, volume=10)
+                for b in self.bars]
+        result = ev.evaluate_chronological(flat, "ETHUSDT", "breakout_retest")
+        self.assertTrue(result["holdout_no_trades"])
+        self.assertEqual(result["holdout"]["trade_count"], 0)
+        self.assertEqual(result["holdout"]["net_pnl"], 0)
+        self.assertIsNone(result["holdout"]["win_rate_pct"])
+
+    def test_negative_results_are_not_suppressed(self):
+        def fake_backtest(bars, strategy, cfg):
+            return {"trade_count": 1, "net_pnl": -3.5,
+                    "win_rate_pct": 0.0, "trades": [{
+                        "entry_time": bars[64].time if len(bars) > 64 else bars[0].time,
+                        "net_pnl": -3.5, "reason": "gap_stop"}],
+                    "input_candles": ["not_exposed"]}
+        with patch.object(ev, "backtest", side_effect=fake_backtest):
+            result = ev.evaluate_chronological(self.bars, "BTCUSDT", "trend_pullback")
+        self.assertEqual(result["holdout"]["net_pnl"], -3.5)
+        self.assertEqual(result["holdout"]["trades"][0]["reason"], "gap_stop")
+        self.assertFalse(result["holdout_no_trades"])
+
+    def test_gaps_duplicates_ohlcv_and_timestamp_forgery_are_rejected(self):
+        variants = [
+            replace(self.bars[70], time=self.bars[70].time + 1),
+            replace(self.bars[70], time=self.bars[69].time),
+            replace(self.bars[70], close_time=self.bars[70].close_time + 1),
+            replace(self.bars[70], volume=-1),
+            replace(self.bars[70], high=0),
+            replace(self.bars[70], open=math.nan),
+            replace(self.bars[70], time=True),
+        ]
+        for corrupt in variants:
+            with self.subTest(corrupt=corrupt):
+                sample = self.bars.copy()
+                sample[70] = corrupt
+                with self.assertRaises(ev.PaperEvaluationError):
+                    ev.evaluate_chronological(sample, "BTCUSDT", "trend_pullback")
+
+    def test_invalid_settings_and_short_or_oversized_samples(self):
+        for data in (self.bars[:239], self.bars + self.bars[:201]):
+            with self.assertRaises(ev.PaperEvaluationError):
+                ev.evaluate_chronological(data, "BTCUSDT", "trend_pullback")
+        for symbol, strategy in (("SOLUSDT", "trend_pullback"), ("BTCUSDT", "buy")):
+            with self.assertRaises(ev.PaperEvaluationError):
+                ev.evaluate_chronological(self.bars, symbol, strategy)
+        with self.assertRaises(ev.PaperEvaluationError):
+            ev.evaluate_chronological(self.bars, "BTCUSDT", "trend_pullback",
+                                      SimulationConfig(equity=True))
+        with self.assertRaises(ev.PaperEvaluationError):
+            ev.evaluate_chronological(self.bars, "BTCUSDT", "trend_pullback",
+                                      config=object())
+
+    def test_hash_changes_when_a_valid_candle_changes(self):
+        original = ev.evaluate_chronological(self.bars, "BTCUSDT", "breakout_retest")
+        changed = self.bars.copy()
+        changed[80] = replace(changed[80], volume=changed[80].volume + 1)
+        modified = ev.evaluate_chronological(changed, "BTCUSDT", "breakout_retest")
+        self.assertNotEqual(original["input_candle_sha256"], modified["input_candle_sha256"])
+
+
+if __name__ == "__main__":
+    unittest.main()

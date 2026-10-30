@@ -25,6 +25,14 @@ V2 desk is usable development work within the new trading focus, not a waiver
 of V3's documented source/release requirements.
 
 
+## 31 October 2026 — trading-only offline chronological holdout evaluator (DEVELOPMENT; CI pending)
+
+In the **same** Hoshi branch and sole draft PR #29, `cloud_backend/paper_evaluation.py` and `scripts/evaluate_trading_paper.py` add a bounded **offline** evaluation of the existing 15m exploratory `trend_pullback` / `breakout_retest` paper rules. An operator supplies 240–500 contiguous, aligned 15m candles in a local JSON file; malformed OHLCV, gaps, duplicate timestamps, invalid budgets, unsupported pairs/strategies and oversized files fail closed. A fixed chronological 70/30 split uses only 64 prior closed candles as holdout indicator warmup. The existing engine uses next-bar-open entries, fees, adverse slippage, stop-first ambiguity, gap stops and UTC daily loss caps. Reports retain **zero trades, losses and gap exits**, exact training/holdout trade lists, and a reproducible SHA-256 input fingerprint. The CLI reads locally and writes JSON to stdout only; no market API, credentials, trades, publication or file modification.
+
+**Code-complete:** this development commit (see branch history). **CI verification:** pending exact-head Python/Node/Playwright/Docker runs; do not mark passed until successful. **Real-data/independent evaluation:** not established; input provenance explicitly says `operator_supplied_unverified`, a single short chronological holdout is not independent cross-venue or forward replication, and the legacy 15m research rules are **not** the V2 three-timeframe desk or source-blocked V3 engine. **Production/device acceptance:** not established; Render V2 and Realme Note 50 remain unchanged. Historical canonical checkbox count stays **48/60**, not a trading readiness percentage. All non-trading development remains deferred.
+
+
+
 ## 30 October 2026 — Task 15/16 mobile Urdu MP3 response byte cap (PARTIAL; CI pending)
 
 - **One existing repo/branch, sole draft PR #29.** `speech-pipeline.js` now streams at most 2,000,000 bytes per online Urdu MP3 clip and `index.html` uses the bounded reader instead of unlimited `Response.blob()`. Reject oversized/malformed declared lengths, enforce actual bytes when headers lie, cancel excessive streams, reject empty clips and size-check the Blob fallback on older Android WebViews. The visible Roman Urdu chat fallback, Stop Speaking, per-clip 22-second deadlines and free-first voice provider remain intact. No new service, phone permission or external publication.

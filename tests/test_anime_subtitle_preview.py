@@ -269,6 +269,15 @@ class SubtitleVisualReviewTests(unittest.TestCase):
             self.assertEqual(meta["video_sha256"], digest(
                 (target / meta["filename"]).read_bytes()))
             self.assertFalse(meta["release_authorized"])
+            self.assertEqual(meta["review_page_filename"],
+                             "hoshi_private_review_OFFLINE.html")
+            review_html = (target / meta["review_page_filename"]).read_bytes()
+            self.assertEqual(meta["review_page_sha256"], digest(review_html))
+            self.assertIn(b"UNAPPROVED / DO NOT PUBLISH", review_html)
+            self.assertIn(b"<video controls", review_html)
+            self.assertIn(b"<audio controls", review_html)
+            self.assertNotIn(b"<script", review_html)
+            self.assertTrue(meta["review_page_human_review_required"])
             self.assertEqual(meta["visual_evidence_sha256"], digest(
                 (target / meta["visual_evidence_filename"]).read_bytes()))
             self.assertEqual(len(meta["visual_evidence_samples"]), 3)

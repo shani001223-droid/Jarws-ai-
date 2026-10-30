@@ -193,6 +193,9 @@ class FloraPrivatePhotoIntakeTests(unittest.TestCase):
             self.assertTrue(verified["encoded_midpoint_checked"])
             self.assertTrue(verified["encoded_three_samples_checked"])
             self.assertEqual(verified["encoded_sample_times_seconds"], [0.6, 1.5, 2.4])
+            self.assertTrue(verified["encoded_full_frame_checked"])
+            self.assertEqual(verified["encoded_frames_checked"], 36)
+            self.assertEqual(verified["encoded_expected_frame_rate"], 12)
             self.assertFalse(verified["owner_approved"])
             cli_check = subprocess.run([
                 sys.executable, "-m", "scripts.verify_flora_private_bundle",
@@ -233,6 +236,36 @@ class FloraPrivatePhotoIntakeTests(unittest.TestCase):
             self.assertTrue(
                 verify_private_flora_bundle(out, "gold_kit", "story")[
                     "encoded_three_samples_checked"]
+            )
+
+            # The old three-frame sampler missed a short substituted shot
+            # strictly between 0.6, 1.5 and 2.4 seconds. All 36 frames must
+            # now be decoded, including the previously unchecked interval.
+            brief_forgery = root / "forged_between_samples.mp4"
+            encoded = subprocess.run([
+                "ffmpeg", "-hide_banner", "-loglevel", "error", "-nostdin", "-y",
+                "-i", str(video_path),
+                "-vf", "drawbox=x=0:y=0:w=iw:h=ih:color=black:t=fill:"
+                       "enable='between(t,1.05,1.22)'",
+                "-an", "-c:v", "libx264", "-threads", "2", "-preset", "ultrafast",
+                "-crf", "32", "-pix_fmt", "yuv420p", "-r", "12",
+                "-movflags", "+faststart", str(brief_forgery),
+            ], capture_output=True, text=True, timeout=35)
+            self.assertEqual(encoded.returncode, 0, encoded.stderr)
+            altered = brief_forgery.read_bytes()
+            video_path.write_bytes(altered)
+            changed = json.loads(original_meta)
+            changed["private_render"]["video_sha256"] = hashlib.sha256(altered).hexdigest()
+            meta_path.write_text(json.dumps(changed), encoding="utf-8")
+            with self.assertRaisesRegex(
+                FloraPrivateBundleError, "does not visually match"
+            ):
+                verify_private_flora_bundle(out, "gold_kit", "story")
+            video_path.write_bytes(original_video)
+            meta_path.write_bytes(original_meta)
+            self.assertTrue(
+                verify_private_flora_bundle(out, "gold_kit", "story")[
+                    "encoded_full_frame_checked"]
             )
 
             # Rehashing a forged poster and JSON must not make it match the

@@ -122,5 +122,65 @@ class ChronologicalEvaluationTests(unittest.TestCase):
             self.assertNotIn(str(source), bad.stderr)
 
 
+    def test_rolling_robustness_disjoint_scored_windows_and_cost_stress(self):
+        result = ev.evaluate_rolling_robustness(self.bars, "BTCUSDT", "trend_pullback")
+        self.assertEqual(result["split"]["holdout_scored_bars"], 90)
+        robust = result["rolling_robustness"]
+        self.assertFalse(robust["independent_venue_verified"])
+        self.assertFalse(robust["forward_verified"])
+        self.assertEqual(robust["scored_windows"], 3)
+        windows = robust["windows"]
+        self.assertEqual([w["first_scored_entry_at"] for w in windows],
+                         [self.bars[i].time for i in (120, 180, 240)])
+        self.assertEqual([w["scored_bars"] for w in windows], [60, 60, 60])
+        self.assertTrue(all(w["prior_warmup_bars"] == 64 for w in windows))
+        for w in windows:
+            self.assertEqual(w["double_costs_status"], "evaluated")
+            self.assertEqual(w["double_costs"]["config"]["fee_bps"], 20)
+            self.assertEqual(w["double_costs"]["config"]["slippage_bps"], 10)
+            self.assertNotIn("input_candles", w["baseline"])
+            self.assertNotIn("input_candles", w["double_costs"])
+            for scenario in (w["baseline"], w["double_costs"]):
+                self.assertTrue(all(t["entry_time"] >= w["first_scored_entry_at"]
+                                    for t in scenario["trades"]))
+
+    def test_rolling_zero_trades_and_high_cost_stress_unavailable(self):
+        flat = [replace(b, open=100, high=100.1, low=99.9, close=100, volume=10)
+                for b in self.bars]
+        result = ev.evaluate_rolling_robustness(flat, "ETHUSDT", "breakout_retest",
+                                                 SimulationConfig(fee_bps=60))
+        self.assertTrue(result["holdout_no_trades"])
+        for window in result["rolling_robustness"]["windows"]:
+            self.assertTrue(window["baseline_no_trades"])
+            self.assertEqual(window["baseline"]["net_pnl"], 0)
+            self.assertIsNone(window["double_costs"])
+            self.assertIsNone(window["double_costs_no_trades"])
+            self.assertEqual(window["double_costs_status"],
+                             "unavailable_config_exceeds_engine_bounds")
+
+    def test_rolling_negative_gap_outcomes_preserved(self):
+        def losing_backtest(bars, strategy, cfg):
+            return {"trade_count": 1, "net_pnl": -4.25,
+                    "trades": [{"entry_time": bars[64].time, "net_pnl": -4.25,
+                                "reason": "gap_stop"}], "input_candles": ["hidden"]}
+        with patch.object(ev, "backtest", side_effect=losing_backtest):
+            result = ev.evaluate_rolling_robustness(self.bars, "BTCUSDT", "trend_pullback")
+        for w in result["rolling_robustness"]["windows"]:
+            for scenario in (w["baseline"], w["double_costs"]):
+                self.assertEqual(scenario["net_pnl"], -4.25)
+                self.assertEqual(scenario["trades"][0]["reason"], "gap_stop")
+                self.assertNotIn("input_candles", scenario)
+
+    def test_rolling_rejects_warmup_trade_from_engine(self):
+        def premature_backtest(bars, strategy, cfg):
+            return {"trade_count": 1, "net_pnl": -1,
+                    "trades": [{"entry_time": bars[63].time, "net_pnl": -1}],
+                    "input_candles": []}
+        with patch.object(ev, "backtest", side_effect=premature_backtest):
+            with self.assertRaisesRegex(ev.PaperEvaluationError, "lookahead_or_warmup_trade"):
+                ev.evaluate_rolling_robustness(self.bars, "BTCUSDT", "trend_pullback")
+
+
+
 if __name__ == "__main__":
     unittest.main()

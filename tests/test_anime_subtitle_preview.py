@@ -10,6 +10,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import wave
 
 from PIL import Image, ImageFont
 
@@ -187,6 +188,27 @@ class SubtitleVisualReviewTests(unittest.TestCase):
         self.assertTrue(result["visual_evidence_decoded_from_both_mp4s"])
         self.assertFalse(result["caption_ink_independently_machine_verified"])
         self.assertEqual(len(result["visual_evidence_samples"]), 3)
+        # Listen to the actual encoded AAC cue excerpts, not the source WAV.
+        self.assertTrue(result["audio_review_decoded_from_actual_encoded_aac"])
+        self.assertTrue(result["audio_review_human_listening_required"])
+        self.assertEqual(len(result["audio_review_wavs"]), 3)
+        self.assertEqual(len(result["audio_review_samples"]), 3)
+        for index, clip in enumerate(result["audio_review_wavs"]):
+            record = result["audio_review_samples"][index]
+            self.assertEqual(record["filename"], clip["filename"])
+            self.assertEqual(record["wav_sha256"], digest(clip["wav_bytes"]))
+            self.assertFalse(record["spoken_words_independently_verified"])
+            self.assertFalse(record["phoneme_sync_verified"])
+            with wave.open(BytesIO(clip["wav_bytes"]), "rb") as audio:
+                self.assertEqual((audio.getnchannels(), audio.getsampwidth(),
+                                  audio.getframerate()), (1, 2, 16000))
+                self.assertLessEqual(abs(audio.getnframes() -
+                                         (record["excerpt_end_ms_requested"] -
+                                          record["excerpt_start_ms"]) * 16), 1600)
+                self.assertTrue(any(audio.readframes(800)))
+        from cloud_backend.anime_subtitle_burnin import _encoded_cue_audio_evidence
+        self.assertEqual(_encoded_cue_audio_evidence(
+            "ffmpeg", Path("unused.mp4"), [(0, 10000, "a")] * 3, "none"), ([], []))
         with Image.open(BytesIO(result["visual_evidence_png"])) as evidence:
             self.assertEqual(evidence.size, (960, 900))
             original_band = evidence.crop((20, 250, 460, 290))
@@ -241,6 +263,11 @@ class SubtitleVisualReviewTests(unittest.TestCase):
             self.assertEqual(meta["visual_evidence_sha256"], digest(
                 (target / meta["visual_evidence_filename"]).read_bytes()))
             self.assertEqual(len(meta["visual_evidence_samples"]), 3)
+            self.assertEqual(len(meta["audio_review_samples"]), 3)
+            self.assertNotIn("audio_review_wavs", meta)
+            for record in meta["audio_review_samples"]:
+                self.assertEqual(record["wav_sha256"], digest(
+                    (target / record["filename"]).read_bytes()))
             second = subprocess.run(command, capture_output=True, timeout=160)
             self.assertNotEqual(second.returncode, 0)
             self.assertFalse((root / "manifest.json").read_text(

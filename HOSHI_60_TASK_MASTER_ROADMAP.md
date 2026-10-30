@@ -1,5 +1,12 @@
 # HOSHI — 60-Task Autonomous Development Roadmap
 
+## 30 October 2026 — Task 15/16 follow-up: non-cooperative Urdu clip deadline (PARTIAL; CI pending)
+
+- **Same original Hoshi branch and sole draft PR #29.** `speech-pipeline.js` now rejects each Urdu MP3 clip at its own deadline even when a network/WebView loader ignores AbortSignal; the old abort-only timer could leave a Promise pending forever and stall spoken replies. Parent Stop Speaking still cancels every child without cancelling sibling clips on an individual timeout. Late success/failure is handled, abort listeners/timers are removed, and the existing visible text fallback remains available. No new endpoint/provider/permissions, automatic upload or fake Room Life.
+- **Code-complete:** `c89c820eac0c0468e0f35e480f781400121e8316`. **Locally tested:** `node --check speech-pipeline.js` and 12 `node --test tests/speech-pipeline.test.cjs` regressions passed. **Full GitHub CI/Playwright:** pending; Docker check also pending at documentation time. **Physical Realme Note 50 / actual Urdu voice acceptance:** not verified. This hardens failure recovery; it does not establish 0.10s latency or a faster successful TTS response.
+- **Only canonical checkbox scoreboard stays 48/60 checked, 12 pending** (Task 06 phone/rollback and Task 11 live OpenJarvis remain unchecked). Code-complete, CI-verified and real-world-verified are separate gates. Corrected mission is original reusable Hindi/Urdu multi-agent Anime Studio with private offline 30–60s pilot first; genuine Flora approvals, media rights and owner acceptance remain pending. Released Render V2 is unchanged; no new repo/PR/tracker/automation, production merge/deploy, purchase, outside publication, secret change or real trading.
+
+
 ## 30 October 2026 — voice/phone reliability: isolate Urdu MP3 segment timeouts (PARTIAL; CI verified)
 
 - **One original Hoshi project, existing branch and sole draft PR #29.** A slow prefetched Urdu MP3 segment previously used a shared 22-second timer that aborted the whole speech session, interrupting other active or queued clips. `speech-pipeline.js` now supplies an independently abortable per-clip fetch with a 22-second deadline; `index.html` passes the child signal to the existing `/api/speech` request. Parent Stop Speaking still immediately propagates to all active clips. No new provider, queue, endpoint, permissions or upload.

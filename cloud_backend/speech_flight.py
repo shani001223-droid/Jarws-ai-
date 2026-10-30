@@ -58,7 +58,8 @@ class SpeechFlightCache:
                         self.cache.popitem(last=False)
                     return audio
                 finally:
-                    self._inflight.pop(flight_key, None)
+                    if self._inflight.get(flight_key) is flight:
+                        self._inflight.pop(flight_key, None)
 
             task = loop.create_task(produce())
             # If all callers disconnect, consume any late exception without
@@ -75,4 +76,6 @@ class SpeechFlightCache:
         finally:
             flight["waiters"] -= 1
             if flight["waiters"] == 0 and not flight["task"].done():
+                if self._inflight.get(flight_key) is flight:
+                    self._inflight.pop(flight_key, None)
                 flight["task"].cancel()

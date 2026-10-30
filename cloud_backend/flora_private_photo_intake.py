@@ -49,6 +49,11 @@ def prepare_private_flora_photo(photo_bytes: bytes, mime_type: str) -> dict:
             clean = Image.new("RGB", rgba.size, "white")
             clean.paste(rgba, mask=rgba.getchannel("A"))
             clean.load()
+            # Downscaling an extremely wide/tall input must not create a
+            # PNG that the existing poster/MP4 intake then rejects.
+            if min(clean.size) < 400:
+                raise FloraPrivatePhotoError(
+                    "Photo aspect ratio is incompatible with private poster intake.")
             output = BytesIO()
             clean.save(output, format="PNG")
             sanitized = output.getvalue()

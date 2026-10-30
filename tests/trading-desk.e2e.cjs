@@ -60,10 +60,10 @@ async function run(){
     await page.evaluate(async()=>{await navigator.serviceWorker.register("/sw.js");await navigator.serviceWorker.ready;});
     await page.reload();await page.evaluate(()=>fetch("/index.html",{cache:"reload"}));await page.reload();
     const mainSource=fs.readFileSync(path.join(ROOT,"index.html"),"utf8");
-    await page.waitForFunction(async expected=>{const cache=await caches.open("hoshi-shell-v36"),r=await cache.match(new URL("/index.html",location.origin).href);return r&&await r.text()===expected;},mainSource);
+    await page.waitForFunction(async expected=>{const cache=await caches.open("hoshi-shell-v37"),r=await cache.match(new URL("/index.html",location.origin).href);return r&&await r.text()===expected;},mainSource);
     await page.waitForTimeout(200);
-    assert.equal(await page.evaluate(async()=>{const r=await(await caches.open("hoshi-shell-v36")).match(new URL("/index.html",location.origin).href);return r.text();}),mainSource);
-    await context.setOffline(true);await context.unroute("**/*");await page.reload();await page.locator("#analyze").click();await page.waitForFunction(()=>document.querySelector("#status").textContent.includes("Data verify"));assert.equal(await page.locator("#plan").isVisible(),false);
+    assert.equal(await page.evaluate(async()=>{const r=await(await caches.open("hoshi-shell-v37")).match(new URL("/index.html",location.origin).href);return r.text();}),mainSource);
+    await context.setOffline(true);await context.unroute("**/*");await page.reload();await page.waitForFunction(()=>!!window.HoshiTradingDesk&&!document.querySelector("#analyze").disabled);await page.locator("#analyze").click();await page.waitForFunction(()=>document.querySelector("#status").textContent.includes("Data verify"));assert.equal(await page.locator("#plan").isVisible(),false);
     assert.deepEqual(errors,[]);console.log("Trading desk Chromium mobile: WAIT/plan, tampering, Stop/races, expiry, consent/export/delete and real SW offline checks passed.");
   }finally{if(browser)await browser.close();await new Promise(resolve=>server.close(resolve));}
 }

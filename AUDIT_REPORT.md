@@ -232,3 +232,24 @@ The first merged-source CI (40509641702 / 40509636857) exposed a missing declare
 ## Release candidate verified
 
 Local 390 Python / 75 Node checks and actual GitHub full browser/API, Docker, sandbox and Android build checks passed on `f62237b15ba2cd383c136042fe5c3732973c51b6`. Exact run IDs, retained failures and the remaining Render workspace blocker are in [HOSHI_RELEASE_PRECHECK.md](HOSHI_RELEASE_PRECHECK.md). No production merge/deploy or physical phone acceptance.
+
+## Focused trading verification continuation — 30 October 2026
+
+The repaired local environment completed all **627 Python / 115 Node tests**.
+Actual source Docker checks passed. Browser run 41107539862 first exposed a
+mock-routing problem (zero intercepted requests); diagnostic source 124cd9ae
+and explicit all-request routing in 1e4d2b0a resolved that first stage without
+weakening validation. Subsequent real Chromium run 41109524310 reached the
+final offline stage after analysis/plan, journal, Stop/race and expiry checks,
+then failed because the offline shell did not reliably retain the new trading
+assets. Added the three trading assets to the service-worker precache (v37)
+and kept Analyze disabled until the application script has actually initialized.
+The offline test still requires a loaded client, failed offline data fetch and
+no plan; it is not skipped or replaced by a source-text assertion.
+
+A real local BTC request observed at **2026-10-30T18:34:14.800194Z** returned
+HTTP 503 (public provider unavailable) with no invented market snapshot. This
+is an availability limit, not a verified live signal. The local execution
+environment subsequently became unavailable; remaining browser/source checks
+are therefore performed in actual GitHub CI. The new desk is still not
+production-deployed, V3 is still source-blocked and real orders remain disabled.

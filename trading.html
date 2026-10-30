@@ -23,11 +23,11 @@
       <label>Fee per side · bps<input id="fee" type="number" min="1" max="100" step="1" value="10" required></label>
       <label>Adverse slippage per side · bps<input id="slip" type="number" min="1" max="100" step="1" value="5" required></label>
     </div><p class="muted">1 bps = 0.01%. Yeh assumptions hain; actual costs aur gaps zyada ho sakte hain.</p></details>
-    <div class="actions"><button id="analyze" type="submit">Market analyze karo</button><button id="stop" type="button" class="secondary">Stop / clear</button></div>
+    <div class="actions"><button id="analyze" type="submit" disabled>Market analyze karo</button><button id="stop" type="button" class="secondary">Stop / clear</button></div>
   </form>
   <section class="panel" aria-live="polite" aria-atomic="true">
     <div class="status-row"><h2 id="decision">WAIT</h2><span id="score" class="badge">No snapshot</span></div>
-    <p id="status">Analyze dabao. Data aane se pehle koi plan nahi.</p>
+    <p id="status">Trading screen load ho rahi hai. Data aane se pehle koi plan nahi.</p>
     <p id="source" class="muted"></p>
     <div id="snapshot" hidden>
       <p class="muted">Prices last closed candles ke hain, live executable quotes nahi. Times PKT mein hain.</p>

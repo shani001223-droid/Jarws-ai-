@@ -47,12 +47,16 @@ def main() -> int:
             font_rights_attested=True)
         encoded = result.pop("video_mp4")
         evidence = result.pop("visual_evidence_png")
+        audio_clips = result.pop("audio_review_wavs")
         target = root / "subtitle_burnin_PRIVATE_DRAFT"
         target.mkdir(mode=0o700, exist_ok=False)
         with (target / result["filename"]).open("xb") as stream:
             stream.write(encoded)
         with (target / result["visual_evidence_filename"]).open("xb") as stream:
             stream.write(evidence)
+        for clip in audio_clips:
+            with (target / clip["filename"]).open("xb") as stream:
+                stream.write(clip["wav_bytes"])
         with (target / "subtitle_burnin_provenance_PRIVATE.json").open(
                 "x", encoding="utf-8") as stream:
             json.dump(result, stream, ensure_ascii=False,

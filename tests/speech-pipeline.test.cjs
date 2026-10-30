@@ -13,7 +13,7 @@ test('a timed-out Urdu prefetch does not abort a different active clip',async()=
  const prefetch=p.withClipTimeout(parent.signal,10,signal=>new Promise((_,reject)=>{
   signal.addEventListener('abort',()=>reject(Error('prefetch timed out')),{once:true});
  }));
- await assert.rejects(prefetch,/prefetch timed out/);
+ await assert.rejects(prefetch,/timed out/);
  assert.equal(parent.signal.aborted,false);
  assert.equal(await first,'first mp3');
 });

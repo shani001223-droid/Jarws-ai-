@@ -109,3 +109,44 @@ test('invalid segment indices do not schedule audio work',async()=>{
  assert.equal(calls,0);
  q.clear();
 });
+
+
+test('bounded Urdu audio streaming accepts a small actual MP3 payload',async()=>{
+ const response=new Response(new Uint8Array([0xff,0xfb,1,2]),{headers:{'content-type':'audio/mpeg'}});
+ const audio=await p.readBoundedAudio(response,8);
+ assert.equal(audio.size,4);
+ assert.equal(audio.type,'audio/mpeg');
+ assert.deepEqual([...new Uint8Array(await audio.arrayBuffer())],[0xff,0xfb,1,2]);
+});
+test('streamed audio rejects bytes beyond cap even when server omits or understates length',async()=>{
+ for(const headers of [{},{'content-length':'3'}]){
+  const response=new Response(new Uint8Array([1,2,3,4,5]),{headers});
+  await assert.rejects(p.readBoundedAudio(response,4),/exceeds size limit/);
+ }
+});
+test('oversized declared Urdu audio is rejected before reading the response body',async()=>{
+ let reads=0;
+ const response={headers:{get:()=> '99999999'},blob:async()=>{reads++;throw Error('must not read')}};
+ await assert.rejects(p.readBoundedAudio(response,4),/exceeds size limit/);
+ assert.equal(reads,0);
+});
+test('oversized streaming response cancels its reader instead of downloading remaining audio',async()=>{
+ let cancelled=false;
+ const stream=new ReadableStream({
+  start(controller){controller.enqueue(new Uint8Array([1,2,3,4,5]));},
+  cancel(){cancelled=true;}
+ });
+ await assert.rejects(p.readBoundedAudio(new Response(stream),4),/exceeds size limit/);
+ assert.equal(cancelled,true);
+});
+test('older WebView Blob fallback is size checked and rejects empty or oversized audio',async()=>{
+ const response=bytes=>({headers:{get:()=>null},blob:async()=>new Blob([new Uint8Array(bytes)])});
+ assert.equal((await p.readBoundedAudio(response([1,2]),3)).size,2);
+ await assert.rejects(p.readBoundedAudio(response([1,2,3,4]),3),/exceeds size limit/);
+ await assert.rejects(p.readBoundedAudio(response([]),3),/Empty Urdu audio/);
+});
+test('invalid length metadata, empty streams and invalid budgets fail closed',async()=>{
+ await assert.rejects(p.readBoundedAudio(new Response(new Uint8Array([1]),{headers:{'content-length':'bad'}}),4),/exceeds size limit/);
+ await assert.rejects(p.readBoundedAudio(new Response(null),4),/Empty Urdu audio/);
+ await assert.rejects(p.readBoundedAudio(new Response(new Uint8Array([1])),0),/Invalid Urdu audio size limit/);
+});

@@ -6,12 +6,17 @@ the original draft. Use an original/licensed local TTF/OTF font.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 import sys
 
 from cloud_backend.anime_subtitle_burnin import (
     AnimeSubtitleBurninError, render_private_subtitled_pilot,
+)
+from cloud_backend.anime_subtitle_preview import _srt_windows
+from cloud_backend.anime_private_review_page import (
+    AnimePrivateReviewPageError, build_private_review_page,
 )
 
 
@@ -39,12 +44,16 @@ def main() -> int:
                 _read(root / "manifest.json", 120_000).decode("utf-8"))
         except (UnicodeError, json.JSONDecodeError):
             raise AnimeSubtitleBurninError("Invalid private manifest JSON.") from None
+        subtitles = _read(root / "hoshi_anime_animatic_DRAFT.srt", 20_000)
         result = render_private_subtitled_pilot(
             manifest,
             _read(root / "hoshi_anime_animatic_DRAFT.mp4", 15_000_000),
-            _read(root / "hoshi_anime_animatic_DRAFT.srt", 20_000),
-            _read(font, 8_000_000),
+            subtitles, _read(font, 8_000_000),
             font_rights_attested=True)
+        review_html = build_private_review_page(result, _srt_windows(subtitles))
+        result["review_page_filename"] = "hoshi_private_review_OFFLINE.html"
+        result["review_page_sha256"] = hashlib.sha256(review_html).hexdigest()
+        result["review_page_human_review_required"] = True
         encoded = result.pop("video_mp4")
         evidence = result.pop("visual_evidence_png")
         audio_clips = result.pop("audio_review_wavs")
@@ -61,6 +70,8 @@ def main() -> int:
         if waveform_png is not None:
             with (target / result["audio_waveform_filename"]).open("xb") as stream:
                 stream.write(waveform_png)
+        with (target / result["review_page_filename"]).open("xb") as stream:
+            stream.write(review_html)
         with (target / "subtitle_burnin_provenance_PRIVATE.json").open(
                 "x", encoding="utf-8") as stream:
             json.dump(result, stream, ensure_ascii=False,
@@ -68,7 +79,8 @@ def main() -> int:
             stream.write("\n")
         print("Private captioned MP4 created; human speech/readability review still required.")
         return 0
-    except (AnimeSubtitleBurninError, OSError, ValueError) as exc:
+    except (AnimeSubtitleBurninError, AnimePrivateReviewPageError,
+            OSError, ValueError) as exc:
         print(f"Private subtitle MP4 not created: {exc}", file=sys.stderr)
         return 1
 

@@ -71,6 +71,47 @@ def _check_png(data: bytes, dimensions: tuple[int, int], name: str) -> None:
         raise AnimePrivateBundleError("Invalid private PNG: " + name) from None
 
 
+def _verify_sampled_caption_gating(ffmpeg: str, source: Path, captioned: Path,
+                                   windows: list[tuple[int, int, str]]) -> None:
+    """Independently sample actual encoded caption visibility and cue edges.
+
+    Compare bottom subtitle band against the same decoded source frame, with
+    the upper band as a lossy-reencode control. This detects missing overlays
+    and captions leaking outside cue boundaries at sampled frames; it does NOT
+    prove glyph content, every intervening frame, speech or lip-sync.
+    """
+    if len(windows) != 3:
+        raise AnimePrivateBundleError("Three subtitle cues required for ink checks.")
+    from cloud_backend.anime_subtitle_burnin import _encoded_rgb_frame
+
+    for shot, (start, end, _) in enumerate(windows):
+        first, last = shot * 120, shot * 120 + 119
+        active = [n for n in range(first, last + 1)
+                  if start * 12 <= (2 * n + 1) * 500 < end * 12]
+        if not active:
+            raise AnimePrivateBundleError("Subtitle cue has no encoded frames.")
+        # Include both shot edges: they expose captions left on outside a cue.
+        for frame in sorted({first, active[len(active) // 2], last}):
+            original = _encoded_rgb_frame(ffmpeg, source, frame)
+            encoded = _encoded_rgb_frame(ffmpeg, captioned, frame)
+            def changed(region: tuple[int, int, int, int]) -> int:
+                a = original.crop(region).tobytes()
+                b = encoded.crop(region).tobytes()
+                return sum(1 for offset in range(0, len(a), 3)
+                           if max(abs(a[offset + channel] - b[offset + channel])
+                                  for channel in range(3)) >= 55)
+            # Equal-sized upper control estimates normal H.264 re-encode noise.
+            control = changed((12, 100, 468, 143))
+            caption = changed((12, 222, 468, 265))
+            if frame in active:
+                if caption < max(80, control * 2 + 40):
+                    raise AnimePrivateBundleError(
+                        "Encoded subtitle ink absent in sampled active cue.")
+            elif caption > max(200, control * 3 + 100):
+                raise AnimePrivateBundleError(
+                    "Encoded subtitle overlay leaks outside sampled cue.")
+
+
 def verify_private_review_bundle(directory: Path) -> dict:
     """Verify the saved HTML, source SRT, MP4, images and AAC-derived WAVs.
 
@@ -147,7 +188,7 @@ def verify_private_review_bundle(directory: Path) -> dict:
         if regenerated != visual or decoded_records != records:
             raise AnimePrivateBundleError(
                 "Comparison pixels differ from actual encoded MP4 frames.")
-        samples = meta.get("audio_review_samples")
+        _verify_sampled_caption_gating(\n            ffmpeg, root.parent / SOURCE_VIDEO, root / VIDEO, windows)\n        samples = meta.get("audio_review_samples")
         if type(samples) is not list or len(samples) not in (0, 3):
             raise AnimePrivateBundleError("Invalid private AAC cue list.")
         clips = []

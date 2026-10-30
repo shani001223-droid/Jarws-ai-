@@ -36,10 +36,13 @@ async function run(){
       try{await route.fulfill({status:selected==="error"?503:200,headers:{"Access-Control-Allow-Origin":"*","Content-Type":"application/json"},body:JSON.stringify(body(selected))});}catch(_){}
     });
     const page=await context.newPage();page.on("pageerror",e=>errors.push(e.message));
+    const browserMessages=[];page.on("console",m=>{if(m.type()==="error")browserMessages.push(m.text().slice(0,240));});
     const base="http://127.0.0.1:"+server.address().port;
     await page.goto(base+"/trading.html");assert.equal(requests,0);
     assert.equal(await page.locator("#decision").textContent(),"WAIT");assert.equal(await page.locator("#save").isDisabled(),true);
-    await page.locator("#analyze").click();await page.locator("#snapshot").waitFor({state:"visible"});assert.equal(await page.locator("#decision").textContent(),"WAIT");assert.equal(await page.locator("#plan").isVisible(),false);
+    await page.locator("#analyze").click();await page.waitForFunction(()=>!document.querySelector("#analyze").disabled);
+    const initialState=await page.evaluate(({data})=>{let validation;try{HoshiTradingDesk.validate(data,{symbol:"BTCUSDT",equity_usdt:100,risk_pct:.5,fee_bps:10,slippage_bps:5});validation="passed";}catch(e){validation=e.message;}return {status:document.querySelector("#status").textContent,validation};},{data:body("wait")});
+    assert.equal(await page.locator("#snapshot").isVisible(),true,JSON.stringify({initialState,requests,errors,browserMessages}));assert.equal(await page.locator("#decision").textContent(),"WAIT");assert.equal(await page.locator("#plan").isVisible(),false);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
     mode="plan";await page.locator("#analyze").click();await page.waitForFunction(()=>document.querySelector("#decision").textContent==="PAPER PLAN");
     assert.equal(await page.locator("#plan").isVisible(),true);assert.equal(await page.locator("#save").isDisabled(),true);

@@ -1,5 +1,46 @@
 # HOSHI AI — ONE MASTER PROJECT
 
+## 30 October 2026 — USER PRIORITY OVERRIDE: trading-only active scope
+
+The user explicitly requested that all other Hoshi features be put pending and
+that development focus on a trading bot/agent. Continue the **same existing
+repository** and development branch `hoshi/dnd-foundation-20261026`, using the
+sole existing draft PR #29. A duplicate app/repository is unnecessary. This
+section supersedes older Anime/Flora/Game/voice expansion priorities below.
+Existing functionality, identity, voice/privacy/Stop controls and historical
+work stay preserved. Non-trading feature development is **DEFERRED**; shared
+security or reliability work is in scope only when necessary for trading.
+The historical 48/60 checkboxes are not a completion percentage for this new
+focused deliverable, and existing accepted work is not silently unchecked.
+
+**Concrete first delivery (development source, not production):**
+`trading.html` is a dedicated mobile-first Roman Urdu paper desk, linked from
+the existing assistant. It uses `GET /api/trading/desk`, which fetches one
+15m/1h/4h BTCUSDT or ETHUSDT closed-candle snapshot and reuses the existing
+structure, indicators, six-family setup, five-factor V2 confluence and bounded
+paper-risk engines. A hypothetical long-only spot plan is displayed only when
+both existing setup gates pass. Missing/stale/unverifiable inputs produce
+WAIT with no plan. It is an analysis/paper assistant, not an order executor,
+continuous background scanner or demonstrated profitable trading strategy.
+The UI has Stop/clear, response expiry, settings-change cancellation and an
+explicitly opt-in device-local journal with JSON export/deletion. No API key,
+AI provider call, purchase, new service, leverage or real-money order is added.
+V2 rule coverage remains distinct from win probability (`null`).
+
+**V3 boundary:** `hoshi-v3-god-mode` and its backup remain untouched. Its
+49/50 source-checked chapters and blocked NDOG/NWOG evidence requirement are
+preserved; no V3 chapter is silently dropped, marked complete or loaded into
+this V2-based desk. The 40/20/20/20 engine, complete V3 runtime integration,
+independent evaluation and final release gate remain pending.
+
+The old multi-feature hourly builder was paused before implementation to avoid
+concurrent non-trading edits. The existing builder is to continue only this
+trading scope after the tested source checkpoint, preserving its cadence and
+without creating a second automation. Current main/Render are not changed by
+this development work. Exact local/CI verification receipts follow below;
+physical Realme Note 50 acceptance and deployment of this desk are pending.
+
+
 ## 30 October 2026 — bounded Urdu MP3 streaming for low-memory WebView (PARTIAL; CI pending)
 
 **Same existing Hoshi project, branch `hoshi/dnd-foundation-20261026`, sole draft PR #29.** The live `/api/speech` client previously called `Response.blob()` without an upper bound, so a broken upstream or unexpectedly large response could consume arbitrary RAM on Realme Note 50 before the user saw an error. `speech-pipeline.js` now provides `readBoundedAudio`: stream at most **2,000,000 bytes per MP3 clip**, reject an oversized/malformed `Content-Length` before reading, reject excessive actual bytes even if the header lies, cancel the reader on failure, reject empty audio and retain a size-checked Blob fallback for older Android WebViews. `index.html` now uses it for actual Urdu playback; existing per-clip 22-second deadline, first-phrase priority, cancellation, Roman Urdu chat text and free-first providers remain unchanged. Six new Node regressions cover streaming, oversized declarations, lying headers, reader cancellation, legacy Blob fallback and invalid/empty responses.

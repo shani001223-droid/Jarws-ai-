@@ -1,5 +1,52 @@
 # HOSHI trading V2 — audit and implementation evidence
 
+## 30 October 2026 — focused trading desk implementation (not a deployment)
+
+Latest user scope: other Hoshi features pending; trading-only development.
+Preserved the existing repository, development branch, draft PR #29, main and
+both backup pins. The existing multi-feature builder was paused before changes
+and is being redirected to this trading-only scope; no duplicate automation.
+
+New `trading_desk.py` / `GET /api/trading/desk` calculate a single shared public
+BTC/ETH Spot snapshot with the existing V2 engines. A plan requires both all
+five V2 conditions and the cost-bounded six-family paper setup. Failed or
+stale evidence returns WAIT; orders are disabled and win probability is null.
+`trading.html` adds a dedicated mobile desk with cancel/clear, expiry, verified
+response shape/identity/cost bounds, explicit opt-in local journal/export/delete,
+and no paid model requests. The main assistant is preserved and links to it.
+Service-worker navigation now prevents a visited trading document from
+overwriting the cached main assistant shell.
+
+Synthetic backend/client/browser tests are explicitly not historical trades,
+real fills, owner acceptance or profitability evidence. Complete V3 loading,
+historical-data blockers and independent trading evaluation remain pending.
+Final local and exact-head GitHub CI receipts are recorded after execution.
+
+**Local checkpoint:** eight focused backend tests pass, including a real
+Python-output-to-Node-validator contract; all 115 Node tests pass. V2 bundle
+parity and `git diff --check` pass. An actual Uvicorn subprocess passed TCP
+`/learn` and `/history` (200), and the new unsupported-pair desk route (422),
+without model or exchange calls. The first broad local Python run found one
+failure/five errors because this older verification virtualenv lacked the
+already-declared `fonttools>=4.55,<5` dependency in unrelated inherited thumbnail
+tests. Bundled fontTools 4.61.1 was installed into that verification environment
+without changing repository requirements; the full rerun is pending at this
+source checkpoint. Local Chromium installation returned a truncated archive,
+so local browser acceptance is not claimed. The existing CI workflow now runs
+the actual mobile Chromium desk/Stop/race/expiry/journal/offline tests, and the
+Docker workflow checks that the new route is registered. Their actual results
+must be inspected on the pushed source, not inferred from the green baseline
+`0f16a340` runs 41102347157 / 41102347064. No production deployment occurred.
+
+**Broad rerun result:** after the environment dependency repair, 627 tests ran
+with one failure: the new README introduction moved the existing canonical
+roadmap link beyond the integrity test's first-1,500-character boundary. Moved
+the existing START HERE reference back to the top without weakening the test.
+All four master-project integrity tests then passed. This retained failure is
+not a trading-engine failure and is not counted as a fully green broad run;
+the final source CI must still execute the full suite and Chromium/Docker.
+
+
 Audit date: **27 October 2026 (Asia/Karachi)**. Repository: `shani001223-droid/Jarws-ai-`.
 This extends the existing assistant; it is not a new app, trading account, or model.
 

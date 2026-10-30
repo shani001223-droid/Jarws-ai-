@@ -95,6 +95,9 @@ jobs:
           print("Task 40 Docker API route registered; unsupported pair rejected")
           PY
           # Task 41: real image must expose the read-only paper risk route.
+          desk_status=$(curl --silent --show-error --max-time 5 -o /tmp/hoshi-desk-invalid.json \
+            -w '%{http_code}' 'http://127.0.0.1:18765/api/trading/desk?symbol=SOLUSDT')
+          test "$desk_status" = 422 || { echo "Trading desk expected 422, got $desk_status"; exit 1; }
           paper_status=$(curl --silent --show-error --max-time 5 -o /tmp/hoshi-paper-invalid.json \
             -w '%{http_code}' 'http://127.0.0.1:18765/api/trading/paper-risk?symbol=SOLUSDT')
           test "$paper_status" = 422 || { echo "Paper risk route expected 422, got $paper_status"; exit 1; }

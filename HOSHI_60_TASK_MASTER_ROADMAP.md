@@ -1,5 +1,30 @@
 # HOSHI — 60-Task Autonomous Development Roadmap
 
+## 30 October 2026 — trading-only priority; other feature work deferred
+
+The latest explicit user instruction supersedes older phase priorities:
+**only the trading assistant/bot is active**. Foundation changes are permitted
+when required by trading. New Anime Studio, Flora, Game Studio, general voice,
+companion, screen-control and OpenJarvis expansion work is deferred. Preserve
+all code/assets/history and privacy/Stop behavior. Keep this single roadmap;
+do not create another project, backlog or duplicate PR.
+
+Historical checkboxes remain **48/60 checked, 12 unchecked**. They record prior
+code/test acceptance, not the progress or production readiness of the focused
+trading deliverable. Unchecked non-trading items remain pending/deferred;
+checked prior functionality is not falsely erased or presented as newly built.
+The first focused implementation is the existing-repo `trading.html` paper
+desk and bounded `GET /api/trading/desk` API, reusing V2's actual source engines.
+Its verification, actual deployment, physical phone acceptance and independent
+trading performance must be reported separately. No existing task is promoted
+by adding this page, a synthetic test, a chapter count or a rule-coverage score.
+
+Trading V3 remains separately source-blocked at **49/50 chapters**, with runtime,
+weighted engine, independent evaluation and release gates pending. The current
+V2 desk is usable development work within the new trading focus, not a waiver
+of V3's documented source/release requirements.
+
+
 ## 30 October 2026 — Task 15/16 mobile Urdu MP3 response byte cap (PARTIAL; CI pending)
 
 - **One existing repo/branch, sole draft PR #29.** `speech-pipeline.js` now streams at most 2,000,000 bytes per online Urdu MP3 clip and `index.html` uses the bounded reader instead of unlimited `Response.blob()`. Reject oversized/malformed declared lengths, enforce actual bytes when headers lie, cancel excessive streams, reject empty clips and size-check the Blob fallback on older Android WebViews. The visible Roman Urdu chat fallback, Stop Speaking, per-clip 22-second deadlines and free-first voice provider remain intact. No new service, phone permission or external publication.

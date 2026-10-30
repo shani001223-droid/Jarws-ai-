@@ -20,6 +20,7 @@ on:
       - "game-studio/**"
       - "scripts/package_hoshi_game.py"
       - "index.html"
+      - "trading.html"
       - "sw.js"
       - "hoshi-*.js"
       - ".github/workflows/ci.yml"
@@ -96,6 +97,10 @@ jobs:
         run: node --check hoshi-task-router.js
       - name: Check paper research client syntax
         run: node --check hoshi-trading-research.js
+      - name: Test trading-only desk validation and private journal
+        run: node --test tests/hoshi-trading-desk.test.cjs
+      - name: Check trading-only desk JavaScript
+        run: node --check hoshi-trading-desk.js
       - name: Test annotated chart evidence and export safety
         run: node --test tests/hoshi-annotated-chart.test.cjs
       - name: Test offline Game Studio Canvas preview engine
@@ -137,6 +142,8 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Run real-browser dashboard smoke tests
         run: node tests/dashboard.e2e.cjs
+      - name: Run trading-only mobile desk and offline safety checks
+        run: node tests/trading-desk.e2e.cjs
       - name: Check Game Studio browser test syntax
         run: node --check tests/game-studio.e2e.cjs
       - name: Run real-browser Game Studio template smoke tests

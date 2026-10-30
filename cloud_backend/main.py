@@ -27,6 +27,7 @@ try:
     from .annotated_charts import build_annotated_chart, render_annotated_png, AnnotatedChartError
     from .brain import load_knowledge, knowledge_index, get_lesson, trading_context, KnowledgeError
     from .strategy_engine import confluence_score, ConfluenceError
+    from .trading_desk import build_trading_desk
 except ImportError:
     from trading_research import closed_candles, research, backtest, SimulationConfig
     from market_data_quality import public_urls, verify_spot_market, MarketDataQualityError
@@ -37,6 +38,7 @@ except ImportError:
     from annotated_charts import build_annotated_chart, render_annotated_png, AnnotatedChartError
     from brain import load_knowledge, knowledge_index, get_lesson, trading_context, KnowledgeError
     from strategy_engine import confluence_score, ConfluenceError
+    from trading_desk import build_trading_desk
 try:
     from .ad_studio import create_ad_pack
     from .artifact_verifier import verify_ad_pack, ArtifactVerificationError
@@ -1477,6 +1479,49 @@ def _research_history(pair, interval):
         return closed_candles(data, interval, int(time.time()*1000)), fetched
     except (ValueError, TypeError, IndexError, OverflowError) as exc:
         raise HTTPException(status_code=503, detail="Research candles invalid, incomplete or stale. No proposal generated.") from exc
+
+
+@app.get("/api/trading/desk")
+def trading_desk(response: Response,
+                 symbol: str = Query(default="BTCUSDT", max_length=16),
+                 equity_usdt: float = Query(default=100, ge=10, le=100_000),
+                 risk_pct: float = Query(default=.5, ge=.1, le=1),
+                 fee_bps: float = Query(default=10, ge=1, le=100),
+                 slippage_bps: float = Query(default=5, ge=1, le=100)):
+    """Trading-only V2 desk; three public histories, no provider/model/account key."""
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    pair = _research_pair(symbol)
+    try:
+        validate_paper_settings(equity_usdt, risk_pct, fee_bps, slippage_bps)
+    except PaperRiskError:
+        raise HTTPException(status_code=422, detail="Invalid paper-only settings.") from None
+    if not _RESEARCH_SLOTS.acquire(blocking=False):
+        raise HTTPException(status_code=429, detail="Research busy. Retry shortly.")
+    try:
+        load_knowledge()  # fail closed before fetching if the V2 bundle is broken
+        with ThreadPoolExecutor(max_workers=3) as pool:
+            jobs = {tf: pool.submit(_research_history, pair, tf)
+                    for tf in ("15m", "1h", "4h")}
+            fetched = {tf: job.result() for tf, job in jobs.items()}
+        now_ms = int(time.time() * 1000)
+        stamps = [stamp for _, stamp in fetched.values()]
+        if (any(type(stamp) is not int or stamp * 1000 > now_ms + 5_000
+                or stamp * 1000 < now_ms - 120_000 for stamp in stamps)
+                or max(stamps) - min(stamps) > 120):
+            raise ValueError("invalid_source_time")
+        return build_trading_desk(
+            {tf: bars for tf, (bars, _) in fetched.items()}, pair, now_ms,
+            min(stamps), equity_usdt, risk_pct, fee_bps, slippage_bps)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        _safe_log_failure("trading.desk", exc)
+        raise HTTPException(status_code=503, detail={
+            "decision": "wait", "paper_plan": None,
+            "message": "Trading evidence unavailable. No plan generated."}) from None
+    finally:
+        _RESEARCH_SLOTS.release()
 
 
 @app.get("/api/trading/structure")

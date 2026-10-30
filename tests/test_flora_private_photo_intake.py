@@ -191,6 +191,8 @@ class FloraPrivatePhotoIntakeTests(unittest.TestCase):
             verified = verify_private_flora_bundle(out, "gold_kit", "story")
             self.assertEqual(verified["status"], "private_draft_verified_not_approved")
             self.assertTrue(verified["encoded_midpoint_checked"])
+            self.assertTrue(verified["encoded_three_samples_checked"])
+            self.assertEqual(verified["encoded_sample_times_seconds"], [0.6, 1.5, 2.4])
             self.assertFalse(verified["owner_approved"])
             cli_check = subprocess.run([
                 sys.executable, "-m", "scripts.verify_flora_private_bundle",
@@ -199,6 +201,39 @@ class FloraPrivatePhotoIntakeTests(unittest.TestCase):
             ], capture_output=True, text=True, timeout=35)
             self.assertEqual(cli_check.returncode, 0, cli_check.stderr)
             self.assertFalse(json.loads(cli_check.stdout)["publication_permitted"])
+
+            # A forged MP4 can keep its 1.5s midpoint and valid H.264
+            # metadata while replacing early frames. Rehashing the JSON
+            # must not let this partial corruption pass review.
+            video_path = out / "flora_gold_kit_story_DRAFT.mp4"
+            meta_path = out / "flora_gold_kit_PRIVATE_photo_provenance.json"
+            original_video, original_meta = video_path.read_bytes(), meta_path.read_bytes()
+            forged_video = root / "forged_early_frames.mp4"
+            encoded = subprocess.run([
+                "ffmpeg", "-hide_banner", "-loglevel", "error", "-nostdin", "-y",
+                "-i", str(video_path),
+                "-vf", "drawbox=x=0:y=0:w=iw:h=ih:color=black:t=fill:enable='lt(t,0.8)'",
+                "-an", "-c:v", "libx264", "-threads", "2", "-preset", "ultrafast",
+                "-crf", "32", "-pix_fmt", "yuv420p", "-r", "12",
+                "-movflags", "+faststart", str(forged_video),
+            ], capture_output=True, text=True, timeout=35)
+            self.assertEqual(encoded.returncode, 0, encoded.stderr)
+            altered = forged_video.read_bytes()
+            self.assertNotEqual(altered, original_video)
+            video_path.write_bytes(altered)
+            changed = json.loads(original_meta)
+            changed["private_render"]["video_sha256"] = hashlib.sha256(altered).hexdigest()
+            meta_path.write_text(json.dumps(changed), encoding="utf-8")
+            with self.assertRaisesRegex(
+                FloraPrivateBundleError, "does not visually match"
+            ):
+                verify_private_flora_bundle(out, "gold_kit", "story")
+            video_path.write_bytes(original_video)
+            meta_path.write_bytes(original_meta)
+            self.assertTrue(
+                verify_private_flora_bundle(out, "gold_kit", "story")[
+                    "encoded_three_samples_checked"]
+            )
 
             # Rehashing a forged poster and JSON must not make it match the
             # actual decoded H.264 video. Restore originals afterward.

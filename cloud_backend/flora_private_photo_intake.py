@@ -37,10 +37,12 @@ def prepare_private_flora_photo(photo_bytes: bytes, mime_type: str) -> dict:
                 raise FloraPrivatePhotoError("Animated product photos are not accepted.")
             oriented = ImageOps.exif_transpose(opened)
             oriented.load()
-            fitted = ImageOps.contain(
+            # ImageOps.contain also upscales small inputs; preserve their
+            # native pixels and resize only when the source exceeds the cap.
+            fitted = (ImageOps.contain(
                 oriented, (_MAX_RENDER_SIDE, _MAX_RENDER_SIDE),
                 method=Image.Resampling.LANCZOS,
-            )
+            ) if max(oriented.size) > _MAX_RENDER_SIDE else oriented)
             # Flatten transparent sources on white rather than introducing
             # black backgrounds or carrying original PNG metadata forward.
             rgba = fitted.convert("RGBA")

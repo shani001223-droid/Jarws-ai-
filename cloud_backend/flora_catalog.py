@@ -96,7 +96,14 @@ def inspect_owner_photo(data: bytes, mime_type: str) -> dict:
                 _MIN_SIDE <= width <= _MAX_SIDE and _MIN_SIDE <= height <= _MAX_SIDE
             ):
                 raise FloraCatalogError("Photo format or dimensions are invalid.")
+            if getattr(photo, "n_frames", 1) != 1:
+                raise FloraCatalogError("Animated product photos are not accepted.")
             photo.verify()
+        # Pillow verify() checks container structure but does not guarantee
+        # that JPEG/WebP pixel data can actually be decoded. Fail before a
+        # downstream poster/MP4 silently loses a corrupted source image.
+        with Image.open(BytesIO(data)) as decoded:
+            decoded.load()
     except (UnidentifiedImageError, OSError, ValueError, Image.DecompressionBombError):
         raise FloraCatalogError("Photo could not be verified.") from None
     return {

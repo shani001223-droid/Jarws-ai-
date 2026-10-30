@@ -61,6 +61,7 @@ try:  # Handles either cloud_backend package import or direct uvicorn main:app.
     from .urdu_tts_text import normalize_urdu_speech
     from .persona_policy import personality_guardrails
     from .latency_budget import provider_timeout
+    from .speech_flight import SpeechFlightCache, SpeechCapacityError
     from .job_records import JobRecordStore, JobCapacityError, JobStateError
     from .job_queue import ScheduledJobQueue, QueueCapacityError
     from .verified_artifact_store import VerifiedArtifactStore, ArtifactStorageError
@@ -82,6 +83,7 @@ except ImportError:
     from urdu_tts_text import normalize_urdu_speech
     from persona_policy import personality_guardrails
     from latency_budget import provider_timeout
+    from speech_flight import SpeechFlightCache, SpeechCapacityError
     from job_records import JobRecordStore, JobCapacityError, JobStateError
     from job_queue import ScheduledJobQueue, QueueCapacityError
     from verified_artifact_store import VerifiedArtifactStore, ArtifactStorageError
@@ -591,7 +593,9 @@ async def synthesize_urdu(text: str, style: str) -> bytes:
 
 
 speech_slots = asyncio.Semaphore(2)
-speech_cache = OrderedDict()
+speech_flights = SpeechFlightCache(ttl=120, max_cache=16, max_inflight=8)
+# Compatibility for existing tests; the cache contains only hashed keys and audio.
+speech_cache = speech_flights.cache
 
 
 @app.post("/api/speech")
@@ -600,24 +604,23 @@ async def speech(payload: SpeechRequest):
     if not re.search(r"[\u0600-\u06ff]", text) or re.search(r"[\u0900-\u097f]", text):
         raise HTTPException(status_code=400, detail="Urdu-script text is required for Urdu speech.")
     text = normalize_urdu_speech(text)
-    cache_key = hashlib.sha256((payload.style + "\0" + text).encode()).digest()
-    cached = speech_cache.get(cache_key)
-    if cached and cached[0] > time.monotonic():
-        return Response(content=cached[1], media_type="audio/mpeg", headers={"Cache-Control": "no-store"})
+    # Unknown styles fall back to the same bounded soft voice and cache key.
+    style = payload.style if payload.style in ("soft", "warm", "playful") else "soft"
+    cache_key = hashlib.sha256((style + "\0" + text).encode()).digest()
     async def generate():
         async with speech_slots:
-            return await synthesize_urdu(text, payload.style)
+            return await synthesize_urdu(text, style)
     try:
-        audio = await asyncio.wait_for(generate(), timeout=25)
+        # Concurrent identical phrases share one synthesis. Cancelling one
+        # HTTP request cannot interrupt another listener of the same phrase.
+        audio = await speech_flights.get(cache_key, generate, timeout=25)
+    except SpeechCapacityError:
+        raise HTTPException(status_code=503, detail="Urdu voice is busy. Please retry shortly.") from None
     except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="Online Urdu voice timed out. Tap Hear Hoshi to retry.") from None
     except Exception as exc:
         _safe_log_failure("speech.tts", exc)
         raise HTTPException(status_code=502, detail="Online Urdu voice is unavailable. Try again or install an Urdu device voice.") from None
-    speech_cache[cache_key] = (time.monotonic() + 120, audio)
-    speech_cache.move_to_end(cache_key)
-    while len(speech_cache) > 16:
-        speech_cache.popitem(last=False)
     return Response(content=audio, media_type="audio/mpeg", headers={"Cache-Control": "no-store"})
 
 

@@ -20,7 +20,8 @@ business project, fetches a remote price, publishes an ad or places an order.
   JPEG or WebP encoding, 400–4096px sides, <=8 MB and SHA-256. It does
   not save/upload the bytes, remove EXIF, verify ownership, authorize a
   publication, or register a photo in the catalogue. A future approved
-  private asset intake must strip metadata, verify rights and persist securely.
+  local private sanitizer now strips metadata; a separately owner-approved,
+  rights-verified persistent catalogue still needs real assets and consent.
 
 Security: fixed IDs only, no arbitrary URLs/paths, no photo bytes or private
 files in API output, no write routes, no purchases or external publishing.
@@ -60,7 +61,12 @@ independent rights verification or owner/publication approval. Real Flora
 product identity, actual photos, stock, current price, cleared audio and final
 owner acceptance are still missing; synthetic CI fixtures do not satisfy them.
 
-**Code-complete:** private normalization and create-only handoff. **CI-verified:**
-await exact-head GitHub Python/JS/browser and Docker checks. **Real-world
-verified:** no. Task 43, 45 and 46 remain unchecked; the only canonical
+**Code-complete:** private normalization, decoded-pixel validation,
+create-only operator handoff and actual sanitized-photo-to-H.264 MP4 test.
+**CI-verified:** exact source/test commit `2549cdc40793ca112027194f68764ee100f5f40b`
+passed [full Python/backend, JS and Playwright Chromium](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/41027826174)
+and [Docker/Uvicorn smoke](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/41027826094).
+An earlier run failed because Pillow's contain() enlarged an 800px input;
+fixed it to resize only oversized inputs and added an extreme-aspect regression.
+**Real-world verified:** no. Task 43, 45 and 46 remain unchecked; the only canonical
 60-task scoreboard is `HOSHI_60_TASK_MASTER_ROADMAP.md` (48 checked, 12 pending).

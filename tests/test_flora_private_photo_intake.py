@@ -18,6 +18,9 @@ from cloud_backend.flora_private_photo_intake import (
 )
 from cloud_backend.flora_photo_posters import render_flora_photo_preview
 from cloud_backend.flora_video_ads import render_flora_video_draft
+from cloud_backend.flora_private_bundle_verify import (
+    FloraPrivateBundleError, verify_private_flora_bundle,
+)
 
 
 def _jpeg_with_exif() -> bytes:
@@ -182,6 +185,54 @@ class FloraPrivatePhotoIntakeTests(unittest.TestCase):
             streams = json.loads(probed.stdout)["streams"]
             self.assertEqual([(s["codec_type"], s["codec_name"]) for s in streams],
                              [("video", "h264")])
+
+            # Independent read-only verifier decodes the actual encoded MP4
+            # midpoint, not just the self-reported SHA-256 in the JSON.
+            verified = verify_private_flora_bundle(out, "gold_kit", "story")
+            self.assertEqual(verified["status"], "private_draft_verified_not_approved")
+            self.assertTrue(verified["encoded_midpoint_checked"])
+            self.assertFalse(verified["owner_approved"])
+            cli_check = subprocess.run([
+                sys.executable, "-m", "scripts.verify_flora_private_bundle",
+                "--draft-dir", str(out), "--product-id", "gold_kit",
+                "--placement", "story",
+            ], capture_output=True, text=True, timeout=35)
+            self.assertEqual(cli_check.returncode, 0, cli_check.stderr)
+            self.assertFalse(json.loads(cli_check.stdout)["publication_permitted"])
+
+            # Rehashing a forged poster and JSON must not make it match the
+            # actual decoded H.264 video. Restore originals afterward.
+            poster_path = out / "flora_gold_kit_story_DRAFT.png"
+            meta_path = out / "flora_gold_kit_PRIVATE_photo_provenance.json"
+            original_poster, original_meta = poster_path.read_bytes(), meta_path.read_bytes()
+            forged = BytesIO()
+            Image.new("RGB", (1080, 1920), "magenta").save(forged, format="PNG")
+            poster_path.write_bytes(forged.getvalue())
+            changed = json.loads(original_meta)
+            changed["private_render"]["poster_sha256"] = hashlib.sha256(
+                forged.getvalue()).hexdigest()
+            meta_path.write_text(json.dumps(changed), encoding="utf-8")
+            with self.assertRaises(FloraPrivateBundleError):
+                verify_private_flora_bundle(out, "gold_kit", "story")
+            poster_path.write_bytes(original_poster)
+            meta_path.write_bytes(original_meta)
+
+            # Unexpected files and forged approval state both fail closed.
+            extra = out / "unexpected.txt"
+            extra.write_text("not part of private draft")
+            with self.assertRaises(FloraPrivateBundleError):
+                verify_private_flora_bundle(out, "gold_kit", "story")
+            extra.unlink()
+            changed = json.loads(original_meta)
+            changed["owner_approved"] = True
+            meta_path.write_text(json.dumps(changed), encoding="utf-8")
+            with self.assertRaises(FloraPrivateBundleError):
+                verify_private_flora_bundle(out, "gold_kit", "story")
+            meta_path.write_bytes(original_meta)
+            self.assertEqual(
+                verify_private_flora_bundle(out, "gold_kit", "story")["status"],
+                "private_draft_verified_not_approved",
+            )
             before = {p.name: p.read_bytes() for p in out.iterdir()}
             repeat = subprocess.run(args, capture_output=True, text=True, timeout=90)
             self.assertNotEqual(repeat.returncode, 0)

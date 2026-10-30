@@ -21,6 +21,7 @@ from cloud_backend.anime_subtitle_preview import (
     _srt_windows,
 )
 from cloud_backend.anime_thumbnail import AnimeThumbnailError, _verify_video
+from cloud_backend.anime_audio_waveform import build_encoded_audio_waveform
 
 
 class AnimeSubtitleBurninError(ValueError):
@@ -249,6 +250,8 @@ def render_private_subtitled_pilot(manifest: dict, video: bytes,
                 ffmpeg, source, output, review["samples"])
             audio_review_wavs, audio_review_samples = _encoded_cue_audio_evidence(
                 ffmpeg, output, windows, media_qc["audio_codec"])
+            waveform = build_encoded_audio_waveform(
+                audio_review_wavs, audio_review_samples)
     except AnimeSubtitleBurninError:
         raise
     except (OSError, subprocess.TimeoutExpired, AnimeThumbnailError, ValueError,
@@ -266,6 +269,15 @@ def render_private_subtitled_pilot(manifest: dict, video: bytes,
         "visual_evidence_decoded_from_both_mp4s": True,
         "visual_evidence_human_review_required": True,
         "audio_review_wavs": audio_review_wavs,
+        "audio_waveform_png": waveform["png_bytes"],
+        "audio_waveform_filename": (
+            "hoshi_encoded_aac_waveform_PRIVATE.png"
+            if waveform["png_bytes"] is not None else None),
+        "audio_waveform_sha256": waveform.get("png_sha256"),
+        "audio_waveform_resolution": waveform.get("resolution"),
+        "audio_waveform_samples": waveform["samples"],
+        "audio_waveform_status": waveform["status"],
+        "audio_waveform_human_review_required": True,
         "audio_review_samples": audio_review_samples,
         "audio_review_decoded_from_actual_encoded_aac": bool(audio_review_samples),
         "audio_review_human_listening_required": True,

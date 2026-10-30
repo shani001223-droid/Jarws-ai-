@@ -21,6 +21,9 @@ from cloud_backend.anime_private_review_page import (
     AnimePrivateReviewPageError, VIDEO, VISUAL, WAVEFORM,
     build_private_review_page,
 )
+from cloud_backend.anime_subtitle_burnin import (
+    AnimeSubtitleBurninError, _encoded_comparison_evidence,
+)
 from cloud_backend.anime_subtitle_preview import _srt_windows
 from cloud_backend.anime_thumbnail import AnimeThumbnailError, _verify_video
 
@@ -109,6 +112,40 @@ def verify_private_review_bundle(directory: Path) -> dict:
         visual = _read_regular(root, VISUAL, 8_000_000)
         _match_hash(visual, meta.get("visual_evidence_sha256"), VISUAL)
         _check_png(visual, (960, 900), VISUAL)
+        # A matching PNG digest alone is insufficient: an edited provenance
+        # document could re-hash an unrelated but valid PNG. Re-decode the
+        # source and captioned MP4s and rebuild the actual comparison pixels.
+        records = meta.get("visual_evidence_samples")
+        if (type(records) is not list or len(records) != 3
+                or meta.get("visual_evidence_decoded_from_both_mp4s") is not True
+                or meta.get("visual_evidence_human_review_required") is not True
+                or meta.get("visual_evidence_resolution") != [960, 900]):
+            raise AnimePrivateBundleError("Missing actual encoded-frame evidence.")
+        reference = []
+        for index, (record, (start, end, _)) in enumerate(zip(records, windows)):
+            expected_frame = max(index * 120, min(index * 120 + 119,
+                                                   (start + end) * 12 // 2000))
+            if (type(record) is not dict
+                    or record.get("shot_index") != index + 1
+                    or record.get("cue_start_ms") != start
+                    or record.get("cue_end_ms") != end
+                    or type(record.get("decoded_frame_index")) is not int
+                    or record["decoded_frame_index"] != expected_frame
+                    or type(record.get("original_decoded_rgb_sha256")) is not str):
+                raise AnimePrivateBundleError("Invalid encoded comparison cue.")
+            reference.append({
+                "decoded_frame_index": expected_frame,
+                "decoded_frame_rgb_sha256": record["original_decoded_rgb_sha256"],
+                "cue_start_ms": start, "cue_end_ms": end,
+            })
+        ffmpeg = shutil.which("ffmpeg")
+        if not ffmpeg:
+            raise AnimePrivateBundleError("Local ffmpeg required.")
+        regenerated, decoded_records = _encoded_comparison_evidence(
+            ffmpeg, root.parent / SOURCE_VIDEO, root / VIDEO, reference)
+        if regenerated != visual or decoded_records != records:
+            raise AnimePrivateBundleError(
+                "Comparison pixels differ from actual encoded MP4 frames.")
         samples = meta.get("audio_review_samples")
         if type(samples) is not list or len(samples) not in (0, 3):
             raise AnimePrivateBundleError("Invalid private AAC cue list.")
@@ -158,6 +195,7 @@ def verify_private_review_bundle(directory: Path) -> dict:
     except AnimePrivateBundleError:
         raise
     except (AnimePrivateReviewPageError, AnimeAudioWaveformError,
+            AnimeSubtitleBurninError,
             AnimeThumbnailError, OSError, ValueError, TypeError, KeyError,
             AttributeError, UnicodeError, json.JSONDecodeError):
         raise AnimePrivateBundleError("Private review bundle failed integrity checks.") from None

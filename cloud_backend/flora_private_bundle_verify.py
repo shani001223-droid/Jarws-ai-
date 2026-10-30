@@ -77,7 +77,13 @@ def _image(data: bytes, size: tuple[int, int] | None = None,
         raise FloraPrivateBundleError("Private PNG could not be decoded.") from None
 
 
-def _decoded_midpoint(mp4: bytes, size: tuple[int, int]) -> Image.Image:
+def _decoded_samples(mp4: bytes, size: tuple[int, int]) -> tuple[Image.Image, ...]:
+    """Independently decode early, middle and late frames of the saved MP4.
+
+    The draft encoder fades in/out for 0.3s. Samples at 0.6, 1.5 and 2.4s
+    avoid the intended fades but detect an altered beginning/end that a
+    midpoint-only integrity check would miss.
+    """
     ffmpeg, ffprobe = shutil.which("ffmpeg"), shutil.which("ffprobe")
     if not ffmpeg or not ffprobe:
         raise FloraPrivateBundleError("Local FFmpeg and ffprobe are required.")
@@ -86,15 +92,20 @@ def _decoded_midpoint(mp4: bytes, size: tuple[int, int]) -> Image.Image:
             path = Path(temp) / "private.mp4"
             path.write_bytes(mp4)
             _probe_video(path, ffprobe, size, False)
-            result = subprocess.run(
-                [ffmpeg, "-hide_banner", "-loglevel", "error", "-nostdin",
-                 "-ss", "1.5", "-i", str(path), "-frames:v", "1",
-                 "-f", "image2pipe", "-vcodec", "png", "pipe:1"],
-                capture_output=True, timeout=15, check=False,
-            )
-            if (result.returncode != 0 or not (100 < len(result.stdout) <= 3_000_000)):
-                raise FloraPrivateBundleError("Encoded MP4 midpoint could not be decoded.")
-            return _image(result.stdout, size, allow_decoder_aspect=True)
+            samples = []
+            for timestamp in ("0.6", "1.5", "2.4"):
+                result = subprocess.run(
+                    [ffmpeg, "-hide_banner", "-loglevel", "error", "-nostdin",
+                     "-ss", timestamp, "-i", str(path), "-frames:v", "1",
+                     "-f", "image2pipe", "-vcodec", "png", "pipe:1"],
+                    capture_output=True, timeout=15, check=False,
+                )
+                if (result.returncode != 0
+                        or not (100 < len(result.stdout) <= 3_000_000)):
+                    raise FloraPrivateBundleError(
+                        "Encoded MP4 sample could not be decoded.")
+                samples.append(_image(result.stdout, size, allow_decoder_aspect=True))
+            return tuple(samples)
     except (FloraVideoError, OSError, subprocess.TimeoutExpired):
         raise FloraPrivateBundleError("Encoded MP4 failed offline verification.") from None
 
@@ -177,12 +188,15 @@ def verify_private_flora_bundle(directory: Path, product_id: str,
             or meta.get("sanitized_canvas_px") != list(photo_image.size)):
         raise FloraPrivateBundleError("Sanitized photo dimensions do not match provenance.")
     poster_image = _image(poster, _POSTER_SIZES[placement])
-    midpoint = _decoded_midpoint(video, _VIDEO_SIZES[placement])
+    samples = _decoded_samples(video, _VIDEO_SIZES[placement])
     expected_frame = poster_image.resize(_VIDEO_SIZES[placement], Image.Resampling.LANCZOS)
-    difference = ImageStat.Stat(ImageChops.difference(midpoint, expected_frame)).mean
-    # Lossy CRF32 H.264 changes pixels; a different poster is not acceptable.
-    if sum(difference) / 3 > 18:
-        raise FloraPrivateBundleError("Encoded MP4 does not visually match its DRAFT poster.")
+    # Lossy CRF32 H.264 changes pixels. Reject a forged early/late segment
+    # even if the midpoint and all locally rewritten SHA-256 values agree.
+    for frame in samples:
+        difference = ImageStat.Stat(ImageChops.difference(frame, expected_frame)).mean
+        if sum(difference) / 3 > 18:
+            raise FloraPrivateBundleError(
+                "Encoded MP4 does not visually match its DRAFT poster at sampled times.")
     return {
         "status": "private_draft_verified_not_approved",
         "product_id": product_id,
@@ -191,6 +205,8 @@ def verify_private_flora_bundle(directory: Path, product_id: str,
         "poster_sha256": _digest(poster),
         "video_sha256": _digest(video),
         "encoded_midpoint_checked": True,
+        "encoded_three_samples_checked": True,
+        "encoded_sample_times_seconds": [0.6, 1.5, 2.4],
         "owner_approved": False,
         "publication_permitted": False,
         "real_photo_rights_verified": False,

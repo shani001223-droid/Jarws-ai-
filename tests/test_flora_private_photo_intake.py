@@ -81,6 +81,16 @@ class FloraPrivatePhotoIntakeTests(unittest.TestCase):
         with self.assertRaises(FloraCatalogError):
             inspect_owner_photo(truncated, "image/jpeg")
 
+    def test_downscale_without_upscale_and_reject_extreme_aspect_ratio(self):
+        large = BytesIO()
+        Image.new("RGB", (3200, 1600), "white").save(large, format="PNG")
+        prepared = prepare_private_flora_photo(large.getvalue(), "image/png")
+        self.assertEqual(prepared["sanitized_canvas_px"], [2048, 1024])
+        narrow = BytesIO()
+        Image.new("RGB", (4096, 400), "white").save(narrow, format="PNG")
+        with self.assertRaises(FloraPrivatePhotoError):
+            prepare_private_flora_photo(narrow.getvalue(), "image/png")
+
     def test_private_cli_create_only_and_no_rights_no_output(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

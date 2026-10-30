@@ -48,13 +48,20 @@
    }catch(error){settle(reject,error);}
   });
  }
+ // Only the current clip and its next prefetch need cached audio bytes.
+ // A played clip can be released once its Blob URL owns the audio; closing the
+ // queue on Stop Speaking prevents stale microtasks from starting new fetches.
  function queue(parts,load,isCurrent=()=>true){
-  const pending=new Map();
-  return {get(index){
-   if(!isCurrent()||index<0||index>=parts.length)return Promise.resolve(null);
-   if(!pending.has(index))pending.set(index,Promise.resolve().then(()=>isCurrent()?load(parts[index]):null).catch(()=>null));
-   return pending.get(index);
-  }};
+  const pending=new Map();let closed=false;
+  return {
+   get(index){
+    if(closed||!isCurrent()||!Number.isInteger(index)||index<0||index>=parts.length)return Promise.resolve(null);
+    if(!pending.has(index))pending.set(index,Promise.resolve().then(()=>!closed&&isCurrent()?load(parts[index]):null).catch(()=>null));
+    return pending.get(index);
+   },
+   release(index){pending.delete(index)},
+   clear(){closed=true;pending.clear()}
+  };
  }
  const api={split,queue,withClipTimeout};if(root)root.HoshiSpeechPipeline=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window!=='undefined'?window:null);

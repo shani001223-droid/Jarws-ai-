@@ -20,6 +20,7 @@ import tempfile
 from PIL import Image, ImageChops, ImageStat, UnidentifiedImageError
 
 from .flora_video_ads import FloraVideoError, _probe_video
+from .flora_private_review import build_flora_private_review_html
 
 
 class FloraPrivateBundleError(ValueError):
@@ -29,7 +30,7 @@ class FloraPrivateBundleError(ValueError):
 _POSTER_SIZES = {"feed": (1080, 1350), "story": (1080, 1920)}
 _VIDEO_SIZES = {"feed": (360, 450), "story": (360, 640)}
 _LIMITS = {"photo": 16_000_000, "poster": 10_000_000,
-           "video": 5_000_000, "provenance": 32_000}
+           "video": 5_000_000, "provenance": 32_000, "review": 16_000}
 
 
 def _read_regular(directory: Path, name: str, limit: int) -> bytes:
@@ -124,14 +125,21 @@ def verify_private_flora_bundle(directory: Path, product_id: str,
     provenance_name = stem + "_provenance.json"
     poster_name = f"flora_{product_id}_{placement}_DRAFT.png"
     video_name = f"flora_{product_id}_{placement}_DRAFT.mp4"
+    review_name = f"flora_{product_id}_{placement}_PRIVATE_review.html"
+    actual = {p.name for p in directory.iterdir()}
+    has_review = review_name in actual
     expected = {photo_name, provenance_name, poster_name, video_name}
-    if {p.name for p in directory.iterdir()} != expected:
+    if has_review:
+        expected.add(review_name)
+    if actual != expected:
         raise FloraPrivateBundleError("Private draft has missing or unexpected files.")
     try:
         photo = _read_regular(directory, photo_name, _LIMITS["photo"])
         poster = _read_regular(directory, poster_name, _LIMITS["poster"])
         video = _read_regular(directory, video_name, _LIMITS["video"])
         raw_json = _read_regular(directory, provenance_name, _LIMITS["provenance"])
+        review_html = (_read_regular(directory, review_name, _LIMITS["review"])
+                       if has_review else None)
         meta = json.loads(raw_json)
     except (OSError, UnicodeError, ValueError, json.JSONDecodeError):
         raise FloraPrivateBundleError("Private draft files or provenance are unreadable.") from None
@@ -206,8 +214,20 @@ def verify_private_flora_bundle(directory: Path, product_id: str,
             raise FloraPrivateBundleError(
                 "Encoded MP4 does not visually match its DRAFT poster at frame "
                 + str(index) + ".")
+    if has_review:
+        if (render.get("review_html_filename") != review_name
+                or not _require_sha(render.get("review_html_sha256"))
+                or render["review_html_sha256"] != _digest(review_html)):
+            raise FloraPrivateBundleError("Private offline review page provenance mismatch.")
+        expected_html = build_flora_private_review_html(
+            product_id, placement, _digest(photo), _digest(poster), _digest(video))
+        if review_html != expected_html:
+            raise FloraPrivateBundleError("Private offline review page was altered.")
+    elif ("review_html_filename" in render or "review_html_sha256" in render):
+        raise FloraPrivateBundleError("Private offline review page is missing.")
     return {
         "status": "private_draft_verified_not_approved",
+        "offline_review_page_checked": has_review,
         "product_id": product_id,
         "placement": placement,
         "sanitized_photo_sha256": _digest(photo),

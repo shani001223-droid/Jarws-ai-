@@ -23,6 +23,7 @@ from cloud_backend.flora_catalog import catalogue_snapshot
 from cloud_backend.flora_private_photo_intake import prepare_private_flora_photo
 from cloud_backend.flora_photo_posters import render_flora_photo_preview
 from cloud_backend.flora_video_ads import render_flora_video_draft
+from cloud_backend.flora_private_review import build_flora_private_review_html
 
 
 def _read_local_photo(path: Path) -> bytes:
@@ -77,7 +78,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--render-video", action="store_true",
                         help="Also create a silent, locally verified H.264 MP4 and poster draft.")
     parser.add_argument("--placement", choices=["feed", "story"], default="story")
+    parser.add_argument("--review-page", action="store_true",
+                        help="Include a script-free, phone-friendly local MP4 review page.")
     args = parser.parse_args(argv)
+    if args.review_page and not args.render_video:
+        parser.error("--review-page requires --render-video.")
     if not args.rights_attested:
         parser.error("Explicit operator photo-rights attestation is required.")
     catalogue_snapshot(args.product_id)  # fail on stale/changed product prices
@@ -121,6 +126,16 @@ def main(argv: list[str] | None = None) -> int:
             "owner_approved": False,
             "publication_permitted": False,
         }
+    if args.review_page:
+        review_name = f"flora_{args.product_id}_{args.placement}_PRIVATE_review.html"
+        review_html = build_flora_private_review_html(
+            args.product_id, args.placement, photo["sanitized_photo_sha256"],
+            photo["private_render"]["poster_sha256"],
+            photo["private_render"]["video_sha256"],
+        )
+        photo["private_render"]["review_html_filename"] = review_name
+        photo["private_render"]["review_html_sha256"] = hashlib.sha256(review_html).hexdigest()
+        extra_files[review_name] = review_html
     photo.update({
         "product_id": args.product_id,
         "caller_rights_attested_not_independently_verified": True,

@@ -307,6 +307,67 @@ class FloraPrivatePhotoIntakeTests(unittest.TestCase):
             self.assertEqual(before, {p.name: p.read_bytes() for p in out.iterdir()})
             self.assertEqual(source.read_bytes(), original)
 
+    def test_private_offline_mobile_review_page_is_create_only_and_verified(self):
+        """A real MP4 has a static local reviewer; no owner approval or posting."""
+        from cloud_backend.flora_private_review import build_flora_private_review_html
+
+        with self.assertRaises(ValueError):
+            build_flora_private_review_html("shampoo", "story", "bad", "0" * 64, "0" * 64)
+        with self.assertRaises(ValueError):
+            build_flora_private_review_html("../shampoo", "story", "0" * 64, "0" * 64, "0" * 64)
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "private_camera.jpg"
+            original = _jpeg_with_exif()
+            source.write_bytes(original)
+            out = root / "draft"
+            out.mkdir()
+            args = [
+                sys.executable, "-m", "scripts.prepare_flora_private_photo",
+                "--photo", str(source), "--mime", "image/jpeg",
+                "--product-id", "shampoo", "--output-dir", str(out),
+                "--rights-attested", "--placement", "feed", "--review-page",
+            ]
+            no_video = subprocess.run(args, capture_output=True, text=True, timeout=15)
+            self.assertNotEqual(no_video.returncode, 0)
+            self.assertEqual(list(out.iterdir()), [])
+            args.append("--render-video")
+            made = subprocess.run(args, capture_output=True, text=True, timeout=90)
+            self.assertEqual(made.returncode, 0, made.stderr)
+            html_path = out / "flora_shampoo_feed_PRIVATE_review.html"
+            meta_path = out / "flora_shampoo_PRIVATE_photo_provenance.json"
+            self.assertEqual(len(list(out.iterdir())), 5)
+            page = html_path.read_bytes()
+            self.assertIn(b"<video controls playsinline", page)
+            self.assertIn(b"NOT APPROVED FOR PUBLICATION", page)
+            self.assertIn(b"default-src 'none'", page)
+            self.assertNotIn(b"<script", page)
+            self.assertNotIn(b"http://", page)
+            self.assertNotIn(b"https://", page)
+            self.assertNotIn(b"PRIVATE CAMERA IDENTIFIER", page)
+            meta = json.loads(meta_path.read_bytes())
+            self.assertEqual(meta["private_render"]["review_html_sha256"],
+                             hashlib.sha256(page).hexdigest())
+            verified = verify_private_flora_bundle(out, "shampoo", "feed")
+            self.assertTrue(verified["offline_review_page_checked"])
+            self.assertFalse(verified["publication_permitted"])
+            html_path.write_bytes(page.replace(b"NOT APPROVED", b"NOW APPROVED"))
+            with self.assertRaises(FloraPrivateBundleError):
+                verify_private_flora_bundle(out, "shampoo", "feed")
+            html_path.write_bytes(page)
+            meta_path.write_bytes(meta_path.read_bytes().replace(
+                meta["private_render"]["review_html_sha256"].encode(), b"0" * 64))
+            with self.assertRaises(FloraPrivateBundleError):
+                verify_private_flora_bundle(out, "shampoo", "feed")
+            meta_path.write_text(json.dumps(meta), encoding="utf-8")
+            self.assertTrue(verify_private_flora_bundle(out, "shampoo", "feed")[
+                "offline_review_page_checked"])
+            before = {p.name: p.read_bytes() for p in out.iterdir()}
+            repeated = subprocess.run(args, capture_output=True, text=True, timeout=90)
+            self.assertNotEqual(repeated.returncode, 0)
+            self.assertEqual(before, {p.name: p.read_bytes() for p in out.iterdir()})
+            self.assertEqual(source.read_bytes(), original)
+
     def test_private_cli_invalid_photo_never_leaves_partial_video(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

@@ -314,6 +314,23 @@ class SubtitleVisualReviewTests(unittest.TestCase):
             rejected = subprocess.run(verify, capture_output=True, timeout=20)
             self.assertNotEqual(rejected.returncode, 0)
             clip.write_bytes(clip_bytes)
+            # A forged but still well-formed WAV can be re-hashed in local
+            # provenance. It must not pass as the actual encoded AAC samples.
+            provenance = target / "subtitle_burnin_provenance_PRIVATE.json"
+            provenance_bytes = provenance.read_bytes()
+            forged_wav = bytearray(clip_bytes)
+            forged_wav[50] ^= 1  # Flip a PCM byte, leaving the WAV header valid.
+            clip.write_bytes(forged_wav)
+            forged_meta = copy.deepcopy(meta)
+            forged_meta["audio_review_samples"][0]["wav_sha256"] = digest(
+                bytes(forged_wav))
+            provenance.write_text(json.dumps(forged_meta, ensure_ascii=False),
+                                  encoding="utf-8")
+            rejected = subprocess.run(verify, capture_output=True, timeout=70)
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertIn(b"AAC listening clips differ", rejected.stderr)
+            clip.write_bytes(clip_bytes)
+            provenance.write_bytes(provenance_bytes)
             # An attacker can re-hash a different valid PNG in the JSON.
             # The verifier must compare decoded source/encoded MP4 pixels,
             # not merely trust a self-consistent metadata hash.

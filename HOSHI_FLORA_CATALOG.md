@@ -47,9 +47,7 @@ For a private, create-only local handoff, run:
 
 ```bash
 mkdir -p ./private-flora
-python -m scripts.prepare_flora_private_photo \\
-  --photo ./owner-supplied.jpg --mime image/jpeg \\
-  --product-id shampoo --output-dir ./private-flora --rights-attested
+python -m scripts.prepare_flora_private_photo --photo ./owner-supplied.jpg --mime image/jpeg --product-id shampoo --output-dir ./private-flora --rights-attested
 ```
 
 This writes only `flora_shampoo_PRIVATE_photo.png` and a separate private

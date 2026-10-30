@@ -61,7 +61,8 @@ def _require_sha(value: object) -> bool:
     return isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value) is not None
 
 
-def _image(data: bytes, size: tuple[int, int] | None = None) -> Image.Image:
+def _image(data: bytes, size: tuple[int, int] | None = None,
+           *, allow_decoder_aspect: bool = False) -> Image.Image:
     try:
         with Image.open(BytesIO(data)) as opened:
             if (opened.format != "PNG" or opened.mode != "RGB"
@@ -91,7 +92,7 @@ def _decoded_midpoint(mp4: bytes, size: tuple[int, int]) -> Image.Image:
             )
             if (result.returncode != 0 or not (100 < len(result.stdout) <= 3_000_000)):
                 raise FloraPrivateBundleError("Encoded MP4 midpoint could not be decoded.")
-            return _image(result.stdout, size)
+            return _image(result.stdout, size, allow_decoder_aspect=True)
     except (FloraVideoError, OSError, subprocess.TimeoutExpired):
         raise FloraPrivateBundleError("Encoded MP4 failed offline verification.") from None
 

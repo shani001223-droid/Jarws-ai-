@@ -58,12 +58,15 @@ test('Stop Speaking settles a non-cooperative loader immediately',async()=>{
  parent.abort();
  await assert.rejects(clip,/cancelled/);
 });
-test('late success or failure after a timeout cannot override the settled result',async()=>{
+test('late success or rejection after a timeout cannot override the settled result',async()=>{
  let finish,fail;
- const late=p.withClipTimeout(null,10,()=>new Promise((resolve,reject)=>{finish=resolve;fail=reject}));
- await assert.rejects(late,/timed out/);
- finish('late audio');fail(Error('late provider error'));
- await Promise.resolve();
+ const success=p.withClipTimeout(null,10,()=>new Promise(resolve=>{finish=resolve}));
+ const rejection=p.withClipTimeout(null,10,()=>new Promise((_,reject)=>{fail=reject}));
+ await assert.rejects(success,/timed out/);
+ await assert.rejects(rejection,/timed out/);
+ finish('late audio');
+ fail(Error('late provider error'));
+ await new Promise(resolve=>setImmediate(resolve));
 });
 test('synchronous loader errors and invalid deadlines fail safely',async()=>{
  await assert.rejects(p.withClipTimeout(null,50,()=>{throw Error('bad loader')}),/bad loader/);

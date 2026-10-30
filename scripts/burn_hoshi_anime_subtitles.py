@@ -46,10 +46,13 @@ def main() -> int:
             _read(font, 8_000_000),
             font_rights_attested=True)
         encoded = result.pop("video_mp4")
+        evidence = result.pop("visual_evidence_png")
         target = root / "subtitle_burnin_PRIVATE_DRAFT"
         target.mkdir(mode=0o700, exist_ok=False)
         with (target / result["filename"]).open("xb") as stream:
             stream.write(encoded)
+        with (target / result["visual_evidence_filename"]).open("xb") as stream:
+            stream.write(evidence)
         with (target / "subtitle_burnin_provenance_PRIVATE.json").open(
                 "x", encoding="utf-8") as stream:
             json.dump(result, stream, ensure_ascii=False,

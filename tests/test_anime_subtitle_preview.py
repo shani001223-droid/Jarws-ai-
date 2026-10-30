@@ -181,6 +181,18 @@ class SubtitleVisualReviewTests(unittest.TestCase):
         self.assertEqual(result["cue_windows_ms"],
                          [[2000, 4000], [12000, 14000], [22000, 24000]])
         self.assertTrue(result["subtitles_embedded_in_video"])
+        self.assertEqual(result["visual_evidence_sha256"],
+                         digest(result["visual_evidence_png"]))
+        self.assertEqual(result["visual_evidence_resolution"], [960, 900])
+        self.assertTrue(result["visual_evidence_decoded_from_both_mp4s"])
+        self.assertFalse(result["caption_ink_independently_machine_verified"])
+        self.assertEqual(len(result["visual_evidence_samples"]), 3)
+        with Image.open(BytesIO(result["visual_evidence_png"])) as evidence:
+            self.assertEqual(evidence.size, (960, 900))
+            original_band = evidence.crop((20, 250, 460, 290))
+            captioned_band = evidence.crop((500, 250, 940, 290))
+            self.assertLess(max(ImageStat.Stat(original_band).extrema[0]), 90)
+            self.assertGreater(max(ImageStat.Stat(captioned_band).extrema[0]), 150)
         self.assertEqual(result["media_qc"]["frame_count"], 360)
         self.assertEqual(result["media_qc"]["audio_codec"], "aac")
         self.assertFalse(result["spoken_words_independently_verified"])
@@ -226,6 +238,9 @@ class SubtitleVisualReviewTests(unittest.TestCase):
             self.assertEqual(meta["video_sha256"], digest(
                 (target / meta["filename"]).read_bytes()))
             self.assertFalse(meta["release_authorized"])
+            self.assertEqual(meta["visual_evidence_sha256"], digest(
+                (target / meta["visual_evidence_filename"]).read_bytes()))
+            self.assertEqual(len(meta["visual_evidence_samples"]), 3)
             second = subprocess.run(command, capture_output=True, timeout=160)
             self.assertNotEqual(second.returncode, 0)
             self.assertFalse((root / "manifest.json").read_text(

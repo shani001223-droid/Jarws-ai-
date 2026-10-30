@@ -30,6 +30,68 @@ def _sha(value: bytes) -> str:
     return hashlib.sha256(value).hexdigest()
 
 
+def _encoded_rgb_frame(ffmpeg: str, path: Path, index: int) -> Image.Image:
+    """Decode one *actual encoded* frame; never trust a render-time PNG."""
+    if type(index) is not int or not 0 <= index < 360:
+        raise AnimeSubtitleBurninError("Invalid private comparison frame index.")
+    process = subprocess.run(
+        [ffmpeg, "-hide_banner", "-loglevel", "error", "-nostdin",
+         "-i", str(path), "-vf", f"select=eq(n\\,{index})",
+         "-frames:v", "1", "-f", "image2pipe", "-vcodec", "png", "-"],
+        capture_output=True, timeout=15, check=False)
+    if process.returncode or not 100 <= len(process.stdout) <= 3_000_000:
+        raise AnimeSubtitleBurninError("Encoded comparison frame unavailable.")
+    with Image.open(BytesIO(process.stdout)) as decoded:
+        if (decoded.format != "PNG" or decoded.size != (480, 270)
+                or getattr(decoded, "n_frames", 1) != 1):
+            raise AnimeSubtitleBurninError("Invalid encoded comparison frame.")
+        frame = decoded.convert("RGB")
+        frame.load()
+    return frame
+
+
+def _encoded_comparison_evidence(ffmpeg: str, source: Path, output: Path,
+                                 samples: list[dict]) -> tuple[bytes, list[dict]]:
+    """Create a private original-vs-reencoded contact sheet for human review.
+
+    Visual evidence is decoded from both real MP4 files. It is NOT automated
+    proof of correct words, cue gaps, professional quality or owner approval.
+    """
+    if len(samples) != 3:
+        raise AnimeSubtitleBurninError("Three verified caption samples required.")
+    canvas = Image.new("RGB", (960, 900), (9, 13, 23))
+    draw = ImageDraw.Draw(canvas)
+    comparisons = []
+    for shot, sample in enumerate(samples):
+        frame_index = sample["decoded_frame_index"]
+        original = _encoded_rgb_frame(ffmpeg, source, frame_index)
+        captioned = _encoded_rgb_frame(ffmpeg, output, frame_index)
+        original_hash = _sha(original.tobytes())
+        if original_hash != sample["decoded_frame_rgb_sha256"]:
+            raise AnimeSubtitleBurninError("Original frame differs from SRT review.")
+        top = shot * 300
+        canvas.paste(original, (0, top + 30))
+        canvas.paste(captioned, (480, top + 30))
+        draw.text((12, top + 9), f"SHOT {shot + 1} FRAME {frame_index} | ORIGINAL",
+                  fill=(240, 240, 240))
+        draw.text((492, top + 9), "CAPTIONED RE-ENCODED MP4",
+                  fill=(240, 240, 240))
+        comparisons.append({
+            "shot_index": shot + 1,
+            "decoded_frame_index": frame_index,
+            "cue_start_ms": sample["cue_start_ms"],
+            "cue_end_ms": sample["cue_end_ms"],
+            "original_decoded_rgb_sha256": original_hash,
+            "captioned_decoded_rgb_sha256": _sha(captioned.tobytes()),
+        })
+    buffer = BytesIO()
+    canvas.save(buffer, "PNG")
+    evidence = buffer.getvalue()
+    if not 100 <= len(evidence) <= 8_000_000:
+        raise AnimeSubtitleBurninError("Private comparison PNG exceeds size limit.")
+    return evidence, comparisons
+
+
 def render_private_subtitled_pilot(manifest: dict, video: bytes,
                                    subtitles: bytes, font_bytes: bytes, *,
                                    font_rights_attested: bool) -> dict:
@@ -123,6 +185,8 @@ def render_private_subtitled_pilot(manifest: dict, video: bytes,
             media_qc = _verify_video(output, ffprobe)
             if media_qc["audio_codec"] != review["media_qc"]["audio_codec"]:
                 raise AnimeSubtitleBurninError("Original AAC stream not preserved.")
+            comparison_png, comparisons = _encoded_comparison_evidence(
+                ffmpeg, source, output, review["samples"])
     except AnimeSubtitleBurninError:
         raise
     except (OSError, subprocess.TimeoutExpired, AnimeThumbnailError, ValueError,
@@ -132,6 +196,14 @@ def render_private_subtitled_pilot(manifest: dict, video: bytes,
     return {
         "filename": "hoshi_anime_subtitled_PRIVATE_DRAFT.mp4",
         "video_mp4": encoded, "video_sha256": _sha(encoded),
+        "visual_evidence_png": comparison_png,
+        "visual_evidence_sha256": _sha(comparison_png),
+        "visual_evidence_filename": "hoshi_subtitle_encoded_comparison_PRIVATE.png",
+        "visual_evidence_resolution": [960, 900],
+        "visual_evidence_samples": comparisons,
+        "visual_evidence_decoded_from_both_mp4s": True,
+        "visual_evidence_human_review_required": True,
+        "caption_ink_independently_machine_verified": False,
         "source_video_sha256": _sha(video),
         "source_subtitles_sha256": _sha(subtitles),
         "source_font_sha256": _sha(font_bytes),

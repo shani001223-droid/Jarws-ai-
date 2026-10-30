@@ -515,14 +515,13 @@ body{background:#101020}.dashboard-shell{display:none}.nightroom{position:relati
   const segments=splitUrduSpeech(request.text);
   if(!segments.length){if(speechAudioController===controller)speechAudioController=null;return}
   async function requestPart(part){
-   const clipTimer=setTimeout(()=>controller.abort(),22000);
-   try{
+   return window.HoshiSpeechPipeline.withClipTimeout(controller.signal,22000,async signal=>{
     const response=await tracedFetch(API_BASE+'/api/speech',{
-     method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:part,style}),signal:controller.signal
+     method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:part,style}),signal
     });
     if(!response.ok)throw new Error('Urdu voice provider unavailable');
     const blob=await response.blob();if(!blob.size)throw new Error('Empty Urdu audio');return blob;
-   }finally{clearTimeout(clipTimer)}
+   });
   }
   const files=window.HoshiSpeechPipeline.queue(segments,requestPart,()=>request.id===speechSequence&&!controller.signal.aborted);
   const audio=$('hoshiAudio');

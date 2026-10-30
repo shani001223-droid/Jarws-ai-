@@ -12,6 +12,25 @@
   }
   return parts;
  }
+ // Each MP3 clip has its own timeout/abort signal. A slow prefetch must not
+ // cancel a different clip that is already playing. Stop Speaking still
+ // propagates through the shared parent signal to every outstanding clip.
+ async function withClipTimeout(parentSignal,timeoutMs,load){
+  const controller=new AbortController();
+  const abort=()=>controller.abort();
+  if(parentSignal){
+   if(parentSignal.aborted)abort();
+   else parentSignal.addEventListener('abort',abort,{once:true});
+  }
+  const timer=setTimeout(abort,timeoutMs);
+  try{
+   if(controller.signal.aborted)throw new Error('Speech clip cancelled');
+   return await load(controller.signal);
+  }finally{
+   clearTimeout(timer);
+   if(parentSignal)parentSignal.removeEventListener('abort',abort);
+  }
+ }
  function queue(parts,load,isCurrent=()=>true){
   const pending=new Map();
   return {get(index){
@@ -20,5 +39,5 @@
    return pending.get(index);
   }};
  }
- const api={split,queue};if(root)root.HoshiSpeechPipeline=api;if(typeof module!=='undefined')module.exports=api;
+ const api={split,queue,withClipTimeout};if(root)root.HoshiSpeechPipeline=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window!=='undefined'?window:null);

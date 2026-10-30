@@ -41,7 +41,7 @@ this development work. Exact local/CI verification receipts follow below;
 physical Realme Note 50 acceptance and deployment of this desk are pending.
 
 
-## 31 October 2026 — causal scored-entry boundary for offline paper windows (DEVELOPMENT; CI pending)
+## 31 October 2026 — causal scored-entry boundary for offline paper windows (CODE/CI verified; external evidence pending)
 
 Trading-only repair in the same V2 research evaluator: a rolling or holdout window previously ran the paper engine on 64 warmup candles and then rejected the result if a real strategy happened to enter during warmup. That could turn a valid operator-supplied sample into a false `lookahead_or_warmup_trade` error; simply filtering those trades afterward would leak cash, risk limits and open positions into scoring. The engine now accepts an optional strictly validated `entry_not_before` timestamp: warmup candles can update indicators and generate only next-bar signals, but **cannot open a position or change cash/risk state**. Pending warmup signals expire at the next bar; the final warmup close may legitimately enter at the first scored open. The original unsliced backtest remains compatible. The evaluator supplies this boundary for its 70/30 holdout and each rolling baseline/double-cost window; existing postcondition guards remain in place. Added real-engine deterministic regressions for scoring, retained losses and invalid boundaries; old mocked regressions still check rejection of a forged premature entry.
 

@@ -25,7 +25,7 @@ V2 desk is usable development work within the new trading focus, not a waiver
 of V3's documented source/release requirements.
 
 
-## 31 October 2026 — offline paper replay warmup execution guard (DEVELOPMENT; CI pending)
+## 31 October 2026 — offline paper replay warmup execution guard (CODE/CI verified; external evidence pending)
 
 The same trading-only V2 evaluator now passes a validated first-scored-entry timestamp into the existing backtest engine. Warmup bars remain causal indicator context, not executable positions; no warmup cash/risk contamination, stale pending signal carryover or post-hoc filtering. Holdout and three rolling windows retain actual negative/zero-trade outcomes and gap-stop semantics. Source/test `c4bea619ea8ec6561112290c0c5756c65ef42b4a` passed [full Python/backend, JavaScript and Chromium Playwright run 41131763291](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/41131763291) and [Docker/Uvicorn run 41131762980](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/41131762980). This is synthetic code verification only, not independent market history, calibrated profitability, forward paper performance, real phone QA or production release. Historical **48/60** and V3 source **49/50** unchanged; non-trading expansion deferred.
 

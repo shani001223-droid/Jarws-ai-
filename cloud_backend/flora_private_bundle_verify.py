@@ -1,6 +1,6 @@
 """Read-only, offline verification of one private Flora photo-to-MP4 draft.
 
-This checks actual media bytes and a decoded video frame, not just JSON hashes.
+This checks actual media bytes and all 36 decoded video frames, not just JSON hashes.
 It cannot independently establish ownership, price accuracy, or permission to
 publish. No network, approval mutation, or input-directory writes occur.
 """
@@ -77,12 +77,12 @@ def _image(data: bytes, size: tuple[int, int] | None = None,
         raise FloraPrivateBundleError("Private PNG could not be decoded.") from None
 
 
-def _decoded_samples(mp4: bytes, size: tuple[int, int]) -> tuple[Image.Image, ...]:
-    """Independently decode early, middle and late frames of the saved MP4.
+def _decoded_frames(mp4: bytes, size: tuple[int, int]) -> bytes:
+    """Decode the entire fixed 36-frame DRAFT, with a bounded 37-frame cap.
 
-    The draft encoder fades in/out for 0.3s. Samples at 0.6, 1.5 and 2.4s
-    avoid the intended fades but detect an altered beginning/end that a
-    midpoint-only integrity check would miss.
+    Sampling only three timestamps missed short substituted segments. Decoding
+    the original encoded frames without frame-rate conversion also rejects
+    truncated/extra-frame videos. No private input is modified or uploaded.
     """
     ffmpeg, ffprobe = shutil.which("ffmpeg"), shutil.which("ffprobe")
     if not ffmpeg or not ffprobe:
@@ -92,20 +92,17 @@ def _decoded_samples(mp4: bytes, size: tuple[int, int]) -> tuple[Image.Image, ..
             path = Path(temp) / "private.mp4"
             path.write_bytes(mp4)
             _probe_video(path, ffprobe, size, False)
-            samples = []
-            for timestamp in ("0.6", "1.5", "2.4"):
-                result = subprocess.run(
-                    [ffmpeg, "-hide_banner", "-loglevel", "error", "-nostdin",
-                     "-ss", timestamp, "-i", str(path), "-frames:v", "1",
-                     "-f", "image2pipe", "-vcodec", "png", "pipe:1"],
-                    capture_output=True, timeout=15, check=False,
-                )
-                if (result.returncode != 0
-                        or not (100 < len(result.stdout) <= 3_000_000)):
-                    raise FloraPrivateBundleError(
-                        "Encoded MP4 sample could not be decoded.")
-                samples.append(_image(result.stdout, size, allow_decoder_aspect=True))
-            return tuple(samples)
+            result = subprocess.run(
+                [ffmpeg, "-hide_banner", "-loglevel", "error", "-nostdin",
+                 "-i", str(path), "-map", "0:v:0", "-frames:v", "37",
+                 "-vsync", "0", "-pix_fmt", "rgb24", "-f", "rawvideo", "pipe:1"],
+                capture_output=True, timeout=30, check=False,
+            )
+            expected_bytes = size[0] * size[1] * 3 * 36
+            if result.returncode != 0 or len(result.stdout) != expected_bytes:
+                raise FloraPrivateBundleError(
+                    "Encoded MP4 must contain exactly 36 decodable frames.")
+            return result.stdout
     except (FloraVideoError, OSError, subprocess.TimeoutExpired):
         raise FloraPrivateBundleError("Encoded MP4 failed offline verification.") from None
 
@@ -188,15 +185,27 @@ def verify_private_flora_bundle(directory: Path, product_id: str,
             or meta.get("sanitized_canvas_px") != list(photo_image.size)):
         raise FloraPrivateBundleError("Sanitized photo dimensions do not match provenance.")
     poster_image = _image(poster, _POSTER_SIZES[placement])
-    samples = _decoded_samples(video, _VIDEO_SIZES[placement])
-    expected_frame = poster_image.resize(_VIDEO_SIZES[placement], Image.Resampling.LANCZOS)
-    # Lossy CRF32 H.264 changes pixels. Reject a forged early/late segment
-    # even if the midpoint and all locally rewritten SHA-256 values agree.
-    for frame in samples:
-        difference = ImageStat.Stat(ImageChops.difference(frame, expected_frame)).mean
-        if sum(difference) / 3 > 18:
+    frame_size = _VIDEO_SIZES[placement]
+    raw_frames = _decoded_frames(video, frame_size)
+    expected_frame = poster_image.resize(frame_size, Image.Resampling.LANCZOS)
+    black_frame = Image.new("RGB", frame_size)
+    frame_bytes = frame_size[0] * frame_size[1] * 3
+    # The source encoder uses 12 fps, with a 0.3-second fade-in and
+    # fade-out beginning at 2.7s. Inspect ALL 36 encoded frames, including
+    # fades, rather than trusting a few timestamps or locally rehashed JSON.
+    for index in range(36):
+        timestamp = index / 12
+        opacity = max(0.0, min(1.0, timestamp / 0.3, (3.0 - timestamp) / 0.3))
+        expected = Image.blend(black_frame, expected_frame, opacity)
+        frame = Image.frombytes(
+            "RGB", frame_size, raw_frames[index * frame_bytes:(index + 1) * frame_bytes])
+        difference = ImageStat.Stat(ImageChops.difference(frame, expected)).mean
+        # Fades add extra codec/quantization error, especially near black.
+        tolerance = 24 if opacity < 1.0 else 18
+        if sum(difference) / 3 > tolerance:
             raise FloraPrivateBundleError(
-                "Encoded MP4 does not visually match its DRAFT poster at sampled times.")
+                "Encoded MP4 does not visually match its DRAFT poster at frame "
+                + str(index) + ".")
     return {
         "status": "private_draft_verified_not_approved",
         "product_id": product_id,
@@ -207,6 +216,9 @@ def verify_private_flora_bundle(directory: Path, product_id: str,
         "encoded_midpoint_checked": True,
         "encoded_three_samples_checked": True,
         "encoded_sample_times_seconds": [0.6, 1.5, 2.4],
+        "encoded_full_frame_checked": True,
+        "encoded_frames_checked": 36,
+        "encoded_expected_frame_rate": 12,
         "owner_approved": False,
         "publication_permitted": False,
         "real_photo_rights_verified": False,

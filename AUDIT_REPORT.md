@@ -1,5 +1,9 @@
 # HOSHI trading V2 — audit and implementation evidence
 
+## 31 October 2026 — trading-only two-venue quality hardening
+
+Existing `market_data_quality.py` now cross-checks the latest **20** aligned closed Binance USDT / Kraken USD spot candles, not just three; a hidden older price disagreement fails closed. Reject future-dated, boolean or noninteger provider timestamps while retaining 120-second freshness and source skew checks. The response keeps the old three-bar field for compatibility and adds a 20-bar maximum and sample count. New regression tests cover a disagreement outside the old three-bar window and invalid/future timestamps. Source/test `0fd3590bf7f78793b58d68df2af203a36715405d` passed [full Python/Node/Playwright CI 41136451168](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/41136451168) and [Docker/Uvicorn CI 41136450972](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/41136450972). Code/CI verified only: no actual fresh market fetch, cross-venue price proof, forward paper profitability, physical Realme QA or production release. The dedicated desk still has single-venue data and must not claim to inherit this verification. Historical 48/60 and V3 49/50 source-only unchanged.
+
 ## 30 October 2026 — focused trading desk implementation (not a deployment)
 
 Latest user scope: other Hoshi features pending; trading-only development.

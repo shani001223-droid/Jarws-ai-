@@ -9,7 +9,7 @@ import json
 from pathlib import Path
 import sys
 
-from cloud_backend.paper_evaluation import evaluate_chronological
+from cloud_backend.paper_evaluation import evaluate_chronological, evaluate_rolling_robustness
 from cloud_backend.trading_research import Candle, SimulationConfig
 
 
@@ -42,12 +42,15 @@ def main():
     parser.add_argument("--daily-loss-limit", type=float, default=10)
     parser.add_argument("--fee-bps", type=float, default=10)
     parser.add_argument("--slippage-bps", type=float, default=5)
+    parser.add_argument("--rolling-robustness", action="store_true",
+                        help="Also score three fixed disjoint windows with double-cost stress when valid")
     args = parser.parse_args()
     try:
         symbol, bars = load_local(args.input)
         config = SimulationConfig(args.equity, args.risk_pct, args.daily_loss_limit,
                                   args.fee_bps, args.slippage_bps)
-        result = evaluate_chronological(bars, symbol, args.strategy, config)
+        evaluator = evaluate_rolling_robustness if args.rolling_robustness else evaluate_chronological
+        result = evaluator(bars, symbol, args.strategy, config)
     except (OSError, UnicodeError, ValueError, TypeError, OverflowError):
         print("Offline paper evaluation refused: invalid input or settings.", file=sys.stderr)
         return 2

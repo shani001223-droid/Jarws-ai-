@@ -103,12 +103,14 @@ class ChronologicalEvaluationTests(unittest.TestCase):
             source.write_text(json.dumps({"symbol": "BTCUSDT", "interval": "15m",
                                           "candles": rows}), encoding="utf-8")
             run = subprocess.run([sys.executable, "-m", "scripts.evaluate_trading_paper",
-                                  "--input", str(source), "--strategy", "trend_pullback"],
+                                  "--input", str(source), "--strategy", "trend_pullback",
+                                  "--rolling-robustness"],
                                  cwd=root, capture_output=True, text=True, timeout=30)
             self.assertEqual(run.returncode, 0, run.stderr)
             result = json.loads(run.stdout)
             self.assertEqual(result["split"]["holdout_scored_bars"], 90)
             self.assertFalse(result["orders_enabled"])
+            self.assertEqual(len(result["rolling_robustness"]["windows"]), 3)
             self.assertEqual(result["input_provenance"], "operator_supplied_unverified")
             self.assertEqual(sorted(p.name for p in Path(tmp).iterdir()), ["candles.json"])
             rows[10][6] += 1  # forged close timestamp
@@ -172,9 +174,14 @@ class ChronologicalEvaluationTests(unittest.TestCase):
                 self.assertNotIn("input_candles", scenario)
 
     def test_rolling_rejects_warmup_trade_from_engine(self):
+        calls = [0]
         def premature_backtest(bars, strategy, cfg):
+            calls[0] += 1
+            # First two calls are primary train/holdout; the third is a rolling
+            # window, whose last warmup bar must never count as an entry.
+            entry = bars[63].time if calls[0] >= 3 else bars[64].time
             return {"trade_count": 1, "net_pnl": -1,
-                    "trades": [{"entry_time": bars[63].time, "net_pnl": -1}],
+                    "trades": [{"entry_time": entry, "net_pnl": -1}],
                     "input_candles": []}
         with patch.object(ev, "backtest", side_effect=premature_backtest):
             with self.assertRaisesRegex(ev.PaperEvaluationError, "lookahead_or_warmup_trade"):

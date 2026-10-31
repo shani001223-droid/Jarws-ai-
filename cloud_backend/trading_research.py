@@ -9,6 +9,10 @@ import math
 INTERVALS = {"15m": 900_000, "1h": 3_600_000, "4h": 14_400_000}
 STRATEGIES = ("trend_pullback", "breakout_retest")
 RULE_VERSION = "spot-long-v1"
+# Prevent finite-but-extreme provider numbers from overflowing EMA/ATR sums,
+# cross-venue price*volume arithmetic or serialized analysis. This is a
+# numeric-safety ceiling, not a prediction of market price or liquidity.
+MAX_SAFE_CANDLE_NUMBER = 1e150
 
 
 @dataclass(frozen=True)
@@ -22,9 +26,30 @@ class Candle:
     close_time: int
 
 
+def _exact_candle_timestamp_ms(value):
+    """Never truncate or round provider candle identities into valid bars.
+
+    Binance uses integer millisecond timestamps. Canonical ASCII decimal
+    strings remain compatible with existing normalized offline inputs.
+    """
+    if type(value) is int:
+        stamp = value
+    elif (type(value) is str and value.isascii() and value.isdecimal()
+          and 1 <= len(value) <= 16
+          and (len(value) == 1 or value[0] != "0")):
+        stamp = int(value)
+    else:
+        raise ValueError("Invalid candle timestamp")
+    if not 0 <= stamp <= 9_999_999_999_999_999:
+        raise ValueError("Invalid candle timestamp")
+    return stamp
+
+
 def closed_candles(rows, interval, now_ms):
     """Reject malformed/gapped/stale data, exclude the still-forming last bar."""
     step = INTERVALS[interval]
+    if type(now_ms) is not int or now_ms < 0:
+        raise ValueError("Invalid candle clock")
     if not isinstance(rows, list) or not 65 <= len(rows) <= 500:
         raise ValueError("Expected 65–500 candles")
     candles = []
@@ -32,9 +57,19 @@ def closed_candles(rows, interval, now_ms):
     for row in rows:
         if not isinstance(row, list) or len(row) < 7:
             raise ValueError("Malformed candle")
-        t, end = int(row[0]), int(row[6])
-        o, h, lo, c, v = map(float, row[1:6])
-        if (not all(math.isfinite(x) for x in (o, h, lo, c, v))
+        t, end = _exact_candle_timestamp_ms(row[0]), _exact_candle_timestamp_ms(row[6])
+        # Python float(True) == 1.0: boolean provider OHLCV is not a
+        # market observation, even when a coherent-looking row can be formed.
+        # Keep numeric strings supported by the existing public spot feeds.
+        raw_values = row[1:6]
+        if any(type(value) not in (str, int, float) for value in raw_values):
+            raise ValueError("Invalid candle numeric field")
+        try:
+            o, h, lo, c, v = map(float, raw_values)
+        except (TypeError, ValueError, OverflowError) as exc:
+            raise ValueError("Invalid candle numeric field") from exc
+        if (not all(math.isfinite(x) and abs(x) <= MAX_SAFE_CANDLE_NUMBER
+                    for x in (o, h, lo, c, v))
                 or min(o, h, lo, c) <= 0 or v < 0
                 or not lo <= min(o, c) <= max(o, c) <= h
                 or t < 0 or t % step or end != t + step - 1
@@ -171,8 +206,16 @@ class SimulationConfig:
         limits = ((self.equity, 10, 100_000), (self.risk_pct, .1, 1),
                   (self.daily_loss_limit, .1, 1000), (self.fee_bps, 1, 100),
                   (self.slippage_bps, 1, 100))
-        if any(not math.isfinite(v) or not low <= v <= high for v, low, high in limits):
-            raise ValueError("Simulation settings out of bounds")
+        for value, low, high in limits:
+            # bool is an int subclass, but not a meaningful paper-risk setting.
+            # Very large Python integers can also overflow math.isfinite().
+            if type(value) not in (int, float):
+                raise ValueError("Simulation settings out of bounds")
+            try:
+                if not math.isfinite(value) or not low <= value <= high:
+                    raise ValueError("Simulation settings out of bounds")
+            except OverflowError as exc:
+                raise ValueError("Simulation settings out of bounds") from exc
 
 
 def risk_size(cash, entry, stop, day_loss, cfg):
@@ -186,7 +229,7 @@ def risk_size(cash, entry, stop, day_loss, cfg):
     return min(budget/per_unit, cash/(entry*(1+fee)))
 
 
-def backtest(bars, strategy, cfg):
+def backtest(bars, strategy, cfg, *, entry_not_before=None):
     """Bounded, single-position, long-only exploratory test on supplied history.
 
     Uses 15m rules only (NOT the multi-timeframe research filter). Fees/slippage
@@ -195,32 +238,89 @@ def backtest(bars, strategy, cfg):
     """
     if strategy not in STRATEGIES or not 64 <= len(bars) <= 500:
         raise ValueError("Invalid test input")
+    # Warmup bars may form signals, but must never open or finance positions.
+    # The last warmup close may still signal an entry at the first scored open.
+    if entry_not_before is not None and (
+            type(entry_not_before) is not int
+            or entry_not_before % INTERVALS["15m"]
+            or not bars[0].time <= entry_not_before <= bars[-1].time):
+        raise ValueError("Invalid scored-entry boundary")
     cash, peak, max_dd = cfg.equity, cfg.equity, 0.0
     fee, slip = cfg.fee_bps/10_000, cfg.slippage_bps/10_000
     position, pending = None, None
     trades, day_losses, cooldown_until = [], {}, -1
+    ambiguous_stop_target_count, gap_stop_count, max_gap_beyond_stop_pct = 0, 0, None
+    risk_budget_breach_count, planned_stop_loss_exceeded_count = 0, 0
+    terminal_forced_close_count, terminal_forced_close_net_pnl = 0, 0.0
+    # Account for every next-open paper entry attempt, including refusals.
+    entry_attempts = entry_skipped_gap = entry_skipped_daily_cap = entry_skipped_risk_capacity = 0
+    max_loss_to_risk_budget_multiple = None
     for i, b in enumerate(bars):
         day = b.time // 86_400_000
+        # Expire any warmup-only pending signal at its very next bar. Never
+        # carry a stale warmup signal forward across the scoring boundary.
+        if pending and entry_not_before is not None and b.time < entry_not_before:
+            pending = None
         if pending and not position:
+            entry_attempts += 1
             entry = b.open*(1+slip)
             # Revalidate risk after a price gap; a gapped invalid setup is skipped.
             stop = pending["stop"]
-            if 0 < entry-stop <= 4*(pending["reference_entry"]-stop):
+            # The actual next-bar opening must itself be above the stop.
+            # Applying adverse buy slippage can otherwise lift an already
+            # invalid below-stop opening above the stop and create a fictitious
+            # paper entry after the setup has been invalidated.
+            if (b.open <= stop
+                    or not 0 < entry-stop <= 4*(pending["reference_entry"]-stop)):
+                entry_skipped_gap += 1
+            elif cfg.daily_loss_limit-day_losses.get(day, 0) <= 1e-8:
+                # A realized daily loss lockout must remain visible even if
+                # later signals appear; do not silently count them as no setup.
+                entry_skipped_daily_cap += 1
+            else:
                 qty = risk_size(cash, entry, stop, day_losses.get(day, 0), cfg)
                 if qty > 0:
+                    budget = min(cash*cfg.risk_pct/100,
+                                 cfg.daily_loss_limit-day_losses.get(day, 0))
+                    estimated_exit = stop*(1-slip)
+                    planned_loss = qty*(entry-estimated_exit + fee*(entry+estimated_exit))
                     position = {"entry": entry, "stop": stop, "target": entry+2*(entry-stop),
-                                "qty": qty, "entry_time": b.time, "entry_index": i}
+                                "qty": qty, "entry_time": b.time, "entry_index": i,
+                                "risk_budget_at_entry": budget,
+                                "planned_stop_loss": planned_loss}
+                else:
+                    entry_skipped_risk_capacity += 1
             pending = None
         if position:
             p = position
-            # Worst adverse excursion for this bar, including a gap below stop.
-            adverse = b.open if b.open < p["stop"] else (p["stop"] if b.low <= p["stop"] else b.low)
+            # A gap through target closes at the OPEN; a later intrabar
+            # low is post-exit and must not inflate modeled drawdown.
+            # A gap below stop still records the adverse opening fill.
+            if b.open <= p["stop"]:
+                adverse = b.open
+            elif b.open >= p["target"]:
+                adverse = p["target"]
+            else:
+                adverse = p["stop"] if b.low <= p["stop"] else b.low
             marked = cash + p["qty"]*((adverse*(1-slip)-p["entry"])
                                      - fee*(adverse*(1-slip)+p["entry"]))
             max_dd = max(max_dd, (peak-marked)/peak*100)
+            # OHLC bars cannot reveal whether the stop or target traded first.
+            # Report this uncertainty, while keeping the conservative stop-first fill.
+            # A gap through an exit boundary is observable at bar open.
+            # Only an open BETWEEN stop and target leaves path ambiguity.
+            # Favorable target gaps fill at the target, not a better open.
+            stop_target_same_bar = (p["stop"] < b.open < p["target"]
+                                    and b.low <= p["stop"] and b.high >= p["target"])
             reason, raw_exit = None, None
-            if b.open <= p["stop"]:
+            if b.open < p["stop"]:
                 reason, raw_exit = "gap_stop", b.open
+            elif b.open == p["stop"]:
+                # Touching the stop exactly at the opening price is not an
+                # adverse gap; do not inflate gap-stop diagnostics.
+                reason, raw_exit = "stop_at_open", b.open
+            elif b.open >= p["target"]:
+                reason, raw_exit = "target_gap_open", p["target"]
             elif b.low <= p["stop"]:
                 reason, raw_exit = "stop", p["stop"]
             elif b.high >= p["target"]:
@@ -230,14 +330,66 @@ def backtest(bars, strategy, cfg):
             elif i >= p["entry_index"] + 96:
                 reason, raw_exit = "time_exit", b.close
             if reason:
+                gap_beyond_stop_pct = None
+                if reason == "gap_stop":
+                    gap_stop_count += 1
+                    gap_beyond_stop_pct = max(0.0, (p["stop"]-b.open)/p["stop"]*100)
+                    max_gap_beyond_stop_pct = max(
+                        max_gap_beyond_stop_pct or 0.0, gap_beyond_stop_pct)
+                if reason == "stop" and stop_target_same_bar:
+                    ambiguous_stop_target_count += 1
                 exit_price = raw_exit*(1-slip)
                 costs = p["qty"]*fee*(p["entry"]+exit_price)
                 pnl = p["qty"]*(exit_price-p["entry"])-costs
+                if reason == "end_of_sample":
+                    # Forced terminal marking is NOT a strategy-triggered exit
+                    # or an observed exchange fill. Keep its PnL in equity,
+                    # but disclose its separate contribution to reported results.
+                    terminal_forced_close_count += 1
+                    terminal_forced_close_net_pnl += pnl
+                realized_loss = max(0.0, -pnl)
+                budget_breached = realized_loss > p["risk_budget_at_entry"] + 1e-8
+                stop_loss_exceeded = realized_loss > p["planned_stop_loss"] + 1e-8
+                if budget_breached:
+                    risk_budget_breach_count += 1
+                if stop_loss_exceeded:
+                    planned_stop_loss_exceeded_count += 1
+                if realized_loss:
+                    multiple = realized_loss/p["risk_budget_at_entry"]
+                    max_loss_to_risk_budget_multiple = max(
+                        max_loss_to_risk_budget_multiple or 0.0, multiple)
                 cash += pnl
-                day_losses[day] = day_losses.get(day, 0)+max(0, -pnl)
-                trades.append({"entry_time": p["entry_time"], "exit_time": b.close_time,
+                day_losses[day] = day_losses.get(day, 0)+realized_loss
+                # The UTC daily cap prevents NEW entries; an already-open
+                # position can gap past it. Surface that breach rather than
+                # implying a hard guaranteed maximum loss.
+                utc_gross_loss_after_exit = day_losses[day]
+                utc_gross_cap_breached = (utc_gross_loss_after_exit
+                                          > cfg.daily_loss_limit + 1e-8)
+                at_open = reason in ("gap_stop", "stop_at_open", "target_gap_open")
+                at_close = reason in ("end_of_sample", "time_exit")
+                trades.append({"entry_time": p["entry_time"],
+                               "exit_time": b.time if at_open else b.close_time,
+                               "exit_time_precision": (
+                                   "bar_open_exact" if at_open else
+                                   "bar_close_exact" if at_close else
+                                   "bar_close_upper_bound_intrabar_unknown"),
                                "entry": p["entry"], "exit": exit_price, "quantity": p["qty"],
-                               "fees": costs, "net_pnl": pnl, "reason": reason})
+                               "fees": costs, "net_pnl": pnl, "reason": reason,
+                               "terminal_forced_mark": reason == "end_of_sample",
+                               "reference_stop": p["stop"],
+                               "reference_target": p["target"],
+                               "stop_target_same_bar": reason == "stop" and stop_target_same_bar,
+                               "gap_beyond_stop_pct": gap_beyond_stop_pct,
+                               "risk_budget_at_entry_usdt": p["risk_budget_at_entry"],
+                               "planned_stop_loss_usdt": p["planned_stop_loss"],
+                               "risk_budget_breached": budget_breached,
+                               "planned_stop_loss_exceeded": stop_loss_exceeded,
+                               "utc_day_gross_realized_loss_after_exit_usdt": utc_gross_loss_after_exit,
+                               "utc_day_gross_loss_cap_breached": utc_gross_cap_breached,
+                               "realized_loss_to_budget_multiple": (
+                                   realized_loss/p["risk_budget_at_entry"]
+                                   if realized_loss else None)})
                 position, cooldown_until = None, i+2
         peak = max(peak, cash)
         max_dd = max(max_dd, (peak-cash)/peak*100)
@@ -253,6 +405,29 @@ def backtest(bars, strategy, cfg):
             "trade_count": len(trades), "win_rate_pct": wins/len(trades)*100 if trades else None,
             "initial_equity": cfg.equity, "ending_equity": cash, "net_pnl": cash-cfg.equity,
             "max_drawdown_pct": max_dd, "fees_paid": sum(t["fees"] for t in trades),
+            "execution_diagnostics": {
+                "paper_entry_attempts": entry_attempts,
+                "paper_entries_skipped_invalid_gap": entry_skipped_gap,
+                "paper_entries_skipped_utc_daily_loss_cap": entry_skipped_daily_cap,
+                "paper_entries_skipped_insufficient_risk_capacity": entry_skipped_risk_capacity,
+                "paper_entries_opened": entry_attempts - entry_skipped_gap
+                                        - entry_skipped_daily_cap - entry_skipped_risk_capacity,
+                "terminal_forced_close_count": terminal_forced_close_count,
+                "terminal_forced_close_net_pnl_usdt": terminal_forced_close_net_pnl,
+                "strategy_resolved_trade_count": len(trades) - terminal_forced_close_count,
+                "strategy_resolved_net_pnl_usdt": cash - cfg.equity - terminal_forced_close_net_pnl,
+                "stop_first_ambiguous_count": ambiguous_stop_target_count,
+                "gap_stop_count": gap_stop_count,
+                "max_gap_beyond_stop_pct": max_gap_beyond_stop_pct,
+                "risk_budget_breach_count": risk_budget_breach_count,
+                "planned_stop_loss_exceeded_count": planned_stop_loss_exceeded_count,
+                "max_loss_to_risk_budget_multiple": max_loss_to_risk_budget_multiple,
+                "utc_daily_gross_loss_cap_usdt": cfg.daily_loss_limit,
+                "utc_gross_loss_cap_breach_days": sum(
+                    value > cfg.daily_loss_limit + 1e-8 for value in day_losses.values()),
+                "max_utc_day_gross_realized_loss_usdt": max(day_losses.values(), default=0.0),
+                "ambiguous_bar_policy": "stop_first_when_stop_and_target_both_touched",
+            },
             "expectancy": (cash-cfg.equity)/len(trades) if trades else None,
             "profit_factor": gross_profit/gross_loss if gross_loss else None,
             "trades": trades,
@@ -260,6 +435,9 @@ def backtest(bars, strategy, cfg):
             "limitations": ["Short exploratory sample, not out-of-sample validation or forward demo.",
                             "Single-timeframe test; multi-timeframe research gate is NOT applied.",
                             "Spot long only, no leverage or funding; one position, two-bar cooldown.",
-                            "Next-open fills, fixed adverse slippage, stop-first ambiguous candles.",
-                            "UTC gross realized daily loss cap; gaps may exceed planned risk.",
+                            "Next-open fills, fixed adverse slippage, stop-first ambiguous candles; ambiguity and gap diagnostics are observed OHLC scenarios, not authenticated execution paths.",
+                            "Open-triggered exits use the observed bar open; intrabar stop/target exit_time is only a bar-close upper bound, not an observed execution timestamp.",
+                            "UTC gross realized daily loss cap prevents new entries only; an already-open position may gap past the cap. Per-entry budgets and daily caps are not guaranteed maximum losses.",
+                            "Paper entry attempts and refusal counts are modeled next-open signals, not real exchange submissions or observed fills.",
+                            "A still-open position at sample end is force-marked at the final close, including modeled costs; its PnL contributes to equity but is separately reported, not a strategy exit or observed fill.",
                             "Does not model partial fills, liquidity impact or intra-bar equity peaks."]}

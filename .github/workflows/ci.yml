@@ -17,7 +17,10 @@ on:
       - "hoshi-*.css"
       - "android/**"
       - "tests/**"
+      - "game-studio/**"
+      - "scripts/package_hoshi_game.py"
       - "index.html"
+      - "trading.html"
       - "sw.js"
       - "hoshi-*.js"
       - ".github/workflows/ci.yml"
@@ -48,8 +51,18 @@ jobs:
         run: python scripts/build_trading_knowledge.py --check
       - name: Install backend dependencies
         run: python -m pip install -r requirements-dev.txt
+      - name: Ensure free FFmpeg tools for real Task 46 MP4 regression
+        run: |
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq ffmpeg
+          fi
+          ffmpeg -version | head -n 1
+          ffprobe -version | head -n 1
       - name: Run backend unit tests
         run: python -m unittest discover -s tests -p "test_*.py"
+      - name: Explicitly exercise Task 46 real MP4 and original WAV tests
+        run: python -m unittest discover -s tests -p "test_flora_video_ads.py" -v
       - name: Test private profile storage and consent
         run: node --test tests/profile-store.test.cjs
       - name: Test first-audio synthesis priority and cancellation
@@ -84,6 +97,26 @@ jobs:
         run: node --check hoshi-task-router.js
       - name: Check paper research client syntax
         run: node --check hoshi-trading-research.js
+      - name: Test trading-only desk validation and private journal
+        run: node --test tests/hoshi-trading-desk.test.cjs
+      - name: Check trading-only desk JavaScript
+        run: node --check hoshi-trading-desk.js
+      - name: Test annotated chart evidence and export safety
+        run: node --test tests/hoshi-annotated-chart.test.cjs
+      - name: Test offline Game Studio Canvas preview engine
+        run: node --test tests/hoshi-game-engine.test.cjs
+      - name: Test Task 52 playable game rules and opt-in saves
+        run: node --test tests/hoshi-gameplay.test.cjs
+      - name: Test Task 53 randomized game state and crash invariants
+        run: node --test tests/hoshi-game-qa.test.cjs
+      - name: Check Task 53 browser QA syntax
+        run: node --check tests/game-studio-qa.e2e.cjs
+      - name: Check offline Game Studio gameplay syntax
+        run: node --check game-studio/gameplay.mjs
+      - name: Check offline Game Studio engine JavaScript syntax
+        run: node --check game-studio/engine.mjs
+      - name: Check annotated chart JavaScript syntax
+        run: node --check hoshi-annotated-chart.js
       - name: Test opt-in local memory export and deletion
         run: node --test tests/hoshi-memory-store.test.cjs
       - name: Check local memory store JavaScript syntax
@@ -96,6 +129,10 @@ jobs:
         run: node --check memory-privacy.js
       - name: Check service worker JavaScript syntax
         run: node --check sw.js
+      - name: Test Hoshi anime avatar timing and emotion states
+        run: node tests/hoshi-anime-avatar.test.cjs
+      - name: Check Hoshi anime avatar controller syntax
+        run: node --check hoshi-anime-avatar.js
       - name: Check dashboard inline JavaScript syntax
         run: |
           node -e 'const fs = require("node:fs"); const html = fs.readFileSync("index.html", "utf8"); const match = html.match(/<script>([\s\S]*?)<\/script>/i); if (!match) { throw new Error("No inline script found in index.html"); } new Function(match[1]); console.log("Dashboard JavaScript syntax: OK");'
@@ -105,4 +142,26 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Run real-browser dashboard smoke tests
         run: node tests/dashboard.e2e.cjs
+      - name: Run trading-only mobile desk and offline safety checks
+        run: node tests/trading-desk.e2e.cjs
+      - name: Check Game Studio browser test syntax
+        run: node --check tests/game-studio.e2e.cjs
+      - name: Run real-browser Game Studio template smoke tests
+        run: node tests/game-studio.e2e.cjs
+      - name: Run Task 53 real-browser full-game and failure-path QA
+        run: node tests/game-studio-qa.e2e.cjs
+      - name: Package and verify Task 54 offline web release
+        run: |
+          python scripts/package_hoshi_game.py --out game-release
+          python scripts/package_hoshi_game.py --verify game-release/Hoshi-Star-Trail-offline.zip
+          python -m unittest discover -s tests -p "test_hoshi_game_package.py" -v
+      - name: Run Task 54 actual offline file-browser release QA
+        run: node tests/game-studio-offline.e2e.cjs
+      - name: Upload private review-only offline game artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hoshi-star-trail-offline-web
+          path: game-release/Hoshi-Star-Trail-offline.zip
+          if-no-files-found: error
+          retention-days: 14
 

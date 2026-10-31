@@ -1,0 +1,86 @@
+import { drawOriginalTile } from "./art.mjs";
+// Tasks 50-52: original dependency-free HTML5 Canvas puzzle renderer.
+export const ENGINE_VERSION = "canvas-game-v2";
+const SIZE = 7;
+const TILES = new Set(["#", ".", "S", "C", "E"]);
+
+export function validateManifest(manifest) {
+  if (!manifest || manifest.version !== "gdd-v1" || !Array.isArray(manifest.levels) ||
+      manifest.levels.length !== 6 || manifest.status !== "playable_local_mvp") {
+    throw new Error("invalid_game_manifest");
+  }
+  return manifest.levels.map((level, index) => {
+    if (!level || level.id !== index + 1 || !Array.isArray(level.rows) ||
+        level.rows.length !== SIZE || !Number.isInteger(level.minimum_moves) ||
+        level.minimum_moves < 1 || level.minimum_moves > 30) {
+      throw new Error("invalid_level_metadata");
+    }
+    let starts = 0, exits = 0, stars = 0;
+    const rows = level.rows.map((row, y) => {
+      if (typeof row !== "string" || row.length !== SIZE) throw new Error("invalid_level_dimensions");
+      for (let x = 0; x < SIZE; x++) {
+        const tile = row[x];
+        if (!TILES.has(tile)) throw new Error("invalid_level_tile");
+        if ((x === 0 || x === SIZE - 1 || y === 0 || y === SIZE - 1) && tile !== "#") {
+          throw new Error("open_level_boundary");
+        }
+        starts += Number(tile === "S");
+        exits += Number(tile === "E");
+        stars += Number(tile === "C");
+      }
+      return row;
+    });
+    if (starts !== 1 || exits !== 1 || stars < 1 || stars > 3 || stars !== level.stars) {
+      throw new Error("invalid_level_entities");
+    }
+    return Object.freeze({ id: level.id, rows: Object.freeze(rows), stars,
+      minimum_moves: level.minimum_moves });
+  });
+}
+
+export function paintPreview(canvas, level, deviceScale = 1, phase = 0, gameState = null) {
+  if (!canvas || typeof canvas.getContext !== "function" || !level ||
+      !Array.isArray(level.rows) || level.rows.length !== SIZE ||
+      !Number.isFinite(phase) || phase < 0 || phase > 1) {
+    throw new Error("invalid_preview_target");
+  }
+  if (gameState && (gameState.level !== level || !Number.isInteger(gameState.x) ||
+      !Number.isInteger(gameState.y) || gameState.x < 1 || gameState.x > 5 ||
+      gameState.y < 1 || gameState.y > 5 || !Number.isInteger(gameState.collected) ||
+      gameState.collected < 0 || gameState.collected >= (1 << level.stars))) {
+    throw new Error("invalid_game_render_state");
+  }
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("canvas_unavailable");
+  const scale = Number.isFinite(deviceScale) ? Math.min(2, Math.max(1, deviceScale)) : 1;
+  const width = 350;
+  canvas.width = Math.round(width * scale);
+  canvas.height = Math.round(width * scale);
+  ctx.setTransform(scale, 0, 0, scale, 0, 0);
+  ctx.fillStyle = "#060d1d";
+  ctx.fillRect(0, 0, width, width);
+  const cell = width / SIZE;
+  level.rows.forEach((row, y) => {
+    for (let x = 0; x < SIZE; x++) {
+      const original = row[x], px = x * cell, py = y * cell;
+      let tile = original;
+      if (original === "C" && gameState) {
+        let index = 0;
+        for (let sy = 0; sy <= y; sy++) {
+          for (let sx = 0; sx < SIZE; sx++) {
+            if (sy === y && sx >= x) break;
+            if (level.rows[sy][sx] === "C") index++;
+          }
+        }
+        if (gameState.collected & (1 << index)) tile = ".";
+      }
+      ctx.fillStyle = tile === "#" ? "#203450" : "#101f35";
+      ctx.fillRect(px + 1, py + 1, cell - 2, cell - 2);
+      drawOriginalTile(ctx, tile, px, py, cell, phase);
+    }
+  });
+  if (gameState) {
+    drawOriginalTile(ctx, "S", gameState.x * cell, gameState.y * cell, cell, phase);
+  }
+  return { width: canvas.width, height: canvas.height, playable: Boolean(gameState) };
+}

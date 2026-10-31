@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self' https://jarws-ai-2.onrender.com http://127.0.0.1:8000 http://localhost:8000; img-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Hoshi Trading — Paper Desk</title>
+  <link rel="stylesheet" href="hoshi-trading-desk.css">
+  <script defer src="hoshi-trading-desk.js"></script>
+</head>
+<body>
+<main>
+  <header><div><span class="eyebrow">HOSHI / TRADING ONLY</span><h1>Market pe focus.</h1></div><span class="badge">PAPER ONLY</span></header>
+  <p class="intro">BTC / ETH ke closed candles, setup checks aur bounded paper-risk. Baqi Hoshi features filhal pending.</p>
+  <form id="deskForm" class="panel">
+    <div class="fields">
+      <label>Pair<select id="symbol"><option value="BTCUSDT">BTC / USDT</option><option value="ETHUSDT">ETH / USDT</option></select></label>
+      <label>Paper capital · USDT<input id="equity" type="number" min="10" max="100000" step="0.01" value="100" required></label>
+      <label>Paper risk · %<input id="risk" type="number" min="0.1" max="1" step="0.1" value="0.5" required></label>
+    </div>
+    <details><summary>Cost assumptions</summary><div class="fields">
+      <label>Fee per side · bps<input id="fee" type="number" min="1" max="100" step="1" value="10" required></label>
+      <label>Adverse slippage per side · bps<input id="slip" type="number" min="1" max="100" step="1" value="5" required></label>
+    </div><p class="muted">1 bps = 0.01%. Yeh assumptions hain; actual costs aur gaps zyada ho sakte hain.</p></details>
+    <div class="actions"><button id="analyze" type="submit" disabled>Market analyze karo</button><button id="stop" type="button" class="secondary">Stop / clear</button></div>
+  </form>
+  <section class="panel" aria-live="polite" aria-atomic="true">
+    <div class="status-row"><h2 id="decision">WAIT</h2><span id="score" class="badge">No snapshot</span></div>
+    <p id="status">Trading screen load ho rahi hai. Data aane se pehle koi plan nahi.</p>
+    <p id="source" class="muted"></p>
+    <div id="snapshot" hidden>
+      <p class="muted">Prices last closed candles ke hain, live executable quotes nahi. Times PKT mein hain.</p>
+      <div class="table-scroll"><table><caption>15m entry context / 1h / 4h structure</caption><thead><tr><th>Frame</th><th>Closed price</th><th>Support</th><th>Resistance</th><th>RSI</th></tr></thead><tbody id="frames"></tbody></table></div>
+      <h3>V2 confluence · 5 checks</h3><ul id="evidence"></ul>
+      <p id="setup"></p>
+      <section id="plan" hidden><h3>Hypothetical long-only spot plan</h3><dl id="levels"></dl><p class="muted">No orders, no simulated fills. Targets returns ki prediction nahi hain.</p></section>
+    </div>
+  </section>
+  <section class="panel">
+    <h2>Private learning journal</h2>
+    <label class="consent"><input id="journalConsent" type="checkbox"> Is device par analysis save karne ki ijazat.</label>
+    <label>Apna note<textarea id="journalNote" maxlength="500" rows="2" placeholder="Setup kyun liya / kyun skip kiya? Password ya API key mat likho."></textarea></label>
+    <div class="actions"><button id="save" type="button" disabled>Snapshot save</button><button id="export" type="button" class="secondary">Export JSON</button><button id="delete" type="button" class="secondary">Delete journal</button></div>
+    <p id="journalStatus" class="muted" role="status">Default: saving OFF. Journal server par upload nahi hota.</p>
+  </section>
+  <details class="panel"><summary>Knowledge aur limits</summary>
+    <p>Yeh existing V2 paper engine hai. V3 ke 49/50 source-checked chapters abhi runtime mein integrated nahi. Rule score win probability nahi.</p>
+    <ul><li>Binance Spot: single venue, independent cross-check is response mein nahi.</li><li>Live news, macro aur full order-book clearance available nahi.</li><li>Missing confirmation / stale source par WAIT. No short orders or leverage.</li></ul>
+    <p><a href="https://jarws-ai-2.onrender.com/learn" target="_blank" rel="noopener noreferrer">11 V2 lessons</a> · <a href="https://jarws-ai-2.onrender.com/history" target="_blank" rel="noopener noreferrer">Market history</a></p>
+  </details>
+  <footer>Hoshi Trading · free public data · manual paper research · no exchange credentials</footer>
+</main>
+</body>
+</html>

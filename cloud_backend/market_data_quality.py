@@ -13,8 +13,16 @@ except ImportError:  # direct Uvicorn main:app from cloud_backend/
     from trading_research import INTERVALS, closed_candles
 
 PAIRS = {"BTCUSDT": "XBTUSD", "ETHUSDT": "ETHUSD"}
+# Kraken's OHLC response identifies the actual returned market by key. Never
+# accept an arbitrary pair just because its OHLC prices happen to agree.
+# Kraken can return its canonical asset codes or the requested pair alias.
+KRAKEN_RESULT_KEYS = {
+    "BTCUSDT": frozenset(("XXBTZUSD", "XBTUSD")),
+    "ETHUSDT": frozenset(("XETHZUSD", "ETHUSD")),
+}
 KRAKEN_INTERVALS = {"15m": 15, "1h": 60, "4h": 240}
 MAX_CLOSE_DIFFERENCE_PCT = 2.0
+CROSS_CHECK_BARS = 20  # compare a bounded history, not only the final three closes
 
 
 class MarketDataQualityError(ValueError):
@@ -43,6 +51,46 @@ def _number(value) -> float:
     if not math.isfinite(result):
         raise MarketDataQualityError("invalid_numeric_field")
     return result
+
+
+def _binance_timestamp_ms(value) -> int:
+    """Accept only exact millisecond integers, never lossy int() coercion.
+
+    Binance returns JSON integer milliseconds; decimal-string timestamps are
+    tolerated for backwards compatibility. Floats, booleans, exponents,
+    leading zeros and fractional values cannot silently change candle identity.
+    """
+    if type(value) is int:
+        stamp = value
+    elif (type(value) is str and value.isascii() and value.isdecimal()
+          and 1 <= len(value) <= 16
+          and (len(value) == 1 or value[0] != "0")):
+        stamp = int(value)
+    else:
+        raise MarketDataQualityError("invalid_binance_timestamp")
+    if stamp < 0 or stamp > 9_999_999_999_999_999:
+        raise MarketDataQualityError("invalid_binance_timestamp")
+    return stamp
+
+
+def _kraken_timestamp_seconds(value) -> int:
+    """Keep Kraken epoch-second identities exact; float() can round fractions.
+
+    Real public responses use integer seconds. Canonical ASCII decimal strings
+    are tolerated, but floats, booleans, exponent/fractional and padded values
+    must not be rounded into a different closed candle.
+    """
+    if type(value) is int:
+        stamp = value
+    elif (type(value) is str and value.isascii() and value.isdecimal()
+          and 1 <= len(value) <= 12
+          and (len(value) == 1 or value[0] != "0")):
+        stamp = int(value)
+    else:
+        raise MarketDataQualityError("invalid_kraken_time")
+    if stamp < 0 or stamp > 999_999_999_999:
+        raise MarketDataQualityError("invalid_kraken_time")
+    return stamp
 
 
 def _count(value) -> int:
@@ -86,6 +134,8 @@ def binance_candles(payload, interval: str, now_ms: int):
     for row in payload:
         if not isinstance(row, list) or len(row) != 12:
             raise MarketDataQualityError("invalid_binance_row")
+        _binance_timestamp_ms(row[0])
+        _binance_timestamp_ms(row[6])
         low, high, base = (_number(row[i]) for i in (3, 2, 5))
         quote = _number(row[7])
         trades = _count(row[8])
@@ -94,10 +144,17 @@ def binance_candles(payload, interval: str, now_ms: int):
         if (buy_base < 0 or buy_quote < 0 or buy_base > base + 1e-9
                 or buy_quote > quote + 1e-7):
             raise MarketDataQualityError("invalid_taker_volume")
+        # A taker-buy quote amount must represent the SAME traded base at
+        # prices inside this candle, not merely be below the total volume.
+        # Otherwise a malformed 4-BTC / 1-USDT buy passes the old check.
+        if (buy_base == 0 and buy_quote != 0) or (
+                buy_base > 0 and not low * buy_base * 0.999
+                <= buy_quote <= high * buy_base * 1.001):
+            raise MarketDataQualityError("inconsistent_taker_quote_volume")
     return _validate_candles(payload, interval, now_ms)
 
 
-def kraken_candles(payload, interval: str, now_ms: int):
+def kraken_candles(payload, interval: str, now_ms: int, *, expected_symbol: str | None = None):
     """Validate independent Kraken OHLC spot base volume (USD quote market)."""
     if not isinstance(payload, dict) or payload.get("error") != []:
         raise MarketDataQualityError("invalid_kraken_response")
@@ -107,6 +164,10 @@ def kraken_candles(payload, interval: str, now_ms: int):
     names = [key for key in result if key != "last"]
     if len(names) != 1 or not isinstance(result[names[0]], list):
         raise MarketDataQualityError("invalid_kraken_pair")
+    if expected_symbol is not None and (
+            expected_symbol not in KRAKEN_RESULT_KEYS
+            or names[0] not in KRAKEN_RESULT_KEYS[expected_symbol]):
+        raise MarketDataQualityError("kraken_pair_identity_mismatch")
     raw = result[names[0]]
     if not 65 <= len(raw) <= 720:
         raise MarketDataQualityError("invalid_kraken_history")
@@ -115,10 +176,7 @@ def kraken_candles(payload, interval: str, now_ms: int):
     for row in raw[-500:]:
         if not isinstance(row, list) or len(row) != 8:
             raise MarketDataQualityError("invalid_kraken_row")
-        epoch = _number(row[0])
-        if epoch < 0 or not epoch.is_integer():
-            raise MarketDataQualityError("invalid_kraken_time")
-        start = int(epoch) * 1000
+        start = _kraken_timestamp_seconds(row[0]) * 1000
         o, h, low, close, vwap, base = (_number(row[i]) for i in range(1, 7))
         count = _count(row[7])
         if base < 0 or count < 0 or (base > 0 and not low <= vwap <= h):
@@ -132,28 +190,41 @@ def kraken_candles(payload, interval: str, now_ms: int):
 def verify_spot_market(symbol: str, interval: str, binance_payload,
                        kraken_payload, now_ms: int, binance_fetched_at: int,
                        kraken_fetched_at: int) -> dict:
-    """Require recent matching closed bars and independent price agreement.
+    """Require 20 aligned closed bars and bounded cross-venue OHLC agreement.
 
     Exchange volumes are intentionally NOT compared numerically: they measure
     separate venues and BTC/USDT vs BTC/USD quote markets.
     """
     public_urls(symbol, interval)
     first = binance_candles(binance_payload, interval, now_ms)
-    second = kraken_candles(kraken_payload, interval, now_ms)
-    if len(first) < 3 or len(second) < 3:
+    second = kraken_candles(kraken_payload, interval, now_ms, expected_symbol=symbol)
+    if len(first) < CROSS_CHECK_BARS or len(second) < CROSS_CHECK_BARS:
         raise MarketDataQualityError("insufficient_overlap")
     differences = []
-    for a, b in zip(first[-3:], second[-3:]):
+    ohlc_differences = []
+    for a, b in zip(first[-CROSS_CHECK_BARS:], second[-CROSS_CHECK_BARS:]):
         if a.time != b.time:
             raise MarketDataQualityError("cross_source_time_mismatch")
-        difference = abs(a.close - b.close) / ((a.close + b.close) / 2) * 100
-        if difference > MAX_CLOSE_DIFFERENCE_PCT:
+        # Closing-price agreement can conceal conflicting opens/wicks,
+        # which materially affect a hypothetical stop or target.
+        close_difference = abs(a.close - b.close) / ((a.close + b.close) / 2) * 100
+        if close_difference > MAX_CLOSE_DIFFERENCE_PCT:
             raise MarketDataQualityError("cross_source_price_disagreement")
-        differences.append(difference)
-    if (not isinstance(binance_fetched_at, int)
-            or not isinstance(kraken_fetched_at, int)
+        differences.append(close_difference)
+        for field in ("open", "high", "low", "close"):
+            x, y = getattr(a, field), getattr(b, field)
+            difference = abs(x - y) / ((x + y) / 2) * 100
+            if difference > MAX_CLOSE_DIFFERENCE_PCT:
+                raise MarketDataQualityError("cross_source_ohlc_disagreement")
+            ohlc_differences.append(difference)
+    # Reject bool/noninteger timestamps and future-dated cache responses.
+    # The two venues must be recent relative to the SAME server clock.
+    if (type(now_ms) is not int or now_ms < 0
+            or type(binance_fetched_at) is not int
+            or type(kraken_fetched_at) is not int
             or abs(binance_fetched_at - kraken_fetched_at) > 120
-            or min(binance_fetched_at, kraken_fetched_at) < now_ms // 1000 - 120):
+            or min(binance_fetched_at, kraken_fetched_at) < now_ms // 1000 - 120
+            or max(binance_fetched_at, kraken_fetched_at) > now_ms // 1000 + 5):
         raise MarketDataQualityError("stale_fetch")
     last = first[-1]
     # Real Binance quote volume (USDT) is separately checked against OHLC.
@@ -173,7 +244,11 @@ def verify_spot_market(symbol: str, interval: str, binance_payload,
         "binance_last_base_volume": last.volume,
         "binance_last_quote_volume_usdt": quote_volume,
         "kraken_last_base_volume": second[-1].volume,
-        "max_last_three_close_difference_pct": round(max(differences), 4),
+        "cross_checked_closed_bars": CROSS_CHECK_BARS,
+        "ohlc_cross_checked_closed_bars": CROSS_CHECK_BARS,
+        "max_last_twenty_ohlc_difference_pct": round(max(ohlc_differences), 4),
+        "max_last_twenty_close_difference_pct": round(max(differences), 4),
+        "max_last_three_close_difference_pct": round(max(differences[-3:]), 4),
         "max_allowed_difference_pct": MAX_CLOSE_DIFFERENCE_PCT,
-        "note": "Independent venue price comparison only; venue volumes are not interchangeable. No signal, order, leverage or profit prediction.",
+        "note": "Independent venue OHLC comparison only; venue volumes are not interchangeable. No signal, order, leverage or profit prediction.",
     }

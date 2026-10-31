@@ -5,6 +5,7 @@ import hmac
 import time
 from collections import OrderedDict, deque
 import json
+import math
 import os
 import re
 import logging
@@ -24,8 +25,10 @@ try:
     from .market_indicators import analyze_market_indicators, MarketIndicatorsError
     from .setup_assessment import assess_spot_setup, SetupAssessmentError
     from .paper_risk import assess_paper_risk, PaperRiskError, validate_paper_settings
+    from .annotated_charts import build_annotated_chart, render_annotated_png, AnnotatedChartError
     from .brain import load_knowledge, knowledge_index, get_lesson, trading_context, KnowledgeError
     from .strategy_engine import confluence_score, ConfluenceError
+    from .trading_desk import build_trading_desk
 except ImportError:
     from trading_research import closed_candles, research, backtest, SimulationConfig
     from market_data_quality import public_urls, verify_spot_market, MarketDataQualityError
@@ -33,14 +36,22 @@ except ImportError:
     from market_indicators import analyze_market_indicators, MarketIndicatorsError
     from setup_assessment import assess_spot_setup, SetupAssessmentError
     from paper_risk import assess_paper_risk, PaperRiskError, validate_paper_settings
+    from annotated_charts import build_annotated_chart, render_annotated_png, AnnotatedChartError
     from brain import load_knowledge, knowledge_index, get_lesson, trading_context, KnowledgeError
     from strategy_engine import confluence_score, ConfluenceError
+    from trading_desk import build_trading_desk
 try:
     from .ad_studio import create_ad_pack
     from .artifact_verifier import verify_ad_pack, ArtifactVerificationError
+    from .flora_catalog import catalogue_snapshot, FloraCatalogError
+    from .flora_campaign import plan_flora_campaign, FloraCampaignError
+    from .flora_post_planning import preview_flora_post, FloraPostPlanError
 except ImportError:
     from ad_studio import create_ad_pack
     from artifact_verifier import verify_ad_pack, ArtifactVerificationError
+    from flora_catalog import catalogue_snapshot, FloraCatalogError
+    from flora_campaign import plan_flora_campaign, FloraCampaignError
+    from flora_post_planning import preview_flora_post, FloraPostPlanError
 try:  # Handles either cloud_backend package import or direct uvicorn main:app.
     from .openjarvis_bridge import ask_openjarvis, endpoint as openjarvis_endpoint, wants_agent, OpenJarvisUnavailable
     from .agent_tools import try_calculate
@@ -53,6 +64,7 @@ try:  # Handles either cloud_backend package import or direct uvicorn main:app.
     from .urdu_tts_text import normalize_urdu_speech
     from .persona_policy import personality_guardrails
     from .latency_budget import provider_timeout
+    from .speech_flight import SpeechFlightCache, SpeechCapacityError
     from .job_records import JobRecordStore, JobCapacityError, JobStateError
     from .job_queue import ScheduledJobQueue, QueueCapacityError
     from .verified_artifact_store import VerifiedArtifactStore, ArtifactStorageError
@@ -74,6 +86,7 @@ except ImportError:
     from urdu_tts_text import normalize_urdu_speech
     from persona_policy import personality_guardrails
     from latency_budget import provider_timeout
+    from speech_flight import SpeechFlightCache, SpeechCapacityError
     from job_records import JobRecordStore, JobCapacityError, JobStateError
     from job_queue import ScheduledJobQueue, QueueCapacityError
     from verified_artifact_store import VerifiedArtifactStore, ArtifactStorageError
@@ -194,6 +207,50 @@ def agent_milestones(payload: GoalSpecRequest):
     """Return a dependency-ordered verification plan, without running a worker."""
     return plan_milestones(payload.message)
 
+
+
+@app.get("/api/flora/post-preview")
+def flora_post_preview(
+    response: Response,
+    product_id: Literal["gold_kit", "shampoo"] = Query(default="gold_kit"),
+    platform: Literal["instagram_feed", "instagram_story", "facebook_feed", "whatsapp_status"] = Query(default="instagram_feed"),
+    objective: Literal["awareness", "inquiries"] = Query(default="inquiries"),
+    proposed_local_time: Optional[str] = Query(default=None, max_length=32),
+):
+    """Read-only proposed publication slot; never save, schedule or publish."""
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    try:
+        return preview_flora_post(product_id, platform, objective, proposed_local_time)
+    except FloraPostPlanError:
+        raise HTTPException(status_code=422, detail="Flora post preview unavailable.") from None
+
+
+@app.get("/api/flora/campaign-draft")
+def flora_campaign_draft(
+    response: Response,
+    product_id: Literal["gold_kit", "shampoo"] = Query(default="gold_kit"),
+    platform: Literal["instagram_feed", "instagram_story", "facebook_feed", "whatsapp_status"] = Query(default="instagram_feed"),
+    objective: Literal["awareness", "inquiries"] = Query(default="inquiries"),
+):
+    """Review-only platform copy. No posting, scheduling or photo approval."""
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    try:
+        return plan_flora_campaign(product_id, platform, objective)
+    except FloraCampaignError:
+        raise HTTPException(status_code=422, detail="Flora campaign draft unavailable.") from None
+
+
+@app.get("/api/flora/catalog")
+def flora_catalogue(response: Response, product_id: Optional[str] = Query(default=None, max_length=32)):
+    """Fixed owner-reported product data, no photos or inventory write access."""
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    try:
+        return catalogue_snapshot(product_id)
+    except FloraCatalogError:
+        raise HTTPException(status_code=422, detail="Flora catalogue selection unavailable.") from None
 
 
 @app.get("/api/research/sources")
@@ -539,7 +596,9 @@ async def synthesize_urdu(text: str, style: str) -> bytes:
 
 
 speech_slots = asyncio.Semaphore(2)
-speech_cache = OrderedDict()
+speech_flights = SpeechFlightCache(ttl=120, max_cache=16, max_inflight=8)
+# Compatibility for existing tests; the cache contains only hashed keys and audio.
+speech_cache = speech_flights.cache
 
 
 @app.post("/api/speech")
@@ -548,24 +607,23 @@ async def speech(payload: SpeechRequest):
     if not re.search(r"[\u0600-\u06ff]", text) or re.search(r"[\u0900-\u097f]", text):
         raise HTTPException(status_code=400, detail="Urdu-script text is required for Urdu speech.")
     text = normalize_urdu_speech(text)
-    cache_key = hashlib.sha256((payload.style + "\0" + text).encode()).digest()
-    cached = speech_cache.get(cache_key)
-    if cached and cached[0] > time.monotonic():
-        return Response(content=cached[1], media_type="audio/mpeg", headers={"Cache-Control": "no-store"})
+    # Unknown styles fall back to the same bounded soft voice and cache key.
+    style = payload.style if payload.style in ("soft", "warm", "playful") else "soft"
+    cache_key = hashlib.sha256((style + "\0" + text).encode()).digest()
     async def generate():
         async with speech_slots:
-            return await synthesize_urdu(text, payload.style)
+            return await synthesize_urdu(text, style)
     try:
-        audio = await asyncio.wait_for(generate(), timeout=25)
+        # Concurrent identical phrases share one synthesis. Cancelling one
+        # HTTP request cannot interrupt another listener of the same phrase.
+        audio = await speech_flights.get(cache_key, generate, timeout=25)
+    except SpeechCapacityError:
+        raise HTTPException(status_code=503, detail="Urdu voice is busy. Please retry shortly.") from None
     except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="Online Urdu voice timed out. Tap Hear Hoshi to retry.") from None
     except Exception as exc:
         _safe_log_failure("speech.tts", exc)
         raise HTTPException(status_code=502, detail="Online Urdu voice is unavailable. Try again or install an Urdu device voice.") from None
-    speech_cache[cache_key] = (time.monotonic() + 120, audio)
-    speech_cache.move_to_end(cache_key)
-    while len(speech_cache) > 16:
-        speech_cache.popitem(last=False)
     return Response(content=audio, media_type="audio/mpeg", headers={"Cache-Control": "no-store"})
 
 
@@ -1272,14 +1330,41 @@ _ALLOWED_PAIRS = {"BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT"}
 _ALLOWED_INTERVALS = {"1m", "5m", "15m", "1h", "4h", "1d"}
 
 
+def _unique_public_json_pairs(pairs):
+    """Refuse duplicate provider fields, including inside nested OHLC data."""
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("Ambiguous public market JSON")
+        result[key] = value
+    return result
+
+
+def _reject_public_json_constant(value):
+    # Python's JSON decoder otherwise accepts NaN/Infinity, unlike strict JSON.
+    raise ValueError("Non-finite public market JSON")
+
+
+def _finite_public_json_float(value):
+    # A syntactically valid JSON number such as 1e999 also becomes infinity
+    # when decoded to binary64. Reject it before any market-data cache write.
+    parsed = float(value)
+    if not math.isfinite(parsed):
+        raise ValueError("Non-finite public market JSON")
+    return parsed
+
+
 def _read_public_json(url: str) -> object:
-    """Bound external I/O. Never accept arbitrary user supplied URLs."""
+    """Bound external I/O and strictly parse fixed public-market responses."""
     request = Request(url, headers={"User-Agent": "HOSHI-public-data/1.0", "Accept": "application/json"})
     with urlopen(request, timeout=7) as response:
         raw = response.read(900001)
     if len(raw) > 900000:
         raise ValueError("External response is too large")
-    return json.loads(raw.decode("utf-8"))
+    return json.loads(raw.decode("utf-8"),
+                      object_pairs_hook=_unique_public_json_pairs,
+                      parse_constant=_reject_public_json_constant,
+                      parse_float=_finite_public_json_float)
 
 
 def _public_data(cache_key: str, url: str, ttl: int) -> tuple[object, int]:
@@ -1422,6 +1507,49 @@ def _research_history(pair, interval):
         return closed_candles(data, interval, int(time.time()*1000)), fetched
     except (ValueError, TypeError, IndexError, OverflowError) as exc:
         raise HTTPException(status_code=503, detail="Research candles invalid, incomplete or stale. No proposal generated.") from exc
+
+
+@app.get("/api/trading/desk")
+def trading_desk(response: Response,
+                 symbol: str = Query(default="BTCUSDT", max_length=16),
+                 equity_usdt: float = Query(default=100, ge=10, le=100_000),
+                 risk_pct: float = Query(default=.5, ge=.1, le=1),
+                 fee_bps: float = Query(default=10, ge=1, le=100),
+                 slippage_bps: float = Query(default=5, ge=1, le=100)):
+    """Trading-only V2 desk; three public histories, no provider/model/account key."""
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    pair = _research_pair(symbol)
+    try:
+        validate_paper_settings(equity_usdt, risk_pct, fee_bps, slippage_bps)
+    except PaperRiskError:
+        raise HTTPException(status_code=422, detail="Invalid paper-only settings.") from None
+    if not _RESEARCH_SLOTS.acquire(blocking=False):
+        raise HTTPException(status_code=429, detail="Research busy. Retry shortly.")
+    try:
+        load_knowledge()  # fail closed before fetching if the V2 bundle is broken
+        with ThreadPoolExecutor(max_workers=3) as pool:
+            jobs = {tf: pool.submit(_research_history, pair, tf)
+                    for tf in ("15m", "1h", "4h")}
+            fetched = {tf: job.result() for tf, job in jobs.items()}
+        now_ms = int(time.time() * 1000)
+        stamps = [stamp for _, stamp in fetched.values()]
+        if (any(type(stamp) is not int or stamp * 1000 > now_ms + 5_000
+                or stamp * 1000 < now_ms - 120_000 for stamp in stamps)
+                or max(stamps) - min(stamps) > 120):
+            raise ValueError("invalid_source_time")
+        return build_trading_desk(
+            {tf: bars for tf, (bars, _) in fetched.items()}, pair, now_ms,
+            min(stamps), equity_usdt, risk_pct, fee_bps, slippage_bps)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        _safe_log_failure("trading.desk", exc)
+        raise HTTPException(status_code=503, detail={
+            "decision": "wait", "paper_plan": None,
+            "message": "Trading evidence unavailable. No plan generated."}) from None
+    finally:
+        _RESEARCH_SLOTS.release()
 
 
 @app.get("/api/trading/structure")
@@ -1608,6 +1736,42 @@ def trading_paper_risk(response: Response, symbol: str = "BTCUSDT",
         result["source"] = "Binance Spot public closed candles (single venue)"
         result["fetched_at"] = min(stamps)
         return result
+    finally:
+        _RESEARCH_SLOTS.release()
+
+
+@app.get("/api/trading/annotated-chart")
+def trading_annotated_chart(response: Response, symbol: str = "BTCUSDT",
+                            interval: Literal["15m", "1h", "4h"] = "15m",
+                            output: Literal["json", "png"] = "json"):
+    """Task 42: timestamped spot research PNG/JSON, no orders or fills."""
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    pair = _research_pair(symbol)
+    if not _RESEARCH_SLOTS.acquire(blocking=False):
+        raise HTTPException(status_code=429, detail="Research busy. Retry shortly.")
+    try:
+        with ThreadPoolExecutor(max_workers=3) as pool:
+            jobs = {tf: pool.submit(_research_history, pair, tf)
+                    for tf in ("15m", "1h", "4h")}
+            fetched = {tf: jobs[tf].result() for tf in jobs}
+        now = int(time.time())
+        stamps = [stamp for _, stamp in fetched.values()]
+        if (any(type(stamp) is not int or stamp > now + 5 or stamp < now - 120
+                for stamp in stamps) or max(stamps) - min(stamps) > 120):
+            raise HTTPException(status_code=503, detail="Chart sources stale; no export generated.")
+        try:
+            chart = build_annotated_chart(
+                {tf: bars for tf, (bars, _) in fetched.items()}, pair, interval, min(stamps))
+            if output == "png":
+                png = render_annotated_png(chart)
+                return Response(content=png, media_type="image/png", headers={
+                    "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff",
+                    "Content-Disposition": 'attachment; filename="Hoshi_' + pair + '_' + interval + '_paper_chart.png"',
+                })
+            return chart
+        except AnnotatedChartError:
+            raise HTTPException(status_code=503, detail="Closed-candle chart verification failed.") from None
     finally:
         _RESEARCH_SLOTS.release()
 

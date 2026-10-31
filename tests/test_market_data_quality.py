@@ -34,6 +34,9 @@ class QualityUnitTests(unittest.TestCase):
                 self.assertEqual(result["binance_last_quote_volume_usdt"], 1000)
                 self.assertEqual(result["kraken_last_base_volume"], 10)
                 self.assertEqual(result["last_closed_at"], b[-2][6])
+                self.assertEqual(result["cross_checked_closed_bars"], 20)
+                self.assertEqual(result["max_last_twenty_close_difference_pct"], 0)
+                self.assertEqual(result["max_last_three_close_difference_pct"], 0)
                 self.assertFalse(result["orders_enabled"])
 
     def test_numeric_string_close_time_does_not_break_quote_volume_selection(self):
@@ -42,6 +45,58 @@ class QualityUnitTests(unittest.TestCase):
         result = mq.verify_spot_market("BTCUSDT", "15m", b, k, NOW,
                                        NOW//1000, NOW//1000)
         self.assertEqual(result["binance_last_quote_volume_usdt"], 1000)
+
+    def test_binance_timestamps_refuse_lossy_or_ambiguous_coercion(self):
+        # int(1800000000000.9) used to truncate to a plausible candle time.
+        # Provider timestamp identity must be exact before any venue agreement.
+        for column in (0, 6):
+            for invalid in (True, 1.5, "1.5", "1e3", "01800000000000", -1):
+                with self.subTest(column=column, invalid=invalid):
+                    b, k = fixtures()
+                    b[17][column] = invalid
+                    with self.assertRaisesRegex(mq.MarketDataQualityError,
+                                                "invalid_binance_timestamp"):
+                        mq.verify_spot_market("BTCUSDT", "15m", b, k, NOW,
+                                              NOW//1000, NOW//1000)
+        # Canonical decimal strings remain compatible with public API variants.
+        b, k = fixtures()
+        b[17][0], b[17][6] = str(b[17][0]), str(b[17][6])
+        self.assertEqual(
+            mq.verify_spot_market("BTCUSDT", "15m", b, k, NOW,
+                                  NOW//1000, NOW//1000)["status"],
+            "verified_sources_agree")
+
+    def test_kraken_epoch_seconds_refuse_lossy_float_coercion(self):
+        # float('1800000000.00000001') rounds to an integer in binary64.
+        for invalid in (True, 1.5, 1800000000.0, "1800000000.00000001",
+                        "1.8e9", "01800000000", -1):
+            with self.subTest(invalid=invalid):
+                b, k = fixtures()
+                k["result"]["XXBTZUSD"][15][0] = invalid
+                with self.assertRaisesRegex(mq.MarketDataQualityError,
+                                            "invalid_kraken_time"):
+                    mq.verify_spot_market("BTCUSDT", "15m", b, k, NOW,
+                                          NOW//1000, NOW//1000)
+        b, k = fixtures()
+        k["result"]["XXBTZUSD"][15][0] = str(k["result"]["XXBTZUSD"][15][0])
+        self.assertEqual(mq.verify_spot_market("BTCUSDT", "15m", b, k, NOW,
+                                               NOW//1000, NOW//1000)["status"],
+                         "verified_sources_agree")
+
+    def test_taker_quote_must_match_taker_base_at_candle_prices(self):
+        for buy_base, buy_quote in (("4", "1"), ("4", "800"),
+                                    ("0", "1"), ("4", "-1")):
+            with self.subTest(buy_base=buy_base, buy_quote=buy_quote):
+                b, k = fixtures()
+                b[12][9], b[12][10] = buy_base, buy_quote
+                with self.assertRaises(mq.MarketDataQualityError):
+                    mq.verify_spot_market("BTCUSDT", "15m", b, k, NOW,
+                                          NOW//1000, NOW//1000)
+        b, k = fixtures()
+        b[12][10] = "402"
+        self.assertEqual(mq.verify_spot_market("BTCUSDT", "15m", b, k, NOW,
+                                               NOW//1000, NOW//1000)["status"],
+                         "verified_sources_agree")
 
     def test_fixed_host_allowlist_and_no_user_url(self):
         b, k = mq.public_urls("ETHUSDT", "1h")
@@ -52,6 +107,33 @@ class QualityUnitTests(unittest.TestCase):
                          ("BTCUSDT", "1m"), ("BTCUSD", "15m")):
             with self.assertRaises(mq.MarketDataQualityError):
                 mq.public_urls(pair, tf)
+
+    def test_kraken_returned_market_identity_must_match_requested_pair(self):
+        # Identical price bars do not prove that Kraken returned BTC or ETH.
+        for symbol, wrong_key in (("BTCUSDT", "XETHZUSD"),
+                                  ("ETHUSDT", "XXBTZUSD"),
+                                  ("BTCUSDT", "DOGEUSD")):
+            with self.subTest(symbol=symbol, wrong_key=wrong_key):
+                b, k = fixtures()
+                rows = k["result"].pop("XXBTZUSD")
+                k["result"][wrong_key] = rows
+                with self.assertRaisesRegex(mq.MarketDataQualityError,
+                                            "kraken_pair_identity_mismatch"):
+                    mq.verify_spot_market(symbol, "15m", b, k, NOW,
+                                          NOW//1000, NOW//1000)
+
+    def test_kraken_documented_pair_aliases_remain_compatible(self):
+        for symbol, accepted_key in (("BTCUSDT", "XXBTZUSD"),
+                                     ("BTCUSDT", "XBTUSD"),
+                                     ("ETHUSDT", "XETHZUSD"),
+                                     ("ETHUSDT", "ETHUSD")):
+            with self.subTest(symbol=symbol, accepted_key=accepted_key):
+                b, k = fixtures()
+                rows = k["result"].pop("XXBTZUSD")
+                k["result"][accepted_key] = rows
+                verified = mq.verify_spot_market(symbol, "15m", b, k, NOW,
+                                                 NOW//1000, NOW//1000)
+                self.assertEqual(verified["status"], "verified_sources_agree")
 
     def test_quote_volume_taker_volume_and_trade_count_are_validated(self):
         for column, value in ((7, "50000"), (7, "-1"), (7, "nan"),
@@ -80,6 +162,68 @@ class QualityUnitTests(unittest.TestCase):
         with self.assertRaises(mq.MarketDataQualityError):
             mq.verify_spot_market("BTCUSDT", "15m", b, k, NOW+3_600_000,
                                   (NOW+3_600_000)//1000, (NOW+3_600_000)//1000)
+
+    def test_rejects_older_cross_venue_disagreement_outside_last_three(self):
+        # Both venues agree at the latest three bars; an earlier divergence
+        # within the last 20 must still invalidate the market-quality claim.
+        b, k = fixtures()
+        k["result"]["XXBTZUSD"][-12][2] = "106"
+        k["result"]["XXBTZUSD"][-12][4] = "105"
+        self.assertEqual(k["result"]["XXBTZUSD"][-2][4], "100")
+        with self.assertRaisesRegex(mq.MarketDataQualityError,
+                                    "cross_source_price_disagreement"):
+            mq.verify_spot_market("BTCUSDT", "15m", b, k, NOW,
+                                  NOW//1000, NOW//1000)
+
+    def test_cross_venue_ohlc_wicks_and_opens_are_checked_not_only_closes(self):
+        # Latest closes match, but older open/wick differences can distort
+        # hypothetical stop/target calculations. Test all supported intervals.
+        for tf in mq.INTERVALS:
+            for field, value in ((1, "105"), (2, "105"), (3, "95")):
+                with self.subTest(interval=tf, field=field):
+                    b, k = fixtures(tf)
+                    row = k["result"]["XXBTZUSD"][-12]
+                    row[field] = value
+                    if field == 1:
+                        row[2] = "106"  # high must include the altered open
+                    self.assertEqual(row[4], b[-12][4])
+                    with self.assertRaisesRegex(mq.MarketDataQualityError,
+                                                "cross_source_ohlc_disagreement"):
+                        mq.verify_spot_market("BTCUSDT", tf, b, k, NOW,
+                                              NOW//1000, NOW//1000)
+            b, k = fixtures(tf)
+            k["result"]["XXBTZUSD"][-12][2] = "102.5"
+            report = mq.verify_spot_market("BTCUSDT", tf, b, k, NOW,
+                                           NOW//1000, NOW//1000)
+            self.assertEqual(report["ohlc_cross_checked_closed_bars"], 20)
+            self.assertGreater(report["max_last_twenty_ohlc_difference_pct"], 0)
+            self.assertLess(report["max_last_twenty_ohlc_difference_pct"], 2)
+            self.assertEqual(report["max_last_twenty_close_difference_pct"], 0)
+
+    def test_actual_quality_api_refuses_disagreeing_wick_without_close_change(self):
+        b, k = fixtures()
+        k["result"]["XXBTZUSD"][-12][2] = "106"
+        def fetch(key, url, ttl):
+            return (k if "kraken.com" in url else b), NOW//1000
+        with patch.object(main, "_public_data", side_effect=fetch), patch.object(
+                main.time, "time", return_value=NOW/1000):
+            with self.assertRaises(main.HTTPException) as err:
+                main.trading_data_quality(Response(), "BTCUSDT", "15m")
+        self.assertEqual(err.exception.status_code, 503)
+        self.assertNotIn("verified_sources_agree", str(err.exception.detail))
+
+    def test_future_or_invalid_provider_fetch_times_fail_closed(self):
+        for stamp in (NOW//1000 + 6, NOW//1000 + 600, True, 1.5, -1):
+            with self.subTest(stamp=stamp):
+                b, k = fixtures()
+                with self.assertRaises(mq.MarketDataQualityError):
+                    mq.verify_spot_market("BTCUSDT", "15m", b, k, NOW,
+                                          stamp, stamp)
+        b, k = fixtures()
+        # A small server-clock skew is permitted; exact bounds are tested.
+        result = mq.verify_spot_market("BTCUSDT", "15m", b, k, NOW,
+                                       NOW//1000 + 5, NOW//1000)
+        self.assertEqual(result["cross_checked_closed_bars"], 20)
 
     def test_rejects_bad_kraken_schema_and_zero_recent_volume(self):
         b, k = fixtures()

@@ -1,0 +1,75 @@
+/* V1 animated anime Hoshi: source is the current 4x2 face-expression
+   atlas, not a claim of a separately layered full-body character rig. */
+.hoshi-animated-avatar{display:none;position:absolute;z-index:1;left:50%;top:39%;
+ transform:translate(-50%,-50%);width:min(75vw,340px);height:min(67dvh,500px);
+ pointer-events:none;isolation:isolate}
+.nightroom.avatar-enabled .hoshi-animated-avatar{display:block}
+.nightroom.avatar-enabled #hoshiEnergy{display:none!important}
+.hoshi-animated-avatar:before{content:"";position:absolute;inset:5% -13% 1%;
+ background:radial-gradient(ellipse,#1c97dd25,transparent 66%);
+ filter:blur(10px)}
+.hoshi-animated-avatar .avatar-portrait{
+ position:absolute;inset:0 0 5%;overflow:hidden;border-radius:45% 45% 19% 19% / 30% 30% 19% 19%;
+ transform-origin:center 67%;animation:hoshi-idle-sway 6s ease-in-out infinite;
+ filter:drop-shadow(0 0 15px #56d3ff47)
+}
+.hoshi-animated-avatar .avatar-face{
+ position:absolute;inset:0;
+ background-image:url("./assets/hoshi-expressions.webp");
+ background-size:400% 200%;background-repeat:no-repeat;
+ background-position:33.3333% 0%;
+ transition:filter .22s ease;will-change:transform;
+}
+.hoshi-animated-avatar[data-emotion="happy"] .avatar-face{background-position:0 0}
+.hoshi-animated-avatar[data-emotion="affectionate"] .avatar-face{background-position:33.3333% 0}
+.hoshi-animated-avatar[data-emotion="excited"] .avatar-face{background-position:66.6667% 0}
+.hoshi-animated-avatar[data-emotion="thinking"] .avatar-face{background-position:100% 0}
+.hoshi-animated-avatar[data-emotion="sad"] .avatar-face{background-position:0 100%}
+.hoshi-animated-avatar[data-emotion="playful"] .avatar-face{background-position:33.3333% 100%}
+.hoshi-animated-avatar[data-emotion="shy"] .avatar-face{background-position:66.6667% 100%}
+.hoshi-animated-avatar[data-emotion="annoyed"] .avatar-face{background-position:100% 100%}
+.hoshi-animated-avatar[data-emotion="concerned"] .avatar-face{background-position:0 100%}
+.hoshi-animated-avatar[data-emotion="caring"] .avatar-face{background-position:33.3333% 0}
+.hoshi-animated-avatar .avatar-eyelid{position:absolute;top:45%;width:19%;height:2.6%;
+ border-radius:50%;background:#4a637b;opacity:0;filter:blur(.5px);
+ transition:opacity .055s linear}
+.hoshi-animated-avatar .avatar-eyelid.left{left:28%;transform:rotate(4deg)}
+.hoshi-animated-avatar .avatar-eyelid.right{right:27%;transform:rotate(-4deg)}
+.hoshi-animated-avatar.hoshi-blink .avatar-eyelid{opacity:.75}
+.hoshi-animated-avatar .avatar-mouth{position:absolute;left:49.5%;top:72%;
+ width:5.5%;height:1.2%;transform:translateX(-50%);border-radius:50%;
+ background:#663754;border:1px solid #dfb6cb7a;opacity:0}
+.hoshi-animated-avatar[data-state="speaking"] .avatar-mouth{
+ opacity:.9;animation:hoshi-avatar-mouth .24s ease-in-out infinite alternate}
+.hoshi-animated-avatar[data-state="speaking"] .avatar-portrait{animation-duration:3.5s}
+.hoshi-animated-avatar[data-state="listening"] .avatar-face{filter:brightness(1.06) saturate(1.06)}
+.hoshi-animated-avatar[data-state="thinking"] .avatar-face{filter:hue-rotate(7deg) brightness(.95)}
+.hoshi-animated-avatar .avatar-signal{position:absolute;bottom:0;left:24%;right:24%;
+ height:2px;box-shadow:0 0 18px #5bd9ff;background:linear-gradient(90deg,transparent,#6ce8ff,transparent);
+ opacity:.55;transition:opacity .2s}
+.hoshi-animated-avatar[data-state="listening"] .avatar-signal,
+.hoshi-animated-avatar[data-state="speaking"] .avatar-signal{opacity:1}
+@keyframes hoshi-idle-sway{
+ 0%,100%{transform:translateY(2px) rotate(-.8deg) scale(1)}
+ 50%{transform:translateY(-5px) rotate(.8deg) scale(1.012)}
+}
+@keyframes hoshi-avatar-mouth{
+ from{height:1.2%;width:5.5%;border-radius:50%}
+ to{height:5%;width:8%;border-radius:45%}
+}
+/* Default home stays minimal: microphone, Settings and interrupt. */
+.nightroom.avatar-enabled .night-head{z-index:3}
+.nightroom.avatar-enabled .night-conversation{z-index:3}
+.nightroom.avatar-enabled .night-mic{z-index:3}
+.nightroom.avatar-enabled .night-tabs{z-index:4}
+@media(max-width:540px){
+ .nightroom.avatar-enabled .hoshi-animated-avatar{top:34%;width:min(79vw,325px);height:min(58dvh,460px)}
+}
+@media(max-height:690px){
+ .nightroom.avatar-enabled .hoshi-animated-avatar{top:31%;width:min(62vw,250px);height:50dvh}
+}
+@media(prefers-reduced-motion:reduce){
+ .hoshi-animated-avatar *{animation:none!important;transition:none!important}
+}
+.hoshi-animated-avatar[data-motion="reduced"] *,
+.hoshi-animated-avatar[data-motion="reduced"] .avatar-portrait{animation:none!important;transition:none!important}

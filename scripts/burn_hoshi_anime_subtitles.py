@@ -1,0 +1,89 @@
+"""Operator-only, create-only offline subtitle burn-in for an existing Hoshi pilot.
+
+No upload, network, owner approval, automatic publishing or modification of
+the original draft. Use an original/licensed local TTF/OTF font.
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+from pathlib import Path
+import sys
+
+from cloud_backend.anime_subtitle_burnin import (
+    AnimeSubtitleBurninError, render_private_subtitled_pilot,
+)
+from cloud_backend.anime_subtitle_preview import _srt_windows
+from cloud_backend.anime_private_review_page import (
+    AnimePrivateReviewPageError, build_private_review_page,
+)
+
+
+def _read(path: Path, maximum: int) -> bytes:
+    if not path.is_file() or not 1 <= path.stat().st_size <= maximum:
+        raise AnimeSubtitleBurninError("Missing or oversized private local input.")
+    return path.read_bytes()
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Burn validated Hindi/Urdu SRT into a PRIVATE 30s MP4 draft")
+    parser.add_argument("--draft-dir", required=True)
+    parser.add_argument("--font", required=True, help="Original/licensed local TTF/OTF")
+    parser.add_argument("--font-rights-attested", action="store_true")
+    args = parser.parse_args()
+    try:
+        root, font = Path(args.draft_dir), Path(args.font)
+        if (not args.font_rights_attested
+                or font.suffix.lower() not in (".ttf", ".otf")):
+            raise AnimeSubtitleBurninError(
+                "Explicit font rights and a local TTF/OTF required.")
+        try:
+            manifest = json.loads(
+                _read(root / "manifest.json", 120_000).decode("utf-8"))
+        except (UnicodeError, json.JSONDecodeError):
+            raise AnimeSubtitleBurninError("Invalid private manifest JSON.") from None
+        subtitles = _read(root / "hoshi_anime_animatic_DRAFT.srt", 20_000)
+        result = render_private_subtitled_pilot(
+            manifest,
+            _read(root / "hoshi_anime_animatic_DRAFT.mp4", 15_000_000),
+            subtitles, _read(font, 8_000_000),
+            font_rights_attested=True)
+        review_html = build_private_review_page(result, _srt_windows(subtitles))
+        result["review_page_filename"] = "hoshi_private_review_OFFLINE.html"
+        result["review_page_sha256"] = hashlib.sha256(review_html).hexdigest()
+        result["review_page_human_review_required"] = True
+        encoded = result.pop("video_mp4")
+        evidence = result.pop("visual_evidence_png")
+        audio_clips = result.pop("audio_review_wavs")
+        waveform_png = result.pop("audio_waveform_png")
+        target = root / "subtitle_burnin_PRIVATE_DRAFT"
+        target.mkdir(mode=0o700, exist_ok=False)
+        with (target / result["filename"]).open("xb") as stream:
+            stream.write(encoded)
+        with (target / result["visual_evidence_filename"]).open("xb") as stream:
+            stream.write(evidence)
+        for clip in audio_clips:
+            with (target / clip["filename"]).open("xb") as stream:
+                stream.write(clip["wav_bytes"])
+        if waveform_png is not None:
+            with (target / result["audio_waveform_filename"]).open("xb") as stream:
+                stream.write(waveform_png)
+        with (target / result["review_page_filename"]).open("xb") as stream:
+            stream.write(review_html)
+        with (target / "subtitle_burnin_provenance_PRIVATE.json").open(
+                "x", encoding="utf-8") as stream:
+            json.dump(result, stream, ensure_ascii=False,
+                      sort_keys=True, indent=2)
+            stream.write("\n")
+        print("Private captioned MP4 created; human speech/readability review still required.")
+        return 0
+    except (AnimeSubtitleBurninError, AnimePrivateReviewPageError,
+            OSError, ValueError) as exc:
+        print(f"Private subtitle MP4 not created: {exc}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

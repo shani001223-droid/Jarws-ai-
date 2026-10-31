@@ -251,6 +251,8 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
     trades, day_losses, cooldown_until = [], {}, -1
     ambiguous_stop_target_count, gap_stop_count, max_gap_beyond_stop_pct = 0, 0, None
     risk_budget_breach_count, planned_stop_loss_exceeded_count = 0, 0
+    # Account for every next-open paper entry attempt, including refusals.
+    entry_attempts = entry_skipped_gap = entry_skipped_daily_cap = entry_skipped_risk_capacity = 0
     max_loss_to_risk_budget_multiple = None
     for i, b in enumerate(bars):
         day = b.time // 86_400_000
@@ -259,10 +261,17 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
         if pending and entry_not_before is not None and b.time < entry_not_before:
             pending = None
         if pending and not position:
+            entry_attempts += 1
             entry = b.open*(1+slip)
             # Revalidate risk after a price gap; a gapped invalid setup is skipped.
             stop = pending["stop"]
-            if 0 < entry-stop <= 4*(pending["reference_entry"]-stop):
+            if not 0 < entry-stop <= 4*(pending["reference_entry"]-stop):
+                entry_skipped_gap += 1
+            elif cfg.daily_loss_limit-day_losses.get(day, 0) <= 1e-8:
+                # A realized daily loss lockout must remain visible even if
+                # later signals appear; do not silently count them as no setup.
+                entry_skipped_daily_cap += 1
+            else:
                 qty = risk_size(cash, entry, stop, day_losses.get(day, 0), cfg)
                 if qty > 0:
                     budget = min(cash*cfg.risk_pct/100,
@@ -273,6 +282,8 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
                                 "qty": qty, "entry_time": b.time, "entry_index": i,
                                 "risk_budget_at_entry": budget,
                                 "planned_stop_loss": planned_loss}
+                else:
+                    entry_skipped_risk_capacity += 1
             pending = None
         if position:
             p = position
@@ -382,6 +393,12 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
             "initial_equity": cfg.equity, "ending_equity": cash, "net_pnl": cash-cfg.equity,
             "max_drawdown_pct": max_dd, "fees_paid": sum(t["fees"] for t in trades),
             "execution_diagnostics": {
+                "paper_entry_attempts": entry_attempts,
+                "paper_entries_skipped_invalid_gap": entry_skipped_gap,
+                "paper_entries_skipped_utc_daily_loss_cap": entry_skipped_daily_cap,
+                "paper_entries_skipped_insufficient_risk_capacity": entry_skipped_risk_capacity,
+                "paper_entries_opened": entry_attempts - entry_skipped_gap
+                                        - entry_skipped_daily_cap - entry_skipped_risk_capacity,
                 "stop_first_ambiguous_count": ambiguous_stop_target_count,
                 "gap_stop_count": gap_stop_count,
                 "max_gap_beyond_stop_pct": max_gap_beyond_stop_pct,
@@ -404,4 +421,5 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
                             "Next-open fills, fixed adverse slippage, stop-first ambiguous candles; ambiguity and gap diagnostics are observed OHLC scenarios, not authenticated execution paths.",
                             "Open-triggered exits use the observed bar open; intrabar stop/target exit_time is only a bar-close upper bound, not an observed execution timestamp.",
                             "UTC gross realized daily loss cap prevents new entries only; an already-open position may gap past the cap. Per-entry budgets and daily caps are not guaranteed maximum losses.",
+                            "Paper entry attempts and refusal counts are modeled next-open signals, not real exchange submissions or observed fills.",
                             "Does not model partial fills, liquidity impact or intra-bar equity peaks."]}

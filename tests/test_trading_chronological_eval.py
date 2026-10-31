@@ -37,6 +37,39 @@ class ChronologicalEvaluationTests(unittest.TestCase):
         self.assertTrue(all(t["entry_time"] >= self.bars[210].time
                             for t in result["holdout"]["trades"]))
 
+    def test_paper_entry_attempts_expose_daily_cap_lockout_without_fake_orders(self):
+        from cloud_backend import trading_research as tr
+        flat = [replace(b, open=100, high=101, low=99, close=100, volume=10)
+                for b in self.bars]
+        with patch.object(tr, "setup", return_value={"stop": 99.5, "reference_entry": 100}):
+            report = ev.evaluate_chronological(
+                flat, "BTCUSDT", "trend_pullback",
+                SimulationConfig(daily_loss_limit=.1))
+        d = report["holdout"]["execution_diagnostics"]
+        self.assertGreater(d["paper_entry_attempts"], 0)
+        self.assertGreater(d["paper_entries_skipped_utc_daily_loss_cap"], 0)
+        self.assertEqual(
+            d["paper_entry_attempts"],
+            d["paper_entries_opened"] + d["paper_entries_skipped_invalid_gap"]
+            + d["paper_entries_skipped_utc_daily_loss_cap"]
+            + d["paper_entries_skipped_insufficient_risk_capacity"])
+        self.assertEqual(d["paper_entries_opened"], report["holdout"]["trade_count"])
+        self.assertFalse(report["orders_enabled"])
+        self.assertLess(report["holdout"]["net_pnl"], 0)
+
+    def test_paper_entry_attempts_reject_gapped_invalid_stop_without_trade(self):
+        from cloud_backend import trading_research as tr
+        flat = [replace(b, open=100, high=101, low=99, close=100, volume=10)
+                for b in self.bars]
+        with patch.object(tr, "setup", return_value={"stop": 100.5, "reference_entry": 101}):
+            report = ev.evaluate_chronological(flat, "ETHUSDT", "trend_pullback")
+        d = report["holdout"]["execution_diagnostics"]
+        self.assertGreater(d["paper_entries_skipped_invalid_gap"], 0)
+        self.assertEqual(d["paper_entry_attempts"], d["paper_entries_skipped_invalid_gap"])
+        self.assertEqual(d["paper_entries_opened"], 0)
+        self.assertEqual(report["holdout"]["trade_count"], 0)
+        self.assertIsNone(report["holdout"]["win_rate_pct"])
+
     def test_no_trade_outcome_is_preserved(self):
         flat = [replace(b, open=100, high=100.1, low=99.9, close=100, volume=10)
                 for b in self.bars]

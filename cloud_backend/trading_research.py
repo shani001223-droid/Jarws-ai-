@@ -251,6 +251,7 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
     trades, day_losses, cooldown_until = [], {}, -1
     ambiguous_stop_target_count, gap_stop_count, max_gap_beyond_stop_pct = 0, 0, None
     risk_budget_breach_count, planned_stop_loss_exceeded_count = 0, 0
+    terminal_forced_close_count, terminal_forced_close_net_pnl = 0, 0.0
     # Account for every next-open paper entry attempt, including refusals.
     entry_attempts = entry_skipped_gap = entry_skipped_daily_cap = entry_skipped_risk_capacity = 0
     max_loss_to_risk_budget_multiple = None
@@ -340,6 +341,12 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
                 exit_price = raw_exit*(1-slip)
                 costs = p["qty"]*fee*(p["entry"]+exit_price)
                 pnl = p["qty"]*(exit_price-p["entry"])-costs
+                if reason == "end_of_sample":
+                    # Forced terminal marking is NOT a strategy-triggered exit
+                    # or an observed exchange fill. Keep its PnL in equity,
+                    # but disclose its separate contribution to reported results.
+                    terminal_forced_close_count += 1
+                    terminal_forced_close_net_pnl += pnl
                 realized_loss = max(0.0, -pnl)
                 budget_breached = realized_loss > p["risk_budget_at_entry"] + 1e-8
                 stop_loss_exceeded = realized_loss > p["planned_stop_loss"] + 1e-8
@@ -369,6 +376,7 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
                                    "bar_close_upper_bound_intrabar_unknown"),
                                "entry": p["entry"], "exit": exit_price, "quantity": p["qty"],
                                "fees": costs, "net_pnl": pnl, "reason": reason,
+                               "terminal_forced_mark": reason == "end_of_sample",
                                "reference_stop": p["stop"],
                                "reference_target": p["target"],
                                "stop_target_same_bar": reason == "stop" and stop_target_same_bar,
@@ -404,6 +412,10 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
                 "paper_entries_skipped_insufficient_risk_capacity": entry_skipped_risk_capacity,
                 "paper_entries_opened": entry_attempts - entry_skipped_gap
                                         - entry_skipped_daily_cap - entry_skipped_risk_capacity,
+                "terminal_forced_close_count": terminal_forced_close_count,
+                "terminal_forced_close_net_pnl_usdt": terminal_forced_close_net_pnl,
+                "strategy_resolved_trade_count": len(trades) - terminal_forced_close_count,
+                "strategy_resolved_net_pnl_usdt": cash - cfg.equity - terminal_forced_close_net_pnl,
                 "stop_first_ambiguous_count": ambiguous_stop_target_count,
                 "gap_stop_count": gap_stop_count,
                 "max_gap_beyond_stop_pct": max_gap_beyond_stop_pct,
@@ -427,4 +439,5 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
                             "Open-triggered exits use the observed bar open; intrabar stop/target exit_time is only a bar-close upper bound, not an observed execution timestamp.",
                             "UTC gross realized daily loss cap prevents new entries only; an already-open position may gap past the cap. Per-entry budgets and daily caps are not guaranteed maximum losses.",
                             "Paper entry attempts and refusal counts are modeled next-open signals, not real exchange submissions or observed fills.",
+                            "A still-open position at sample end is force-marked at the final close, including modeled costs; its PnL contributes to equity but is separately reported, not a strategy exit or observed fill.",
                             "Does not model partial fills, liquidity impact or intra-bar equity peaks."]}

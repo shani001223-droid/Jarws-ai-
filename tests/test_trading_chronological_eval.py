@@ -102,6 +102,40 @@ class ChronologicalEvaluationTests(unittest.TestCase):
             valid["holdout"]["execution_diagnostics"]["paper_entries_opened"], 0)
         self.assertGreater(valid["holdout"]["trade_count"], 0)
 
+    def test_terminal_forced_close_is_disclosed_separately_from_strategy_exits(self):
+        from cloud_backend import trading_research as tr
+        # Synthetic sample: a single signal at the penultimate close enters
+        # the final bar and cannot reach either stop or target before sample end.
+        flat = [replace(b, open=100, high=101, low=99, close=100.2, volume=10)
+                for b in self.bars]
+        signal_time = flat[-2].time
+        def last_signal(bars, strategy):
+            return ({"stop": 90.0, "reference_entry": 100.2}
+                    if bars[-1].time == signal_time else None)
+        with patch.object(tr, "setup", side_effect=last_signal):
+            report = tr.backtest(flat, "trend_pullback", SimulationConfig())
+        self.assertEqual(report["trade_count"], 1)
+        trade = report["trades"][0]
+        self.assertEqual(trade["reason"], "end_of_sample")
+        self.assertTrue(trade["terminal_forced_mark"])
+        self.assertEqual(trade["exit_time_precision"], "bar_close_exact")
+        diagnostics = report["execution_diagnostics"]
+        self.assertEqual(diagnostics["terminal_forced_close_count"], 1)
+        self.assertAlmostEqual(diagnostics["terminal_forced_close_net_pnl_usdt"],
+                               trade["net_pnl"])
+        self.assertEqual(diagnostics["strategy_resolved_trade_count"], 0)
+        self.assertAlmostEqual(diagnostics["strategy_resolved_net_pnl_usdt"], 0)
+        self.assertAlmostEqual(report["net_pnl"], trade["net_pnl"])
+        self.assertFalse(report["orders_enabled"])
+
+        with patch.object(tr, "setup", return_value=None):
+            empty = tr.backtest(flat, "trend_pullback", SimulationConfig())
+        self.assertEqual(empty["trade_count"], 0)
+        self.assertEqual(empty["execution_diagnostics"]["terminal_forced_close_count"], 0)
+        self.assertEqual(empty["execution_diagnostics"]["terminal_forced_close_net_pnl_usdt"], 0)
+        self.assertEqual(empty["execution_diagnostics"]["strategy_resolved_trade_count"], 0)
+        self.assertEqual(empty["execution_diagnostics"]["strategy_resolved_net_pnl_usdt"], 0)
+
     def test_no_trade_outcome_is_preserved(self):
         flat = [replace(b, open=100, high=100.1, low=99.9, close=100, volume=10)
                 for b in self.bars]

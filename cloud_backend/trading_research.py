@@ -237,6 +237,8 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
     position, pending = None, None
     trades, day_losses, cooldown_until = [], {}, -1
     ambiguous_stop_target_count, gap_stop_count, max_gap_beyond_stop_pct = 0, 0, None
+    risk_budget_breach_count, planned_stop_loss_exceeded_count = 0, 0
+    max_loss_to_risk_budget_multiple = None
     for i, b in enumerate(bars):
         day = b.time // 86_400_000
         # Expire any warmup-only pending signal at its very next bar. Never
@@ -250,8 +252,14 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
             if 0 < entry-stop <= 4*(pending["reference_entry"]-stop):
                 qty = risk_size(cash, entry, stop, day_losses.get(day, 0), cfg)
                 if qty > 0:
+                    budget = min(cash*cfg.risk_pct/100,
+                                 cfg.daily_loss_limit-day_losses.get(day, 0))
+                    estimated_exit = stop*(1-slip)
+                    planned_loss = qty*(entry-estimated_exit + fee*(entry+estimated_exit))
                     position = {"entry": entry, "stop": stop, "target": entry+2*(entry-stop),
-                                "qty": qty, "entry_time": b.time, "entry_index": i}
+                                "qty": qty, "entry_time": b.time, "entry_index": i,
+                                "risk_budget_at_entry": budget,
+                                "planned_stop_loss": planned_loss}
             pending = None
         if position:
             p = position
@@ -287,15 +295,33 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
                 exit_price = raw_exit*(1-slip)
                 costs = p["qty"]*fee*(p["entry"]+exit_price)
                 pnl = p["qty"]*(exit_price-p["entry"])-costs
+                realized_loss = max(0.0, -pnl)
+                budget_breached = realized_loss > p["risk_budget_at_entry"] + 1e-8
+                stop_loss_exceeded = realized_loss > p["planned_stop_loss"] + 1e-8
+                if budget_breached:
+                    risk_budget_breach_count += 1
+                if stop_loss_exceeded:
+                    planned_stop_loss_exceeded_count += 1
+                if realized_loss:
+                    multiple = realized_loss/p["risk_budget_at_entry"]
+                    max_loss_to_risk_budget_multiple = max(
+                        max_loss_to_risk_budget_multiple or 0.0, multiple)
                 cash += pnl
-                day_losses[day] = day_losses.get(day, 0)+max(0, -pnl)
+                day_losses[day] = day_losses.get(day, 0)+realized_loss
                 trades.append({"entry_time": p["entry_time"], "exit_time": b.close_time,
                                "entry": p["entry"], "exit": exit_price, "quantity": p["qty"],
                                "fees": costs, "net_pnl": pnl, "reason": reason,
                                "reference_stop": p["stop"],
                                "reference_target": p["target"],
                                "stop_target_same_bar": reason == "stop" and stop_target_same_bar,
-                               "gap_beyond_stop_pct": gap_beyond_stop_pct})
+                               "gap_beyond_stop_pct": gap_beyond_stop_pct,
+                               "risk_budget_at_entry_usdt": p["risk_budget_at_entry"],
+                               "planned_stop_loss_usdt": p["planned_stop_loss"],
+                               "risk_budget_breached": budget_breached,
+                               "planned_stop_loss_exceeded": stop_loss_exceeded,
+                               "realized_loss_to_budget_multiple": (
+                                   realized_loss/p["risk_budget_at_entry"]
+                                   if realized_loss else None)})
                 position, cooldown_until = None, i+2
         peak = max(peak, cash)
         max_dd = max(max_dd, (peak-cash)/peak*100)
@@ -315,6 +341,9 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
                 "stop_first_ambiguous_count": ambiguous_stop_target_count,
                 "gap_stop_count": gap_stop_count,
                 "max_gap_beyond_stop_pct": max_gap_beyond_stop_pct,
+                "risk_budget_breach_count": risk_budget_breach_count,
+                "planned_stop_loss_exceeded_count": planned_stop_loss_exceeded_count,
+                "max_loss_to_risk_budget_multiple": max_loss_to_risk_budget_multiple,
                 "ambiguous_bar_policy": "stop_first_when_stop_and_target_both_touched",
             },
             "expectancy": (cash-cfg.equity)/len(trades) if trades else None,
@@ -325,5 +354,5 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
                             "Single-timeframe test; multi-timeframe research gate is NOT applied.",
                             "Spot long only, no leverage or funding; one position, two-bar cooldown.",
                             "Next-open fills, fixed adverse slippage, stop-first ambiguous candles; ambiguity and gap diagnostics are observed OHLC scenarios, not authenticated execution paths.",
-                            "UTC gross realized daily loss cap; gaps may exceed planned risk.",
+                            "UTC gross realized daily loss cap; per-entry budget is a sizing limit, not a guaranteed loss limit; gaps may exceed it.",
                             "Does not model partial fills, liquidity impact or intra-bar equity peaks."]}

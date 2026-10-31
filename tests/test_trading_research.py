@@ -162,6 +162,13 @@ class SimulatorTests(unittest.TestCase):
         self.assertEqual(result["execution_diagnostics"]["gap_stop_count"], 0)
         self.assertIsNone(result["execution_diagnostics"]["max_gap_beyond_stop_pct"])
         self.assertAlmostEqual(trade["net_pnl"],-5)
+        self.assertAlmostEqual(trade["risk_budget_at_entry_usdt"], 5)
+        self.assertAlmostEqual(trade["planned_stop_loss_usdt"], 5)
+        self.assertFalse(trade["risk_budget_breached"])
+        self.assertFalse(trade["planned_stop_loss_exceeded"])
+        self.assertAlmostEqual(trade["realized_loss_to_budget_multiple"], 1)
+        self.assertEqual(result["execution_diagnostics"]["risk_budget_breach_count"], 0)
+        self.assertEqual(result["execution_diagnostics"]["planned_stop_loss_exceeded_count"], 0)
         self.assertGreater(trade["fees"],0)
         self.assertAlmostEqual(result["ending_equity"],995)
 
@@ -179,6 +186,16 @@ class SimulatorTests(unittest.TestCase):
         self.assertEqual(result["execution_diagnostics"]["stop_first_ambiguous_count"], 0)
         self.assertAlmostEqual(result["execution_diagnostics"]["max_gap_beyond_stop_pct"],
                                (95-80)/95*100)
+        trade = result["trades"][0]
+        self.assertAlmostEqual(trade["risk_budget_at_entry_usdt"], 5)
+        self.assertAlmostEqual(trade["planned_stop_loss_usdt"], 5)
+        self.assertTrue(trade["risk_budget_breached"])
+        self.assertTrue(trade["planned_stop_loss_exceeded"])
+        self.assertGreater(trade["realized_loss_to_budget_multiple"], 1)
+        self.assertEqual(result["execution_diagnostics"]["risk_budget_breach_count"], 1)
+        self.assertEqual(result["execution_diagnostics"]["planned_stop_loss_exceeded_count"], 1)
+        self.assertAlmostEqual(result["execution_diagnostics"]["max_loss_to_risk_budget_multiple"],
+                               trade["realized_loss_to_budget_multiple"])
 
     def test_daily_cap_and_cooldown_do_not_allow_unbounded_reentries(self):
         data=bars(85)
@@ -204,6 +221,9 @@ class SimulatorTests(unittest.TestCase):
         self.assertEqual(result["execution_diagnostics"]["gap_stop_count"], 0)
         self.assertEqual(result["execution_diagnostics"]["stop_first_ambiguous_count"], 0)
         self.assertIsNone(result["execution_diagnostics"]["max_gap_beyond_stop_pct"])
+        self.assertEqual(result["execution_diagnostics"]["risk_budget_breach_count"], 0)
+        self.assertEqual(result["execution_diagnostics"]["planned_stop_loss_exceeded_count"], 0)
+        self.assertIsNone(result["execution_diagnostics"]["max_loss_to_risk_budget_multiple"])
         json.dumps(result,allow_nan=False)
         self.assertIn("NOT applied",str(result["limitations"]))
 

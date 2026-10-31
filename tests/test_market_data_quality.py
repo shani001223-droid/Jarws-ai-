@@ -66,6 +66,38 @@ class QualityUnitTests(unittest.TestCase):
                                   NOW//1000, NOW//1000)["status"],
             "verified_sources_agree")
 
+    def test_kraken_epoch_seconds_refuse_lossy_float_coercion(self):
+        # float('1800000000.00000001') rounds to an integer in binary64.
+        for invalid in (True, 1.5, 1800000000.0, "1800000000.00000001",
+                        "1.8e9", "01800000000", -1):
+            with self.subTest(invalid=invalid):
+                b, k = fixtures()
+                k["result"]["XXBTZUSD"][15][0] = invalid
+                with self.assertRaisesRegex(mq.MarketDataQualityError,
+                                            "invalid_kraken_time"):
+                    mq.verify_spot_market("BTCUSDT", "15m", b, k, NOW,
+                                          NOW//1000, NOW//1000)
+        b, k = fixtures()
+        k["result"]["XXBTZUSD"][15][0] = str(k["result"]["XXBTZUSD"][15][0])
+        self.assertEqual(mq.verify_spot_market("BTCUSDT", "15m", b, k, NOW,
+                                               NOW//1000, NOW//1000)["status"],
+                         "verified_sources_agree")
+
+    def test_taker_quote_must_match_taker_base_at_candle_prices(self):
+        for buy_base, buy_quote in (("4", "1"), ("4", "800"),
+                                    ("0", "1"), ("4", "-1")):
+            with self.subTest(buy_base=buy_base, buy_quote=buy_quote):
+                b, k = fixtures()
+                b[12][9], b[12][10] = buy_base, buy_quote
+                with self.assertRaises(mq.MarketDataQualityError):
+                    mq.verify_spot_market("BTCUSDT", "15m", b, k, NOW,
+                                          NOW//1000, NOW//1000)
+        b, k = fixtures()
+        b[12][10] = "402"
+        self.assertEqual(mq.verify_spot_market("BTCUSDT", "15m", b, k, NOW,
+                                               NOW//1000, NOW//1000)["status"],
+                         "verified_sources_agree")
+
     def test_fixed_host_allowlist_and_no_user_url(self):
         b, k = mq.public_urls("ETHUSDT", "1h")
         self.assertIn("data-api.binance.vision", b)

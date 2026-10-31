@@ -73,6 +73,26 @@ def _binance_timestamp_ms(value) -> int:
     return stamp
 
 
+def _kraken_timestamp_seconds(value) -> int:
+    """Keep Kraken epoch-second identities exact; float() can round fractions.
+
+    Real public responses use integer seconds. Canonical ASCII decimal strings
+    are tolerated, but floats, booleans, exponent/fractional and padded values
+    must not be rounded into a different closed candle.
+    """
+    if type(value) is int:
+        stamp = value
+    elif (type(value) is str and value.isascii() and value.isdecimal()
+          and 1 <= len(value) <= 12
+          and (len(value) == 1 or value[0] != "0")):
+        stamp = int(value)
+    else:
+        raise MarketDataQualityError("invalid_kraken_time")
+    if stamp < 0 or stamp > 999_999_999_999:
+        raise MarketDataQualityError("invalid_kraken_time")
+    return stamp
+
+
 def _count(value) -> int:
     if isinstance(value, bool) or not isinstance(value, (str, int)):
         raise MarketDataQualityError("invalid_trade_count")
@@ -124,6 +144,13 @@ def binance_candles(payload, interval: str, now_ms: int):
         if (buy_base < 0 or buy_quote < 0 or buy_base > base + 1e-9
                 or buy_quote > quote + 1e-7):
             raise MarketDataQualityError("invalid_taker_volume")
+        # A taker-buy quote amount must represent the SAME traded base at
+        # prices inside this candle, not merely be below the total volume.
+        # Otherwise a malformed 4-BTC / 1-USDT buy passes the old check.
+        if (buy_base == 0 and buy_quote != 0) or (
+                buy_base > 0 and not low * buy_base * 0.999
+                <= buy_quote <= high * buy_base * 1.001):
+            raise MarketDataQualityError("inconsistent_taker_quote_volume")
     return _validate_candles(payload, interval, now_ms)
 
 
@@ -149,10 +176,7 @@ def kraken_candles(payload, interval: str, now_ms: int, *, expected_symbol: str 
     for row in raw[-500:]:
         if not isinstance(row, list) or len(row) != 8:
             raise MarketDataQualityError("invalid_kraken_row")
-        epoch = _number(row[0])
-        if epoch < 0 or not epoch.is_integer():
-            raise MarketDataQualityError("invalid_kraken_time")
-        start = int(epoch) * 1000
+        start = _kraken_timestamp_seconds(row[0]) * 1000
         o, h, low, close, vwap, base = (_number(row[i]) for i in range(1, 7))
         count = _count(row[7])
         if base < 0 or count < 0 or (base > 0 and not low <= vwap <= h):

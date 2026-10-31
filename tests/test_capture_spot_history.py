@@ -143,6 +143,25 @@ class CaptureTests(unittest.TestCase):
                 "BTCUSDT", fetch_json=lambda u: k if "kraken.com" in u else b,
                 clock=lambda: NOW / 1000)
 
+    def test_manual_capture_refuses_rounded_kraken_epoch(self):
+        b, k = fixtures()
+        # This fractional string would round to an integer through float().
+        k["result"]["XXBTZUSD"][80][0] = "1800000000.00000001"
+        with self.assertRaisesRegex(MarketDataQualityError,
+                                    "invalid_kraken_time"):
+            capture.capture_spot_history(
+                "BTCUSDT", fetch_json=lambda u: k if "kraken.com" in u else b,
+                clock=lambda: NOW / 1000)
+
+    def test_manual_capture_refuses_inconsistent_taker_buy_quote(self):
+        b, k = fixtures()
+        b[80][10] = "1"  # Four BTC of taker buys cannot cost one USDT.
+        with self.assertRaisesRegex(MarketDataQualityError,
+                                    "inconsistent_taker_quote_volume"):
+            capture.capture_spot_history(
+                "BTCUSDT", fetch_json=lambda u: k if "kraken.com" in u else b,
+                clock=lambda: NOW / 1000)
+
     def test_unsupported_pair_never_calls_network(self):
         with self.assertRaises(MarketDataQualityError):
             capture.capture_spot_history("SOLUSDT",

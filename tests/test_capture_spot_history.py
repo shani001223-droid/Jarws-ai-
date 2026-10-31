@@ -80,8 +80,12 @@ class CaptureTests(unittest.TestCase):
         for field in (1, 2, 3):
             with self.subTest(field=field):
                 b, k = fixtures()
-                k["result"]["XXBTZUSD"][-80][field] = (
-                    "70" if field == 3 else "130")
+                row = k["result"]["XXBTZUSD"][-80]
+                if field == 1:
+                    # Valid OHLC: only the open breaches the 2% venue bound.
+                    row[1], row[2] = "102.5", "103"
+                else:
+                    row[field] = "70" if field == 3 else "130"
                 with self.assertRaisesRegex(MarketDataQualityError,
                                             "historical_venue_ohlc_disagreement"):
                     capture.capture_spot_history(

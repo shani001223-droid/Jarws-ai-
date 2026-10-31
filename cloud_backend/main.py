@@ -1329,14 +1329,31 @@ _ALLOWED_PAIRS = {"BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT"}
 _ALLOWED_INTERVALS = {"1m", "5m", "15m", "1h", "4h", "1d"}
 
 
+def _unique_public_json_pairs(pairs):
+    """Refuse duplicate provider fields, including inside nested OHLC data."""
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("Ambiguous public market JSON")
+        result[key] = value
+    return result
+
+
+def _reject_public_json_constant(value):
+    # Python's JSON decoder otherwise accepts NaN/Infinity, unlike strict JSON.
+    raise ValueError("Non-finite public market JSON")
+
+
 def _read_public_json(url: str) -> object:
-    """Bound external I/O. Never accept arbitrary user supplied URLs."""
+    """Bound external I/O and strictly parse fixed public-market responses."""
     request = Request(url, headers={"User-Agent": "HOSHI-public-data/1.0", "Accept": "application/json"})
     with urlopen(request, timeout=7) as response:
         raw = response.read(900001)
     if len(raw) > 900000:
         raise ValueError("External response is too large")
-    return json.loads(raw.decode("utf-8"))
+    return json.loads(raw.decode("utf-8"),
+                      object_pairs_hook=_unique_public_json_pairs,
+                      parse_constant=_reject_public_json_constant)
 
 
 def _public_data(cache_key: str, url: str, ttl: int) -> tuple[object, int]:

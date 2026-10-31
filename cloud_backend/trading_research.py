@@ -263,8 +263,15 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
             pending = None
         if position:
             p = position
-            # Worst adverse excursion for this bar, including a gap below stop.
-            adverse = b.open if b.open < p["stop"] else (p["stop"] if b.low <= p["stop"] else b.low)
+            # A gap through target closes at the OPEN; a later intrabar
+            # low is post-exit and must not inflate modeled drawdown.
+            # A gap below stop still records the adverse opening fill.
+            if b.open <= p["stop"]:
+                adverse = b.open
+            elif b.open >= p["target"]:
+                adverse = p["target"]
+            else:
+                adverse = p["stop"] if b.low <= p["stop"] else b.low
             marked = cash + p["qty"]*((adverse*(1-slip)-p["entry"])
                                      - fee*(adverse*(1-slip)+p["entry"]))
             max_dd = max(max_dd, (peak-marked)/peak*100)

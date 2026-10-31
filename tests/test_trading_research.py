@@ -191,6 +191,23 @@ class SimulatorTests(unittest.TestCase):
             self.assertEqual(result["execution_diagnostics"]["stop_first_ambiguous_count"], 0)
             self.assertEqual(result["execution_diagnostics"]["gap_stop_count"], 0)
 
+    def test_target_gap_drawdown_excludes_post_exit_intrabar_low(self):
+        # Both candles open above the planned target and therefore exit
+        # immediately at the same conservative target price. The later
+        # lows cannot change the already-closed trade's drawdown.
+        outcomes = []
+        for low in (90, 111):
+            data = bars(67)
+            data[65] = replace(data[65], open=115, high=116, low=low, close=115)
+            with patch.object(tr, "setup", side_effect=one_signal):
+                outcomes.append(tr.backtest(data, "trend_pullback",
+                                            tr.SimulationConfig()))
+        self.assertEqual([x["trades"][0]["reason"] for x in outcomes],
+                         ["target_gap_open", "target_gap_open"])
+        self.assertAlmostEqual(outcomes[0]["max_drawdown_pct"],
+                               outcomes[1]["max_drawdown_pct"])
+        self.assertAlmostEqual(outcomes[0]["net_pnl"], outcomes[1]["net_pnl"])
+
     def test_stop_gap_open_precedes_intrabar_target(self):
         data = bars(67)
         data[65] = replace(data[65], open=80, high=120, low=79, close=100)

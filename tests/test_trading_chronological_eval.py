@@ -124,6 +124,29 @@ class ChronologicalEvaluationTests(unittest.TestCase):
             self.assertNotIn(str(source), bad.stderr)
 
 
+    def test_offline_dataset_rejects_ambiguous_duplicate_json_keys(self):
+        # The receipt already rejects duplicate fields; the source candle
+        # file must do the same before any simulation or provenance hashing.
+        from scripts.evaluate_trading_paper import load_local
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "candles.json"
+            for raw in (
+                '{"symbol":"BTCUSDT","symbol":"ETHUSDT","interval":"15m","candles":[]}',
+                '{"symbol":"BTCUSDT","interval":"15m","candles":[],"candles":[]}',
+            ):
+                with self.subTest(raw=raw):
+                    source.write_text(raw, encoding="utf-8")
+                    with self.assertRaisesRegex(ValueError, "duplicate_json_field"):
+                        load_local(source)
+                    run = subprocess.run([sys.executable, "-m",
+                                          "scripts.evaluate_trading_paper",
+                                          "--input", str(source)],
+                                         cwd=Path(__file__).resolve().parents[1],
+                                         capture_output=True, text=True, timeout=30)
+                    self.assertEqual(run.returncode, 2)
+                    self.assertEqual(run.stdout, "")
+                    self.assertNotIn(str(source), run.stderr)
+
     def test_rolling_robustness_disjoint_scored_windows_and_cost_stress(self):
         result = ev.evaluate_rolling_robustness(self.bars, "BTCUSDT", "trend_pullback")
         self.assertEqual(result["split"]["holdout_scored_bars"], 90)

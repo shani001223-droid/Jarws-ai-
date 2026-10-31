@@ -18,6 +18,7 @@ def load_local(path: Path):
     if not path.is_file() or path.stat().st_size > 250_000:
         raise ValueError("invalid_input_file")
     payload = json.loads(path.read_text(encoding="utf-8"),
+                         object_pairs_hook=_unique_json_pairs,
                          parse_constant=lambda _: (_ for _ in ()).throw(ValueError("invalid_json")))
     if (not isinstance(payload, dict) or set(payload) != {"symbol", "interval", "candles"}
             or payload["interval"] != "15m" or not isinstance(payload["candles"], list)):
@@ -37,7 +38,7 @@ def _unique_json_pairs(pairs):
     result = {}
     for key, value in pairs:
         if key in result:
-            raise ValueError("duplicate_receipt_field")
+            raise ValueError("duplicate_json_field")
         result[key] = value
     return result
 

@@ -29,6 +29,16 @@ class _NoRedirect(HTTPRedirectHandler):
         raise MarketDataQualityError("provider_redirect_refused")
 
 
+def _unique_provider_pairs(pairs):
+    """Reject ambiguous duplicate JSON object keys at every nesting level."""
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise MarketDataQualityError("invalid_provider_json")
+        result[key] = value
+    return result
+
+
 def _fetch_json(url: str):
     """Fetch ONLY a caller-provided fixed public_urls URL; refuse redirects.
 
@@ -55,6 +65,7 @@ def _fetch_json(url: str):
             raise MarketDataQualityError("oversized_or_empty_provider_response")
     try:
         return json.loads(body.decode("utf-8"),
+                          object_pairs_hook=_unique_provider_pairs,
                           parse_constant=lambda _: (_ for _ in ()).throw(
                               MarketDataQualityError("invalid_provider_json")))
     except (UnicodeError, ValueError) as exc:

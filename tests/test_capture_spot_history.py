@@ -149,6 +149,26 @@ class CaptureTests(unittest.TestCase):
             capture.capture_spot_history(
                 "BTCUSDT", fetch_json=lambda _: (_ for _ in ()).throw(OSError("offline")))
 
+    def test_public_provider_json_rejects_duplicate_keys_without_network(self):
+        # A 200 response with conflicting JSON fields must not be accepted as
+        # one unambiguous exchange observation (including nested objects).
+        class FakeResponse(io.BytesIO):
+            status = 200
+            headers = {"Content-Type": "application/json"}
+
+        for raw in (b'{"error":[],"error":[]}',
+                    b'{"result":{"XXBTZUSD":[],"XXBTZUSD":[]},"error":[]}',
+                    b'{"symbol":"BTCUSDT","symbol":"ETHUSDT"}'):
+            with self.subTest(raw=raw), patch.object(capture, "build_opener") as opener:
+                opener.return_value.open.return_value.__enter__.return_value = FakeResponse(raw)
+                with self.assertRaisesRegex(MarketDataQualityError,
+                                            "invalid_provider_json"):
+                    capture._fetch_json("https://api.kraken.com/0/public/OHLC")
+        with patch.object(capture, "build_opener") as opener:
+            opener.return_value.open.return_value.__enter__.return_value = FakeResponse(b'{"error":[],"result":{}}')
+            self.assertEqual(capture._fetch_json("https://api.kraken.com/0/public/OHLC"),
+                             {"error": [], "result": {}})
+
     def test_cli_failure_emits_no_dataset_or_prices(self):
         output, errors = io.StringIO(), io.StringIO()
         with patch.object(capture, "capture_spot_history",

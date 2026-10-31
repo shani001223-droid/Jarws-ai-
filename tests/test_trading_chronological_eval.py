@@ -125,6 +125,9 @@ class ChronologicalEvaluationTests(unittest.TestCase):
                                trade["net_pnl"])
         self.assertEqual(diagnostics["strategy_resolved_trade_count"], 0)
         self.assertAlmostEqual(diagnostics["strategy_resolved_net_pnl_usdt"], 0)
+        self.assertIsNone(diagnostics["strategy_resolved_win_rate_pct"])
+        self.assertIsNone(diagnostics["strategy_resolved_expectancy_usdt"])
+        self.assertIsNone(diagnostics["strategy_resolved_profit_factor"])
         self.assertAlmostEqual(report["net_pnl"], trade["net_pnl"])
         self.assertFalse(report["orders_enabled"])
 
@@ -135,6 +138,9 @@ class ChronologicalEvaluationTests(unittest.TestCase):
         self.assertEqual(empty["execution_diagnostics"]["terminal_forced_close_net_pnl_usdt"], 0)
         self.assertEqual(empty["execution_diagnostics"]["strategy_resolved_trade_count"], 0)
         self.assertEqual(empty["execution_diagnostics"]["strategy_resolved_net_pnl_usdt"], 0)
+        self.assertIsNone(empty["execution_diagnostics"]["strategy_resolved_win_rate_pct"])
+        self.assertIsNone(empty["execution_diagnostics"]["strategy_resolved_expectancy_usdt"])
+        self.assertIsNone(empty["execution_diagnostics"]["strategy_resolved_profit_factor"])
 
     def test_no_trade_outcome_is_preserved(self):
         flat = [replace(b, open=100, high=100.1, low=99.9, close=100, volume=10)
@@ -157,6 +163,42 @@ class ChronologicalEvaluationTests(unittest.TestCase):
         self.assertEqual(result["holdout"]["net_pnl"], -3.5)
         self.assertEqual(result["holdout"]["trades"][0]["reason"], "gap_stop")
         self.assertFalse(result["holdout_no_trades"])
+
+    def test_strategy_resolved_metrics_exclude_terminal_mark_from_denominator(self):
+        from cloud_backend import trading_research as tr
+        # One early modeled stop, then a distinct terminal forced mark.
+        # These synthetic candles and patched signals are not market evidence.
+        flat = [replace(b, open=100, high=101, low=99, close=100.2, volume=10)
+                for b in self.bars]
+        first_signal, final_signal = flat[63].time, flat[-2].time
+
+        def two_signals(bars, strategy):
+            if bars[-1].time == first_signal:
+                return {"stop": 99.5, "reference_entry": 100.2}
+            if bars[-1].time == final_signal:
+                return {"stop": 90.0, "reference_entry": 100.2}
+            return None
+
+        with patch.object(tr, "setup", side_effect=two_signals):
+            report = tr.backtest(flat, "trend_pullback", SimulationConfig())
+        self.assertEqual(report["trade_count"], 2)
+        resolved = [t for t in report["trades"] if not t["terminal_forced_mark"]]
+        terminal = [t for t in report["trades"] if t["terminal_forced_mark"]]
+        self.assertEqual(len(resolved), 1)
+        self.assertEqual(len(terminal), 1)
+        self.assertLess(resolved[0]["net_pnl"], 0)
+        diagnostics = report["execution_diagnostics"]
+        self.assertEqual(diagnostics["strategy_resolved_trade_count"], 1)
+        self.assertEqual(diagnostics["terminal_forced_close_count"], 1)
+        self.assertAlmostEqual(diagnostics["strategy_resolved_net_pnl_usdt"],
+                               resolved[0]["net_pnl"])
+        self.assertEqual(diagnostics["strategy_resolved_win_rate_pct"], 0)
+        self.assertAlmostEqual(diagnostics["strategy_resolved_expectancy_usdt"],
+                               resolved[0]["net_pnl"])
+        self.assertEqual(diagnostics["strategy_resolved_profit_factor"], 0)
+        self.assertAlmostEqual(report["net_pnl"],
+                               resolved[0]["net_pnl"] + terminal[0]["net_pnl"])
+        self.assertFalse(report["orders_enabled"])
 
     def test_gaps_duplicates_ohlcv_and_timestamp_forgery_are_rejected(self):
         variants = [

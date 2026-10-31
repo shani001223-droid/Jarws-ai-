@@ -398,6 +398,14 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
     wins = sum(t["net_pnl"] > 0 for t in trades)
     gross_profit = sum(max(0, t["net_pnl"]) for t in trades)
     gross_loss = sum(max(0, -t["net_pnl"]) for t in trades)
+    # Forced last-candle marks are NOT strategy-resolved trades. The headline
+    # all-trade metrics remain unchanged for equity reconciliation, but a
+    # separate denominator prevents terminal marks masquerading as wins/losses.
+    resolved = [t for t in trades if not t["terminal_forced_mark"]]
+    resolved_net = sum(t["net_pnl"] for t in resolved)
+    resolved_wins = sum(t["net_pnl"] > 0 for t in resolved)
+    resolved_profit = sum(max(0, t["net_pnl"]) for t in resolved)
+    resolved_loss = sum(max(0, -t["net_pnl"]) for t in resolved)
     return {"mode": "historical-paper-simulation", "orders_enabled": False,
             "rule_version": RULE_VERSION, "strategy": strategy, "interval": "15m",
             "config": asdict(cfg), "bars": len(bars),
@@ -414,8 +422,14 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
                                         - entry_skipped_daily_cap - entry_skipped_risk_capacity,
                 "terminal_forced_close_count": terminal_forced_close_count,
                 "terminal_forced_close_net_pnl_usdt": terminal_forced_close_net_pnl,
-                "strategy_resolved_trade_count": len(trades) - terminal_forced_close_count,
-                "strategy_resolved_net_pnl_usdt": cash - cfg.equity - terminal_forced_close_net_pnl,
+                "strategy_resolved_trade_count": len(resolved),
+                "strategy_resolved_net_pnl_usdt": resolved_net,
+                "strategy_resolved_win_rate_pct": (
+                    resolved_wins / len(resolved) * 100 if resolved else None),
+                "strategy_resolved_expectancy_usdt": (
+                    resolved_net / len(resolved) if resolved else None),
+                "strategy_resolved_profit_factor": (
+                    resolved_profit / resolved_loss if resolved_loss else None),
                 "stop_first_ambiguous_count": ambiguous_stop_target_count,
                 "gap_stop_count": gap_stop_count,
                 "max_gap_beyond_stop_pct": max_gap_beyond_stop_pct,
@@ -439,5 +453,5 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
                             "Open-triggered exits use the observed bar open; intrabar stop/target exit_time is only a bar-close upper bound, not an observed execution timestamp.",
                             "UTC gross realized daily loss cap prevents new entries only; an already-open position may gap past the cap. Per-entry budgets and daily caps are not guaranteed maximum losses.",
                             "Paper entry attempts and refusal counts are modeled next-open signals, not real exchange submissions or observed fills.",
-                            "A still-open position at sample end is force-marked at the final close, including modeled costs; its PnL contributes to equity but is separately reported, not a strategy exit or observed fill.",
+                            "A still-open position at sample end is force-marked at the final close, including modeled costs; headline all-trade win rate/expectancy/profit factor include such marks, while strategy_resolved metrics exclude them; neither is a calibrated win probability.",
                             "Does not model partial fills, liquidity impact or intra-bar equity peaks."]}

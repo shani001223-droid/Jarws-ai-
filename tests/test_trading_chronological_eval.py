@@ -102,6 +102,41 @@ class ChronologicalEvaluationTests(unittest.TestCase):
             valid["holdout"]["execution_diagnostics"]["paper_entries_opened"], 0)
         self.assertGreater(valid["holdout"]["trade_count"], 0)
 
+    def test_last_bar_time_expiry_is_strategy_resolved_not_terminal_mark(self):
+        from cloud_backend import trading_research as tr
+        # Synthetic 15m bars: signal index 63, next-open entry index 64,
+        # 96-bar scheduled time exit index 160, exactly the sample's end.
+        flat = [replace(b, open=100, high=101, low=99, close=100.2,
+                        volume=10) for b in self.bars[:161]]
+        signal_time = flat[63].time
+
+        def one_signal(bars, strategy):
+            return ({"stop": 90.0, "reference_entry": 100.2}
+                    if bars[-1].time == signal_time else None)
+
+        with patch.object(tr, "setup", side_effect=one_signal):
+            scheduled = tr.backtest(flat, "trend_pullback", SimulationConfig())
+            premature = tr.backtest(flat[:-1], "trend_pullback", SimulationConfig())
+            stop_bar = flat.copy()
+            stop_bar[-1] = replace(stop_bar[-1], low=89.0)
+            stopped = tr.backtest(stop_bar, "trend_pullback", SimulationConfig())
+        self.assertEqual(scheduled["trade_count"], 1)
+        trade = scheduled["trades"][0]
+        self.assertEqual(trade["reason"], "time_exit")
+        self.assertEqual(trade["exit_time"], flat[-1].close_time)
+        self.assertEqual(trade["exit_time_precision"], "bar_close_exact")
+        self.assertFalse(trade["terminal_forced_mark"])
+        diagnostics = scheduled["execution_diagnostics"]
+        self.assertEqual(diagnostics["terminal_forced_close_count"], 0)
+        self.assertEqual(diagnostics["strategy_resolved_trade_count"], 1)
+        self.assertAlmostEqual(diagnostics["strategy_resolved_net_pnl_usdt"],
+                               trade["net_pnl"])
+        self.assertEqual(premature["trades"][0]["reason"], "end_of_sample")
+        self.assertEqual(premature["execution_diagnostics"]["terminal_forced_close_count"], 1)
+        self.assertEqual(stopped["trades"][0]["reason"], "stop")
+        self.assertEqual(stopped["execution_diagnostics"]["terminal_forced_close_count"], 0)
+        self.assertFalse(stopped["trades"][0]["terminal_forced_mark"])
+
     def test_terminal_forced_close_is_disclosed_separately_from_strategy_exits(self):
         from cloud_backend import trading_research as tr
         # Synthetic sample: a single signal at the penultimate close enters

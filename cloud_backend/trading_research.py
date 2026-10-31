@@ -329,10 +329,13 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
                 reason, raw_exit = "stop", p["stop"]
             elif b.high >= p["target"]:
                 reason, raw_exit = "target", p["target"]
+            elif i >= p["entry_index"] + 96:
+                # A scheduled strategy time exit on the last available bar
+                # is still a strategy-resolved close, NOT a forced terminal
+                # mark. Stops/targets above retain priority on that bar.
+                reason, raw_exit = "time_exit", b.close
             elif i == len(bars)-1:
                 reason, raw_exit = "end_of_sample", b.close
-            elif i >= p["entry_index"] + 96:
-                reason, raw_exit = "time_exit", b.close
             if reason:
                 gap_beyond_stop_pct = None
                 if reason == "gap_stop":

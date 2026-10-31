@@ -40,6 +40,8 @@ class CaptureTests(unittest.TestCase):
         self.assertIn("api.kraken.com", urls[1])
         self.assertEqual(len(dataset["candles"]), 499)
         self.assertEqual(receipt["cross_checked_closed_bars"], 20)
+        self.assertEqual(receipt["historical_cross_checked_closed_bars"], 499)
+        self.assertEqual(receipt["max_historical_close_difference_pct"], 0)
         self.assertFalse(receipt["orders_enabled"])
         bars = [Candle(*row) for row in dataset["candles"]]
         report = evaluate_chronological(bars, "BTCUSDT", "trend_pullback")
@@ -57,6 +59,46 @@ class CaptureTests(unittest.TestCase):
             capture.capture_spot_history(
                 "BTCUSDT", fetch_json=lambda u: k if "kraken.com" in u else b,
                 clock=lambda: NOW / 1000)
+
+
+    def test_disagreement_far_before_latest_twenty_refuses_capture(self):
+        b, k = fixtures()
+        # An old close disagrees, although the original latest-20 gate passes.
+        k["result"]["XXBTZUSD"][-80][2] = "106"
+        k["result"]["XXBTZUSD"][-80][4] = "105"
+        with self.assertRaisesRegex(MarketDataQualityError,
+                                    "historical_venue_price_disagreement"):
+            capture.capture_spot_history(
+                "BTCUSDT", fetch_json=lambda u: k if "kraken.com" in u else b,
+                clock=lambda: NOW / 1000)
+
+    def test_shorter_kraken_history_is_not_full_coverage(self):
+        b, k = fixtures()
+        k["result"]["XXBTZUSD"].pop(0)
+        with self.assertRaisesRegex(MarketDataQualityError,
+                                    "insufficient_historical_venue_overlap"):
+            capture.capture_spot_history(
+                "BTCUSDT", fetch_json=lambda u: k if "kraken.com" in u else b,
+                clock=lambda: NOW / 1000)
+
+    def test_historical_alignment_guard_rejects_shifted_peers(self):
+        a = [Candle(i * STEP, 100., 101., 99., 100., 10.,
+                    (i + 1) * STEP - 1) for i in range(240)]
+        b = [Candle((i + 1) * STEP, 100., 101., 99., 100., 10.,
+                    (i + 2) * STEP - 1) for i in range(240)]
+        with self.assertRaisesRegex(MarketDataQualityError,
+                                    "historical_venue_time_mismatch"):
+            capture.verify_historical_overlap(a, b)
+
+    def test_small_historical_quote_deviation_is_recorded(self):
+        a = [Candle(i * STEP, 100., 101., 99., 100., 10.,
+                    (i + 1) * STEP - 1) for i in range(240)]
+        b = [Candle(i * STEP, 100., 102., 99., 101., 10.,
+                    (i + 1) * STEP - 1) for i in range(240)]
+        check = capture.verify_historical_overlap(a, b)
+        self.assertEqual(check["historical_cross_checked_closed_bars"], 240)
+        self.assertGreater(check["max_historical_close_difference_pct"], 0)
+        self.assertLess(check["max_historical_close_difference_pct"], 2)
 
     def test_unsupported_pair_never_calls_network(self):
         with self.assertRaises(MarketDataQualityError):

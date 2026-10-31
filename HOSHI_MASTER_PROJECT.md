@@ -41,6 +41,12 @@ this development work. Exact local/CI verification receipts follow below;
 physical Realme Note 50 acceptance and deployment of this desk are pending.
 
 
+## 31 October 2026 — full captured-history two-venue close verification (DEVELOPMENT; CI and live-provider acceptance pending)
+
+Trading-only upgrade to the existing **manual** spot-history capture. The prior quality endpoint still checks the latest 20 aligned closed bars, but the capture CLI now additionally requires **every emitted 240–500 Binance 15m closed candle** to have a timestamp-aligned Kraken USD close within the existing 2% tolerance. Partial Kraken overlap, old disagreements or misaligned history refuse the entire dataset (WAIT, no partial JSON). The stderr receipt reports the actual full-history checked count and maximum close deviation, in addition to the prior latest-20 fields and SHA-256 input fingerprint. This is price-only cross-venue evidence: Binance OHLCV, Kraken quote-currency differences, real fills, signed provenance, future performance and profitability are NOT authenticated. No keys, order execution, background scanner, new provider or deployment.
+
+**Code-complete:** this branch's next trading-only commit. **CI-verified:** pending exact-head GitHub full backend/Node/Playwright and Docker results. **Real market/forward-paper evidence:** pending actual successful provider capture and independent chronological/forward evaluation. **Production/Realme Note 50:** not deployed or physically accepted. Historical 48/60 and V3 49/50 source-only unchanged; non-trading work deferred.
+
 ## 31 October 2026 — stronger two-venue spot quality gate (CODE/CI verified; live data pending)
 
 Trading-only hardening of the **existing** public Binance Spot USDT / Kraken Spot USD quality endpoint, not the single-venue V2 desk: `market_data_quality.verify_spot_market` now compares **20 consecutive, time-aligned closed candles** instead of only the last three. Any bar exceeding the existing 2% cross-quote close-difference bound fails closed; a disagreement 12 bars back cannot be hidden by three matching recent closes. Provider cache timestamps must be actual integers, recent, within 120 seconds of each other and no more than 5 seconds in the future. The response retains the backward-compatible last-three metric and adds 20-bar scope and maximum deviation. No strategy thresholds, order paths, API keys, external posting or paid services changed.

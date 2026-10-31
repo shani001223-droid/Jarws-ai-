@@ -16,7 +16,8 @@ import time
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from cloud_backend.market_data_quality import (
-    MarketDataQualityError, binance_candles, public_urls, verify_spot_market,
+    MarketDataQualityError, MAX_CLOSE_DIFFERENCE_PCT, binance_candles,
+    kraken_candles, public_urls, verify_spot_market,
 )
 
 INTERVAL = "15m"
@@ -60,11 +61,35 @@ def _fetch_json(url: str):
         raise MarketDataQualityError("invalid_provider_json") from exc
 
 
+def verify_historical_overlap(binance_bars, kraken_bars):
+    """Require independent close agreement for EVERY captured historical bar.
+
+    The fixed Kraken USD market is a quality cross-check, not an exchange
+    signature or a replacement for Binance USDT OHLCV/fill provenance.
+    A partial overlap must never be presented as full-history verification.
+    """
+    if len(kraken_bars) < len(binance_bars):
+        raise MarketDataQualityError("insufficient_historical_venue_overlap")
+    peers = kraken_bars[-len(binance_bars):]
+    differences = []
+    for a, b in zip(binance_bars, peers):
+        if a.time != b.time:
+            raise MarketDataQualityError("historical_venue_time_mismatch")
+        deviation = abs(a.close - b.close) / ((a.close + b.close) / 2) * 100
+        if deviation > MAX_CLOSE_DIFFERENCE_PCT:
+            raise MarketDataQualityError("historical_venue_price_disagreement")
+        differences.append(deviation)
+    return {
+        "historical_cross_checked_closed_bars": len(differences),
+        "max_historical_close_difference_pct": round(max(differences), 4),
+    }
+
+
 def capture_spot_history(symbol: str, *, fetch_json=None, clock=None):
-    """Capture 240-500 validated closed Binance bars and 20-bar Kraken check.
+    """Capture 240-500 closed Binance bars with full-overlap Kraken close check.
 
     Returns (evaluator_input, independent_quality_receipt). The quality check
-    covers ONLY the latest 20 aligned closes, NOT all historical bars. The
+    covers ALL emitted closed prices, NOT other OHLCV fields. The
     operator must independently retain and inspect the receipt; a SHA is not
     an exchange signature. Failure produces no partially valid data.
     """
@@ -83,6 +108,8 @@ def capture_spot_history(symbol: str, *, fetch_json=None, clock=None):
     bars = binance_candles(binance, INTERVAL, now_ms)
     if not 240 <= len(bars) <= 500:
         raise MarketDataQualityError("insufficient_evaluation_history")
+    historical = verify_historical_overlap(
+        bars, kraken_candles(kraken, INTERVAL, now_ms))
     # Same canonical Candle serialization/hash as paper_evaluation.py.
     canonical = json.dumps([asdict(bar) for bar in bars], sort_keys=True,
                            separators=(",", ":"), allow_nan=False).encode("utf-8")
@@ -101,13 +128,14 @@ def capture_spot_history(symbol: str, *, fetch_json=None, clock=None):
         "input_candle_sha256": hashlib.sha256(canonical).hexdigest(),
         "quality_status": quality["status"],
         "cross_checked_closed_bars": quality["cross_checked_closed_bars"],
+        **historical,
         "max_last_twenty_close_difference_pct": quality[
             "max_last_twenty_close_difference_pct"],
         "source_fetched_at": quality["source_fetched_at"],
         "sources": quality["sources"],
         "limitations": [
-            "Only the most recent 20 closed prices are compared across venues.",
-            "The earlier Binance history is NOT independently cross-checked.",
+            "Every emitted Binance close is compared to a timestamp-aligned Kraken close.",
+            "Only closes are cross-checked; historical OHLCV, fills and liquidity are NOT independently authenticated.",
             "BTC/USDT and BTC/USD (or ETH pairs) are different quote markets.",
             "The SHA-256 binds local candle content; it is not a provider signature.",
             "Public APIs can be unavailable or geographically restricted.",

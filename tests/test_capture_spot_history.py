@@ -41,7 +41,9 @@ class CaptureTests(unittest.TestCase):
         self.assertEqual(len(dataset["candles"]), 499)
         self.assertEqual(receipt["cross_checked_closed_bars"], 20)
         self.assertEqual(receipt["historical_cross_checked_closed_bars"], 499)
+        self.assertEqual(receipt["historical_ohlc_cross_checked_bars"], 499)
         self.assertEqual(receipt["max_historical_close_difference_pct"], 0)
+        self.assertEqual(receipt["max_historical_ohlc_difference_pct"], 0)
         self.assertFalse(receipt["orders_enabled"])
         bars = [Candle(*row) for row in dataset["candles"]]
         report = evaluate_chronological(bars, "BTCUSDT", "trend_pullback")
@@ -72,6 +74,21 @@ class CaptureTests(unittest.TestCase):
                 "BTCUSDT", fetch_json=lambda u: k if "kraken.com" in u else b,
                 clock=lambda: NOW / 1000)
 
+    def test_hidden_historical_wick_or_open_disagreement_refuses_capture(self):
+        # Same close on both venues is insufficient: a forged wick could
+        # create fake stops/targets in a historical paper replay.
+        for field in (1, 2, 3):
+            with self.subTest(field=field):
+                b, k = fixtures()
+                k["result"]["XXBTZUSD"][-80][field] = (
+                    "70" if field == 3 else "130")
+                with self.assertRaisesRegex(MarketDataQualityError,
+                                            "historical_venue_ohlc_disagreement"):
+                    capture.capture_spot_history(
+                        "BTCUSDT",
+                        fetch_json=lambda u: k if "kraken.com" in u else b,
+                        clock=lambda: NOW / 1000)
+
     def test_shorter_kraken_history_is_not_full_coverage(self):
         b, k = fixtures()
         k["result"]["XXBTZUSD"].pop(0)
@@ -99,6 +116,9 @@ class CaptureTests(unittest.TestCase):
         self.assertEqual(check["historical_cross_checked_closed_bars"], 240)
         self.assertGreater(check["max_historical_close_difference_pct"], 0)
         self.assertLess(check["max_historical_close_difference_pct"], 2)
+        self.assertEqual(check["historical_ohlc_cross_checked_bars"], 240)
+        self.assertGreaterEqual(check["max_historical_ohlc_difference_pct"],
+                                check["max_historical_close_difference_pct"])
 
     def test_unsupported_pair_never_calls_network(self):
         with self.assertRaises(MarketDataQualityError):
@@ -153,11 +173,15 @@ class CaptureTests(unittest.TestCase):
                          "local_unsigned_receipt_matches_candles")
         self.assertFalse(bound["independent_venue_verified"])
         self.assertFalse(bound["capture_receipt"]["independent_venue_authenticated"])
+        self.assertEqual(bound["capture_receipt"]["historical_ohlc_comparison_bars_claimed"],
+                         len(data["candles"]))
         self.assertNotIn("capture_receipt", report)
         for key, bad in (
             ("input_candle_sha256", "0" * 64),
             ("historical_cross_checked_closed_bars", 20),
             ("closed_bars", True),
+            ("historical_ohlc_cross_checked_bars", 20),
+            ("max_historical_ohlc_difference_pct", 3.0),
             ("symbol", "ETHUSDT"),
             ("first_open_at_ms", receipt["first_open_at_ms"] + STEP),
             ("captured_at_ms", receipt["captured_at_ms"] + 10 * STEP),

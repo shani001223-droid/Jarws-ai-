@@ -62,26 +62,39 @@ def _fetch_json(url: str):
 
 
 def verify_historical_overlap(binance_bars, kraken_bars):
-    """Require independent close agreement for EVERY captured historical bar.
+    """Require independent OHLC agreement for EVERY captured historical bar.
 
     The fixed Kraken USD market is a quality cross-check, not an exchange
-    signature or a replacement for Binance USDT OHLCV/fill provenance.
+    signature or a replacement for Binance USDT volume/fill provenance.
     A partial overlap must never be presented as full-history verification.
     """
     if len(kraken_bars) < len(binance_bars):
         raise MarketDataQualityError("insufficient_historical_venue_overlap")
     peers = kraken_bars[-len(binance_bars):]
-    differences = []
+    close_differences = []
+    ohlc_differences = []
     for a, b in zip(binance_bars, peers):
         if a.time != b.time:
             raise MarketDataQualityError("historical_venue_time_mismatch")
-        deviation = abs(a.close - b.close) / ((a.close + b.close) / 2) * 100
-        if deviation > MAX_CLOSE_DIFFERENCE_PCT:
+        close_deviation = abs(a.close - b.close) / ((a.close + b.close) / 2) * 100
+        if close_deviation > MAX_CLOSE_DIFFERENCE_PCT:
             raise MarketDataQualityError("historical_venue_price_disagreement")
-        differences.append(deviation)
+        # A forged historical wick/open can change paper stops and targets
+        # while leaving both venues' closes identical. Refuse such datasets.
+        deviations = [close_deviation]
+        for field in ("open", "high", "low"):
+            left, right = getattr(a, field), getattr(b, field)
+            difference = abs(left - right) / ((left + right) / 2) * 100
+            if difference > MAX_CLOSE_DIFFERENCE_PCT:
+                raise MarketDataQualityError("historical_venue_ohlc_disagreement")
+            deviations.append(difference)
+        close_differences.append(close_deviation)
+        ohlc_differences.append(max(deviations))
     return {
-        "historical_cross_checked_closed_bars": len(differences),
-        "max_historical_close_difference_pct": round(max(differences), 4),
+        "historical_cross_checked_closed_bars": len(close_differences),
+        "max_historical_close_difference_pct": round(max(close_differences), 4),
+        "historical_ohlc_cross_checked_bars": len(ohlc_differences),
+        "max_historical_ohlc_difference_pct": round(max(ohlc_differences), 4),
     }
 
 
@@ -89,7 +102,7 @@ def capture_spot_history(symbol: str, *, fetch_json=None, clock=None):
     """Capture 240-500 closed Binance bars with full-overlap Kraken close check.
 
     Returns (evaluator_input, independent_quality_receipt). The quality check
-    covers ALL emitted closed prices, NOT other OHLCV fields. The
+    covers ALL emitted OHLC prices, NOT base/quote volumes or fills. The
     operator must independently retain and inspect the receipt; a SHA is not
     an exchange signature. Failure produces no partially valid data.
     """
@@ -134,8 +147,8 @@ def capture_spot_history(symbol: str, *, fetch_json=None, clock=None):
         "source_fetched_at": quality["source_fetched_at"],
         "sources": quality["sources"],
         "limitations": [
-            "Every emitted Binance close is compared to a timestamp-aligned Kraken close.",
-            "Only closes are cross-checked; historical OHLCV, fills and liquidity are NOT independently authenticated.",
+            "Every emitted Binance OHLC bar is compared to a timestamp-aligned Kraken OHLC bar.",
+            "Cross-venue OHLC comparison is not signed provenance; volume, fills and liquidity are NOT independently authenticated.",
             "BTC/USDT and BTC/USD (or ETH pairs) are different quote markets.",
             "The SHA-256 binds local candle content; it is not a provider signature.",
             "Public APIs can be unavailable or geographically restricted.",

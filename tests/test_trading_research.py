@@ -172,6 +172,37 @@ class SimulatorTests(unittest.TestCase):
         self.assertGreater(trade["fees"],0)
         self.assertAlmostEqual(result["ending_equity"],995)
 
+    def test_target_gap_open_precedes_intrabar_stop_without_gap_windfall(self):
+        # Synthetic OHLC, not market evidence: target is crossed at the
+        # next bar OPEN, so a later intrabar low cannot fill stop first.
+        for opening in (110.15, 115):
+            data = bars(67)
+            data[65] = replace(data[65], open=opening, high=116, low=90, close=100)
+            with self.subTest(opening=opening), patch.object(
+                    tr, "setup", side_effect=one_signal):
+                result = tr.backtest(data, "trend_pullback", tr.SimulationConfig())
+            trade = result["trades"][0]
+            self.assertEqual(trade["reason"], "target_gap_open")
+            self.assertAlmostEqual(trade["exit"], trade["reference_target"]*.9995)
+            self.assertLessEqual(trade["exit"], opening*.9995 + 1e-8)
+            self.assertFalse(trade["stop_target_same_bar"])
+            self.assertIsNone(trade["gap_beyond_stop_pct"])
+            self.assertGreater(trade["net_pnl"], 0)
+            self.assertEqual(result["execution_diagnostics"]["stop_first_ambiguous_count"], 0)
+            self.assertEqual(result["execution_diagnostics"]["gap_stop_count"], 0)
+
+    def test_stop_gap_open_precedes_intrabar_target(self):
+        data = bars(67)
+        data[65] = replace(data[65], open=80, high=120, low=79, close=100)
+        with patch.object(tr, "setup", side_effect=one_signal):
+            result = tr.backtest(data, "trend_pullback", tr.SimulationConfig())
+        trade = result["trades"][0]
+        self.assertEqual(trade["reason"], "gap_stop")
+        self.assertAlmostEqual(trade["exit"], 80*.9995)
+        self.assertFalse(trade["stop_target_same_bar"])
+        self.assertLess(trade["net_pnl"], 0)
+        self.assertEqual(result["execution_diagnostics"]["gap_stop_count"], 1)
+
     def test_gap_beyond_stop_uses_actual_open_and_can_exceed_planned_risk(self):
         data=bars(67);data[65]=replace(data[65],open=80,high=81,low=79,close=80)
         with patch.object(tr,"setup",side_effect=one_signal):

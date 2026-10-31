@@ -270,11 +270,16 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
             max_dd = max(max_dd, (peak-marked)/peak*100)
             # OHLC bars cannot reveal whether the stop or target traded first.
             # Report this uncertainty, while keeping the conservative stop-first fill.
-            stop_target_same_bar = (b.open > p["stop"] and b.low <= p["stop"]
-                                    and b.high >= p["target"])
+            # A gap through an exit boundary is observable at bar open.
+            # Only an open BETWEEN stop and target leaves path ambiguity.
+            # Favorable target gaps fill at the target, not a better open.
+            stop_target_same_bar = (p["stop"] < b.open < p["target"]
+                                    and b.low <= p["stop"] and b.high >= p["target"])
             reason, raw_exit = None, None
             if b.open <= p["stop"]:
                 reason, raw_exit = "gap_stop", b.open
+            elif b.open >= p["target"]:
+                reason, raw_exit = "target_gap_open", p["target"]
             elif b.low <= p["stop"]:
                 reason, raw_exit = "stop", p["stop"]
             elif b.high >= p["target"]:

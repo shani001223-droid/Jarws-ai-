@@ -47,6 +47,31 @@ class CandleTests(unittest.TestCase):
             with self.subTest(index=index,column=column), self.assertRaises(ValueError):
                 tr.closed_candles(data,"15m",1_800_000_000_000)
 
+    def test_shared_research_parser_refuses_lossy_provider_timestamps(self):
+        # The mobile desk calls this shared parser, not the separate
+        # Binance/Kraken quality endpoint. Previously int(float) truncated
+        # fractional millisecond identities into apparently valid bars.
+        for tf in tr.INTERVALS:
+            for column in (0, 6):
+                for invalid in (True, 1.5, "1e3", "01800000000000", -1):
+                    with self.subTest(tf=tf, column=column, invalid=invalid):
+                        data = rows(tf)
+                        data[20][column] = invalid
+                        with self.assertRaisesRegex(ValueError, "Invalid candle timestamp"):
+                            tr.closed_candles(data, tf, 1_800_000_000_000)
+            # Even an exactly representable float is not an exact JSON
+            # integer type; a tiny fraction can disappear in binary64.
+            data = rows(tf)
+            data[20][0] = float(data[20][0])
+            with self.assertRaisesRegex(ValueError, "Invalid candle timestamp"):
+                tr.closed_candles(data, tf, 1_800_000_000_000)
+            data = rows(tf)
+            data[20][0] = str(data[20][0])
+            data[20][6] = str(data[20][6])
+            self.assertEqual(len(tr.closed_candles(data, tf, 1_800_000_000_000)), 80)
+        with self.assertRaisesRegex(ValueError, "Invalid candle clock"):
+            tr.closed_candles(rows(), "15m", True)
+
     def test_flat_market_has_neutral_rsi_finite_atr_and_no_setup(self):
         data = bars()
         ind = tr.indicators(data)
@@ -166,6 +191,25 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(p.call_count,3)
         self.assertEqual(set(result["timeframes"]),{"15m","1h","4h"})
         self.assertEqual(result["market"],"spot")
+
+    def test_actual_mobile_desk_refuses_fractional_provider_timestamp(self):
+        # Exercise the real FastAPI route and _research_history with mocked
+        # transport. No synthetic price is presented as a live market quote.
+        from fastapi.testclient import TestClient
+        now = 1_800_000_000_000
+        def fetch(key, url, ttl):
+            tf = url.split("interval=")[1].split("&")[0]
+            data = rows(tf, now=now)
+            if tf == "15m":
+                data[20][0] = float(data[20][0]) + .75
+            return data, now // 1000
+        with patch.object(main, "_public_data", side_effect=fetch), patch.object(
+                main.time, "time", return_value=now / 1000), patch.object(
+                main, "load_knowledge", return_value=None):
+            response = TestClient(main.app).get("/api/trading/desk?symbol=BTCUSDT")
+        self.assertEqual(response.status_code, 503)
+        self.assertNotIn("paper_plan_only", response.text)
+        self.assertNotIn("reference_entry", response.text)
 
     def test_unknown_pair_no_network_and_stale_data_no_result(self):
         with patch.object(main,"_public_data") as p:

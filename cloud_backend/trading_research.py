@@ -22,9 +22,30 @@ class Candle:
     close_time: int
 
 
+def _exact_candle_timestamp_ms(value):
+    """Never truncate or round provider candle identities into valid bars.
+
+    Binance uses integer millisecond timestamps. Canonical ASCII decimal
+    strings remain compatible with existing normalized offline inputs.
+    """
+    if type(value) is int:
+        stamp = value
+    elif (type(value) is str and value.isascii() and value.isdecimal()
+          and 1 <= len(value) <= 16
+          and (len(value) == 1 or value[0] != "0")):
+        stamp = int(value)
+    else:
+        raise ValueError("Invalid candle timestamp")
+    if not 0 <= stamp <= 9_999_999_999_999_999:
+        raise ValueError("Invalid candle timestamp")
+    return stamp
+
+
 def closed_candles(rows, interval, now_ms):
     """Reject malformed/gapped/stale data, exclude the still-forming last bar."""
     step = INTERVALS[interval]
+    if type(now_ms) is not int or now_ms < 0:
+        raise ValueError("Invalid candle clock")
     if not isinstance(rows, list) or not 65 <= len(rows) <= 500:
         raise ValueError("Expected 65–500 candles")
     candles = []
@@ -32,7 +53,7 @@ def closed_candles(rows, interval, now_ms):
     for row in rows:
         if not isinstance(row, list) or len(row) < 7:
             raise ValueError("Malformed candle")
-        t, end = int(row[0]), int(row[6])
+        t, end = _exact_candle_timestamp_ms(row[0]), _exact_candle_timestamp_ms(row[6])
         o, h, lo, c, v = map(float, row[1:6])
         if (not all(math.isfinite(x) for x in (o, h, lo, c, v))
                 or min(o, h, lo, c) <= 0 or v < 0

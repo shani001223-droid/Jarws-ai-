@@ -1,5 +1,9 @@
 # HOSHI release precheck — 27 October 2026
 
+## 31 October 2026 — unmerged trading-only quality gate (development only)
+
+[Source/test e48dedeb](https://github.com/shani001223-droid/Jarws-ai-/commit/e48dedebd2bcf265c100455e7dac7d264dc73175) adds 20-bar aligned Binance/Kraken **OHLC** comparison to the separate public quality API, refusing discrepant opens/wicks with HTTP 503. This is not a live data capture, a change to the single-source mobile desk, or evidence of profitable fills. Exact-source [full CI 41202402163](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/41202402163) is pending; [Docker CI 41202402034](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/41202402034) passed. Independent forward paper performance and physical Realme Note 50 QA remain unverified. No production deploy, release authorization, merge or real-money orders. Existing 27 October production source below remains the last verified deployment; do not infer live changes from a newer branch/main commit.
+
 Production is live; current status and actual checks appear first.
 
 ## Production release — 27 October 2026

@@ -154,6 +154,13 @@ class SimulatorTests(unittest.TestCase):
         self.assertAlmostEqual(trade["exit"],95*.9995)
         self.assertEqual(trade["entry_time"],data[64].time)
         self.assertEqual(trade["reason"],"stop")
+        self.assertTrue(trade["stop_target_same_bar"])
+        self.assertEqual(trade["reference_stop"], 95)
+        self.assertGreater(trade["reference_target"], trade["entry"])
+        self.assertIsNone(trade["gap_beyond_stop_pct"])
+        self.assertEqual(result["execution_diagnostics"]["stop_first_ambiguous_count"], 1)
+        self.assertEqual(result["execution_diagnostics"]["gap_stop_count"], 0)
+        self.assertIsNone(result["execution_diagnostics"]["max_gap_beyond_stop_pct"])
         self.assertAlmostEqual(trade["net_pnl"],-5)
         self.assertGreater(trade["fees"],0)
         self.assertAlmostEqual(result["ending_equity"],995)
@@ -165,6 +172,13 @@ class SimulatorTests(unittest.TestCase):
         self.assertEqual(result["trades"][0]["reason"],"gap_stop")
         self.assertAlmostEqual(result["trades"][0]["exit"],80*.9995)
         self.assertLess(result["net_pnl"],-5)
+        self.assertFalse(result["trades"][0]["stop_target_same_bar"])
+        self.assertAlmostEqual(result["trades"][0]["gap_beyond_stop_pct"],
+                               (95-80)/95*100)
+        self.assertEqual(result["execution_diagnostics"]["gap_stop_count"], 1)
+        self.assertEqual(result["execution_diagnostics"]["stop_first_ambiguous_count"], 0)
+        self.assertAlmostEqual(result["execution_diagnostics"]["max_gap_beyond_stop_pct"],
+                               (95-80)/95*100)
 
     def test_daily_cap_and_cooldown_do_not_allow_unbounded_reentries(self):
         data=bars(85)
@@ -187,6 +201,9 @@ class SimulatorTests(unittest.TestCase):
         self.assertEqual(result["trade_count"],0)
         self.assertIsNone(result["win_rate_pct"])
         self.assertIsNone(result["profit_factor"])
+        self.assertEqual(result["execution_diagnostics"]["gap_stop_count"], 0)
+        self.assertEqual(result["execution_diagnostics"]["stop_first_ambiguous_count"], 0)
+        self.assertIsNone(result["execution_diagnostics"]["max_gap_beyond_stop_pct"])
         json.dumps(result,allow_nan=False)
         self.assertIn("NOT applied",str(result["limitations"]))
 

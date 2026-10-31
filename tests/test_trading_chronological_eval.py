@@ -30,6 +30,8 @@ class ChronologicalEvaluationTests(unittest.TestCase):
         self.assertIsNone(result["win_probability"])
         self.assertEqual(result["input_provenance"], "operator_supplied_unverified")
         self.assertNotIn("input_candles", result["holdout"])
+        self.assertIn("execution_diagnostics", result["holdout"])
+        self.assertIn("execution_diagnostics", result["training"])
         self.assertTrue(all(t["entry_time"] >= self.bars[210].time
                             for t in result["holdout"]["trades"]))
 
@@ -164,6 +166,7 @@ class ChronologicalEvaluationTests(unittest.TestCase):
             self.assertEqual(w["double_costs"]["config"]["fee_bps"], 20)
             self.assertEqual(w["double_costs"]["config"]["slippage_bps"], 10)
             self.assertNotIn("input_candles", w["baseline"])
+            self.assertIn("execution_diagnostics", w["baseline"])
             self.assertNotIn("input_candles", w["double_costs"])
             for scenario in (w["baseline"], w["double_costs"]):
                 self.assertTrue(all(t["entry_time"] >= w["first_scored_entry_at"]

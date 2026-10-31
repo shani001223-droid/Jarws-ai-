@@ -236,6 +236,7 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
     fee, slip = cfg.fee_bps/10_000, cfg.slippage_bps/10_000
     position, pending = None, None
     trades, day_losses, cooldown_until = [], {}, -1
+    ambiguous_stop_target_count, gap_stop_count, max_gap_beyond_stop_pct = 0, 0, None
     for i, b in enumerate(bars):
         day = b.time // 86_400_000
         # Expire any warmup-only pending signal at its very next bar. Never
@@ -259,6 +260,10 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
             marked = cash + p["qty"]*((adverse*(1-slip)-p["entry"])
                                      - fee*(adverse*(1-slip)+p["entry"]))
             max_dd = max(max_dd, (peak-marked)/peak*100)
+            # OHLC bars cannot reveal whether the stop or target traded first.
+            # Report this uncertainty, while keeping the conservative stop-first fill.
+            stop_target_same_bar = (b.open > p["stop"] and b.low <= p["stop"]
+                                    and b.high >= p["target"])
             reason, raw_exit = None, None
             if b.open <= p["stop"]:
                 reason, raw_exit = "gap_stop", b.open
@@ -271,6 +276,14 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
             elif i >= p["entry_index"] + 96:
                 reason, raw_exit = "time_exit", b.close
             if reason:
+                gap_beyond_stop_pct = None
+                if reason == "gap_stop":
+                    gap_stop_count += 1
+                    gap_beyond_stop_pct = max(0.0, (p["stop"]-b.open)/p["stop"]*100)
+                    max_gap_beyond_stop_pct = max(
+                        max_gap_beyond_stop_pct or 0.0, gap_beyond_stop_pct)
+                if reason == "stop" and stop_target_same_bar:
+                    ambiguous_stop_target_count += 1
                 exit_price = raw_exit*(1-slip)
                 costs = p["qty"]*fee*(p["entry"]+exit_price)
                 pnl = p["qty"]*(exit_price-p["entry"])-costs
@@ -278,7 +291,11 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
                 day_losses[day] = day_losses.get(day, 0)+max(0, -pnl)
                 trades.append({"entry_time": p["entry_time"], "exit_time": b.close_time,
                                "entry": p["entry"], "exit": exit_price, "quantity": p["qty"],
-                               "fees": costs, "net_pnl": pnl, "reason": reason})
+                               "fees": costs, "net_pnl": pnl, "reason": reason,
+                               "reference_stop": p["stop"],
+                               "reference_target": p["target"],
+                               "stop_target_same_bar": reason == "stop" and stop_target_same_bar,
+                               "gap_beyond_stop_pct": gap_beyond_stop_pct})
                 position, cooldown_until = None, i+2
         peak = max(peak, cash)
         max_dd = max(max_dd, (peak-cash)/peak*100)
@@ -294,6 +311,12 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
             "trade_count": len(trades), "win_rate_pct": wins/len(trades)*100 if trades else None,
             "initial_equity": cfg.equity, "ending_equity": cash, "net_pnl": cash-cfg.equity,
             "max_drawdown_pct": max_dd, "fees_paid": sum(t["fees"] for t in trades),
+            "execution_diagnostics": {
+                "stop_first_ambiguous_count": ambiguous_stop_target_count,
+                "gap_stop_count": gap_stop_count,
+                "max_gap_beyond_stop_pct": max_gap_beyond_stop_pct,
+                "ambiguous_bar_policy": "stop_first_when_stop_and_target_both_touched",
+            },
             "expectancy": (cash-cfg.equity)/len(trades) if trades else None,
             "profit_factor": gross_profit/gross_loss if gross_loss else None,
             "trades": trades,
@@ -301,6 +324,6 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
             "limitations": ["Short exploratory sample, not out-of-sample validation or forward demo.",
                             "Single-timeframe test; multi-timeframe research gate is NOT applied.",
                             "Spot long only, no leverage or funding; one position, two-bar cooldown.",
-                            "Next-open fills, fixed adverse slippage, stop-first ambiguous candles.",
+                            "Next-open fills, fixed adverse slippage, stop-first ambiguous candles; ambiguity and gap diagnostics are observed OHLC scenarios, not authenticated execution paths.",
                             "UTC gross realized daily loss cap; gaps may exceed planned risk.",
                             "Does not model partial fills, liquidity impact or intra-bar equity peaks."]}

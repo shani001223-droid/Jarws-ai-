@@ -1,8 +1,8 @@
 # HOSHI trading V2 — audit and implementation evidence
 
-## 31 October 2026 — independent quality OHLC gate (code complete; CI pending)
+## 31 October 2026 — independent quality OHLC gate (code/CI verified)
 
-[Source/test e48dedeb](https://github.com/shani001223-droid/Jarws-ai-/commit/e48dedebd2bcf265c100455e7dac7d264dc73175) now compares open/high/low/close on each of 20 aligned closed Binance/Kraken spot candles, not just closes. A >2% difference fails closed (quality API HTTP 503); deterministic 15m/1h/4h and API tests cover hidden wick/open divergence. This is the separate quality endpoint, NOT proof that the single-source mobile desk is cross-venue gated. [Full CI 41202402163](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/41202402163) pending; [Docker 41202402034](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/41202402034) passed. No fresh authenticated capture, independent forward paper results, profitability, production deployment or physical Realme acceptance. Historical 48/60 and V3 49/50 source-checked remain unchanged; non-trading work deferred.
+[Source/test e48dedeb](https://github.com/shani001223-droid/Jarws-ai-/commit/e48dedebd2bcf265c100455e7dac7d264dc73175) now compares open/high/low/close on each of 20 aligned closed Binance/Kraken spot candles, not just closes. A >2% difference fails closed (quality API HTTP 503); deterministic 15m/1h/4h and API tests cover hidden wick/open divergence. This is the separate quality endpoint, NOT proof that the single-source mobile desk is cross-venue gated. [Full Python/Node/Chromium CI 41202402163](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/41202402163) and [Docker/Uvicorn CI 41202402034](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/41202402034) passed on the exact source. No fresh authenticated capture, independent forward paper results, profitability, production deployment or physical Realme acceptance. Historical 48/60 and V3 49/50 source-checked remain unchanged; non-trading work deferred.
 
 ## 31 October 2026 — modeled paper-risk budget breaches (CODE/CI verified; external gates pending)
 

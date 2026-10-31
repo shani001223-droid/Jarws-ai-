@@ -13,6 +13,13 @@ except ImportError:  # direct Uvicorn main:app from cloud_backend/
     from trading_research import INTERVALS, closed_candles
 
 PAIRS = {"BTCUSDT": "XBTUSD", "ETHUSDT": "ETHUSD"}
+# Kraken's OHLC response identifies the actual returned market by key. Never
+# accept an arbitrary pair just because its OHLC prices happen to agree.
+# Kraken can return its canonical asset codes or the requested pair alias.
+KRAKEN_RESULT_KEYS = {
+    "BTCUSDT": frozenset(("XXBTZUSD", "XBTUSD")),
+    "ETHUSDT": frozenset(("XETHZUSD", "ETHUSD")),
+}
 KRAKEN_INTERVALS = {"15m": 15, "1h": 60, "4h": 240}
 MAX_CLOSE_DIFFERENCE_PCT = 2.0
 CROSS_CHECK_BARS = 20  # compare a bounded history, not only the final three closes
@@ -98,7 +105,7 @@ def binance_candles(payload, interval: str, now_ms: int):
     return _validate_candles(payload, interval, now_ms)
 
 
-def kraken_candles(payload, interval: str, now_ms: int):
+def kraken_candles(payload, interval: str, now_ms: int, *, expected_symbol: str | None = None):
     """Validate independent Kraken OHLC spot base volume (USD quote market)."""
     if not isinstance(payload, dict) or payload.get("error") != []:
         raise MarketDataQualityError("invalid_kraken_response")
@@ -108,6 +115,10 @@ def kraken_candles(payload, interval: str, now_ms: int):
     names = [key for key in result if key != "last"]
     if len(names) != 1 or not isinstance(result[names[0]], list):
         raise MarketDataQualityError("invalid_kraken_pair")
+    if expected_symbol is not None and (
+            expected_symbol not in KRAKEN_RESULT_KEYS
+            or names[0] not in KRAKEN_RESULT_KEYS[expected_symbol]):
+        raise MarketDataQualityError("kraken_pair_identity_mismatch")
     raw = result[names[0]]
     if not 65 <= len(raw) <= 720:
         raise MarketDataQualityError("invalid_kraken_history")
@@ -140,7 +151,7 @@ def verify_spot_market(symbol: str, interval: str, binance_payload,
     """
     public_urls(symbol, interval)
     first = binance_candles(binance_payload, interval, now_ms)
-    second = kraken_candles(kraken_payload, interval, now_ms)
+    second = kraken_candles(kraken_payload, interval, now_ms, expected_symbol=symbol)
     if len(first) < CROSS_CHECK_BARS or len(second) < CROSS_CHECK_BARS:
         raise MarketDataQualityError("insufficient_overlap")
     differences = []

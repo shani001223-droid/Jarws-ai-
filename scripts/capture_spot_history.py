@@ -122,7 +122,7 @@ def capture_spot_history(symbol: str, *, fetch_json=None, clock=None):
     if not 240 <= len(bars) <= 500:
         raise MarketDataQualityError("insufficient_evaluation_history")
     historical = verify_historical_overlap(
-        bars, kraken_candles(kraken, INTERVAL, now_ms))
+        bars, kraken_candles(kraken, INTERVAL, now_ms, expected_symbol=symbol))
     # Same canonical Candle serialization/hash as paper_evaluation.py.
     canonical = json.dumps([asdict(bar) for bar in bars], sort_keys=True,
                            separators=(",", ":"), allow_nan=False).encode("utf-8")

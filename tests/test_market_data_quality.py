@@ -56,6 +56,33 @@ class QualityUnitTests(unittest.TestCase):
             with self.assertRaises(mq.MarketDataQualityError):
                 mq.public_urls(pair, tf)
 
+    def test_kraken_returned_market_identity_must_match_requested_pair(self):
+        # Identical price bars do not prove that Kraken returned BTC or ETH.
+        for symbol, wrong_key in (("BTCUSDT", "XETHZUSD"),
+                                  ("ETHUSDT", "XXBTZUSD"),
+                                  ("BTCUSDT", "DOGEUSD")):
+            with self.subTest(symbol=symbol, wrong_key=wrong_key):
+                b, k = fixtures()
+                rows = k["result"].pop("XXBTZUSD")
+                k["result"][wrong_key] = rows
+                with self.assertRaisesRegex(mq.MarketDataQualityError,
+                                            "kraken_pair_identity_mismatch"):
+                    mq.verify_spot_market(symbol, "15m", b, k, NOW,
+                                          NOW//1000, NOW//1000)
+
+    def test_kraken_documented_pair_aliases_remain_compatible(self):
+        for symbol, accepted_key in (("BTCUSDT", "XXBTZUSD"),
+                                     ("BTCUSDT", "XBTUSD"),
+                                     ("ETHUSDT", "XETHZUSD"),
+                                     ("ETHUSDT", "ETHUSD")):
+            with self.subTest(symbol=symbol, accepted_key=accepted_key):
+                b, k = fixtures()
+                rows = k["result"].pop("XXBTZUSD")
+                k["result"][accepted_key] = rows
+                verified = mq.verify_spot_market(symbol, "15m", b, k, NOW,
+                                                 NOW//1000, NOW//1000)
+                self.assertEqual(verified["status"], "verified_sources_agree")
+
     def test_quote_volume_taker_volume_and_trade_count_are_validated(self):
         for column, value in ((7, "50000"), (7, "-1"), (7, "nan"),
                               (8, 0), (8, "1.0"), (9, "11"), (10, "1001")):

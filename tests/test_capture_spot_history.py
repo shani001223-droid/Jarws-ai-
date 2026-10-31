@@ -93,6 +93,16 @@ class CaptureTests(unittest.TestCase):
                         fetch_json=lambda u: k if "kraken.com" in u else b,
                         clock=lambda: NOW / 1000)
 
+    def test_capture_refuses_wrong_kraken_market_even_with_matching_prices(self):
+        b, k = fixtures()
+        rows = k["result"].pop("XXBTZUSD")
+        k["result"]["XETHZUSD"] = rows
+        with self.assertRaisesRegex(MarketDataQualityError,
+                                    "kraken_pair_identity_mismatch"):
+            capture.capture_spot_history(
+                "BTCUSDT", fetch_json=lambda u: k if "kraken.com" in u else b,
+                clock=lambda: NOW / 1000)
+
     def test_shorter_kraken_history_is_not_full_coverage(self):
         b, k = fixtures()
         k["result"]["XXBTZUSD"].pop(0)

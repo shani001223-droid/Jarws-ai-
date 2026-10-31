@@ -1,5 +1,14 @@
 # HOSHI — 60-Task Autonomous Development Roadmap
 
+## 31 October 2026 — transparent paper-entry refusal and UTC loss-cap lockout (source committed; full CI pending)
+
+**Trading-only code:** [commit `a686d8787c94795a5e909a3a6fa893fa020493bd`](https://github.com/shani001223-droid/Jarws-ai-/commit/a686d8787c94795a5e909a3a6fa893fa020493bd) adds next-open paper-entry attempt/refusal accounting to the existing 15m chronological long-only simulator. It reports total attempts, opened hypothetical positions, rejected entry/stop gaps, UTC daily realized-gross-loss lockouts and insufficient paper risk/cash capacity. The four mutually exclusive outcomes sum to attempts; this distinguishes an actual modelled risk veto from a strategy that never produced a setup. No strategy, fill, fee, slippage, daily loss cap, live order, leverage, credentials, continuous scanner or non-trading functionality changed. Deterministic regression tests exercise the daily-cap lockout and invalid entry/stop gap with negative/zero-trade outcomes retained.
+
+**Source/CI:** the exact source was pushed via a current-parent compare-and-swap. [Docker/Uvicorn push CI 41230008032](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/41230008032) and [Docker PR CI 41230013008](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/41230013008) concluded success. [Full Python/Node/Chromium push CI 41230008011](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/41230008011) and [PR CI 41230012962](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/41230012962) were still in progress at this checkpoint, not assumed successful. Source-level fixtures are not fresh public-market evidence or verified profitability.
+
+**Real data / independent paper:** no newly verified fresh Binance/Kraken capture, independent forward-paper fills or calibrated win probability. **Production / device:** draft PR #29 remains unmerged; no deployment, release authorization or physical Realme Note 50 acceptance. Historical roadmap **48/60 checked, 12 deferred**, V3 **49/50 source-checked and runtime-blocked**, main, backup/V3 branches, voice/privacy/Stop controls and non-trading deferral remain unchanged. No new repo, PR, automation, purchase, secret change, outside publication or real-money order.
+
+
 
 ## 30 October 2026 — trading-only priority; other feature work deferred
 

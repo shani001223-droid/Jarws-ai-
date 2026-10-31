@@ -197,6 +197,21 @@ class CaptureTests(unittest.TestCase):
             self.assertEqual(capture._fetch_json("https://api.kraken.com/0/public/OHLC"),
                              {"error": [], "result": {}})
 
+    def test_public_capture_rejects_overflowing_json_floats_even_in_ignored_fields(self):
+        class FakeResponse(io.BytesIO):
+            status = 200
+            headers = {"Content-Type": "application/json"}
+
+        for raw in (b'{"ignored":1e999}', b'{"nested":[{"price":-1e999}]}'):
+            with self.subTest(raw=raw), patch.object(capture, "build_opener") as opener:
+                opener.return_value.open.return_value.__enter__.return_value = FakeResponse(raw)
+                with self.assertRaisesRegex(MarketDataQualityError, "invalid_provider_json"):
+                    capture._fetch_json("https://api.kraken.com/0/public/OHLC")
+        with patch.object(capture, "build_opener") as opener:
+            opener.return_value.open.return_value.__enter__.return_value = FakeResponse(b'{"price":1e2}')
+            self.assertEqual(capture._fetch_json("https://api.kraken.com/0/public/OHLC"),
+                             {"price": 100.0})
+
     def test_cli_failure_emits_no_dataset_or_prices(self):
         output, errors = io.StringIO(), io.StringIO()
         with patch.object(capture, "capture_spot_history",

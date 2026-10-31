@@ -54,7 +54,16 @@ def closed_candles(rows, interval, now_ms):
         if not isinstance(row, list) or len(row) < 7:
             raise ValueError("Malformed candle")
         t, end = _exact_candle_timestamp_ms(row[0]), _exact_candle_timestamp_ms(row[6])
-        o, h, lo, c, v = map(float, row[1:6])
+        # Python float(True) == 1.0: boolean provider OHLCV is not a
+        # market observation, even when a coherent-looking row can be formed.
+        # Keep numeric strings supported by the existing public spot feeds.
+        raw_values = row[1:6]
+        if any(type(value) not in (str, int, float) for value in raw_values):
+            raise ValueError("Invalid candle numeric field")
+        try:
+            o, h, lo, c, v = map(float, raw_values)
+        except (TypeError, ValueError, OverflowError) as exc:
+            raise ValueError("Invalid candle numeric field") from exc
         if (not all(math.isfinite(x) for x in (o, h, lo, c, v))
                 or min(o, h, lo, c) <= 0 or v < 0
                 or not lo <= min(o, c) <= max(o, c) <= h

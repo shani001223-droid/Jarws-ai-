@@ -72,6 +72,25 @@ class CandleTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Invalid candle clock"):
             tr.closed_candles(rows(), "15m", True)
 
+    def test_shared_candle_parser_refuses_boolean_ohlcv_even_if_row_is_coherent(self):
+        # Every case would pass the previous float(True) coercion and
+        # ordinary OHLC validation. The shared mobile desk must refuse it.
+        plausible = {
+            1: [True, 2, .5, 1.5, 10],
+            2: [.8, True, .5, .9, 10],
+            3: [1.5, 2, True, 1.5, 10],
+            4: [.8, 2, .5, True, 10],
+            5: [1, 2, .5, 1.5, True],
+        }
+        for tf in tr.INTERVALS:
+            for column, values in plausible.items():
+                with self.subTest(tf=tf, column=column):
+                    data = rows(tf)
+                    data[20][1:6] = values
+                    with self.assertRaisesRegex(ValueError, "Invalid candle numeric field"):
+                        tr.closed_candles(data, tf, 1_800_000_000_000)
+        self.assertEqual(len(tr.closed_candles(rows(), "15m", 1_800_000_000_000)), 80)
+
     def test_flat_market_has_neutral_rsi_finite_atr_and_no_setup(self):
         data = bars()
         ind = tr.indicators(data)
@@ -202,6 +221,23 @@ class ApiTests(unittest.TestCase):
             data = rows(tf, now=now)
             if tf == "15m":
                 data[20][0] = float(data[20][0]) + .75
+            return data, now // 1000
+        with patch.object(main, "_public_data", side_effect=fetch), patch.object(
+                main.time, "time", return_value=now / 1000), patch.object(
+                main, "load_knowledge", return_value=None):
+            response = TestClient(main.app).get("/api/trading/desk?symbol=BTCUSDT")
+        self.assertEqual(response.status_code, 503)
+        self.assertNotIn("paper_plan_only", response.text)
+        self.assertNotIn("reference_entry", response.text)
+
+    def test_actual_mobile_desk_refuses_boolean_provider_volume(self):
+        from fastapi.testclient import TestClient
+        now = 1_800_000_000_000
+        def fetch(key, url, ttl):
+            tf = url.split("interval=")[1].split("&")[0]
+            data = rows(tf, now=now)
+            if tf == "15m":
+                data[20][5] = True  # previously float(True) == 1.0
             return data, now // 1000
         with patch.object(main, "_public_data", side_effect=fetch), patch.object(
                 main.time, "time", return_value=now / 1000), patch.object(

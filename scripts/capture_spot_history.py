@@ -11,6 +11,7 @@ import argparse
 from dataclasses import asdict
 import hashlib
 import json
+import math
 import sys
 import time
 from urllib.request import HTTPRedirectHandler, Request, build_opener
@@ -37,6 +38,15 @@ def _unique_provider_pairs(pairs):
             raise MarketDataQualityError("invalid_provider_json")
         result[key] = value
     return result
+
+
+def _finite_provider_float(raw: str) -> float:
+    # json.loads accepts exponent overflow (1e999) as float('inf') unless
+    # parse_float is supplied. Refuse it even in ignored provider fields.
+    value = float(raw)
+    if not math.isfinite(value):
+        raise MarketDataQualityError("invalid_provider_json")
+    return value
 
 
 def _fetch_json(url: str):
@@ -66,6 +76,7 @@ def _fetch_json(url: str):
     try:
         return json.loads(body.decode("utf-8"),
                           object_pairs_hook=_unique_provider_pairs,
+                          parse_float=_finite_provider_float,
                           parse_constant=lambda _: (_ for _ in ()).throw(
                               MarketDataQualityError("invalid_provider_json")))
     except (UnicodeError, ValueError) as exc:

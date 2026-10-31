@@ -91,6 +91,22 @@ class CandleTests(unittest.TestCase):
                         tr.closed_candles(data, tf, 1_800_000_000_000)
         self.assertEqual(len(tr.closed_candles(rows(), "15m", 1_800_000_000_000)), 80)
 
+    def test_refuses_finite_extreme_ohlcv_before_indicator_overflow(self):
+        # 1e308 is finite as a float, but repeated EMA sums overflow.
+        # Coherent extreme candles must never become market observations.
+        for tf in tr.INTERVALS:
+            with self.subTest(tf=tf):
+                data = rows(tf)
+                for row in data:
+                    row[1:6] = ["1e308"] * 5
+                with self.assertRaisesRegex(ValueError, "Invalid candle values/timing"):
+                    tr.closed_candles(data, tf, 1_800_000_000_000)
+        data = rows()
+        data[20][5] = "1e308"
+        with self.assertRaisesRegex(ValueError, "Invalid candle values/timing"):
+            tr.closed_candles(data, "15m", 1_800_000_000_000)
+        self.assertEqual(len(tr.closed_candles(rows(), "15m", 1_800_000_000_000)), 80)
+
     def test_flat_market_has_neutral_rsi_finite_atr_and_no_setup(self):
         data = bars()
         ind = tr.indicators(data)
@@ -330,6 +346,26 @@ class ApiTests(unittest.TestCase):
             data = rows(tf, now=now)
             if tf == "15m":
                 data[20][0] = float(data[20][0]) + .75
+            return data, now // 1000
+        with patch.object(main, "_public_data", side_effect=fetch), patch.object(
+                main.time, "time", return_value=now / 1000), patch.object(
+                main, "load_knowledge", return_value=None):
+            response = TestClient(main.app).get("/api/trading/desk?symbol=BTCUSDT")
+        self.assertEqual(response.status_code, 503)
+        self.assertNotIn("paper_plan_only", response.text)
+        self.assertNotIn("reference_entry", response.text)
+
+    def test_mobile_desk_refuses_finite_but_overflowing_market_prices(self):
+        # Exercise the actual FastAPI route with synthetic provider fixtures.
+        # Never return a 500, nonfinite analysis or executable paper plan.
+        from fastapi.testclient import TestClient
+        now = 1_800_000_000_000
+        def fetch(key, url, ttl):
+            tf = url.split("interval=")[1].split("&")[0]
+            data = rows(tf, now=now)
+            if tf == "15m":
+                for row in data:
+                    row[1:6] = ["1e308"] * 5
             return data, now // 1000
         with patch.object(main, "_public_data", side_effect=fetch), patch.object(
                 main.time, "time", return_value=now / 1000), patch.object(

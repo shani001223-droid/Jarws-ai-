@@ -9,6 +9,10 @@ import math
 INTERVALS = {"15m": 900_000, "1h": 3_600_000, "4h": 14_400_000}
 STRATEGIES = ("trend_pullback", "breakout_retest")
 RULE_VERSION = "spot-long-v1"
+# Prevent finite-but-extreme provider numbers from overflowing EMA/ATR sums,
+# cross-venue price*volume arithmetic or serialized analysis. This is a
+# numeric-safety ceiling, not a prediction of market price or liquidity.
+MAX_SAFE_CANDLE_NUMBER = 1e150
 
 
 @dataclass(frozen=True)
@@ -64,7 +68,8 @@ def closed_candles(rows, interval, now_ms):
             o, h, lo, c, v = map(float, raw_values)
         except (TypeError, ValueError, OverflowError) as exc:
             raise ValueError("Invalid candle numeric field") from exc
-        if (not all(math.isfinite(x) for x in (o, h, lo, c, v))
+        if (not all(math.isfinite(x) and abs(x) <= MAX_SAFE_CANDLE_NUMBER
+                    for x in (o, h, lo, c, v))
                 or min(o, h, lo, c) <= 0 or v < 0
                 or not lo <= min(o, c) <= max(o, c) <= h
                 or t < 0 or t % step or end != t + step - 1

@@ -140,6 +140,68 @@ class CaptureTests(unittest.TestCase):
                          {"symbol", "interval", "candles"})
         self.assertIn(receipt["input_candle_sha256"], errors.getvalue())
 
+    def test_receipt_binding_is_unsigned_and_fail_closed(self):
+        b, k = fixtures()
+        data, receipt = capture.capture_spot_history(
+            "BTCUSDT", fetch_json=lambda u: k if "kraken.com" in u else b,
+            clock=lambda: NOW / 1000)
+        from cloud_backend.paper_evaluation import attach_capture_receipt, PaperEvaluationError
+        report = evaluate_chronological([Candle(*row) for row in data["candles"]],
+                                        "BTCUSDT", "trend_pullback")
+        bound = attach_capture_receipt(report, receipt)
+        self.assertEqual(bound["capture_receipt"]["status"],
+                         "local_unsigned_receipt_matches_candles")
+        self.assertFalse(bound["independent_venue_verified"])
+        self.assertFalse(bound["capture_receipt"]["independent_venue_authenticated"])
+        self.assertNotIn("capture_receipt", report)
+        for key, bad in (
+            ("input_candle_sha256", "0" * 64),
+            ("historical_cross_checked_closed_bars", 20),
+            ("closed_bars", True),
+            ("symbol", "ETHUSDT"),
+            ("first_open_at_ms", receipt["first_open_at_ms"] + STEP),
+            ("captured_at_ms", receipt["captured_at_ms"] + 10 * STEP),
+            ("max_historical_close_difference_pct", 3.0),
+            ("sources", ["fake"]),
+        ):
+            with self.subTest(key=key), self.assertRaises(PaperEvaluationError):
+                attach_capture_receipt(report, {**receipt, key: bad})
+
+    def test_cli_consumes_actual_capture_receipt_line_without_trusting_it(self):
+        import subprocess
+        import sys
+        import tempfile
+        from pathlib import Path
+        b, k = fixtures()
+        dataset, receipt = capture.capture_spot_history(
+            "BTCUSDT", fetch_json=lambda u: k if "kraken.com" in u else b,
+            clock=lambda: NOW / 1000)
+        root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as tmp:
+            source, proof = Path(tmp) / "candles.json", Path(tmp) / "receipt.txt"
+            source.write_text(json.dumps(dataset), encoding="utf-8")
+            proof.write_text("HOSHI_CAPTURE_RECEIPT " + json.dumps(receipt) + "\n",
+                             encoding="utf-8")
+            command = [sys.executable, "-m", "scripts.evaluate_trading_paper",
+                       "--input", str(source), "--capture-receipt", str(proof)]
+            good = subprocess.run(command, cwd=root, capture_output=True, text=True, timeout=30)
+            self.assertEqual(good.returncode, 0, good.stderr)
+            result = json.loads(good.stdout)
+            self.assertFalse(result["independent_venue_verified"])
+            self.assertEqual(result["capture_receipt"]["historical_close_comparison_bars_claimed"],
+                             len(dataset["candles"]))
+            dataset["candles"][80][5] += 1  # valid OHLCV, different input fingerprint
+            source.write_text(json.dumps(dataset), encoding="utf-8")
+            bad = subprocess.run(command, cwd=root, capture_output=True, text=True, timeout=30)
+            self.assertEqual(bad.returncode, 2)
+            self.assertEqual(bad.stdout, "")
+            proof.write_text('HOSHI_CAPTURE_RECEIPT {"symbol":"BTCUSDT","symbol":"BTCUSDT"}',
+                             encoding="utf-8")
+            duplicate = subprocess.run(command, cwd=root, capture_output=True,
+                                       text=True, timeout=30)
+            self.assertEqual(duplicate.returncode, 2)
+            self.assertEqual(duplicate.stdout, "")
+
 
 if __name__ == "__main__":
     unittest.main()

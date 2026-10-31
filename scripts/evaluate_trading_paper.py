@@ -9,7 +9,8 @@ import json
 from pathlib import Path
 import sys
 
-from cloud_backend.paper_evaluation import evaluate_chronological, evaluate_rolling_robustness
+from cloud_backend.paper_evaluation import (evaluate_chronological, evaluate_rolling_robustness,
+                                      attach_capture_receipt)
 from cloud_backend.trading_research import Candle, SimulationConfig
 
 
@@ -32,6 +33,33 @@ def load_local(path: Path):
     return payload["symbol"], bars
 
 
+def _unique_json_pairs(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("duplicate_receipt_field")
+        result[key] = value
+    return result
+
+
+def load_capture_receipt(path: Path):
+    """Accept only one bounded, exact HOSHI_CAPTURE_RECEIPT stderr line."""
+    if path.is_symlink() or not path.is_file() or not 0 < path.stat().st_size <= 16_384:
+        raise ValueError("invalid_receipt_file")
+    raw = path.read_text(encoding="utf-8").strip()
+    prefix = "HOSHI_CAPTURE_RECEIPT "
+    if not raw.startswith(prefix) or "\n" in raw:
+        raise ValueError("invalid_receipt_format")
+    receipt = json.loads(
+        raw[len(prefix):],
+        parse_constant=lambda _: (_ for _ in ()).throw(ValueError("invalid_receipt_json")),
+        object_pairs_hook=_unique_json_pairs,
+    )
+    if type(receipt) is not dict:
+        raise ValueError("invalid_receipt_shape")
+    return receipt
+
+
 def main():
     parser = argparse.ArgumentParser(description="Offline, unverified-source 15m paper evaluation")
     parser.add_argument("--input", required=True, type=Path)
@@ -42,6 +70,8 @@ def main():
     parser.add_argument("--daily-loss-limit", type=float, default=10)
     parser.add_argument("--fee-bps", type=float, default=10)
     parser.add_argument("--slippage-bps", type=float, default=5)
+    parser.add_argument("--capture-receipt", type=Path,
+                        help="Optional local HOSHI_CAPTURE_RECEIPT stderr line; unsigned evidence only")
     parser.add_argument("--rolling-robustness", action="store_true",
                         help="Also score three fixed disjoint windows with double-cost stress when valid")
     args = parser.parse_args()
@@ -51,6 +81,8 @@ def main():
                                   args.fee_bps, args.slippage_bps)
         evaluator = evaluate_rolling_robustness if args.rolling_robustness else evaluate_chronological
         result = evaluator(bars, symbol, args.strategy, config)
+        if args.capture_receipt is not None:
+            result = attach_capture_receipt(result, load_capture_receipt(args.capture_receipt))
     except (OSError, UnicodeError, ValueError, TypeError, OverflowError):
         print("Offline paper evaluation refused: invalid input or settings.", file=sys.stderr)
         return 2

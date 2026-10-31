@@ -177,3 +177,71 @@ def evaluate_rolling_robustness(bars, symbol: str, strategy: str,
         ],
     }
     return report
+
+def attach_capture_receipt(report: dict, receipt: dict) -> dict:
+    """Bind an optional UNSIGNED manual capture receipt to a paper report.
+
+    Matching a local JSON receipt to candles is useful reproducibility evidence,
+    NOT authenticated Binance/Kraken data, independent evaluation, or a
+    calibrated win probability. Never promote independent_venue_verified.
+    """
+    if type(report) is not dict or type(receipt) is not dict:
+        raise PaperEvaluationError("invalid_capture_receipt")
+    split = report.get("split")
+    if type(split) is not dict or report.get("input_provenance") != "operator_supplied_unverified":
+        raise PaperEvaluationError("invalid_capture_report")
+    count = split.get("total_bars")
+    last_close = split.get("holdout_end_at")
+    expected = {
+        "mode": "manual_public_spot_capture_no_orders",
+        "symbol": report.get("symbol"),
+        "interval": "15m",
+        "orders_enabled": False,
+        "quality_status": "verified_sources_agree",
+        "closed_bars": count,
+        "historical_cross_checked_closed_bars": count,
+        "cross_checked_closed_bars": 20,
+        "input_candle_sha256": report.get("input_candle_sha256"),
+        "sources": ["Binance Spot BTC/ETH USDT", "Kraken Spot BTC/ETH USD"],
+    }
+    for key, value in expected.items():
+        if key not in receipt or type(receipt[key]) is not type(value) or receipt[key] != value:
+            raise PaperEvaluationError("capture_receipt_mismatch")
+    first = receipt.get("first_open_at_ms")
+    captured = receipt.get("captured_at_ms")
+    if (type(count) is not int or type(last_close) is not int
+            or type(first) is not int or type(captured) is not int
+            or first < 0 or first + count * STEP_MS - 1 != last_close
+            or not last_close <= captured <= last_close + 2 * STEP_MS):
+        raise PaperEvaluationError("capture_receipt_time_mismatch")
+    fetched = receipt.get("source_fetched_at")
+    if (type(fetched) is not dict or set(fetched) != {"binance", "kraken"}
+            or any(type(v) is not int or v < captured // 1000 - 120
+                   or v > captured // 1000 + 5 for v in fetched.values())
+            or abs(fetched["binance"] - fetched["kraken"]) > 120):
+        raise PaperEvaluationError("capture_receipt_fetch_mismatch")
+    historical_max = receipt.get("max_historical_close_difference_pct")
+    recent_max = receipt.get("max_last_twenty_close_difference_pct")
+    if any(type(v) not in (int, float) or not math.isfinite(v)
+           or v < 0 or v > 2 for v in (historical_max, recent_max)):
+        raise PaperEvaluationError("capture_receipt_deviation_invalid")
+    if recent_max > historical_max:
+        raise PaperEvaluationError("capture_receipt_deviation_mismatch")
+    try:
+        canonical = json.dumps(receipt, sort_keys=True, separators=(",", ":"),
+                               allow_nan=False).encode("utf-8")
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise PaperEvaluationError("invalid_capture_receipt") from exc
+    result = dict(report)
+    result["capture_receipt"] = {
+        "status": "local_unsigned_receipt_matches_candles",
+        "receipt_sha256": hashlib.sha256(canonical).hexdigest(),
+        "historical_close_comparison_bars_claimed": count,
+        "max_historical_close_difference_pct_claimed": historical_max,
+        "independent_venue_authenticated": False,
+        "forward_paper_verified": False,
+    }
+    result["limitations"] = list(report["limitations"]) + [
+        "The optional local capture receipt is unsigned and user-supplied; matching its hash, timestamps and claimed cross-venue closes does NOT authenticate either exchange or independently verify fills.",
+    ]
+    return result

@@ -5,6 +5,7 @@ import hmac
 import time
 from collections import OrderedDict, deque
 import json
+import math
 import os
 import re
 import logging
@@ -1344,6 +1345,15 @@ def _reject_public_json_constant(value):
     raise ValueError("Non-finite public market JSON")
 
 
+def _finite_public_json_float(value):
+    # A syntactically valid JSON number such as 1e999 also becomes infinity
+    # when decoded to binary64. Reject it before any market-data cache write.
+    parsed = float(value)
+    if not math.isfinite(parsed):
+        raise ValueError("Non-finite public market JSON")
+    return parsed
+
+
 def _read_public_json(url: str) -> object:
     """Bound external I/O and strictly parse fixed public-market responses."""
     request = Request(url, headers={"User-Agent": "HOSHI-public-data/1.0", "Accept": "application/json"})
@@ -1353,7 +1363,8 @@ def _read_public_json(url: str) -> object:
         raise ValueError("External response is too large")
     return json.loads(raw.decode("utf-8"),
                       object_pairs_hook=_unique_public_json_pairs,
-                      parse_constant=_reject_public_json_constant)
+                      parse_constant=_reject_public_json_constant,
+                      parse_float=_finite_public_json_float)
 
 
 def _public_data(cache_key: str, url: str, ttl: int) -> tuple[object, int]:

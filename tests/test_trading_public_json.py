@@ -33,6 +33,11 @@ class PublicTradingJsonTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "Non-finite public market JSON"):
                     main._read_public_json("https://data-api.binance.vision/test")
 
+    def test_exponent_overflow_is_not_cached_as_infinite_market_price(self):
+        with patch.object(main, "urlopen", return_value=BytesIO(b'{"price":1e999}')):
+            with self.assertRaisesRegex(ValueError, "Non-finite public market JSON"):
+                main._read_public_json("https://data-api.binance.vision/test")
+
     def test_ambiguous_provider_response_is_not_cached(self):
         cache = OrderedDict()
         with patch.object(main, "_PUBLIC_CACHE", cache), patch.object(

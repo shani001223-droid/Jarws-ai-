@@ -11,9 +11,9 @@ import json
 import math
 
 try:
-    from .trading_research import Candle, INTERVALS, STRATEGIES, RULE_VERSION, SimulationConfig, backtest
+    from .trading_research import Candle, INTERVALS, STRATEGIES, RULE_VERSION, SimulationConfig, backtest, MAX_SAFE_CANDLE_NUMBER
 except ImportError:  # direct backend imports
-    from trading_research import Candle, INTERVALS, STRATEGIES, RULE_VERSION, SimulationConfig, backtest
+    from trading_research import Candle, INTERVALS, STRATEGIES, RULE_VERSION, SimulationConfig, backtest, MAX_SAFE_CANDLE_NUMBER
 
 VERSION = "spot-chronological-paper-evaluation-v1"
 MIN_BARS = 240
@@ -39,7 +39,17 @@ def _checked(bars):
                 or (previous is not None and bar.time != previous + STEP_MS)):
             raise PaperEvaluationError("missing_duplicate_or_misaligned_bar")
         values = (bar.open, bar.high, bar.low, bar.close, bar.volume)
-        if (any(type(v) not in (int, float) or not math.isfinite(v) for v in values)
+        # Keep offline paper inputs at least as numerically safe as the
+        # shared live-desk candle parser. Finite 1e308 OHLCV can overflow
+        # indicator/PnL arithmetic; huge Python ints can overflow isfinite().
+        try:
+            numeric_safe = all(
+                type(v) in (int, float) and math.isfinite(v)
+                and abs(v) <= MAX_SAFE_CANDLE_NUMBER for v in values
+            )
+        except (OverflowError, TypeError, ValueError):
+            numeric_safe = False
+        if (not numeric_safe
                 or min(values[:4]) <= 0 or bar.volume < 0
                 or not bar.low <= min(bar.open, bar.close)
                 <= max(bar.open, bar.close) <= bar.high):

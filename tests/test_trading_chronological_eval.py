@@ -90,6 +90,45 @@ class ChronologicalEvaluationTests(unittest.TestCase):
             ev.evaluate_chronological(self.bars, "BTCUSDT", "trend_pullback",
                                       config=object())
 
+    def test_extreme_finite_and_huge_integer_candles_fail_closed(self):
+        # A coherent-looking 1e308 candle is finite, but can overflow EMA,
+        # ATR, drawdown and JSON output. Huge ints can overflow isfinite().
+        for extreme in (1e308, 10 ** 400):
+            for field in ("prices", "volume"):
+                with self.subTest(extreme_type=type(extreme).__name__, field=field):
+                    sample = self.bars.copy()
+                    original = sample[70]
+                    sample[70] = (replace(original, open=extreme, high=extreme,
+                                          low=extreme, close=extreme)
+                                  if field == "prices" else
+                                  replace(original, volume=extreme))
+                    with self.assertRaisesRegex(ev.PaperEvaluationError, "invalid_ohlcv"):
+                        ev.evaluate_chronological(sample, "BTCUSDT", "trend_pullback")
+
+    def test_simulation_config_rejects_boolean_and_huge_integer_risk_fields(self):
+        for field in ("equity", "risk_pct", "daily_loss_limit",
+                      "fee_bps", "slippage_bps"):
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                SimulationConfig(**{field: True})
+        with self.assertRaises(ValueError):
+            SimulationConfig(fee_bps=10 ** 400)
+
+    def test_offline_cli_refuses_finite_overflow_without_report(self):
+        rows = [[b.time, b.open, b.high, b.low, b.close, b.volume, b.close_time]
+                for b in self.bars]
+        rows[70][1:5] = [1e308] * 4
+        root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "extreme.json"
+            source.write_text(json.dumps({"symbol": "BTCUSDT", "interval": "15m",
+                                          "candles": rows}), encoding="utf-8")
+            run = subprocess.run([sys.executable, "-m", "scripts.evaluate_trading_paper",
+                                  "--input", str(source)],
+                                 cwd=root, capture_output=True, text=True, timeout=30)
+            self.assertEqual(run.returncode, 2)
+            self.assertEqual(run.stdout, "")
+            self.assertNotIn(str(source), run.stderr)
+
     def test_hash_changes_when_a_valid_candle_changes(self):
         original = ev.evaluate_chronological(self.bars, "BTCUSDT", "breakout_retest")
         changed = self.bars.copy()

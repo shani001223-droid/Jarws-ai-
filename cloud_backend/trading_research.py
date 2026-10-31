@@ -206,8 +206,16 @@ class SimulationConfig:
         limits = ((self.equity, 10, 100_000), (self.risk_pct, .1, 1),
                   (self.daily_loss_limit, .1, 1000), (self.fee_bps, 1, 100),
                   (self.slippage_bps, 1, 100))
-        if any(not math.isfinite(v) or not low <= v <= high for v, low, high in limits):
-            raise ValueError("Simulation settings out of bounds")
+        for value, low, high in limits:
+            # bool is an int subclass, but not a meaningful paper-risk setting.
+            # Very large Python integers can also overflow math.isfinite().
+            if type(value) not in (int, float):
+                raise ValueError("Simulation settings out of bounds")
+            try:
+                if not math.isfinite(value) or not low <= value <= high:
+                    raise ValueError("Simulation settings out of bounds")
+            except OverflowError as exc:
+                raise ValueError("Simulation settings out of bounds") from exc
 
 
 def risk_size(cash, entry, stop, day_loss, cfg):

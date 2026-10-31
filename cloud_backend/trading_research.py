@@ -246,6 +246,10 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
             or not bars[0].time <= entry_not_before <= bars[-1].time):
         raise ValueError("Invalid scored-entry boundary")
     cash, peak, max_dd = cfg.equity, cfg.equity, 0.0
+    # Supplemental end-of-bar liquidation-value drawdown. The existing
+    # conservative intrabar/realized-peak max_drawdown_pct stays unchanged.
+    close_mark_peak = close_mark_low = cfg.equity
+    close_mark_max_dd = 0.0
     fee, slip = cfg.fee_bps/10_000, cfg.slippage_bps/10_000
     position, pending = None, None
     trades, day_losses, cooldown_until = [], {}, -1
@@ -391,6 +395,22 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
                                    realized_loss/p["risk_budget_at_entry"]
                                    if realized_loss else None)})
                 position, cooldown_until = None, i+2
+        # A still-open long is hypothetically liquidated at this bar's close
+        # with adverse sell slippage and BOTH fees. If the position exited at
+        # open/intrabar, only realized cash is measured: the candle close
+        # cannot retroactively revalue a position that no longer exists.
+        if position:
+            close_exit = b.close*(1-slip)
+            close_mark_equity = cash + position["qty"]*(
+                close_exit-position["entry"]
+                - fee*(close_exit+position["entry"]))
+        else:
+            close_mark_equity = cash
+        close_mark_peak = max(close_mark_peak, close_mark_equity)
+        close_mark_low = min(close_mark_low, close_mark_equity)
+        close_mark_max_dd = max(
+            close_mark_max_dd,
+            (close_mark_peak-close_mark_equity)/close_mark_peak*100)
         peak = max(peak, cash)
         max_dd = max(max_dd, (peak-cash)/peak*100)
         if not position and i >= 63 and i < len(bars)-1 and i >= cooldown_until:
@@ -414,6 +434,9 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
             "initial_equity": cfg.equity, "ending_equity": cash, "net_pnl": cash-cfg.equity,
             "max_drawdown_pct": max_dd, "fees_paid": sum(t["fees"] for t in trades),
             "execution_diagnostics": {
+                "close_mark_max_drawdown_pct": close_mark_max_dd,
+                "close_mark_peak_equity_usdt": close_mark_peak,
+                "close_mark_low_equity_usdt": close_mark_low,
                 "paper_entry_attempts": entry_attempts,
                 "paper_entries_skipped_invalid_gap": entry_skipped_gap,
                 "paper_entries_skipped_utc_daily_loss_cap": entry_skipped_daily_cap,
@@ -454,4 +477,5 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
                             "UTC gross realized daily loss cap prevents new entries only; an already-open position may gap past the cap. Per-entry budgets and daily caps are not guaranteed maximum losses.",
                             "Paper entry attempts and refusal counts are modeled next-open signals, not real exchange submissions or observed fills.",
                             "A still-open position at sample end is force-marked at the final close, including modeled costs; headline all-trade win rate/expectancy/profit factor include such marks, while strategy_resolved metrics exclude them; neither is a calibrated win probability.",
+                            "Supplemental close_mark drawdown uses hypothetical fee/slippage-adjusted liquidation value at each bar close; it is not an observed fill, intrabar peak-to-trough path or independently verified account equity.", 
                             "Does not model partial fills, liquidity impact or intra-bar equity peaks."]}

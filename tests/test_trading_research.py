@@ -249,6 +249,26 @@ class SimulatorTests(unittest.TestCase):
         self.assertAlmostEqual(outcomes[0]["max_drawdown_pct"],
                                outcomes[1]["max_drawdown_pct"])
         self.assertAlmostEqual(outcomes[0]["net_pnl"], outcomes[1]["net_pnl"])
+        self.assertAlmostEqual(
+            outcomes[0]["execution_diagnostics"]["close_mark_max_drawdown_pct"],
+            outcomes[1]["execution_diagnostics"]["close_mark_max_drawdown_pct"])
+
+    def test_close_mark_drawdown_includes_unrealized_peak_then_reversal(self):
+        # Synthetic candles only: the position remains open across two
+        # closes, so a profitable close followed by a lower close is a real
+        # modeled equity-path drawdown even without an exit on either bar.
+        data = bars(68)
+        data[65] = replace(data[65], open=105, high=106, low=104, close=105)
+        data[66] = replace(data[66], open=99, high=100, low=98, close=99)
+        with patch.object(tr, "setup", side_effect=one_signal):
+            result = tr.backtest(data, "trend_pullback", tr.SimulationConfig())
+        diagnostic = result["execution_diagnostics"]
+        self.assertGreater(diagnostic["close_mark_peak_equity_usdt"], 1000)
+        self.assertLess(diagnostic["close_mark_low_equity_usdt"],
+                        diagnostic["close_mark_peak_equity_usdt"])
+        self.assertGreater(diagnostic["close_mark_max_drawdown_pct"], 0)
+        self.assertTrue(result["trades"][0]["terminal_forced_mark"])
+        self.assertIn("hypothetical", " ".join(result["limitations"]))
 
     def test_stop_gap_open_precedes_intrabar_target(self):
         data = bars(67)
@@ -315,6 +335,9 @@ class SimulatorTests(unittest.TestCase):
     def test_no_trades_reports_unknown_metrics_and_valid_json(self):
         result=tr.backtest(bars(),"trend_pullback",tr.SimulationConfig())
         self.assertEqual(result["trade_count"],0)
+        self.assertEqual(result["execution_diagnostics"]["close_mark_max_drawdown_pct"], 0)
+        self.assertEqual(result["execution_diagnostics"]["close_mark_peak_equity_usdt"], 1000)
+        self.assertEqual(result["execution_diagnostics"]["close_mark_low_equity_usdt"], 1000)
         self.assertIsNone(result["win_rate_pct"])
         self.assertIsNone(result["profit_factor"])
         self.assertEqual(result["execution_diagnostics"]["gap_stop_count"], 0)

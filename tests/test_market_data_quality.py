@@ -46,6 +46,26 @@ class QualityUnitTests(unittest.TestCase):
                                        NOW//1000, NOW//1000)
         self.assertEqual(result["binance_last_quote_volume_usdt"], 1000)
 
+    def test_binance_timestamps_refuse_lossy_or_ambiguous_coercion(self):
+        # int(1800000000000.9) used to truncate to a plausible candle time.
+        # Provider timestamp identity must be exact before any venue agreement.
+        for column in (0, 6):
+            for invalid in (True, 1.5, "1.5", "1e3", "01800000000000", -1):
+                with self.subTest(column=column, invalid=invalid):
+                    b, k = fixtures()
+                    b[17][column] = invalid
+                    with self.assertRaisesRegex(mq.MarketDataQualityError,
+                                                "invalid_binance_timestamp"):
+                        mq.verify_spot_market("BTCUSDT", "15m", b, k, NOW,
+                                              NOW//1000, NOW//1000)
+        # Canonical decimal strings remain compatible with public API variants.
+        b, k = fixtures()
+        b[17][0], b[17][6] = str(b[17][0]), str(b[17][6])
+        self.assertEqual(
+            mq.verify_spot_market("BTCUSDT", "15m", b, k, NOW,
+                                  NOW//1000, NOW//1000)["status"],
+            "verified_sources_agree")
+
     def test_fixed_host_allowlist_and_no_user_url(self):
         b, k = mq.public_urls("ETHUSDT", "1h")
         self.assertIn("data-api.binance.vision", b)

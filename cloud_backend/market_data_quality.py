@@ -53,6 +53,26 @@ def _number(value) -> float:
     return result
 
 
+def _binance_timestamp_ms(value) -> int:
+    """Accept only exact millisecond integers, never lossy int() coercion.
+
+    Binance returns JSON integer milliseconds; decimal-string timestamps are
+    tolerated for backwards compatibility. Floats, booleans, exponents,
+    leading zeros and fractional values cannot silently change candle identity.
+    """
+    if type(value) is int:
+        stamp = value
+    elif (type(value) is str and value.isascii() and value.isdecimal()
+          and 1 <= len(value) <= 16
+          and (len(value) == 1 or value[0] != "0")):
+        stamp = int(value)
+    else:
+        raise MarketDataQualityError("invalid_binance_timestamp")
+    if stamp < 0 or stamp > 9_999_999_999_999_999:
+        raise MarketDataQualityError("invalid_binance_timestamp")
+    return stamp
+
+
 def _count(value) -> int:
     if isinstance(value, bool) or not isinstance(value, (str, int)):
         raise MarketDataQualityError("invalid_trade_count")
@@ -94,6 +114,8 @@ def binance_candles(payload, interval: str, now_ms: int):
     for row in payload:
         if not isinstance(row, list) or len(row) != 12:
             raise MarketDataQualityError("invalid_binance_row")
+        _binance_timestamp_ms(row[0])
+        _binance_timestamp_ms(row[6])
         low, high, base = (_number(row[i]) for i in (3, 2, 5))
         quote = _number(row[7])
         trades = _count(row[8])

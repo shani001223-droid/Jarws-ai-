@@ -134,6 +134,15 @@ class CaptureTests(unittest.TestCase):
         self.assertGreaterEqual(check["max_historical_ohlc_difference_pct"],
                                 check["max_historical_close_difference_pct"])
 
+    def test_capture_refuses_fractional_binance_timestamp(self):
+        b, k = fixtures()
+        b[80][0] = float(b[80][0]) + 0.5
+        with self.assertRaisesRegex(MarketDataQualityError,
+                                    "invalid_binance_timestamp"):
+            capture.capture_spot_history(
+                "BTCUSDT", fetch_json=lambda u: k if "kraken.com" in u else b,
+                clock=lambda: NOW / 1000)
+
     def test_unsupported_pair_never_calls_network(self):
         with self.assertRaises(MarketDataQualityError):
             capture.capture_spot_history("SOLUSDT",

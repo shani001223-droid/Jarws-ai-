@@ -70,6 +70,38 @@ class ChronologicalEvaluationTests(unittest.TestCase):
         self.assertEqual(report["holdout"]["trade_count"], 0)
         self.assertIsNone(report["holdout"]["win_rate_pct"])
 
+    def test_paper_entry_rejects_raw_open_at_or_below_stop_before_slippage(self):
+        from cloud_backend import trading_research as tr
+        # A buy-side slippage adjustment can lift a raw opening of 99.99
+        # or 100.00 above the 100.00 stop. Neither is a valid new long.
+        # Synthetic candles and mocked setup are not market evidence.
+        for opening in (99.99, 100.0):
+            with self.subTest(opening=opening):
+                bars = [replace(b, open=opening, high=102, low=99,
+                                close=100.5, volume=10) for b in self.bars]
+                with patch.object(tr, "setup", return_value={
+                        "stop": 100.0, "reference_entry": 101.0}):
+                    report = ev.evaluate_chronological(
+                        bars, "BTCUSDT", "trend_pullback")
+                diagnostics = report["holdout"]["execution_diagnostics"]
+                self.assertGreater(diagnostics["paper_entry_attempts"], 0)
+                self.assertEqual(diagnostics["paper_entry_attempts"],
+                                 diagnostics["paper_entries_skipped_invalid_gap"])
+                self.assertEqual(diagnostics["paper_entries_opened"], 0)
+                self.assertEqual(report["holdout"]["trade_count"], 0)
+                self.assertEqual(report["holdout"]["net_pnl"], 0)
+
+        # A genuine opening ABOVE the stop must still be eligible for
+        # ordinary next-open paper entry and conservative intrabar stop.
+        bars = [replace(b, open=100.01, high=102, low=99,
+                        close=100.5, volume=10) for b in self.bars]
+        with patch.object(tr, "setup", return_value={
+                "stop": 100.0, "reference_entry": 101.0}):
+            valid = ev.evaluate_chronological(bars, "BTCUSDT", "trend_pullback")
+        self.assertGreater(
+            valid["holdout"]["execution_diagnostics"]["paper_entries_opened"], 0)
+        self.assertGreater(valid["holdout"]["trade_count"], 0)
+
     def test_no_trade_outcome_is_preserved(self):
         flat = [replace(b, open=100, high=100.1, low=99.9, close=100, volume=10)
                 for b in self.bars]

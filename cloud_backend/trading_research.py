@@ -265,7 +265,12 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
             entry = b.open*(1+slip)
             # Revalidate risk after a price gap; a gapped invalid setup is skipped.
             stop = pending["stop"]
-            if not 0 < entry-stop <= 4*(pending["reference_entry"]-stop):
+            # The actual next-bar opening must itself be above the stop.
+            # Applying adverse buy slippage can otherwise lift an already
+            # invalid below-stop opening above the stop and create a fictitious
+            # paper entry after the setup has been invalidated.
+            if (b.open <= stop
+                    or not 0 < entry-stop <= 4*(pending["reference_entry"]-stop)):
                 entry_skipped_gap += 1
             elif cfg.daily_loss_limit-day_losses.get(day, 0) <= 1e-8:
                 # A realized daily loss lockout must remain visible even if

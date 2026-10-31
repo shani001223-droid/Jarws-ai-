@@ -283,8 +283,12 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
             stop_target_same_bar = (p["stop"] < b.open < p["target"]
                                     and b.low <= p["stop"] and b.high >= p["target"])
             reason, raw_exit = None, None
-            if b.open <= p["stop"]:
+            if b.open < p["stop"]:
                 reason, raw_exit = "gap_stop", b.open
+            elif b.open == p["stop"]:
+                # Touching the stop exactly at the opening price is not an
+                # adverse gap; do not inflate gap-stop diagnostics.
+                reason, raw_exit = "stop_at_open", b.open
             elif b.open >= p["target"]:
                 reason, raw_exit = "target_gap_open", p["target"]
             elif b.low <= p["stop"]:
@@ -320,7 +324,14 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
                         max_loss_to_risk_budget_multiple or 0.0, multiple)
                 cash += pnl
                 day_losses[day] = day_losses.get(day, 0)+realized_loss
-                trades.append({"entry_time": p["entry_time"], "exit_time": b.close_time,
+                at_open = reason in ("gap_stop", "stop_at_open", "target_gap_open")
+                at_close = reason in ("end_of_sample", "time_exit")
+                trades.append({"entry_time": p["entry_time"],
+                               "exit_time": b.time if at_open else b.close_time,
+                               "exit_time_precision": (
+                                   "bar_open_exact" if at_open else
+                                   "bar_close_exact" if at_close else
+                                   "bar_close_upper_bound_intrabar_unknown"),
                                "entry": p["entry"], "exit": exit_price, "quantity": p["qty"],
                                "fees": costs, "net_pnl": pnl, "reason": reason,
                                "reference_stop": p["stop"],
@@ -366,5 +377,6 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
                             "Single-timeframe test; multi-timeframe research gate is NOT applied.",
                             "Spot long only, no leverage or funding; one position, two-bar cooldown.",
                             "Next-open fills, fixed adverse slippage, stop-first ambiguous candles; ambiguity and gap diagnostics are observed OHLC scenarios, not authenticated execution paths.",
+                            "Open-triggered exits use the observed bar open; intrabar stop/target exit_time is only a bar-close upper bound, not an observed execution timestamp.",
                             "UTC gross realized daily loss cap; per-entry budget is a sizing limit, not a guaranteed loss limit; gaps may exceed it.",
                             "Does not model partial fills, liquidity impact or intra-bar equity peaks."]}

@@ -154,6 +154,8 @@ class SimulatorTests(unittest.TestCase):
         self.assertAlmostEqual(trade["exit"],95*.9995)
         self.assertEqual(trade["entry_time"],data[64].time)
         self.assertEqual(trade["reason"],"stop")
+        self.assertEqual(trade["exit_time"], data[64].close_time)
+        self.assertEqual(trade["exit_time_precision"], "bar_close_upper_bound_intrabar_unknown")
         self.assertTrue(trade["stop_target_same_bar"])
         self.assertEqual(trade["reference_stop"], 95)
         self.assertGreater(trade["reference_target"], trade["entry"])
@@ -172,6 +174,24 @@ class SimulatorTests(unittest.TestCase):
         self.assertGreater(trade["fees"],0)
         self.assertAlmostEqual(result["ending_equity"],995)
 
+    def test_exact_stop_at_open_is_not_misclassified_as_adverse_gap(self):
+        # The stop is met at the OPEN, before the same candle's target wick.
+        # No below-stop gap occurred; its gap diagnostic must stay empty.
+        data = bars(67)
+        data[65] = replace(data[65], open=95, high=120, low=94, close=100)
+        with patch.object(tr, "setup", side_effect=one_signal):
+            result = tr.backtest(data, "trend_pullback", tr.SimulationConfig())
+        trade = result["trades"][0]
+        self.assertEqual(trade["reason"], "stop_at_open")
+        self.assertEqual(trade["exit_time"], data[65].time)
+        self.assertEqual(trade["exit_time_precision"], "bar_open_exact")
+        self.assertAlmostEqual(trade["exit"], 95 * .9995)
+        self.assertIsNone(trade["gap_beyond_stop_pct"])
+        self.assertFalse(trade["stop_target_same_bar"])
+        self.assertEqual(result["execution_diagnostics"]["gap_stop_count"], 0)
+        self.assertIsNone(result["execution_diagnostics"]["max_gap_beyond_stop_pct"])
+        self.assertLess(trade["net_pnl"], 0)
+
     def test_target_gap_open_precedes_intrabar_stop_without_gap_windfall(self):
         # Synthetic OHLC, not market evidence: target is crossed at the
         # next bar OPEN, so a later intrabar low cannot fill stop first.
@@ -183,6 +203,8 @@ class SimulatorTests(unittest.TestCase):
                 result = tr.backtest(data, "trend_pullback", tr.SimulationConfig())
             trade = result["trades"][0]
             self.assertEqual(trade["reason"], "target_gap_open")
+            self.assertEqual(trade["exit_time"], data[65].time)
+            self.assertEqual(trade["exit_time_precision"], "bar_open_exact")
             self.assertAlmostEqual(trade["exit"], trade["reference_target"]*.9995)
             self.assertLessEqual(trade["exit"], opening*.9995 + 1e-8)
             self.assertFalse(trade["stop_target_same_bar"])
@@ -215,6 +237,8 @@ class SimulatorTests(unittest.TestCase):
             result = tr.backtest(data, "trend_pullback", tr.SimulationConfig())
         trade = result["trades"][0]
         self.assertEqual(trade["reason"], "gap_stop")
+        self.assertEqual(trade["exit_time"], data[65].time)
+        self.assertEqual(trade["exit_time_precision"], "bar_open_exact")
         self.assertAlmostEqual(trade["exit"], 80*.9995)
         self.assertFalse(trade["stop_target_same_bar"])
         self.assertLess(trade["net_pnl"], 0)

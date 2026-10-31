@@ -187,6 +187,10 @@ class SimulatorTests(unittest.TestCase):
         self.assertAlmostEqual(trade["realized_loss_to_budget_multiple"], 1)
         self.assertEqual(result["execution_diagnostics"]["risk_budget_breach_count"], 0)
         self.assertEqual(result["execution_diagnostics"]["planned_stop_loss_exceeded_count"], 0)
+        self.assertFalse(trade["utc_day_gross_loss_cap_breached"])
+        self.assertAlmostEqual(trade["utc_day_gross_realized_loss_after_exit_usdt"], 5)
+        self.assertEqual(result["execution_diagnostics"]["utc_gross_loss_cap_breach_days"], 0)
+        self.assertAlmostEqual(result["execution_diagnostics"]["max_utc_day_gross_realized_loss_usdt"], 5)
         self.assertGreater(trade["fees"],0)
         self.assertAlmostEqual(result["ending_equity"],995)
 
@@ -284,6 +288,12 @@ class SimulatorTests(unittest.TestCase):
         self.assertEqual(result["execution_diagnostics"]["planned_stop_loss_exceeded_count"], 1)
         self.assertAlmostEqual(result["execution_diagnostics"]["max_loss_to_risk_budget_multiple"],
                                trade["realized_loss_to_budget_multiple"])
+        self.assertTrue(trade["utc_day_gross_loss_cap_breached"])
+        self.assertGreater(trade["utc_day_gross_realized_loss_after_exit_usdt"], 10)
+        self.assertEqual(result["execution_diagnostics"]["utc_daily_gross_loss_cap_usdt"], 10)
+        self.assertEqual(result["execution_diagnostics"]["utc_gross_loss_cap_breach_days"], 1)
+        self.assertAlmostEqual(result["execution_diagnostics"]["max_utc_day_gross_realized_loss_usdt"],
+                               -trade["net_pnl"])
 
     def test_daily_cap_and_cooldown_do_not_allow_unbounded_reentries(self):
         data=bars(85)
@@ -293,6 +303,7 @@ class SimulatorTests(unittest.TestCase):
             result=tr.backtest(data,"trend_pullback",tr.SimulationConfig(daily_loss_limit=1))
         self.assertEqual(result["trade_count"],1)
         self.assertAlmostEqual(result["net_pnl"],-1)
+        self.assertEqual(result["execution_diagnostics"]["utc_gross_loss_cap_breach_days"], 0)
 
     def test_position_size_accounts_for_costs_and_cash_without_leverage(self):
         cfg=tr.SimulationConfig(equity=10)
@@ -312,6 +323,8 @@ class SimulatorTests(unittest.TestCase):
         self.assertEqual(result["execution_diagnostics"]["risk_budget_breach_count"], 0)
         self.assertEqual(result["execution_diagnostics"]["planned_stop_loss_exceeded_count"], 0)
         self.assertIsNone(result["execution_diagnostics"]["max_loss_to_risk_budget_multiple"])
+        self.assertEqual(result["execution_diagnostics"]["utc_gross_loss_cap_breach_days"], 0)
+        self.assertEqual(result["execution_diagnostics"]["max_utc_day_gross_realized_loss_usdt"], 0)
         json.dumps(result,allow_nan=False)
         self.assertIn("NOT applied",str(result["limitations"]))
 

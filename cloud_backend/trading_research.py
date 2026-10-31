@@ -337,6 +337,12 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
                         max_loss_to_risk_budget_multiple or 0.0, multiple)
                 cash += pnl
                 day_losses[day] = day_losses.get(day, 0)+realized_loss
+                # The UTC daily cap prevents NEW entries; an already-open
+                # position can gap past it. Surface that breach rather than
+                # implying a hard guaranteed maximum loss.
+                utc_gross_loss_after_exit = day_losses[day]
+                utc_gross_cap_breached = (utc_gross_loss_after_exit
+                                          > cfg.daily_loss_limit + 1e-8)
                 at_open = reason in ("gap_stop", "stop_at_open", "target_gap_open")
                 at_close = reason in ("end_of_sample", "time_exit")
                 trades.append({"entry_time": p["entry_time"],
@@ -355,6 +361,8 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
                                "planned_stop_loss_usdt": p["planned_stop_loss"],
                                "risk_budget_breached": budget_breached,
                                "planned_stop_loss_exceeded": stop_loss_exceeded,
+                               "utc_day_gross_realized_loss_after_exit_usdt": utc_gross_loss_after_exit,
+                               "utc_day_gross_loss_cap_breached": utc_gross_cap_breached,
                                "realized_loss_to_budget_multiple": (
                                    realized_loss/p["risk_budget_at_entry"]
                                    if realized_loss else None)})
@@ -380,6 +388,10 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
                 "risk_budget_breach_count": risk_budget_breach_count,
                 "planned_stop_loss_exceeded_count": planned_stop_loss_exceeded_count,
                 "max_loss_to_risk_budget_multiple": max_loss_to_risk_budget_multiple,
+                "utc_daily_gross_loss_cap_usdt": cfg.daily_loss_limit,
+                "utc_gross_loss_cap_breach_days": sum(
+                    value > cfg.daily_loss_limit + 1e-8 for value in day_losses.values()),
+                "max_utc_day_gross_realized_loss_usdt": max(day_losses.values(), default=0.0),
                 "ambiguous_bar_policy": "stop_first_when_stop_and_target_both_touched",
             },
             "expectancy": (cash-cfg.equity)/len(trades) if trades else None,
@@ -391,5 +403,5 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
                             "Spot long only, no leverage or funding; one position, two-bar cooldown.",
                             "Next-open fills, fixed adverse slippage, stop-first ambiguous candles; ambiguity and gap diagnostics are observed OHLC scenarios, not authenticated execution paths.",
                             "Open-triggered exits use the observed bar open; intrabar stop/target exit_time is only a bar-close upper bound, not an observed execution timestamp.",
-                            "UTC gross realized daily loss cap; per-entry budget is a sizing limit, not a guaranteed loss limit; gaps may exceed it.",
+                            "UTC gross realized daily loss cap prevents new entries only; an already-open position may gap past the cap. Per-entry budgets and daily caps are not guaranteed maximum losses.",
                             "Does not model partial fills, liquidity impact or intra-bar equity peaks."]}

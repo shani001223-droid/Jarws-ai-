@@ -190,7 +190,7 @@ def kraken_candles(payload, interval: str, now_ms: int, *, expected_symbol: str 
 def verify_spot_market(symbol: str, interval: str, binance_payload,
                        kraken_payload, now_ms: int, binance_fetched_at: int,
                        kraken_fetched_at: int) -> dict:
-    """Require 20 aligned closed bars and bounded cross-venue price agreement.
+    """Require 20 aligned closed bars and bounded cross-venue OHLC agreement.
 
     Exchange volumes are intentionally NOT compared numerically: they measure
     separate venues and BTC/USDT vs BTC/USD quote markets.
@@ -201,13 +201,22 @@ def verify_spot_market(symbol: str, interval: str, binance_payload,
     if len(first) < CROSS_CHECK_BARS or len(second) < CROSS_CHECK_BARS:
         raise MarketDataQualityError("insufficient_overlap")
     differences = []
+    ohlc_differences = []
     for a, b in zip(first[-CROSS_CHECK_BARS:], second[-CROSS_CHECK_BARS:]):
         if a.time != b.time:
             raise MarketDataQualityError("cross_source_time_mismatch")
-        difference = abs(a.close - b.close) / ((a.close + b.close) / 2) * 100
-        if difference > MAX_CLOSE_DIFFERENCE_PCT:
+        # Closing-price agreement can conceal conflicting opens/wicks,
+        # which materially affect a hypothetical stop or target.
+        close_difference = abs(a.close - b.close) / ((a.close + b.close) / 2) * 100
+        if close_difference > MAX_CLOSE_DIFFERENCE_PCT:
             raise MarketDataQualityError("cross_source_price_disagreement")
-        differences.append(difference)
+        differences.append(close_difference)
+        for field in ("open", "high", "low", "close"):
+            x, y = getattr(a, field), getattr(b, field)
+            difference = abs(x - y) / ((x + y) / 2) * 100
+            if difference > MAX_CLOSE_DIFFERENCE_PCT:
+                raise MarketDataQualityError("cross_source_ohlc_disagreement")
+            ohlc_differences.append(difference)
     # Reject bool/noninteger timestamps and future-dated cache responses.
     # The two venues must be recent relative to the SAME server clock.
     if (type(now_ms) is not int or now_ms < 0
@@ -236,8 +245,10 @@ def verify_spot_market(symbol: str, interval: str, binance_payload,
         "binance_last_quote_volume_usdt": quote_volume,
         "kraken_last_base_volume": second[-1].volume,
         "cross_checked_closed_bars": CROSS_CHECK_BARS,
+        "ohlc_cross_checked_closed_bars": CROSS_CHECK_BARS,
+        "max_last_twenty_ohlc_difference_pct": round(max(ohlc_differences), 4),
         "max_last_twenty_close_difference_pct": round(max(differences), 4),
         "max_last_three_close_difference_pct": round(max(differences[-3:]), 4),
         "max_allowed_difference_pct": MAX_CLOSE_DIFFERENCE_PCT,
-        "note": "Independent venue price comparison only; venue volumes are not interchangeable. No signal, order, leverage or profit prediction.",
+        "note": "Independent venue OHLC comparison only; venue volumes are not interchangeable. No signal, order, leverage or profit prediction.",
     }

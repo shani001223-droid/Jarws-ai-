@@ -175,6 +175,43 @@ class QualityUnitTests(unittest.TestCase):
             mq.verify_spot_market("BTCUSDT", "15m", b, k, NOW,
                                   NOW//1000, NOW//1000)
 
+    def test_cross_venue_ohlc_wicks_and_opens_are_checked_not_only_closes(self):
+        # Latest closes match, but older open/wick differences can distort
+        # hypothetical stop/target calculations. Test all supported intervals.
+        for tf in mq.INTERVALS:
+            for field, value in ((1, "105"), (2, "105"), (3, "95")):
+                with self.subTest(interval=tf, field=field):
+                    b, k = fixtures(tf)
+                    row = k["result"]["XXBTZUSD"][-12]
+                    row[field] = value
+                    if field == 1:
+                        row[2] = "106"  # high must include the altered open
+                    self.assertEqual(row[4], b[-12][4])
+                    with self.assertRaisesRegex(mq.MarketDataQualityError,
+                                                "cross_source_ohlc_disagreement"):
+                        mq.verify_spot_market("BTCUSDT", tf, b, k, NOW,
+                                              NOW//1000, NOW//1000)
+            b, k = fixtures(tf)
+            k["result"]["XXBTZUSD"][-12][2] = "102.5"
+            report = mq.verify_spot_market("BTCUSDT", tf, b, k, NOW,
+                                           NOW//1000, NOW//1000)
+            self.assertEqual(report["ohlc_cross_checked_closed_bars"], 20)
+            self.assertGreater(report["max_last_twenty_ohlc_difference_pct"], 0)
+            self.assertLess(report["max_last_twenty_ohlc_difference_pct"], 2)
+            self.assertEqual(report["max_last_twenty_close_difference_pct"], 0)
+
+    def test_actual_quality_api_refuses_disagreeing_wick_without_close_change(self):
+        b, k = fixtures()
+        k["result"]["XXBTZUSD"][-12][2] = "106"
+        def fetch(key, url, ttl):
+            return (k if "kraken.com" in url else b), NOW//1000
+        with patch.object(main, "_public_data", side_effect=fetch), patch.object(
+                main.time, "time", return_value=NOW/1000):
+            with self.assertRaises(main.HTTPException) as err:
+                main.trading_data_quality(Response(), "BTCUSDT", "15m")
+        self.assertEqual(err.exception.status_code, 503)
+        self.assertNotIn("verified_sources_agree", str(err.exception.detail))
+
     def test_future_or_invalid_provider_fetch_times_fail_closed(self):
         for stamp in (NOW//1000 + 6, NOW//1000 + 600, True, 1.5, -1):
             with self.subTest(stamp=stamp):

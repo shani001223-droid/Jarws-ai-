@@ -181,7 +181,8 @@ def _execution_bar_quality(bars, trades):
 
 def evaluate_chronological(bars, symbol: str, strategy: str,
                            config: SimulationConfig | None = None, *,
-                           include_cost_guard_sensitivity: bool = False) -> dict:
+                           include_cost_guard_sensitivity: bool = False,
+                           include_holdout_cost_stress: bool = False) -> dict:
     """Fixed 70/30 chronological split; 64 prior bars warm the holdout.
 
     Signals may use only bars already closed at that moment. A signal at the
@@ -191,6 +192,8 @@ def evaluate_chronological(bars, symbol: str, strategy: str,
     """
     if type(include_cost_guard_sensitivity) is not bool:
         raise PaperEvaluationError("invalid_cost_guard_flag")
+    if type(include_holdout_cost_stress) is not bool:
+        raise PaperEvaluationError("invalid_holdout_cost_stress_flag")
     if symbol not in ("BTCUSDT", "ETHUSDT") or strategy not in STRATEGIES:
         raise PaperEvaluationError("unsupported_symbol_or_strategy")
     cfg = SimulationConfig() if config is None else config
@@ -294,12 +297,46 @@ def evaluate_chronological(bars, symbol: str, strategy: str,
                 "Zero trades and negative outcomes remain in the report.",
             ],
         }
+    if include_holdout_cost_stress:
+        # Same exact scored holdout, doubled modeled costs; not independent.
+        available = cfg.fee_bps <= 50 and cfg.slippage_bps <= 50
+        stressed = None
+        if available:
+            stress_cfg = SimulationConfig(**{
+                **asdict(cfg), "fee_bps": cfg.fee_bps * 2,
+                "slippage_bps": cfg.slippage_bps * 2})
+            stressed = backtest(candles[split - WARMUP_BARS:], strategy,
+                                stress_cfg, entry_not_before=first_holdout)
+            if any(t["entry_time"] < first_holdout for t in stressed["trades"]):
+                raise PaperEvaluationError("lookahead_or_warmup_trade")
+        result["holdout_double_cost_sensitivity"] = {
+            "status": ("evaluated_same_holdout_not_independent" if available
+                       else "unavailable_config_exceeds_engine_bounds"),
+            "baseline_trade_count": holdout["trade_count"],
+            "baseline_net_pnl_usdt": holdout["net_pnl"],
+            "double_costs_trade_count": stressed["trade_count"] if stressed is not None else None,
+            "double_costs_net_pnl_usdt": stressed["net_pnl"] if stressed is not None else None,
+            "double_costs_holdout": ({k: v for k, v in stressed.items()
+                                     if k != "input_candles"} if stressed is not None else None),
+            "double_costs_paper_execution_bar_quality": (
+                _execution_bar_quality(candles[split - WARMUP_BARS:],
+                                       stressed["trades"]) if stressed is not None else None),
+            "independent_venue_verified": False,
+            "forward_verified": False,
+            "limitations": [
+                "Same unverified candles and same chronological holdout; not independent or forward evidence.",
+                "Double-cost stress is unavailable, never silently capped, beyond engine bounds.",
+                "All zero/negative trades, modeled gaps, ambiguity, drawdown and forced marks remain visible.",
+                "Modeled fills are not observed exchange execution or a calibrated win probability.",
+            ],
+        }
     return result
 
 
 def evaluate_rolling_robustness(bars, symbol: str, strategy: str,
                                 config: SimulationConfig | None = None, *,
-                                include_cost_guard_sensitivity: bool = False) -> dict:
+                                include_cost_guard_sensitivity: bool = False,
+                                include_holdout_cost_stress: bool = False) -> dict:
     """Optional fixed-window/cost stress study on the SAME unverified input.
 
     The 40-60%, 60-80% and 80-100% windows do not overlap in scored bars.
@@ -308,7 +345,8 @@ def evaluate_rolling_robustness(bars, symbol: str, strategy: str,
     """
     report = evaluate_chronological(
         bars, symbol, strategy, config,
-        include_cost_guard_sensitivity=include_cost_guard_sensitivity)
+        include_cost_guard_sensitivity=include_cost_guard_sensitivity,
+        include_holdout_cost_stress=include_holdout_cost_stress)
     candles = _checked(bars)
     cfg = SimulationConfig() if config is None else config
     stress_available = cfg.fee_bps <= 50 and cfg.slippage_bps <= 50

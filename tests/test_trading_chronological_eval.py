@@ -864,5 +864,65 @@ class ChronologicalEvaluationTests(unittest.TestCase):
                             entry_not_before=invalid)
 
 
+    def test_primary_holdout_double_cost_stress_retains_losses_and_boundary(self):
+        from cloud_backend import trading_research as tr
+        flat = [replace(b, open=100, high=101, low=99, close=100, volume=10)
+                for b in self.bars]
+        with patch.object(tr, "setup", return_value={"stop": 99.5,
+                                                      "reference_entry": 100}):
+            report = ev.evaluate_chronological(flat, "BTCUSDT", "trend_pullback",
+                                               include_holdout_cost_stress=True)
+        stress = report["holdout_double_cost_sensitivity"]
+        self.assertEqual(stress["status"], "evaluated_same_holdout_not_independent")
+        self.assertFalse(stress["independent_venue_verified"])
+        self.assertFalse(stress["forward_verified"])
+        self.assertEqual(stress["baseline_trade_count"], report["holdout"]["trade_count"])
+        self.assertEqual(stress["baseline_net_pnl_usdt"], report["holdout"]["net_pnl"])
+        self.assertGreater(stress["baseline_trade_count"], 0)
+        self.assertLess(stress["baseline_net_pnl_usdt"], 0)
+        self.assertGreater(stress["double_costs_trade_count"], 0)
+        self.assertLess(stress["double_costs_net_pnl_usdt"], 0)
+        self.assertEqual(stress["double_costs_holdout"]["config"]["fee_bps"], 20)
+        self.assertEqual(stress["double_costs_holdout"]["config"]["slippage_bps"], 10)
+        self.assertNotIn("input_candles", stress["double_costs_holdout"])
+        self.assertEqual(stress["double_costs_paper_execution_bar_quality"]["trade_count"],
+                         stress["double_costs_trade_count"])
+        self.assertTrue(all(t["entry_time"] >= flat[210].time
+                            for t in stress["double_costs_holdout"]["trades"]))
+
+    def test_primary_holdout_double_cost_stress_zero_and_bounds(self):
+        from cloud_backend import trading_research as tr
+        with patch.object(tr, "setup", return_value=None):
+            report = ev.evaluate_chronological(self.bars, "ETHUSDT", "trend_pullback",
+                                               include_holdout_cost_stress=True)
+        stress = report["holdout_double_cost_sensitivity"]
+        self.assertEqual(stress["baseline_trade_count"], 0)
+        self.assertEqual(stress["baseline_net_pnl_usdt"], 0)
+        self.assertEqual(stress["double_costs_trade_count"], 0)
+        self.assertEqual(stress["double_costs_net_pnl_usdt"], 0)
+        self.assertEqual(stress["double_costs_paper_execution_bar_quality"]["trade_count"], 0)
+        self.assertNotIn("holdout_double_cost_sensitivity",
+                         ev.evaluate_chronological(self.bars, "ETHUSDT", "trend_pullback"))
+        unavailable = ev.evaluate_chronological(
+            self.bars, "ETHUSDT", "trend_pullback",
+            SimulationConfig(fee_bps=60), include_holdout_cost_stress=True)
+        self.assertEqual(unavailable["holdout_double_cost_sensitivity"]["status"],
+                         "unavailable_config_exceeds_engine_bounds")
+        self.assertIsNone(unavailable["holdout_double_cost_sensitivity"]["double_costs_holdout"])
+        for bad in (None, 1, "true"):
+            with self.subTest(bad=bad), self.assertRaisesRegex(
+                    ev.PaperEvaluationError, "invalid_holdout_cost_stress_flag"):
+                ev.evaluate_chronological(self.bars, "BTCUSDT", "trend_pullback",
+                                          include_holdout_cost_stress=bad)
+
+    def test_rolling_forwards_primary_holdout_cost_stress(self):
+        report = ev.evaluate_rolling_robustness(
+            self.bars, "BTCUSDT", "trend_pullback",
+            include_holdout_cost_stress=True)
+        self.assertIn("holdout_double_cost_sensitivity", report)
+        self.assertIn("rolling_robustness", report)
+        self.assertEqual(report["holdout_double_cost_sensitivity"]["double_costs_holdout"]["config"]["fee_bps"], 20)
+
+
 if __name__ == "__main__":
     unittest.main()

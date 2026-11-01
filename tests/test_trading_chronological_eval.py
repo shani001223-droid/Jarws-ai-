@@ -99,6 +99,10 @@ class ChronologicalEvaluationTests(unittest.TestCase):
         self.assertEqual(overlap["shared_scenario_net_pnl_usdt"], -1.0)
         self.assertEqual(overlap["baseline_only_net_pnl_usdt"], -5.0)
         self.assertEqual(overlap["scenario_only_net_pnl_usdt"], 3.0)
+        self.assertEqual(overlap["total_scenario_minus_baseline_net_pnl_usdt"], 5.0)
+        self.assertTrue(overlap["pnl_delta_reconciled"])
+        self.assertEqual(overlap["shared_quantity_unavailable_count"], 1)
+        self.assertEqual(overlap["shared_fill_unavailable_count"], 1)
         empty = ev._scenario_entry_overlap([], [])
         self.assertTrue(empty["identical_entry_timestamps"])
         self.assertEqual(empty["shared_entry_count"], 0)
@@ -158,6 +162,52 @@ class ChronologicalEvaluationTests(unittest.TestCase):
             [{"entry_time": 0, "net_pnl": -1e308}],
             [{"entry_time": 0, "net_pnl": 1e308}])
         self.assertIsNone(overflow["shared_scenario_minus_baseline_net_pnl_usdt"])
+
+
+    def test_shared_entry_economics_and_pnl_delta_are_not_assumed_equal(self):
+        # Synthetic same-entry scenarios: quantity and modeled fill can change
+        # under different costs, even when the timestamps overlap.
+        baseline = [
+            {"entry_time": 0, "exit_time": 900000, "net_pnl": -5.0,
+             "quantity": 1.0, "entry": 100.0},
+            {"entry_time": 1800000, "exit_time": 2700000, "net_pnl": 2.0,
+             "quantity": 2.0, "entry": 101.0},
+            {"entry_time": 3600000, "net_pnl": -3.0},
+        ]
+        scenario = [
+            {"entry_time": 0, "exit_time": 900000, "net_pnl": -7.0,
+             "quantity": 1.5, "entry": 100.0},
+            {"entry_time": 1800000, "exit_time": 2700000, "net_pnl": 1.0,
+             "quantity": 2.0, "entry": 102.0},
+            {"entry_time": 4500000, "net_pnl": -4.0},
+        ]
+        report = ev._scenario_entry_overlap(baseline, scenario)
+        self.assertEqual(report["status"], "descriptive_same_series_not_independent")
+        self.assertEqual(report["shared_quantity_equal_count"], 1)
+        self.assertEqual(report["shared_quantity_different_count"], 1)
+        self.assertEqual(report["shared_quantity_unavailable_count"], 0)
+        self.assertEqual(report["shared_fill_equal_count"], 1)
+        self.assertEqual(report["shared_fill_different_count"], 1)
+        self.assertEqual(report["shared_fill_unavailable_count"], 0)
+        self.assertEqual(report["shared_scenario_minus_baseline_net_pnl_usdt"], -3)
+        # Baseline -6, scenario -10; preserve both unmatched losing trades.
+        self.assertEqual(report["total_scenario_minus_baseline_net_pnl_usdt"], -4)
+        self.assertTrue(report["pnl_delta_reconciled"])
+        missing = ev._scenario_entry_overlap(
+            [{"entry_time": 0, "net_pnl": -1.0}],
+            [{"entry_time": 0, "net_pnl": -2.0, "quantity": 1.0, "entry": 100}])
+        self.assertEqual(missing["shared_quantity_unavailable_count"], 1)
+        self.assertEqual(missing["shared_fill_unavailable_count"], 1)
+        self.assertEqual(missing["total_scenario_minus_baseline_net_pnl_usdt"], -1)
+        for field, bad in (("quantity", 0), ("quantity", float("nan")),
+                           ("quantity", True), ("entry", -1), ("entry", float("inf"))):
+            with self.subTest(field=field, bad=bad):
+                invalid = ev._scenario_entry_overlap(
+                    [{"entry_time": 0, "net_pnl": -1.0, field: bad}], scenario)
+                self.assertEqual(invalid["status"],
+                                 "unavailable_invalid_or_nonfinite_trade_entries")
+                self.assertIsNone(invalid["total_scenario_minus_baseline_net_pnl_usdt"])
+                self.assertIsNone(invalid["shared_quantity_equal_count"])
 
     def test_entry_overlap_scenarios_keep_zero_trade_results(self):
         from cloud_backend import trading_research as tr

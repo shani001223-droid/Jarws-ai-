@@ -321,6 +321,14 @@ def _scenario_entry_overlap(baseline_trades, scenario_trades):
         "shared_exit_time_different_count": None,
         "shared_exit_time_unavailable_count": None,
         "shared_outcome_category_changed_count": None,
+        "shared_quantity_equal_count": None,
+        "shared_quantity_different_count": None,
+        "shared_quantity_unavailable_count": None,
+        "shared_fill_equal_count": None,
+        "shared_fill_different_count": None,
+        "shared_fill_unavailable_count": None,
+        "total_scenario_minus_baseline_net_pnl_usdt": None,
+        "pnl_delta_reconciled": None,
         "shared_scenario_minus_baseline_net_pnl_usdt": None,
         "shared_baseline_net_pnl_usdt": None,
         "shared_scenario_net_pnl_usdt": None,
@@ -345,6 +353,14 @@ def _scenario_entry_overlap(baseline_trades, scenario_trades):
                         type(trade["exit_time"]) is not int
                         or trade["exit_time"] < trade["entry_time"]):
                     raise ValueError("invalid_modeled_exit_timestamp")
+                # Shared timestamps do not prove equal size or modeled fill.
+                # Missing synthetic economics remain explicitly unknown.
+                for optional in ("quantity", "entry"):
+                    if optional in trade and (
+                            type(trade[optional]) not in (int, float)
+                            or not math.isfinite(trade[optional])
+                            or trade[optional] <= 0):
+                        raise ValueError("invalid_modeled_entry_economics")
                 entries[trade["entry_time"]] = trade
             return entries
 
@@ -366,6 +382,29 @@ def _scenario_entry_overlap(baseline_trades, scenario_trades):
                             and "exit_time" in scenario[t]]
         same_exits = sum(baseline[t]["exit_time"] == scenario[t]["exit_time"]
                          for t in comparable_exits)
+        # Stress costs can change sizing as well as per-unit economics.
+        def compare_optional(field):
+            comparable = [t for t in shared if field in baseline[t]
+                          and field in scenario[t]]
+            equal = sum(baseline[t][field] == scenario[t][field]
+                        for t in comparable)
+            return equal, len(comparable) - equal, len(shared) - len(comparable)
+
+        qty_equal, qty_different, qty_unknown = compare_optional("quantity")
+        fill_equal, fill_different, fill_unknown = compare_optional("entry")
+        baseline_total = math.fsum((sums["shared_baseline_net_pnl_usdt"],
+                                    sums["baseline_only_net_pnl_usdt"]))
+        scenario_total = math.fsum((sums["shared_scenario_net_pnl_usdt"],
+                                    sums["scenario_only_net_pnl_usdt"]))
+        total_delta = scenario_total - baseline_total
+        component_delta = math.fsum((
+            sums["shared_scenario_minus_baseline_net_pnl_usdt"],
+            sums["scenario_only_net_pnl_usdt"],
+            -sums["baseline_only_net_pnl_usdt"]))
+        if (not math.isfinite(total_delta) or not math.isfinite(component_delta)
+                or not math.isclose(total_delta, component_delta,
+                                    rel_tol=1e-10, abs_tol=1e-8)):
+            raise ValueError("unreconciled_modeled_pnl_delta")
         def category(pnl):
             return (pnl > 0) - (pnl < 0)
         changed_categories = sum(
@@ -384,6 +423,14 @@ def _scenario_entry_overlap(baseline_trades, scenario_trades):
         "shared_exit_time_different_count": len(comparable_exits) - same_exits,
         "shared_exit_time_unavailable_count": len(shared) - len(comparable_exits),
         "shared_outcome_category_changed_count": changed_categories,
+        "shared_quantity_equal_count": qty_equal,
+        "shared_quantity_different_count": qty_different,
+        "shared_quantity_unavailable_count": qty_unknown,
+        "shared_fill_equal_count": fill_equal,
+        "shared_fill_different_count": fill_different,
+        "shared_fill_unavailable_count": fill_unknown,
+        "total_scenario_minus_baseline_net_pnl_usdt": total_delta,
+        "pnl_delta_reconciled": True,
         **sums,
     })
     return result

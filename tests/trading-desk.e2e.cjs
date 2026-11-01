@@ -6,7 +6,15 @@ const {fixture,makePaperPlan}=require("./trading-desk.fixtures.cjs");
 const ROOT=path.resolve(__dirname,"..");
 function body(mode){
   const d=fixture(),now=Date.now();d.as_of_ms=now;d.fetched_at=Math.floor(now/1000);d.expires_at_ms=now+60000;d.confluence.as_of=now;
-  for(const tf of Object.keys(d.timeframes)){d.timeframes[tf].last_closed_at=now-1000;d.confluence.last_closed_at[tf]=now-1000;d.setup.last_closed_at[tf]=now-1000;}
+  // Mock the latest genuinely closed candle for each independent timeframe.
+  // A generic now-1000 timestamp is not an exchange candle boundary.
+  for(const tf of Object.keys(d.timeframes)){
+    const step={"15m":900000,"1h":3600000,"4h":14400000}[tf];
+    const lastClose=Math.floor(now/step)*step-1;
+    d.timeframes[tf].last_closed_at=lastClose;
+    d.confluence.last_closed_at[tf]=lastClose;
+    d.setup.last_closed_at[tf]=lastClose;
+  }
   if(["plan","expiry"].includes(mode)){
     d.decision="paper_plan_only";d.confluence.score=100;d.confluence.decision="paper_watchlist_only";
     for(const e of Object.values(d.confluence.evidence)){e.passed=true;e.points=20;}

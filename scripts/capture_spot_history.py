@@ -166,6 +166,8 @@ def capture_spot_history(symbol: str, *, fetch_json=None, clock=None):
         **historical,
         "max_last_twenty_close_difference_pct": quality[
             "max_last_twenty_close_difference_pct"],
+        "max_last_twenty_ohlc_difference_pct": quality[
+            "max_last_twenty_ohlc_difference_pct"],
         "source_fetched_at": quality["source_fetched_at"],
         "sources": quality["sources"],
         "limitations": [

@@ -532,6 +532,7 @@ def attach_capture_receipt(report: dict, receipt: dict) -> dict:
         "historical_cross_checked_closed_bars": count,
         "historical_ohlc_cross_checked_bars": count,
         "cross_checked_closed_bars": 20,
+        "last_closed_at_ms": last_close,
         "input_candle_sha256": report.get("input_candle_sha256"),
         "sources": ["Binance Spot BTC/ETH USDT", "Kraken Spot BTC/ETH USD"],
     }
@@ -554,11 +555,15 @@ def attach_capture_receipt(report: dict, receipt: dict) -> dict:
     historical_max = receipt.get("max_historical_close_difference_pct")
     ohlc_max = receipt.get("max_historical_ohlc_difference_pct")
     recent_max = receipt.get("max_last_twenty_close_difference_pct")
+    recent_ohlc_max = receipt.get("max_last_twenty_ohlc_difference_pct")
     if any(type(v) not in (int, float) or not math.isfinite(v)
-           or v < 0 or v > 2 for v in (historical_max, ohlc_max, recent_max)):
+           or v < 0 or v > 2 for v in (historical_max, ohlc_max,
+                                        recent_max, recent_ohlc_max)):
         raise PaperEvaluationError("capture_receipt_deviation_invalid")
-    # Rounded maximums are calculated from the same bars; OHLC includes close.
-    if recent_max > historical_max or historical_max > ohlc_max:
+    # Rounded maxima come from the same bars: latest 20 are a subset
+    # of full history, and every OHLC maximum includes the close.
+    if (recent_max > historical_max or historical_max > ohlc_max
+            or recent_max > recent_ohlc_max or recent_ohlc_max > ohlc_max):
         raise PaperEvaluationError("capture_receipt_deviation_mismatch")
     try:
         canonical = json.dumps(receipt, sort_keys=True, separators=(",", ":"),
@@ -573,6 +578,8 @@ def attach_capture_receipt(report: dict, receipt: dict) -> dict:
         "historical_ohlc_comparison_bars_claimed": count,
         "max_historical_close_difference_pct_claimed": historical_max,
         "max_historical_ohlc_difference_pct_claimed": ohlc_max,
+        "max_last_twenty_ohlc_difference_pct_claimed": recent_ohlc_max,
+        "last_closed_at_ms_claimed": last_close,
         "independent_venue_authenticated": False,
         "forward_paper_verified": False,
     }

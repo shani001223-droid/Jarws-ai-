@@ -44,6 +44,7 @@ class CaptureTests(unittest.TestCase):
         self.assertEqual(receipt["historical_ohlc_cross_checked_bars"], 499)
         self.assertEqual(receipt["max_historical_close_difference_pct"], 0)
         self.assertEqual(receipt["max_historical_ohlc_difference_pct"], 0)
+        self.assertEqual(receipt["max_last_twenty_ohlc_difference_pct"], 0)
         self.assertFalse(receipt["orders_enabled"])
         bars = [Candle(*row) for row in dataset["candles"]]
         report = evaluate_chronological(bars, "BTCUSDT", "trend_pullback")
@@ -253,6 +254,11 @@ class CaptureTests(unittest.TestCase):
         self.assertEqual(bound["capture_receipt"]["historical_ohlc_comparison_bars_claimed"],
                          len(data["candles"]))
         self.assertNotIn("capture_receipt", report)
+        self.assertEqual(bound["capture_receipt"]["last_closed_at_ms_claimed"],
+                         report["split"]["holdout_end_at"])
+        self.assertEqual(bound["capture_receipt"][
+            "max_last_twenty_ohlc_difference_pct_claimed"],
+            receipt["max_last_twenty_ohlc_difference_pct"])
         for key, bad in (
             ("input_candle_sha256", "0" * 64),
             ("historical_cross_checked_closed_bars", 20),
@@ -261,12 +267,33 @@ class CaptureTests(unittest.TestCase):
             ("max_historical_ohlc_difference_pct", 3.0),
             ("symbol", "ETHUSDT"),
             ("first_open_at_ms", receipt["first_open_at_ms"] + STEP),
+            ("last_closed_at_ms", receipt["last_closed_at_ms"] - STEP),
+            ("last_closed_at_ms", True),
             ("captured_at_ms", receipt["captured_at_ms"] + 10 * STEP),
             ("max_historical_close_difference_pct", 3.0),
+            ("max_last_twenty_ohlc_difference_pct", 3.0),
+            ("max_last_twenty_ohlc_difference_pct", True),
             ("sources", ["fake"]),
         ):
             with self.subTest(key=key), self.assertRaises(PaperEvaluationError):
                 attach_capture_receipt(report, {**receipt, key: bad})
+
+    def test_receipt_rejects_impossible_recent_ohlc_claims(self):
+        # Synthetic unsigned receipts must still be internally consistent.
+        b, k = fixtures()
+        data, receipt = capture.capture_spot_history(
+            "BTCUSDT", fetch_json=lambda u: k if "kraken.com" in u else b,
+            clock=lambda: NOW / 1000)
+        from cloud_backend.paper_evaluation import attach_capture_receipt, PaperEvaluationError
+        report = evaluate_chronological([Candle(*row) for row in data["candles"]],
+                                        "BTCUSDT", "trend_pullback")
+        for overrides in (
+            {"max_last_twenty_ohlc_difference_pct": 0.01},
+            {"max_last_twenty_close_difference_pct": 0.01},
+            {"max_last_twenty_ohlc_difference_pct": float("nan")},
+        ):
+            with self.subTest(overrides=overrides), self.assertRaises(PaperEvaluationError):
+                attach_capture_receipt(report, {**receipt, **overrides})
 
     def test_cli_consumes_actual_capture_receipt_line_without_trusting_it(self):
         import subprocess

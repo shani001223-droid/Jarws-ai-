@@ -257,11 +257,16 @@ def _trade_outcome_concentration(trades):
         "largest_win_share_of_resolved_gross_profit_pct": None,
         "largest_loss_share_of_resolved_gross_loss_pct": None,
     }
-    if any(type(t) is not dict or type(t.get("entry_time")) is not int
-           or t["entry_time"] < 0 or type(t.get("net_pnl")) not in (int, float)
-           or not math.isfinite(t["net_pnl"])
-           or type(t.get("terminal_forced_mark", False)) is not bool
-           for t in trades):
+    try:
+        invalid = any(
+            type(t) is not dict or type(t.get("entry_time")) is not int
+            or t["entry_time"] < 0 or type(t.get("net_pnl")) not in (int, float)
+            or not math.isfinite(t["net_pnl"])
+            or type(t.get("terminal_forced_mark", False)) is not bool
+            for t in trades)
+    except (OverflowError, TypeError, ValueError):
+        invalid = True
+    if invalid:
         result["status"] = "unavailable_incomplete_trade_outcomes"
         return result
     resolved = sorted(
@@ -320,6 +325,14 @@ def _scenario_entry_overlap(baseline_trades, scenario_trades):
         "shared_exit_time_equal_count": None,
         "shared_exit_time_different_count": None,
         "shared_exit_time_unavailable_count": None,
+        "shared_exit_precision_equal_count": None,
+        "shared_exit_precision_different_count": None,
+        "shared_exit_precision_unavailable_count": None,
+        "shared_equal_exit_time_intrabar_uncertain_count": None,
+        "shared_terminal_status_equal_count": None,
+        "shared_terminal_status_different_count": None,
+        "shared_terminal_status_unavailable_count": None,
+        "shared_both_strategy_resolved_count": None,
         "shared_outcome_category_changed_count": None,
         "shared_quantity_equal_count": None,
         "shared_quantity_different_count": None,
@@ -353,6 +366,23 @@ def _scenario_entry_overlap(baseline_trades, scenario_trades):
                         type(trade["exit_time"]) is not int
                         or trade["exit_time"] < trade["entry_time"]):
                     raise ValueError("invalid_modeled_exit_timestamp")
+                # Exit timestamps for intrabar stops/targets are only the
+                # candle-close upper bound, not observed matching fill times.
+                if "exit_time_precision" in trade:
+                    precision = trade["exit_time_precision"]
+                    if (precision not in (
+                            "bar_open_exact", "bar_close_exact",
+                            "bar_close_upper_bound_intrabar_unknown")
+                            or type(precision) is not str
+                            or "exit_time" not in trade
+                            or (precision == "bar_open_exact"
+                                and trade["exit_time"] % STEP_MS != 0)
+                            or (precision != "bar_open_exact"
+                                and (trade["exit_time"] + 1) % STEP_MS != 0)):
+                        raise ValueError("invalid_modeled_exit_precision")
+                if ("terminal_forced_mark" in trade
+                        and type(trade["terminal_forced_mark"]) is not bool):
+                    raise ValueError("invalid_terminal_mark_status")
                 # Shared timestamps do not prove equal size or modeled fill.
                 # Missing synthetic economics remain explicitly unknown.
                 for optional in ("quantity", "entry"):
@@ -382,6 +412,28 @@ def _scenario_entry_overlap(baseline_trades, scenario_trades):
                             and "exit_time" in scenario[t]]
         same_exits = sum(baseline[t]["exit_time"] == scenario[t]["exit_time"]
                          for t in comparable_exits)
+        comparable_precisions = [
+            t for t in shared if "exit_time_precision" in baseline[t]
+            and "exit_time_precision" in scenario[t]]
+        same_precisions = sum(
+            baseline[t]["exit_time_precision"] == scenario[t]["exit_time_precision"]
+            for t in comparable_precisions)
+        uncertain_same_exits = sum(
+            baseline[t]["exit_time"] == scenario[t]["exit_time"]
+            and ("bar_close_upper_bound_intrabar_unknown" in (
+                baseline[t].get("exit_time_precision"),
+                scenario[t].get("exit_time_precision")))
+            for t in comparable_exits)
+        comparable_terminal = [
+            t for t in shared if "terminal_forced_mark" in baseline[t]
+            and "terminal_forced_mark" in scenario[t]]
+        same_terminal = sum(
+            baseline[t]["terminal_forced_mark"] == scenario[t]["terminal_forced_mark"]
+            for t in comparable_terminal)
+        both_resolved = sum(
+            not baseline[t]["terminal_forced_mark"]
+            and not scenario[t]["terminal_forced_mark"]
+            for t in comparable_terminal)
         # Stress costs can change sizing as well as per-unit economics.
         def compare_optional(field):
             comparable = [t for t in shared if field in baseline[t]
@@ -422,6 +474,14 @@ def _scenario_entry_overlap(baseline_trades, scenario_trades):
         "shared_exit_time_equal_count": same_exits,
         "shared_exit_time_different_count": len(comparable_exits) - same_exits,
         "shared_exit_time_unavailable_count": len(shared) - len(comparable_exits),
+        "shared_exit_precision_equal_count": same_precisions,
+        "shared_exit_precision_different_count": len(comparable_precisions) - same_precisions,
+        "shared_exit_precision_unavailable_count": len(shared) - len(comparable_precisions),
+        "shared_equal_exit_time_intrabar_uncertain_count": uncertain_same_exits,
+        "shared_terminal_status_equal_count": same_terminal,
+        "shared_terminal_status_different_count": len(comparable_terminal) - same_terminal,
+        "shared_terminal_status_unavailable_count": len(shared) - len(comparable_terminal),
+        "shared_both_strategy_resolved_count": both_resolved,
         "shared_outcome_category_changed_count": changed_categories,
         "shared_quantity_equal_count": qty_equal,
         "shared_quantity_different_count": qty_different,

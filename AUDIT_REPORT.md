@@ -1,5 +1,10 @@
 # HOSHI trading V2 — audit and implementation evidence
 
+## 2 November 2026 — modeled exit precision and terminal-mark comparability (trading-only development)
+
+**Code-complete, CI pending:** On the existing draft PR #29 branch, the offline same-entry paper scenario comparison now distinguishes equal/different/unknown exit-time precision, flags equal candle-close timestamps that are only uncertain intrabar exit upper bounds, and distinguishes matching/different/unknown terminal forced-mark status from pairs where both trades were strategy-resolved. A matching candle-close timestamp is not evidence of identical execution; terminal marks are not strategy exits. Invalid precision/timestamp combinations and malformed forced-mark flags fail closed. Extremely large synthetic integer PnL now returns unavailable outcome concentration rather than raising OverflowError. Synthetic regressions added. No entry/exit policy, modeled PnL, risk limits, fees, orders-enabled=false, Hoshi identity/assets, Roman Urdu, voice, privacy, Stop or V3 behavior changed. **Real-data and independent forward-paper gates remain PENDING; production and physical Realme acceptance remain PENDING.** No merge/deploy or release authorization. Historical 48/60 checkboxes and V3 49/50 source-checked/runtime-blocked remain unchanged.
+
+
 
 ## 2 November 2026 — same-entry modeled size/fill divergence and PnL reconciliation (trading-only development)
 

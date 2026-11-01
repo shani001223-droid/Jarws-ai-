@@ -209,6 +209,76 @@ class ChronologicalEvaluationTests(unittest.TestCase):
                 self.assertIsNone(invalid["total_scenario_minus_baseline_net_pnl_usdt"])
                 self.assertIsNone(invalid["shared_quantity_equal_count"])
 
+    def test_shared_exit_time_does_not_prove_same_fill_or_resolved_trade(self):
+        # All records are synthetic; matching candle-close timestamps can be
+        # unknown intrabar stop/target times, and forced marks are not exits.
+        base = [
+            {"entry_time": 0, "exit_time": 899999, "net_pnl": -3,
+             "exit_time_precision": "bar_close_upper_bound_intrabar_unknown",
+             "terminal_forced_mark": False},
+            {"entry_time": 900000, "exit_time": 1799999, "net_pnl": -2,
+             "exit_time_precision": "bar_close_exact",
+             "terminal_forced_mark": False},
+            {"entry_time": 1800000, "exit_time": 2699999, "net_pnl": -1,
+             "exit_time_precision": "bar_close_exact",
+             "terminal_forced_mark": True},
+        ]
+        other = [
+            {"entry_time": 0, "exit_time": 899999, "net_pnl": -4,
+             "exit_time_precision": "bar_close_exact",
+             "terminal_forced_mark": False},
+            {"entry_time": 900000, "exit_time": 1799999, "net_pnl": 1,
+             "exit_time_precision": "bar_close_exact",
+             "terminal_forced_mark": True},
+            {"entry_time": 1800000, "exit_time": 2699999, "net_pnl": -2,
+             "exit_time_precision": "bar_close_exact",
+             "terminal_forced_mark": True},
+        ]
+        report = ev._scenario_entry_overlap(base, other)
+        self.assertEqual(report["status"], "descriptive_same_series_not_independent")
+        self.assertEqual(report["shared_exit_time_equal_count"], 3)
+        self.assertEqual(report["shared_exit_precision_equal_count"], 2)
+        self.assertEqual(report["shared_exit_precision_different_count"], 1)
+        self.assertEqual(report["shared_exit_precision_unavailable_count"], 0)
+        self.assertEqual(report["shared_equal_exit_time_intrabar_uncertain_count"], 1)
+        self.assertEqual(report["shared_terminal_status_equal_count"], 2)
+        self.assertEqual(report["shared_terminal_status_different_count"], 1)
+        self.assertEqual(report["shared_terminal_status_unavailable_count"], 0)
+        self.assertEqual(report["shared_both_strategy_resolved_count"], 1)
+        self.assertEqual(report["shared_outcome_category_changed_count"], 1)
+        self.assertTrue(report["pnl_delta_reconciled"])
+        self.assertFalse(report["independent_evaluation"])
+        missing = ev._scenario_entry_overlap(
+            [{"entry_time": 0, "net_pnl": -2}],
+            [{"entry_time": 0, "net_pnl": -3,
+              "exit_time": 899999, "exit_time_precision": "bar_close_exact",
+              "terminal_forced_mark": True}])
+        self.assertEqual(missing["shared_exit_precision_unavailable_count"], 1)
+        self.assertEqual(missing["shared_terminal_status_unavailable_count"], 1)
+        self.assertEqual(missing["shared_both_strategy_resolved_count"], 0)
+        for invalid in (
+            {"exit_time": 899999, "exit_time_precision": "bar_open_exact"},
+            {"exit_time": 900000, "exit_time_precision": "bar_close_exact"},
+            {"exit_time_precision": "bar_close_exact"},
+            {"exit_time": 899999, "exit_time_precision": "unverified"},
+            {"terminal_forced_mark": "false"},
+            {"net_pnl": 10 ** 1000},
+        ):
+            with self.subTest(invalid=invalid):
+                record = {"entry_time": 0, "net_pnl": -1, **invalid}
+                result = ev._scenario_entry_overlap([record], [])
+                self.assertEqual(result["status"],
+                                 "unavailable_invalid_or_nonfinite_trade_entries")
+                self.assertIsNone(result["shared_exit_precision_equal_count"])
+
+    def test_huge_integer_modeled_pnl_concentration_fails_closed(self):
+        report = ev._trade_outcome_concentration([
+            {"entry_time": 0, "net_pnl": 10 ** 1000},
+            {"entry_time": 900000, "net_pnl": -5}])
+        self.assertEqual(report["status"], "unavailable_incomplete_trade_outcomes")
+        self.assertEqual(report["trade_count_including_terminal_marks"], 2)
+        self.assertIsNone(report["largest_win_share_of_resolved_gross_profit_pct"])
+
     def test_entry_overlap_scenarios_keep_zero_trade_results(self):
         from cloud_backend import trading_research as tr
         with patch.object(tr, "setup", return_value=None):

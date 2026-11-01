@@ -83,6 +83,62 @@ class ChronologicalEvaluationTests(unittest.TestCase):
         self.assertEqual(
             ordinary["largest_loss_share_of_resolved_gross_loss_pct"], 100.0)
 
+    def test_entry_overlap_preserves_unmatched_losses_and_rejects_bad_records(self):
+        baseline = [{"entry_time": 0, "net_pnl": -5.0},
+                    {"entry_time": 900000, "net_pnl": 2.0}]
+        alternate = [{"entry_time": 900000, "net_pnl": -1.0},
+                     {"entry_time": 1800000, "net_pnl": 3.0}]
+        overlap = ev._scenario_entry_overlap(baseline, alternate)
+        self.assertEqual(overlap["status"], "descriptive_same_series_not_independent")
+        self.assertFalse(overlap["independent_evaluation"])
+        self.assertEqual(overlap["shared_entry_count"], 1)
+        self.assertEqual(overlap["baseline_only_entry_count"], 1)
+        self.assertEqual(overlap["scenario_only_entry_count"], 1)
+        self.assertFalse(overlap["identical_entry_timestamps"])
+        self.assertEqual(overlap["shared_baseline_net_pnl_usdt"], 2.0)
+        self.assertEqual(overlap["shared_scenario_net_pnl_usdt"], -1.0)
+        self.assertEqual(overlap["baseline_only_net_pnl_usdt"], -5.0)
+        self.assertEqual(overlap["scenario_only_net_pnl_usdt"], 3.0)
+        empty = ev._scenario_entry_overlap([], [])
+        self.assertTrue(empty["identical_entry_timestamps"])
+        self.assertEqual(empty["shared_entry_count"], 0)
+        self.assertEqual(empty["shared_baseline_net_pnl_usdt"], 0.0)
+        for bad_trades in (
+            baseline + [baseline[0]],
+            [{"entry_time": 0, "net_pnl": float("nan")}],
+            [{"entry_time": True, "net_pnl": 1}],
+            [{"entry_time": 0, "net_pnl": 1e308},
+             {"entry_time": 900000, "net_pnl": 1e308}],
+        ):
+            with self.subTest(bad_trades=bad_trades):
+                bad = ev._scenario_entry_overlap(bad_trades, [])
+                self.assertEqual(bad["status"],
+                                 "unavailable_invalid_or_nonfinite_trade_entries")
+                self.assertIsNone(bad["shared_entry_count"])
+                self.assertIsNone(bad["baseline_only_net_pnl_usdt"])
+
+    def test_entry_overlap_scenarios_keep_zero_trade_results(self):
+        from cloud_backend import trading_research as tr
+        with patch.object(tr, "setup", return_value=None):
+            report = ev.evaluate_rolling_robustness(
+                self.bars, "BTCUSDT", "trend_pullback",
+                include_cost_guard_sensitivity=True,
+                include_holdout_cost_stress=True,
+                include_prior_volume_guard_sensitivity=True)
+        for key in ("holdout_prior_closed_volume_guard_sensitivity",
+                    "holdout_original_target_cost_guard_sensitivity"):
+            overlap = report[key]["baseline_vs_guarded_entry_overlap"]
+            self.assertEqual(overlap["shared_entry_count"], 0)
+            self.assertTrue(overlap["identical_entry_timestamps"])
+            self.assertFalse(overlap["independent_evaluation"])
+        self.assertEqual(
+            report["holdout_double_cost_sensitivity"][
+                "baseline_vs_double_costs_entry_overlap"]["scenario_trade_count"], 0)
+        for window in report["rolling_robustness"]["windows"]:
+            self.assertEqual(
+                window["baseline_vs_double_costs_entry_overlap"]["shared_entry_count"], 0)
+        self.assertFalse(report["orders_enabled"])
+
     def test_chronological_concentration_reports_are_scenario_specific(self):
         from cloud_backend import trading_research as tr
         with patch.object(tr, "setup", return_value=None):

@@ -302,6 +302,67 @@ def _trade_outcome_concentration(trades):
     return result
 
 
+
+def _scenario_entry_overlap(baseline_trades, scenario_trades):
+    """Same-series modeled entry comparison; never independent fill evidence.
+
+    A policy/cost change can change future cooldowns and entry opportunities.
+    Keep unmatched losses visible; refuse incomplete, duplicate or nonfinite
+    modeled records instead of fabricating a paired comparison.
+    """
+    result = {
+        "baseline_trade_count": len(baseline_trades),
+        "scenario_trade_count": len(scenario_trades),
+        "shared_entry_count": None,
+        "baseline_only_entry_count": None,
+        "scenario_only_entry_count": None,
+        "identical_entry_timestamps": None,
+        "shared_baseline_net_pnl_usdt": None,
+        "shared_scenario_net_pnl_usdt": None,
+        "baseline_only_net_pnl_usdt": None,
+        "scenario_only_net_pnl_usdt": None,
+        "independent_evaluation": False,
+    }
+    try:
+        def keyed(trades):
+            entries = {}
+            for trade in trades:
+                if (type(trade) is not dict
+                        or type(trade.get("entry_time")) is not int
+                        or trade["entry_time"] < 0
+                        or type(trade.get("net_pnl")) not in (int, float)
+                        or not math.isfinite(trade["net_pnl"])
+                        or trade["entry_time"] in entries):
+                    raise ValueError("invalid_or_duplicate_modeled_entry")
+                entries[trade["entry_time"]] = trade["net_pnl"]
+            return entries
+
+        baseline, scenario = keyed(baseline_trades), keyed(scenario_trades)
+        shared = baseline.keys() & scenario.keys()
+        baseline_only = baseline.keys() - scenario.keys()
+        scenario_only = scenario.keys() - baseline.keys()
+        sums = {
+            "shared_baseline_net_pnl_usdt": math.fsum(baseline[t] for t in shared),
+            "shared_scenario_net_pnl_usdt": math.fsum(scenario[t] for t in shared),
+            "baseline_only_net_pnl_usdt": math.fsum(baseline[t] for t in baseline_only),
+            "scenario_only_net_pnl_usdt": math.fsum(scenario[t] for t in scenario_only),
+        }
+        if not all(math.isfinite(v) for v in sums.values()):
+            raise OverflowError("nonfinite_modeled_entry_pnl")
+    except (ValueError, OverflowError, TypeError):
+        result["status"] = "unavailable_invalid_or_nonfinite_trade_entries"
+        return result
+    result.update({
+        "status": "descriptive_same_series_not_independent",
+        "shared_entry_count": len(shared),
+        "baseline_only_entry_count": len(baseline_only),
+        "scenario_only_entry_count": len(scenario_only),
+        "identical_entry_timestamps": not baseline_only and not scenario_only,
+        **sums,
+    })
+    return result
+
+
 def evaluate_chronological(bars, symbol: str, strategy: str,
                            config: SimulationConfig | None = None, *,
                            include_cost_guard_sensitivity: bool = False,
@@ -428,6 +489,8 @@ def evaluate_chronological(bars, symbol: str, strategy: str,
                                 if k != "input_candles"},
             "guarded_outcome_concentration": _trade_outcome_concentration(
                 volume_guarded["trades"]),
+            "baseline_vs_guarded_entry_overlap": _scenario_entry_overlap(
+                holdout["trades"], volume_guarded["trades"]),
             "guarded_paper_execution_bar_quality": _execution_bar_quality(
                 candles[split - WARMUP_BARS:], volume_guarded["trades"]),
             "independent_venue_verified": False,
@@ -453,6 +516,8 @@ def evaluate_chronological(bars, symbol: str, strategy: str,
             "baseline_net_pnl_usdt": holdout["net_pnl"],
             "guarded_holdout": {k: v for k, v in guarded.items() if k != "input_candles"},
             "guarded_outcome_concentration": _trade_outcome_concentration(guarded["trades"]),
+            "baseline_vs_guarded_entry_overlap": _scenario_entry_overlap(
+                holdout["trades"], guarded["trades"]),
             "guarded_paper_execution_bar_quality": _execution_bar_quality(
                 candles[split - WARMUP_BARS:], guarded["trades"]),
             "independent_venue_verified": False,
@@ -486,6 +551,9 @@ def evaluate_chronological(bars, symbol: str, strategy: str,
                                      if k != "input_candles"} if stressed is not None else None),
             "double_costs_outcome_concentration": (
                 _trade_outcome_concentration(stressed["trades"])
+                if stressed is not None else None),
+            "baseline_vs_double_costs_entry_overlap": (
+                _scenario_entry_overlap(holdout["trades"], stressed["trades"])
                 if stressed is not None else None),
             "double_costs_paper_execution_bar_quality": (
                 _execution_bar_quality(candles[split - WARMUP_BARS:],
@@ -550,6 +618,9 @@ def evaluate_rolling_robustness(bars, symbol: str, strategy: str,
             "baseline_paper_execution_bar_quality": _execution_bar_quality(segment, base["trades"]),
             "double_costs_outcome_concentration": (
                 _trade_outcome_concentration(stressed["trades"])
+                if stressed is not None else None),
+            "baseline_vs_double_costs_entry_overlap": (
+                _scenario_entry_overlap(base["trades"], stressed["trades"])
                 if stressed is not None else None),
             "double_costs_paper_execution_bar_quality": (
                 _execution_bar_quality(segment, stressed["trades"])

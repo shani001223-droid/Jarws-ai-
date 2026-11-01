@@ -13,6 +13,7 @@ try:
     from .paper_risk import build_paper_risk, validate_paper_settings
     from .strategy_engine import confluence_score
     from .brain import knowledge_index
+    from .trading_research import INTERVALS
 except ImportError:  # existing Docker root: uvicorn main:app
     from market_structure import analyze_market_structure
     from market_indicators import analyze_market_indicators
@@ -20,6 +21,7 @@ except ImportError:  # existing Docker root: uvicorn main:app
     from paper_risk import build_paper_risk, validate_paper_settings
     from strategy_engine import confluence_score
     from brain import knowledge_index
+    from trading_research import INTERVALS
 
 VERSION = "hoshi-trading-desk-v1"
 FRAMES = ("15m", "1h", "4h")
@@ -35,6 +37,16 @@ def build_trading_desk(histories: dict, symbol: str, now_ms: int,
             or fetched_at * 1000 > now_ms + 5_000
             or fetched_at * 1000 < now_ms - 120_000):
         raise ValueError("invalid_source_time")
+    # Parallel provider reads can straddle a candle boundary. Historical
+    # freshness permits an older bar; a current paper desk must instead use
+    # the latest closed bar of EACH timeframe at the same as-of instant.
+    if type(now_ms) is not int or now_ms <= 0 or not isinstance(histories, dict) or set(histories) != set(FRAMES):
+        raise ValueError("invalid_snapshot_boundary")
+    for tf in FRAMES:
+        bars = histories[tf]
+        expected_close = (now_ms // INTERVALS[tf]) * INTERVALS[tf] - 1
+        if not bars or type(bars[-1].close_time) is not int or bars[-1].close_time != expected_close:
+            raise ValueError("mixed_or_lagging_closed_candle_snapshot")
     # Validates every candle, frame, close time and freshness before analysis.
     confluence = confluence_score(histories, symbol, now_ms, "long")
     structure = analyze_market_structure(histories, symbol)

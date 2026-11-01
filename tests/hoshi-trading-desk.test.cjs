@@ -27,6 +27,17 @@ test("paper plan independently reconciles stop, sizing, costs and targets",()=>{
   ];
   for(const mutate of mutations){const forged=structuredClone(d);mutate(forged.paper_plan);assert.throws(()=>desk.validate(forged,expected,NOW));}
 });
+test("mixed or one-interval-lagging closed frames fail client verification",()=>{
+  for(const tf of ["15m","1h","4h"]){
+    const d=fixture(),step={"15m":900000,"1h":3600000,"4h":14400000}[tf];
+    d.timeframes[tf].last_closed_at-=step;
+    d.confluence.last_closed_at[tf]-=step;
+    d.setup.last_closed_at[tf]-=step;
+    assert.throws(()=>desk.validate(d,expected,NOW));
+  }
+  const valid=fixture();valid.as_of_ms=NOW+1;valid.confluence.as_of=NOW+1;
+  assert.equal(desk.validate(valid,expected,NOW+1).decision,"wait");
+});
 test("invalid paper settings reject before a URL is built",()=>{for(const change of [{symbol:"SOLUSDT"},{risk_pct:2},{equity_usdt:0},{fee_bps:0},{slippage_bps:Infinity}])assert.throws(()=>desk.settings({...expected,...change}));});
 test("local operator mode is loopback-only; public pages cannot redirect the API",()=>{
   assert.equal(desk.apiBase("http://127.0.0.1:8765/trading.html?backend=local"),"http://127.0.0.1:8000");

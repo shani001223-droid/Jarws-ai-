@@ -41,6 +41,30 @@ class TradingDeskTests(unittest.TestCase):
             self.assertEqual(result["timeframes"][tf]["last_close"], self.data[tf][-1].close)
             self.assertEqual(result["timeframes"][tf]["last_closed_at"], self.data[tf][-1].close_time)
 
+    def test_cross_boundary_snapshot_rejects_lagging_frame_without_plan(self):
+        # An older but otherwise fresh candle must not be mixed with a newer
+        # 15m/1h/4h boundary for a current hypothetical plan.
+        for tf in FRAMES:
+            data = histories()
+            step = {"15m": 900_000, "1h": 3_600_000, "4h": 14_400_000}[tf]
+            data[tf] = [replace(bar, time=bar.time-step,
+                                close_time=bar.close_time-step) for bar in data[tf]]
+            with self.subTest(tf=tf), patch.object(main, "_research_history",
+                    side_effect=lambda pair, frame: (data[frame], NOW//1000)), patch.object(
+                    main.time, "time", return_value=NOW/1000):
+                response = self.client.get("/api/trading/desk")
+            self.assertEqual(response.status_code, 503)
+            self.assertEqual(response.json()["detail"]["decision"], "wait")
+            self.assertIsNone(response.json()["detail"]["paper_plan"])
+
+    def test_same_closed_snapshot_is_valid_just_after_boundary(self):
+        with patch.object(main, "_research_history",
+                side_effect=lambda pair, tf: (self.data[tf], NOW//1000)), patch.object(
+                main.time, "time", return_value=(NOW+1)/1000):
+            response = self.client.get("/api/trading/desk")
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(response.json()["as_of_ms"], NOW+1)
+
     def test_research_source_requires_full_binance_volume_and_trade_evidence(self):
         # This uses synthetic 12-field Binance-shaped rows, never a provider
         # call or a claim that the exchange was independently authenticated.

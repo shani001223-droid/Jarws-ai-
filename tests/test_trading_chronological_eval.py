@@ -211,6 +211,53 @@ class ChronologicalEvaluationTests(unittest.TestCase):
             empty["holdout"]["execution_diagnostics"][
                 "paper_entries_original_signal_remaining_rr_below_1r"], 0)
 
+    def test_original_signal_net_upside_includes_exit_slippage_and_both_fees(self):
+        from cloud_backend import trading_research as tr
+        # Synthetic only: an original 110 target can be ABOVE the modeled
+        # entry but already unprofitable net of two fees and sell slippage.
+        for opening, net_positive, net_below_one in (
+                (109.8, False, True), (109.0, True, True),
+                (100.0, True, False)):
+            with self.subTest(opening=opening):
+                bars = [replace(b, open=opening, high=112, low=94,
+                                close=100, volume=10) for b in self.bars]
+                cfg = SimulationConfig(fee_bps=10, slippage_bps=5)
+                with patch.object(tr, "setup", return_value={
+                        "stop": 95.0, "reference_entry": 100.0,
+                        "reference_target": 110.0}):
+                    report = ev.evaluate_chronological(
+                        bars, "BTCUSDT", "trend_pullback", cfg)
+                trades = report["holdout"]["trades"]
+                self.assertGreater(len(trades), 0)
+                for trade in trades:
+                    modeled_exit = 110.0*(1-cfg.slippage_bps/10_000)
+                    per_unit = (modeled_exit-trade["entry"]
+                                - cfg.fee_bps/10_000*(modeled_exit+trade["entry"]))
+                    stop_loss_per_unit = (trade["planned_stop_loss_usdt"]
+                                          / trade["quantity"])
+                    self.assertAlmostEqual(
+                        trade["original_signal_target_net_gain_per_unit_usdt"],
+                        per_unit)
+                    self.assertAlmostEqual(
+                        trade["remaining_original_signal_net_reward_risk_at_entry"],
+                        per_unit/stop_loss_per_unit)
+                    self.assertEqual(per_unit > 0, net_positive)
+                    self.assertEqual(per_unit/stop_loss_per_unit < 1,
+                                     net_below_one)
+                    self.assertGreater(
+                        trade["remaining_original_signal_reward_risk_at_entry"], 0)
+                d = report["holdout"]["execution_diagnostics"]
+                self.assertEqual(
+                    d["paper_entries_original_signal_net_upside_nonpositive"],
+                    0 if net_positive else len(trades))
+                self.assertFalse(report["orders_enabled"])
+
+        with patch.object(tr, "setup", return_value=None):
+            empty = ev.evaluate_chronological(self.bars, "ETHUSDT", "trend_pullback")
+        self.assertEqual(
+            empty["holdout"]["execution_diagnostics"][
+                "paper_entries_original_signal_net_upside_nonpositive"], 0)
+
     def test_last_bar_time_expiry_is_strategy_resolved_not_terminal_mark(self):
         from cloud_backend import trading_research as tr
         # Synthetic 15m bars: signal index 63, next-open entry index 64,

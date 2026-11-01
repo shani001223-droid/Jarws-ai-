@@ -306,12 +306,22 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
                         "reference_target", pending["reference_entry"]
                         + 2*(pending["reference_entry"]-stop))
                     original_rr = (original_target-entry)/(entry-stop)
+                    # A remaining GROSS target reward can still be a modeled
+                    # NET loss after both fees and adverse exit slippage.
+                    # This is a counterfactual original-target exit, not an
+                    # observed fill or a change to the repriced paper target.
+                    original_exit = original_target*(1-slip)
+                    original_net_gain_per_unit = (original_exit-entry
+                                                  - fee*(entry+original_exit))
+                    original_net_rr = original_net_gain_per_unit/(planned_loss/qty)
                     position = {"entry": entry, "stop": stop, "target": entry+2*(entry-stop),
                                 "qty": qty, "entry_time": b.time, "entry_index": i,
                                 "risk_budget_at_entry": budget,
                                 "planned_stop_loss": planned_loss,
                                 "original_signal_target": original_target,
-                                "remaining_original_signal_reward_risk_at_entry": original_rr}
+                                "remaining_original_signal_reward_risk_at_entry": original_rr,
+                                "original_signal_target_net_gain_per_unit_usdt": original_net_gain_per_unit,
+                                "remaining_original_signal_net_reward_risk_at_entry": original_net_rr}
                 else:
                     entry_skipped_risk_capacity += 1
             pending = None
@@ -409,6 +419,10 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
                                "original_signal_target": p["original_signal_target"],
                                "remaining_original_signal_reward_risk_at_entry": (
                                    p["remaining_original_signal_reward_risk_at_entry"]),
+                               "original_signal_target_net_gain_per_unit_usdt": (
+                                   p["original_signal_target_net_gain_per_unit_usdt"]),
+                               "remaining_original_signal_net_reward_risk_at_entry": (
+                                   p["remaining_original_signal_net_reward_risk_at_entry"]),
                                "stop_target_same_bar": reason == "stop" and stop_target_same_bar,
                                "gap_beyond_stop_pct": gap_beyond_stop_pct,
                                "risk_budget_at_entry_usdt": p["risk_budget_at_entry"],
@@ -473,6 +487,9 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
                                         - entry_skipped_risk_capacity,
                 "paper_entries_original_signal_remaining_rr_below_1r": sum(
                     t["remaining_original_signal_reward_risk_at_entry"] < 1
+                    for t in trades),
+                "paper_entries_original_signal_net_upside_nonpositive": sum(
+                    t["original_signal_target_net_gain_per_unit_usdt"] <= 0
                     for t in trades),
                 "terminal_forced_close_count": terminal_forced_close_count,
                 "terminal_forced_close_net_pnl_usdt": terminal_forced_close_net_pnl,

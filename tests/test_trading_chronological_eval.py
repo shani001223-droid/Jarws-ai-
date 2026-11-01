@@ -117,6 +117,48 @@ class ChronologicalEvaluationTests(unittest.TestCase):
                 self.assertIsNone(bad["shared_entry_count"])
                 self.assertIsNone(bad["baseline_only_net_pnl_usdt"])
 
+    def test_shared_entry_does_not_imply_same_exit_or_same_outcome(self):
+        # Synthetic same-series entries can exit at different times, even
+        # when both runs have identical entry timestamps. No observed fills.
+        base = [
+            {"entry_time": 0, "exit_time": 900000, "net_pnl": -2.0},
+            {"entry_time": 1800000, "exit_time": 2700000, "net_pnl": 3.0},
+            {"entry_time": 3600000, "net_pnl": -1.0},
+        ]
+        alternative = [
+            {"entry_time": 0, "exit_time": 1800000, "net_pnl": 1.0},
+            {"entry_time": 1800000, "exit_time": 2700000, "net_pnl": 2.0},
+            {"entry_time": 3600000, "net_pnl": -4.0},
+        ]
+        report = ev._scenario_entry_overlap(base, alternative)
+        self.assertEqual(report["status"], "descriptive_same_series_not_independent")
+        self.assertTrue(report["identical_entry_timestamps"])
+        self.assertEqual(report["shared_exit_time_equal_count"], 1)
+        self.assertEqual(report["shared_exit_time_different_count"], 1)
+        self.assertEqual(report["shared_exit_time_unavailable_count"], 1)
+        self.assertEqual(report["shared_outcome_category_changed_count"], 1)
+        self.assertEqual(report["shared_scenario_minus_baseline_net_pnl_usdt"], -1.0)
+        self.assertEqual(report["shared_baseline_net_pnl_usdt"], 0.0)
+        self.assertEqual(report["shared_scenario_net_pnl_usdt"], -1.0)
+        self.assertFalse(report["independent_evaluation"])
+        empty = ev._scenario_entry_overlap([], [])
+        self.assertEqual(empty["shared_exit_time_unavailable_count"], 0)
+        self.assertEqual(empty["shared_outcome_category_changed_count"], 0)
+        for invalid_exit in (True, -1, 1.5, "900000"):
+            with self.subTest(invalid_exit=invalid_exit):
+                invalid = ev._scenario_entry_overlap(
+                    [{"entry_time": 0, "exit_time": invalid_exit, "net_pnl": -2}],
+                    alternative)
+                self.assertEqual(invalid["status"],
+                                 "unavailable_invalid_or_nonfinite_trade_entries")
+                self.assertIsNone(invalid["shared_exit_time_equal_count"])
+        # Finite individual PnL differences may overflow even when a single
+        # shared entry is present; never emit Infinity in JSON.
+        overflow = ev._scenario_entry_overlap(
+            [{"entry_time": 0, "net_pnl": -1e308}],
+            [{"entry_time": 0, "net_pnl": 1e308}])
+        self.assertIsNone(overflow["shared_scenario_minus_baseline_net_pnl_usdt"])
+
     def test_entry_overlap_scenarios_keep_zero_trade_results(self):
         from cloud_backend import trading_research as tr
         with patch.object(tr, "setup", return_value=None):

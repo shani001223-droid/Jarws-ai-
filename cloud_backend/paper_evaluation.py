@@ -317,6 +317,11 @@ def _scenario_entry_overlap(baseline_trades, scenario_trades):
         "baseline_only_entry_count": None,
         "scenario_only_entry_count": None,
         "identical_entry_timestamps": None,
+        "shared_exit_time_equal_count": None,
+        "shared_exit_time_different_count": None,
+        "shared_exit_time_unavailable_count": None,
+        "shared_outcome_category_changed_count": None,
+        "shared_scenario_minus_baseline_net_pnl_usdt": None,
         "shared_baseline_net_pnl_usdt": None,
         "shared_scenario_net_pnl_usdt": None,
         "baseline_only_net_pnl_usdt": None,
@@ -334,7 +339,13 @@ def _scenario_entry_overlap(baseline_trades, scenario_trades):
                         or not math.isfinite(trade["net_pnl"])
                         or trade["entry_time"] in entries):
                     raise ValueError("invalid_or_duplicate_modeled_entry")
-                entries[trade["entry_time"]] = trade["net_pnl"]
+                # Older synthetic test doubles may omit exit_time. Keep
+                # entry/PnL evidence but report exit comparability unknown.
+                if "exit_time" in trade and (
+                        type(trade["exit_time"]) is not int
+                        or trade["exit_time"] < trade["entry_time"]):
+                    raise ValueError("invalid_modeled_exit_timestamp")
+                entries[trade["entry_time"]] = trade
             return entries
 
         baseline, scenario = keyed(baseline_trades), keyed(scenario_trades)
@@ -342,13 +353,24 @@ def _scenario_entry_overlap(baseline_trades, scenario_trades):
         baseline_only = baseline.keys() - scenario.keys()
         scenario_only = scenario.keys() - baseline.keys()
         sums = {
-            "shared_baseline_net_pnl_usdt": math.fsum(baseline[t] for t in shared),
-            "shared_scenario_net_pnl_usdt": math.fsum(scenario[t] for t in shared),
-            "baseline_only_net_pnl_usdt": math.fsum(baseline[t] for t in baseline_only),
-            "scenario_only_net_pnl_usdt": math.fsum(scenario[t] for t in scenario_only),
+            "shared_baseline_net_pnl_usdt": math.fsum(baseline[t]["net_pnl"] for t in shared),
+            "shared_scenario_net_pnl_usdt": math.fsum(scenario[t]["net_pnl"] for t in shared),
+            "baseline_only_net_pnl_usdt": math.fsum(baseline[t]["net_pnl"] for t in baseline_only),
+            "scenario_only_net_pnl_usdt": math.fsum(scenario[t]["net_pnl"] for t in scenario_only),
+            "shared_scenario_minus_baseline_net_pnl_usdt": math.fsum(
+                scenario[t]["net_pnl"] - baseline[t]["net_pnl"] for t in shared),
         }
         if not all(math.isfinite(v) for v in sums.values()):
             raise OverflowError("nonfinite_modeled_entry_pnl")
+        comparable_exits = [t for t in shared if "exit_time" in baseline[t]
+                            and "exit_time" in scenario[t]]
+        same_exits = sum(baseline[t]["exit_time"] == scenario[t]["exit_time"]
+                         for t in comparable_exits)
+        def category(pnl):
+            return (pnl > 0) - (pnl < 0)
+        changed_categories = sum(
+            category(baseline[t]["net_pnl"]) != category(scenario[t]["net_pnl"])
+            for t in shared)
     except (ValueError, OverflowError, TypeError):
         result["status"] = "unavailable_invalid_or_nonfinite_trade_entries"
         return result
@@ -358,6 +380,10 @@ def _scenario_entry_overlap(baseline_trades, scenario_trades):
         "baseline_only_entry_count": len(baseline_only),
         "scenario_only_entry_count": len(scenario_only),
         "identical_entry_timestamps": not baseline_only and not scenario_only,
+        "shared_exit_time_equal_count": same_exits,
+        "shared_exit_time_different_count": len(comparable_exits) - same_exits,
+        "shared_exit_time_unavailable_count": len(shared) - len(comparable_exits),
+        "shared_outcome_category_changed_count": changed_categories,
         **sums,
     })
     return result

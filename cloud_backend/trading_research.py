@@ -355,8 +355,6 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None,
                         position = {"entry": entry, "stop": stop, "target": entry+2*(entry-stop),
                                     "qty": qty, "entry_time": b.time, "entry_index": i,
                                     "raw_entry_open": b.open,
-                                    # Retrospective evidence flag, NOT an entry input.
-                                    "entry_bar_zero_volume_ex_post": b.volume == 0,
                                     "prior_closed_bar_base_volume": prior_volume,
                                     "risk_budget_at_entry": budget,
                                     "planned_stop_loss": planned_loss,
@@ -461,7 +459,11 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None,
                                    "bar_close_upper_bound_intrabar_unknown"),
                                "entry": p["entry"], "exit": exit_price, "quantity": p["qty"],
                                "entry_reference_open": p["raw_entry_open"],
-                               "entry_bar_zero_volume_ex_post": p["entry_bar_zero_volume_ex_post"],
+                               # Evaluate the entry candle's final volume ONLY
+                               # when recording the completed trade, never
+                               # during the next-open entry decision.
+                               "entry_bar_zero_volume_ex_post": (
+                                   bars[p["entry_index"]].volume == 0),
                                "prior_closed_bar_base_volume": p["prior_closed_bar_base_volume"],
                                "modeled_entry_qty_pct_of_prior_closed_bar_volume": (
                                    _safe_prior_volume_participation_pct(

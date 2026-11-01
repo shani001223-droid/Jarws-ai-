@@ -18,6 +18,53 @@ class ChronologicalEvaluationTests(unittest.TestCase):
     def setUp(self):
         self.bars = history("15m", count=300)
 
+    def test_sample_quality_counts_holdout_boundary_gaps_and_zero_volume(self):
+        # Entirely synthetic contiguous 15m OHLCV, not authenticated data.
+        from cloud_backend import trading_research as tr
+        bars = [replace(b, open=100, high=101, low=99,
+                        close=100, volume=10) for b in self.bars]
+        bars[10] = replace(bars[10], volume=0)
+        bars[250] = replace(bars[250], volume=0)
+        # First holdout opening is compared with the final training close.
+        bars[210] = replace(bars[210], open=103, high=104, low=99)
+        bars[220] = replace(bars[220], high=111)
+        bars[221] = replace(bars[221], high=100, low=100)
+        with patch.object(tr, "setup", return_value=None):
+            report = ev.evaluate_chronological(bars, "BTCUSDT", "trend_pullback")
+        quality = report["sample_quality"]
+        train, holdout, full = (quality[k] for k in
+                                ("training", "holdout", "full_sample"))
+        self.assertEqual(quality["status"], "descriptive_operator_supplied_unverified")
+        self.assertFalse(quality["authenticated_market_data"])
+        self.assertFalse(quality["trade_rule_or_filter"])
+        self.assertEqual((train["bars"], holdout["bars"], full["bars"]),
+                         (210, 90, 300))
+        self.assertEqual((train["zero_volume_bars"],
+                          holdout["zero_volume_bars"], full["zero_volume_bars"]),
+                         (1, 1, 2))
+        self.assertEqual((train["open_gap_ge_2pct_bars"],
+                          holdout["open_gap_ge_2pct_bars"],
+                          full["open_gap_ge_2pct_bars"]), (0, 1, 1))
+        self.assertEqual(holdout["intrabar_range_ge_10pct_bars"], 1)
+        self.assertEqual(holdout["flat_ohlc_bars"], 1)
+        self.assertEqual(holdout["first_open_at_ms"], bars[210].time)
+        self.assertEqual(holdout["last_close_at_ms"], bars[-1].close_time)
+        self.assertEqual(report["holdout"]["trade_count"], 0)
+        self.assertEqual(report["holdout"]["net_pnl"], 0)
+        self.assertFalse(report["orders_enabled"])
+
+    def test_sample_quality_avoids_overflow_from_valid_extreme_price_ratios(self):
+        from cloud_backend import trading_research as tr
+        # Direct descriptive helper is deliberately safe even when ratios
+        # are astronomically large; no fabricated percent is serialized.
+        tiny = Candle(0, 1e-150, 1e-150, 1e-150, 1e-150, 0, 899999)
+        huge = Candle(900000, 1e150, 1e150, 1e150, 1e150, 0, 1799999)
+        quality = ev._sample_quality([tiny, huge])
+        self.assertEqual(quality["open_gap_ge_2pct_bars"], 1)
+        self.assertEqual(quality["zero_volume_bars"], 2)
+        self.assertEqual(quality["intrabar_range_ge_10pct_bars"], 0)
+        self.assertEqual(quality["bars"], 2)
+
     def test_fixed_holdout_is_causal_and_exportable(self):
         result = ev.evaluate_chronological(self.bars, "BTCUSDT", "trend_pullback")
         self.assertEqual(result["split"]["training_bars"], 210)

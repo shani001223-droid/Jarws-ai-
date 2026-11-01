@@ -58,6 +58,32 @@ def _checked(bars):
     return list(bars)
 
 
+def _sample_quality(bars, *, previous_close=None):
+    """Descriptive OHLCV counts only; no exchange provenance or trade veto.
+
+    Compare differences without division to keep extreme but finite valid
+    OHLCV values from producing infinite percentage diagnostics.
+    """
+    zero_volume = flat_ohlc = large_open_gaps = wide_ranges = 0
+    prior = previous_close
+    for bar in bars:
+        zero_volume += bar.volume == 0
+        flat_ohlc += bar.open == bar.high == bar.low == bar.close
+        if prior is not None:
+            large_open_gaps += abs(bar.open - prior) >= prior * .02
+        wide_ranges += bar.high - bar.low >= bar.open * .10
+        prior = bar.close
+    return {
+        "bars": len(bars),
+        "first_open_at_ms": bars[0].time,
+        "last_close_at_ms": bars[-1].close_time,
+        "zero_volume_bars": zero_volume,
+        "flat_ohlc_bars": flat_ohlc,
+        "open_gap_ge_2pct_bars": large_open_gaps,
+        "intrabar_range_ge_10pct_bars": wide_ranges,
+    }
+
+
 def evaluate_chronological(bars, symbol: str, strategy: str,
                            config: SimulationConfig | None = None, *,
                            include_cost_guard_sensitivity: bool = False) -> dict:
@@ -104,6 +130,19 @@ def evaluate_chronological(bars, symbol: str, strategy: str,
         "win_probability": None, "independent_venue_verified": False,
         "input_provenance": "operator_supplied_unverified",
         "input_candle_sha256": hashlib.sha256(payload).hexdigest(),
+        "sample_quality": {
+            "status": "descriptive_operator_supplied_unverified",
+            "thresholds": {
+                "open_gap": "absolute next open vs previous close >= 2 percent",
+                "intrabar_range": "high minus low >= 10 percent of open",
+            },
+            "training": _sample_quality(candles[:split]),
+            "holdout": _sample_quality(
+                candles[split:], previous_close=candles[split - 1].close),
+            "full_sample": _sample_quality(candles),
+            "authenticated_market_data": False,
+            "trade_rule_or_filter": False,
+        },
         "split": {
             "method": "fixed_chronological_70_30_no_tuning",
             "total_bars": len(candles), "training_bars": split,
@@ -117,6 +156,7 @@ def evaluate_chronological(bars, symbol: str, strategy: str,
         "holdout_no_trades": holdout["trade_count"] == 0,
         "limitations": [
             "Operator-supplied candles are NOT authenticated or cross-venue verified.",
+            "Sample-quality gap, zero-volume, flat-bar and range counts are descriptive only; they neither validate venue data nor veto trades.",
             "One fixed chronological holdout on one short sample is not independent replication.",
             "The existing 15m research rule is NOT the 3-timeframe V2 desk or V3 engine.",
             "Prior 64 closed bars are context only; warmup entries are prohibited at the engine boundary.",

@@ -229,13 +229,16 @@ def risk_size(cash, entry, stop, day_loss, cfg):
     return min(budget/per_unit, cash/(entry*(1+fee)))
 
 
-def backtest(bars, strategy, cfg, *, entry_not_before=None):
+def backtest(bars, strategy, cfg, *, entry_not_before=None,
+             reject_nonpositive_original_net_upside=False):
     """Bounded, single-position, long-only exploratory test on supplied history.
 
     Uses 15m rules only (NOT the multi-timeframe research filter). Fees/slippage
     charged each side; gaps stop at open; same-bar stop/target resolves stop-first.
     UTC daily GROSS realized losses enforce pause; gap losses can exceed budget.
     """
+    if type(reject_nonpositive_original_net_upside) is not bool:
+        raise ValueError("Invalid cost guard flag")
     if strategy not in STRATEGIES or not 64 <= len(bars) <= 500:
         raise ValueError("Invalid test input")
     # Warmup bars may form signals, but must never open or finance positions.
@@ -259,6 +262,7 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
     # Account for every next-open paper entry attempt, including refusals.
     entry_attempts = entry_skipped_gap = entry_skipped_target_gap = 0
     entry_skipped_daily_cap = entry_skipped_risk_capacity = 0
+    entry_skipped_nonpositive_net_upside = 0
     max_loss_to_risk_budget_multiple = None
     for i, b in enumerate(bars):
         day = b.time // 86_400_000
@@ -314,14 +318,17 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
                     original_net_gain_per_unit = (original_exit-entry
                                                   - fee*(entry+original_exit))
                     original_net_rr = original_net_gain_per_unit/(planned_loss/qty)
-                    position = {"entry": entry, "stop": stop, "target": entry+2*(entry-stop),
-                                "qty": qty, "entry_time": b.time, "entry_index": i,
-                                "risk_budget_at_entry": budget,
-                                "planned_stop_loss": planned_loss,
-                                "original_signal_target": original_target,
-                                "remaining_original_signal_reward_risk_at_entry": original_rr,
-                                "original_signal_target_net_gain_per_unit_usdt": original_net_gain_per_unit,
-                                "remaining_original_signal_net_reward_risk_at_entry": original_net_rr}
+                    if reject_nonpositive_original_net_upside and original_net_gain_per_unit <= 0:
+                        entry_skipped_nonpositive_net_upside += 1
+                    else:
+                        position = {"entry": entry, "stop": stop, "target": entry+2*(entry-stop),
+                                    "qty": qty, "entry_time": b.time, "entry_index": i,
+                                    "risk_budget_at_entry": budget,
+                                    "planned_stop_loss": planned_loss,
+                                    "original_signal_target": original_target,
+                                    "remaining_original_signal_reward_risk_at_entry": original_rr,
+                                    "original_signal_target_net_gain_per_unit_usdt": original_net_gain_per_unit,
+                                    "remaining_original_signal_net_reward_risk_at_entry": original_net_rr}
                 else:
                     entry_skipped_risk_capacity += 1
             pending = None
@@ -469,6 +476,7 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
     return {"mode": "historical-paper-simulation", "orders_enabled": False,
             "rule_version": RULE_VERSION, "strategy": strategy, "interval": "15m",
             "config": asdict(cfg), "bars": len(bars),
+            "reject_nonpositive_original_net_upside": reject_nonpositive_original_net_upside,
             "start_at": bars[0].time, "end_at": bars[-1].close_time,
             "trade_count": len(trades), "win_rate_pct": wins/len(trades)*100 if trades else None,
             "initial_equity": cfg.equity, "ending_equity": cash, "net_pnl": cash-cfg.equity,
@@ -482,9 +490,11 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
                 "paper_entries_skipped_past_signal_target": entry_skipped_target_gap,
                 "paper_entries_skipped_utc_daily_loss_cap": entry_skipped_daily_cap,
                 "paper_entries_skipped_insufficient_risk_capacity": entry_skipped_risk_capacity,
+                "paper_entries_skipped_nonpositive_original_target_net_upside": entry_skipped_nonpositive_net_upside,
                 "paper_entries_opened": entry_attempts - entry_skipped_gap
                                         - entry_skipped_target_gap - entry_skipped_daily_cap
-                                        - entry_skipped_risk_capacity,
+                                        - entry_skipped_risk_capacity
+                                        - entry_skipped_nonpositive_net_upside,
                 "paper_entries_original_signal_remaining_rr_below_1r": sum(
                     t["remaining_original_signal_reward_risk_at_entry"] < 1
                     for t in trades),
@@ -527,4 +537,5 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
                             "The paper target is repriced to 2R from the next-open entry. remaining_original_signal_reward_risk_at_entry measures gross reward to the ORIGINAL signal target after buy slippage; remaining_original_signal_net_reward_risk_at_entry assumes a hypothetical original-target sell with adverse sell slippage and both fees, divided by the modeled stop loss per unit. A target above entry can still have nonpositive modeled net upside. Neither metric is realized return, observed execution or a calibrated win probability.",
                             "A still-open position at sample end is force-marked at the final close, including modeled costs; headline all-trade win rate/expectancy/profit factor include such marks, while strategy_resolved metrics exclude them; neither is a calibrated win probability.",
                             "Supplemental close_mark drawdown uses hypothetical fee/slippage-adjusted liquidation value at each bar close; it is not an observed fill, intrabar peak-to-trough path or independently verified account equity.", 
+                            "Optional original-target cost guard refuses hypothetical entries with nonpositive modeled net upside to the original target; it is a same-sample sensitivity policy, not the baseline or proof of improved performance.",
                             "Does not model partial fills, liquidity impact or intra-bar equity peaks."]}

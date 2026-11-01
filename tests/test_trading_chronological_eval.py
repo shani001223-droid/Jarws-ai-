@@ -211,6 +211,56 @@ class ChronologicalEvaluationTests(unittest.TestCase):
             empty["holdout"]["execution_diagnostics"][
                 "paper_entries_original_signal_remaining_rr_below_1r"], 0)
 
+    def test_original_target_cost_guard_sensitivity_is_opt_in_and_not_independent(self):
+        from cloud_backend import trading_research as tr
+        cfg = SimulationConfig(fee_bps=10, slippage_bps=5)
+        for opening, refused in ((109.8, True), (109.0, False)):
+            with self.subTest(opening=opening):
+                bars = [replace(b, open=opening, high=112, low=94,
+                                close=100, volume=10) for b in self.bars]
+                with patch.object(tr, "setup", return_value={
+                        "stop": 95.0, "reference_entry": 100.0,
+                        "reference_target": 110.0}):
+                    report = ev.evaluate_chronological(
+                        bars, "BTCUSDT", "trend_pullback", cfg,
+                        include_cost_guard_sensitivity=True)
+                baseline = report["holdout"]
+                scenario = report["holdout_original_target_cost_guard_sensitivity"]
+                guarded = scenario["guarded_holdout"]
+                d = guarded["execution_diagnostics"]
+                self.assertEqual(scenario["status"], "same_holdout_counterfactual_not_independent")
+                self.assertFalse(scenario["independent_venue_verified"])
+                self.assertFalse(scenario["forward_verified"])
+                self.assertFalse(baseline["reject_nonpositive_original_net_upside"])
+                self.assertTrue(guarded["reject_nonpositive_original_net_upside"])
+                self.assertGreater(baseline["trade_count"], 0)
+                if refused:
+                    self.assertEqual(guarded["trade_count"], 0)
+                    self.assertEqual(guarded["net_pnl"], 0)
+                    self.assertGreater(d["paper_entries_skipped_nonpositive_original_target_net_upside"], 0)
+                else:
+                    self.assertEqual(guarded["trade_count"], baseline["trade_count"])
+                    self.assertEqual(guarded["net_pnl"], baseline["net_pnl"])
+                    self.assertEqual(d["paper_entries_skipped_nonpositive_original_target_net_upside"], 0)
+                self.assertEqual(
+                    d["paper_entry_attempts"],
+                    d["paper_entries_opened"] + d["paper_entries_skipped_invalid_gap"]
+                    + d["paper_entries_skipped_past_signal_target"]
+                    + d["paper_entries_skipped_utc_daily_loss_cap"]
+                    + d["paper_entries_skipped_insufficient_risk_capacity"]
+                    + d["paper_entries_skipped_nonpositive_original_target_net_upside"])
+        with patch.object(tr, "setup", return_value=None):
+            empty = ev.evaluate_chronological(
+                self.bars, "ETHUSDT", "trend_pullback",
+                include_cost_guard_sensitivity=True)
+        self.assertEqual(empty["holdout"]["trade_count"], 0)
+        self.assertEqual(
+            empty["holdout_original_target_cost_guard_sensitivity"]["guarded_holdout"]["trade_count"], 0)
+        with self.assertRaises(ev.PaperEvaluationError):
+            ev.evaluate_chronological(
+                self.bars, "BTCUSDT", "trend_pullback",
+                include_cost_guard_sensitivity=1)
+
     def test_original_signal_net_upside_includes_exit_slippage_and_both_fees(self):
         from cloud_backend import trading_research as tr
         # Synthetic only: an original 110 target can be ABOVE the modeled

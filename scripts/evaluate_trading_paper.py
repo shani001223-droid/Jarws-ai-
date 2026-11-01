@@ -73,6 +73,8 @@ def main():
     parser.add_argument("--slippage-bps", type=float, default=5)
     parser.add_argument("--capture-receipt", type=Path,
                         help="Optional local HOSHI_CAPTURE_RECEIPT stderr line; unsigned evidence only")
+    parser.add_argument("--cost-guard-sensitivity", action="store_true",
+                        help="Optional same-holdout cost-aware original-target entry guard")
     parser.add_argument("--rolling-robustness", action="store_true",
                         help="Also score three fixed disjoint windows with double-cost stress when valid")
     args = parser.parse_args()
@@ -81,7 +83,8 @@ def main():
         config = SimulationConfig(args.equity, args.risk_pct, args.daily_loss_limit,
                                   args.fee_bps, args.slippage_bps)
         evaluator = evaluate_rolling_robustness if args.rolling_robustness else evaluate_chronological
-        result = evaluator(bars, symbol, args.strategy, config)
+        result = evaluator(bars, symbol, args.strategy, config,
+                           include_cost_guard_sensitivity=args.cost_guard_sensitivity)
         if args.capture_receipt is not None:
             result = attach_capture_receipt(result, load_capture_receipt(args.capture_receipt))
     except (OSError, UnicodeError, ValueError, TypeError, OverflowError):

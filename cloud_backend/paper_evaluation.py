@@ -59,7 +59,8 @@ def _checked(bars):
 
 
 def evaluate_chronological(bars, symbol: str, strategy: str,
-                           config: SimulationConfig | None = None) -> dict:
+                           config: SimulationConfig | None = None, *,
+                           include_cost_guard_sensitivity: bool = False) -> dict:
     """Fixed 70/30 chronological split; 64 prior bars warm the holdout.
 
     Signals may use only bars already closed at that moment. A signal at the
@@ -67,6 +68,8 @@ def evaluate_chronological(bars, symbol: str, strategy: str,
     The existing backtest handles next-open fills, fees, adverse slippage,
     stop-first same-bar ambiguity, gap stops and daily loss caps.
     """
+    if type(include_cost_guard_sensitivity) is not bool:
+        raise PaperEvaluationError("invalid_cost_guard_flag")
     if symbol not in ("BTCUSDT", "ETHUSDT") or strategy not in STRATEGIES:
         raise PaperEvaluationError("unsupported_symbol_or_strategy")
     cfg = SimulationConfig() if config is None else config
@@ -94,7 +97,7 @@ def evaluate_chronological(bars, symbol: str, strategy: str,
     # Exclude redundant raw candle arrays from summaries; retain input hash.
     train_summary = {k: v for k, v in train.items() if k != "input_candles"}
     holdout_summary = {k: v for k, v in holdout.items() if k != "input_candles"}
-    return {
+    result = {
         "version": VERSION, "rule_version": RULE_VERSION, "symbol": symbol,
         "strategy": strategy, "market": "spot", "interval": "15m",
         "mode": "offline-historical-paper-evaluation", "orders_enabled": False,
@@ -123,16 +126,42 @@ def evaluate_chronological(bars, symbol: str, strategy: str,
         ],
     }
 
+    if include_cost_guard_sensitivity:
+        # Same holdout and input; this is a counterfactual policy, not independent evidence.
+        guarded = backtest(candles[split - WARMUP_BARS:], strategy, cfg,
+                           entry_not_before=first_holdout,
+                           reject_nonpositive_original_net_upside=True)
+        if any(t["entry_time"] < first_holdout for t in guarded["trades"]):
+            raise PaperEvaluationError("lookahead_or_warmup_trade")
+        result["holdout_original_target_cost_guard_sensitivity"] = {
+            "status": "same_holdout_counterfactual_not_independent",
+            "guard_rule": "reject_if_modeled_original_target_net_upside_nonpositive",
+            "baseline_trade_count": holdout["trade_count"],
+            "baseline_net_pnl_usdt": holdout["net_pnl"],
+            "guarded_holdout": {k: v for k, v in guarded.items() if k != "input_candles"},
+            "independent_venue_verified": False,
+            "forward_verified": False,
+            "limitations": [
+                "Both scenarios use the same unverified candles and modeled costs.",
+                "This policy comparison is not an independent test or evidence of profitability.",
+                "Zero trades and negative outcomes remain in the report.",
+            ],
+        }
+    return result
+
 
 def evaluate_rolling_robustness(bars, symbol: str, strategy: str,
-                                config: SimulationConfig | None = None) -> dict:
+                                config: SimulationConfig | None = None, *,
+                                include_cost_guard_sensitivity: bool = False) -> dict:
     """Optional fixed-window/cost stress study on the SAME unverified input.
 
     The 40-60%, 60-80% and 80-100% windows do not overlap in scored bars.
     Each has exactly 64 prior closed bars of warmup, and a separate cash/risk
     reset. This is a robustness diagnostic, NOT independent venue/forward proof.
     """
-    report = evaluate_chronological(bars, symbol, strategy, config)
+    report = evaluate_chronological(
+        bars, symbol, strategy, config,
+        include_cost_guard_sensitivity=include_cost_guard_sensitivity)
     candles = _checked(bars)
     cfg = SimulationConfig() if config is None else config
     stress_available = cfg.fee_bps <= 50 and cfg.slippage_bps <= 50

@@ -46,6 +46,41 @@ class ChronologicalEvaluationTests(unittest.TestCase):
             ev._execution_bar_quality(bars, [{"entry_time": -900000,
                                                "exit_time": bars[2].close_time}])
 
+    def test_exact_open_exit_excludes_post_exit_wicks_but_keeps_open_warnings(self):
+        # These synthetic OHLC candles are not an intrabar path or exchange fill.
+        bars = [Candle(i * 900000, 100, 101, 99, 100, 10,
+                       i * 900000 + 899999) for i in range(4)]
+        bars[2] = replace(bars[2], open=103, high=120, low=80,
+                          close=103, volume=0)
+        open_exit = {"entry_time": bars[1].time, "exit_time": bars[2].time,
+                     "exit_time_precision": "bar_open_exact"}
+        unknown_exit = {"entry_time": bars[1].time,
+                        "exit_time": bars[2].close_time,
+                        "exit_time_precision": "bar_close_upper_bound_intrabar_unknown"}
+        report = ev._execution_bar_quality(bars, [open_exit, unknown_exit])
+        at_open, intrabar = report["trade_exposures"]
+        self.assertEqual(report["exit_open_only_count"], 1)
+        self.assertTrue(at_open["exit_open_only"])
+        self.assertTrue(at_open["exit_zero_volume"])
+        self.assertTrue(at_open["spanned_zero_volume"])
+        self.assertTrue(at_open["spanned_open_gap_ge_2pct"])
+        self.assertFalse(at_open["spanned_intrabar_range_ge_10pct"])
+        self.assertTrue(intrabar["spanned_intrabar_range_ge_10pct"])
+        self.assertFalse(intrabar["exit_open_only"])
+
+        # A flat candle after an open exit does not retroactively make the
+        # already-closed position exposed to its closing OHLC shape.
+        flat = list(bars)
+        flat[2] = replace(flat[2], high=103, low=103, volume=10)
+        at_open = ev._execution_bar_quality(flat, [open_exit])["trade_exposures"][0]
+        at_close = ev._execution_bar_quality(flat, [unknown_exit])["trade_exposures"][0]
+        self.assertFalse(at_open["spanned_flat_ohlc"])
+        self.assertTrue(at_close["spanned_flat_ohlc"])
+        with self.assertRaisesRegex(ev.PaperEvaluationError,
+                                    "invalid_paper_exit_time_precision"):
+            ev._execution_bar_quality(bars, [{
+                **open_exit, "exit_time": bars[2].close_time}])
+
     def test_incomplete_synthetic_trade_record_never_invents_clean_exposure(self):
         bars = [Candle(i * 900000, 100, 101, 99, 100, 10,
                        i * 900000 + 899999) for i in range(3)]

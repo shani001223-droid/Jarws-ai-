@@ -88,7 +88,9 @@ def _sample_quality(bars, *, previous_close=None):
 def _execution_bar_quality(bars, trades):
     """Disclose suspicious OHLCV bars crossed by modeled paper positions.
 
-    A trade's exit candle is included, but intrabar exit ordering is unknown.
+    Intrabar/close exits include the exit candle conservatively; exact
+    opening exits exclude post-exit OHLC range/flatness, while retaining the
+    exit opening gap and zero-volume execution warnings.
     This is NOT a fill-quality verification, liquidity estimate or trade veto.
     """
     flags = []
@@ -107,6 +109,7 @@ def _execution_bar_quality(bars, trades):
         previous_close = bar.close
     result = {
         "trade_count": len(trades),
+        "exit_open_only_count": 0,
         "entry_zero_volume_count": 0,
         "exit_zero_volume_count": 0,
         "trades_spanning_zero_volume_count": 0,
@@ -132,10 +135,26 @@ def _execution_bar_quality(bars, trades):
         exit_index = index.get((trade["exit_time"] // STEP_MS) * STEP_MS)
         if entry is None or exit_index is None or exit_index < entry:
             raise PaperEvaluationError("paper_trade_outside_candle_sample")
+        # An exact open-triggered stop/target exit cannot be exposed to the
+        # exit candle's later high/low or flat-close behavior. Its opening gap
+        # and zero total candle volume still matter for modeled execution.
+        # Intrabar/close exits and older records without precision remain
+        # conservatively exposed to the entire exit candle.
+        exit_open_only = trade.get("exit_time_precision") == "bar_open_exact"
+        if exit_open_only and trade["exit_time"] != bars[exit_index].time:
+            raise PaperEvaluationError("invalid_paper_exit_time_precision")
         span = flags[entry:exit_index + 1]
+        if exit_open_only:
+            span = flags[entry:exit_index] + [{
+                "zero_volume": flags[exit_index]["zero_volume"],
+                "flat_ohlc": False,
+                "open_gap_ge_2pct": flags[exit_index]["open_gap_ge_2pct"],
+                "intrabar_range_ge_10pct": False,
+            }]
         exposed = {
             "entry_time": trade["entry_time"],
             "exit_time": trade["exit_time"],
+            "exit_open_only": exit_open_only,
             "entry_zero_volume": flags[entry]["zero_volume"],
             "exit_zero_volume": flags[exit_index]["zero_volume"],
             "spanned_zero_volume": any(x["zero_volume"] for x in span),
@@ -145,6 +164,7 @@ def _execution_bar_quality(bars, trades):
                 x["intrabar_range_ge_10pct"] for x in span),
         }
         result["trade_exposures"].append(exposed)
+        result["exit_open_only_count"] += exit_open_only
         result["entry_zero_volume_count"] += exposed["entry_zero_volume"]
         result["exit_zero_volume_count"] += exposed["exit_zero_volume"]
         result["trades_spanning_zero_volume_count"] += exposed["spanned_zero_volume"]
@@ -241,7 +261,7 @@ def evaluate_chronological(bars, symbol: str, strategy: str,
         "holdout_no_trades": holdout["trade_count"] == 0,
         "limitations": [
             "Operator-supplied candles are NOT authenticated or cross-venue verified.",
-            "Sample-quality and modeled-trade bar-exposure flags are descriptive only; they neither validate venue data nor veto trades. Exit-bar exposure includes the reported exit candle even when intrabar ordering is unknown.",
+            "Sample-quality and modeled-trade bar-exposure flags are descriptive only; they neither validate venue data nor veto trades. Exact bar-open exits exclude post-exit OHLC range/flatness, but retain opening-gap and zero-volume warnings; uncertain intrabar exits include the full exit bar.",
             "One fixed chronological holdout on one short sample is not independent replication.",
             "The existing 15m research rule is NOT the 3-timeframe V2 desk or V3 engine.",
             "Prior 64 closed bars are context only; warmup entries are prohibited at the engine boundary.",

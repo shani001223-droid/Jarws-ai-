@@ -116,6 +116,16 @@ def _execution_bar_quality(bars, trades):
         "trades_spanning_any_flag_count": 0,
         "trade_exposures": [],
     }
+    # Synthetic test doubles may supply only entry/PnL, with no exit
+    # timestamp. Do not fabricate zero exposure or erase negative trades:
+    # explicitly mark the supplemental quality report unavailable.
+    if any(type(trade) is dict and "exit_time" not in trade for trade in trades):
+        for key in result:
+            if key != "trade_count":
+                result[key] = None
+        result["status"] = "unavailable_incomplete_trade_exit_timestamps"
+        return result
+    result["status"] = "evaluated_modeled_only"
     for trade in trades:
         entry = index.get(trade["entry_time"])
         # Open and close timestamps both map to the containing 15m candle.

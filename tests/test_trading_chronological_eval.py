@@ -46,6 +46,17 @@ class ChronologicalEvaluationTests(unittest.TestCase):
             ev._execution_bar_quality(bars, [{"entry_time": -900000,
                                                "exit_time": bars[2].close_time}])
 
+    def test_incomplete_synthetic_trade_record_never_invents_clean_exposure(self):
+        bars = [Candle(i * 900000, 100, 101, 99, 100, 10,
+                       i * 900000 + 899999) for i in range(3)]
+        result = ev._execution_bar_quality(
+            bars, [{"entry_time": bars[1].time, "net_pnl": -3.5}])
+        self.assertEqual(result["trade_count"], 1)
+        self.assertEqual(result["status"],
+                         "unavailable_incomplete_trade_exit_timestamps")
+        self.assertIsNone(result["trades_spanning_any_flag_count"])
+        self.assertIsNone(result["trade_exposures"])
+
     def test_paper_execution_quality_zero_trades_and_same_sample_sensitivity(self):
         from cloud_backend import trading_research as tr
         with patch.object(tr, "setup", return_value=None):

@@ -110,6 +110,31 @@ class ChronologicalEvaluationTests(unittest.TestCase):
         guarded = report["holdout_original_target_cost_guard_sensitivity"]
         self.assertEqual(guarded["guarded_paper_execution_bar_quality"]["trade_count"], 0)
 
+    def test_zero_volume_entry_refusal_propagates_to_holdout_and_stress(self):
+        # Fully synthetic no-volume bars: neither baseline nor doubled-cost
+        # replay can assume next-open fills or manufacture a win rate.
+        from cloud_backend import trading_research as tr
+        flat = [replace(b, open=100, high=101, low=99,
+                        close=100, volume=0) for b in self.bars]
+        with patch.object(tr, "setup", return_value={
+                "stop": 95, "reference_entry": 100}):
+            report = ev.evaluate_chronological(
+                flat, "BTCUSDT", "trend_pullback",
+                include_holdout_cost_stress=True)
+        base = report["holdout"]
+        stressed = report["holdout_double_cost_sensitivity"]["double_costs_holdout"]
+        for outcome in (base, stressed):
+            d = outcome["execution_diagnostics"]
+            self.assertGreater(d["paper_entry_attempts"], 0)
+            self.assertEqual(d["paper_entries_skipped_zero_volume_open"],
+                             d["paper_entry_attempts"])
+            self.assertEqual(d["paper_entries_opened"], 0)
+            self.assertEqual(outcome["trade_count"], 0)
+            self.assertEqual(outcome["net_pnl"], 0)
+            self.assertIsNone(outcome["win_rate_pct"])
+            self.assertIsNone(outcome["profit_factor"])
+        self.assertFalse(report["orders_enabled"])
+
     def test_sample_quality_counts_holdout_boundary_gaps_and_zero_volume(self):
         # Entirely synthetic contiguous 15m OHLCV, not authenticated data.
         from cloud_backend import trading_research as tr

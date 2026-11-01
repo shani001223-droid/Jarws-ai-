@@ -270,6 +270,7 @@ def evaluate_chronological(bars, symbol: str, strategy: str,
             "Prior 64 closed bars are context only; warmup entries are prohibited at the engine boundary.",
             "No optimization, resampling, survivorship correction or multiple-testing correction.",
             "Next-open fills, fixed fees/slippage and stop-first ambiguous bars; real gaps, liquidity and impact can be worse.",
+            "Zero-volume next-open bars refuse new modeled entries; existing positions still have uncertain modeled exits and descriptive zero-volume exposure flags.",
             "Zero and negative results are retained; no profit, win-rate or forward-performance guarantee.",
         ],
     }

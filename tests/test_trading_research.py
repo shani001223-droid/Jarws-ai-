@@ -194,6 +194,35 @@ class SimulatorTests(unittest.TestCase):
         self.assertGreater(trade["fees"],0)
         self.assertAlmostEqual(result["ending_equity"],995)
 
+    def test_zero_volume_next_open_refuses_unsubstantiated_paper_fill(self):
+        # Synthetic OHLC with no traded volume cannot substantiate an entry,
+        # even if a stop and target are shown as touched by that candle.
+        data = bars(66)
+        data[64] = replace(data[64], open=102, high=120, low=90,
+                           close=100, volume=0)
+        with patch.object(tr, "setup", side_effect=one_signal):
+            refused = tr.backtest(data, "trend_pullback", tr.SimulationConfig())
+        d = refused["execution_diagnostics"]
+        self.assertEqual(d["paper_entry_attempts"], 1)
+        self.assertEqual(d["paper_entries_skipped_zero_volume_open"], 1)
+        self.assertEqual(d["paper_entries_opened"], 0)
+        self.assertEqual(refused["trade_count"], 0)
+        self.assertEqual(refused["net_pnl"], 0)
+        self.assertIsNone(refused["win_rate_pct"])
+        self.assertEqual(d["paper_entries_skipped_invalid_gap"], 0)
+
+        # A positive-volume candle with otherwise identical synthetic OHLC
+        # keeps the prior conservative stop-first modeled result.
+        valid = list(data)
+        valid[64] = replace(valid[64], volume=10)
+        with patch.object(tr, "setup", side_effect=one_signal):
+            accepted = tr.backtest(valid, "trend_pullback", tr.SimulationConfig())
+        self.assertEqual(accepted["execution_diagnostics"][
+            "paper_entries_skipped_zero_volume_open"], 0)
+        self.assertEqual(accepted["execution_diagnostics"]["paper_entries_opened"], 1)
+        self.assertEqual(accepted["trade_count"], 1)
+        self.assertLess(accepted["net_pnl"], 0)
+
     def test_exact_stop_at_open_is_not_misclassified_as_adverse_gap(self):
         # The stop is met at the OPEN, before the same candle's target wick.
         # No below-stop gap occurred; its gap diagnostic must stay empty.

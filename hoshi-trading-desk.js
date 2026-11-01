@@ -19,6 +19,41 @@
     return u.protocol==="http:" && ["127.0.0.1","localhost"].includes(u.hostname) && u.searchParams.get("backend")==="local"
       ? "http://"+u.hostname+":8000" : "https://jarws-ai-2.onrender.com";
   }
+  // Recompute the full hypothetical long-only cash/risk plan from the same
+  // closed 15m evidence. A plausible-looking JSON plan is not enough:
+  // modified stops, fills, quantity or cost-adjusted targets must fail closed.
+  function validPlanMath(p, expected, frame) {
+    if (!p || !positive(frame.support) || !positive(frame.atr14)) return false;
+    const reference=frame.last_close, fee=expected.fee_bps/10000, slip=expected.slippage_bps/10000;
+    const stop=frame.support-Math.max(.25*frame.atr14,.001*reference);
+    const distance=reference-stop;
+    if (!positive(stop) || distance/reference<.002 || distance/reference>.05) return false;
+    const entry=reference*(1+slip), stopFill=stop*(1-slip);
+    const lossUnit=entry-stopFill+fee*(entry+stopFill);
+    if (!positive(lossUnit)) return false;
+    const budget=expected.equity_usdt*expected.risk_pct/100;
+    const quantity=Math.floor(Math.min(budget/lossUnit,expected.equity_usdt/(entry*(1+fee)))*1e8)/1e8;
+    if (!positive(quantity)) return false;
+    const comparisons=[
+      [p.confirmed_support,frame.support],[p.reference_stop,stop],
+      [p.estimated_entry_with_slippage,entry],[p.estimated_stop_fill_with_slippage,stopFill],
+      [p.stop_distance_pct,distance/reference*100],[p.risk_budget_usdt,budget],
+      [p.estimated_quantity_base,quantity],[p.estimated_notional_usdt,quantity*entry],
+      [p.estimated_stop_loss_including_costs_usdt,quantity*lossUnit]
+    ];
+    if (!comparisons.every(([actual,computed])=>close(actual,computed))) return false;
+    // 8-decimal base quantity is a sizing constraint, not a loose price comparison.
+    if (Math.abs(p.estimated_quantity_base-quantity)>1e-12*Math.max(1,quantity)) return false;
+    if (p.stop_method!=="confirmed_15m_support_minus_max_quarter_atr_or_0_1pct" || p.estimated_stop_loss_including_costs_usdt>budget+1e-8) return false;
+    for (let i=0;i<2;i++) {
+      const target=reference+(i+1)*distance, targetFill=target*(1-slip);
+      const gainUnit=targetFill-entry-fee*(entry+targetFill);
+      if (!close(p.targets[i].reference_price,target)
+          || !close(p.targets[i].estimated_net_pnl_usdt,quantity*gainUnit)
+          || !close(p.targets[i].estimated_net_reward_risk,gainUnit/lossUnit)) return false;
+    }
+    return p.targets[1].estimated_net_reward_risk>=1;
+  }
   function validate(data, expected, now=Date.now()) {
     const fail = () => { throw new Error("Unverified or expired trading response"); };
     if (!data || data.version!==VERSION || data.symbol!==expected.symbol || data.market!=="spot" || data.mode!=="paper-assistant-only" || data.orders_enabled!==false || data.win_probability!==null || data.independently_cross_checked!==false || data.direction!=="long_study_only" || data.price_kind!=="last_closed_candle_not_live_quote" || data.knowledge_version!=="hoshi-trading-knowledge-v2" || data.v3_runtime_integration!=="pending") fail();
@@ -43,7 +78,7 @@
       const p=data.paper_plan;
       if (c.score!==100 || count!==6 || !p || p.side!=="long" || p.fills_simulated!==false || p.exchange_order_validated!==false || !close(p.reference_entry_close,data.timeframes["15m"].last_close) || !positive(p.reference_stop) || p.reference_stop>=p.reference_entry_close || !positive(p.estimated_entry_with_slippage) || !positive(p.estimated_quantity_base) || !positive(p.estimated_notional_usdt) || !positive(p.risk_budget_usdt) || !positive(p.estimated_stop_loss_including_costs_usdt) || p.equity_usdt!==expected.equity_usdt || p.risk_pct!==expected.risk_pct || p.assumed_fee_bps_each_side!==expected.fee_bps || p.assumed_adverse_slippage_bps_each_side!==expected.slippage_bps || !close(p.risk_budget_usdt,expected.equity_usdt*expected.risk_pct/100) || p.estimated_stop_loss_including_costs_usdt>p.risk_budget_usdt+1e-8 || p.estimated_notional_usdt>expected.equity_usdt+1e-8 || !Array.isArray(p.targets) || p.targets.length!==2) fail();
       for (let n=0;n<2;n++) {const t=p.targets[n];if (!t || t.multiple_before_costs!==n+1 || !close(t.reference_price,p.reference_entry_close+(n+1)*(p.reference_entry_close-p.reference_stop)) || !finite(t.estimated_net_pnl_usdt) || !finite(t.estimated_net_reward_risk)) fail();}
-      if(p.targets[1].estimated_net_reward_risk<1)fail();
+      if(!validPlanMath(p,expected,data.timeframes["15m"]))fail();
     } else fail();
     return data;
   }

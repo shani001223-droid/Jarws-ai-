@@ -2,7 +2,7 @@
 // Real Chromium UI + synthetic market fixtures. No exchange/model calls.
 const assert=require("node:assert/strict"),fs=require("node:fs"),path=require("node:path"),http=require("node:http");
 const {chromium}=require("playwright");
-const {fixture}=require("./trading-desk.fixtures.cjs");
+const {fixture,makePaperPlan}=require("./trading-desk.fixtures.cjs");
 const ROOT=path.resolve(__dirname,"..");
 function body(mode){
   const d=fixture(),now=Date.now();d.as_of_ms=now;d.fetched_at=Math.floor(now/1000);d.expires_at_ms=now+60000;d.confluence.as_of=now;
@@ -11,7 +11,7 @@ function body(mode){
     d.decision="paper_plan_only";d.confluence.score=100;d.confluence.decision="paper_watchlist_only";
     for(const e of Object.values(d.confluence.evidence)){e.passed=true;e.points=20;}
     d.setup.positive_families=6;d.setup.decision="paper_watchlist_only";for(const e of Object.values(d.setup.evidence))e.status="supports_watchlist";
-    d.paper_plan={side:"long",fills_simulated:false,exchange_order_validated:false,reference_entry_close:1000,estimated_entry_with_slippage:1000.5,reference_stop:990,estimated_quantity_base:.02,estimated_notional_usdt:20.01,risk_budget_usdt:.5,estimated_stop_loss_including_costs_usdt:.3,equity_usdt:100,risk_pct:.5,assumed_fee_bps_each_side:10,assumed_adverse_slippage_bps_each_side:5,targets:[{multiple_before_costs:1,reference_price:1010,estimated_net_pnl_usdt:.15,estimated_net_reward_risk:.5},{multiple_before_costs:2,reference_price:1020,estimated_net_pnl_usdt:.45,estimated_net_reward_risk:1.5}]};
+    d.paper_plan=makePaperPlan();
   }
   if(mode==="expiry")d.expires_at_ms=now+700;
   if(mode==="forged")d.win_probability=.92;

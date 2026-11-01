@@ -2,12 +2,30 @@
 const test=require("node:test"),assert=require("node:assert/strict");
 const desk=require("../hoshi-trading-desk.js");
 const fs=require("node:fs");
-const {fixture,expected,NOW}=require("./trading-desk.fixtures.cjs");
+const {fixture,expected,NOW,makePaperPlan}=require("./trading-desk.fixtures.cjs");
 function storage(){const map=new Map();return {getItem:k=>map.get(k)??null,setItem:(k,v)=>map.set(k,v),removeItem:k=>map.delete(k)};}
 test("checked WAIT remains without fabricated levels or probability",()=>assert.equal(desk.validate(fixture(),expected,NOW).paper_plan,null));
 test("forged identity, risk, confidence, score, times and WAIT levels reject",()=>{
   const mutations=[d=>d.orders_enabled=true,d=>d.win_probability=.92,d=>d.symbol="NAS100",d=>d.expires_at_ms=NOW,d=>d.as_of_ms=NOW+6000,d=>d.confluence.score=100,d=>d.confluence.evidence.htf_trend.points=20,d=>d.assumptions.risk_pct=20,d=>d.timeframes["15m"].support=1001,d=>d.timeframes["1h"].last_close=NaN,d=>d.confluence.last_closed_at["1h"]=0,d=>d.paper_plan={entry:1000}];
   for(const mutate of mutations){const d=fixture();mutate(d);assert.throws(()=>desk.validate(d,expected,NOW));}
+});
+test("paper plan independently reconciles stop, sizing, costs and targets",()=>{
+  const d=fixture();d.decision="paper_plan_only";d.confluence.score=100;d.confluence.decision="paper_watchlist_only";
+  for(const e of Object.values(d.confluence.evidence)){e.passed=true;e.points=20;}
+  d.setup.positive_families=6;d.setup.decision="paper_watchlist_only";
+  for(const e of Object.values(d.setup.evidence))e.status="supports_watchlist";
+  d.paper_plan=makePaperPlan();
+  assert.equal(desk.validate(d,expected,NOW).decision,"paper_plan_only");
+  const mutations=[
+    p=>p.reference_stop+=1,p=>p.confirmed_support=980,
+    p=>p.estimated_entry_with_slippage+=1,p=>p.estimated_stop_fill_with_slippage+=1,
+    p=>p.estimated_quantity_base*=1.5,p=>p.estimated_notional_usdt*=.8,
+    p=>p.estimated_stop_loss_including_costs_usdt=.01,
+    p=>p.targets[0].estimated_net_reward_risk=100,
+    p=>p.targets[1].estimated_net_pnl_usdt+=5,
+    p=>p.stop_distance_pct=1
+  ];
+  for(const mutate of mutations){const forged=structuredClone(d);mutate(forged.paper_plan);assert.throws(()=>desk.validate(forged,expected,NOW));}
 });
 test("invalid paper settings reject before a URL is built",()=>{for(const change of [{symbol:"SOLUSDT"},{risk_pct:2},{equity_usdt:0},{fee_bps:0},{slippage_bps:Infinity}])assert.throws(()=>desk.settings({...expected,...change}));});
 test("local operator mode is loopback-only; public pages cannot redirect the API",()=>{

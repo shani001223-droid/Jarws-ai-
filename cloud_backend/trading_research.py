@@ -323,6 +323,7 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None,
                     else:
                         position = {"entry": entry, "stop": stop, "target": entry+2*(entry-stop),
                                     "qty": qty, "entry_time": b.time, "entry_index": i,
+                                    "raw_entry_open": b.open,
                                     "risk_budget_at_entry": budget,
                                     "planned_stop_loss": planned_loss,
                                     "original_signal_target": original_target,
@@ -385,6 +386,12 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None,
                 exit_price = raw_exit*(1-slip)
                 costs = p["qty"]*fee*(p["entry"]+exit_price)
                 pnl = p["qty"]*(exit_price-p["entry"])-costs
+                # Explicitly reconcile modeled net PnL to the candle-open
+                # entry and strategy exit reference, without treating either
+                # reference as an observed executable exchange quote.
+                buy_slippage_cost = p["qty"]*(p["entry"]-p["raw_entry_open"])
+                sell_slippage_cost = p["qty"]*(raw_exit-exit_price)
+                reference_gross_pnl = p["qty"]*(raw_exit-p["raw_entry_open"])
                 if reason == "end_of_sample":
                     # Forced terminal marking is NOT a strategy-triggered exit
                     # or an observed exchange fill. Keep its PnL in equity,
@@ -419,6 +426,11 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None,
                                    "bar_close_exact" if at_close else
                                    "bar_close_upper_bound_intrabar_unknown"),
                                "entry": p["entry"], "exit": exit_price, "quantity": p["qty"],
+                               "entry_reference_open": p["raw_entry_open"],
+                               "exit_reference_price": raw_exit,
+                               "reference_gross_pnl_before_modeled_costs_usdt": reference_gross_pnl,
+                               "modeled_buy_slippage_cost_usdt": buy_slippage_cost,
+                               "modeled_sell_slippage_cost_usdt": sell_slippage_cost,
                                "fees": costs, "net_pnl": pnl, "reason": reason,
                                "terminal_forced_mark": reason == "end_of_sample",
                                "reference_stop": p["stop"],
@@ -482,6 +494,16 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None,
             "initial_equity": cfg.equity, "ending_equity": cash, "net_pnl": cash-cfg.equity,
             "max_drawdown_pct": max_dd, "fees_paid": sum(t["fees"] for t in trades),
             "execution_diagnostics": {
+                "modeled_buy_slippage_cost_usdt": sum(
+                    t["modeled_buy_slippage_cost_usdt"] for t in trades),
+                "modeled_sell_slippage_cost_usdt": sum(
+                    t["modeled_sell_slippage_cost_usdt"] for t in trades),
+                "modeled_total_slippage_cost_usdt": sum(
+                    t["modeled_buy_slippage_cost_usdt"]
+                    + t["modeled_sell_slippage_cost_usdt"] for t in trades),
+                "modeled_fees_plus_slippage_cost_usdt": sum(
+                    t["fees"] + t["modeled_buy_slippage_cost_usdt"]
+                    + t["modeled_sell_slippage_cost_usdt"] for t in trades),
                 "close_mark_max_drawdown_pct": close_mark_max_dd,
                 "close_mark_peak_equity_usdt": close_mark_peak,
                 "close_mark_low_equity_usdt": close_mark_low,
@@ -538,4 +560,5 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None,
                             "A still-open position at sample end is force-marked at the final close, including modeled costs; headline all-trade win rate/expectancy/profit factor include such marks, while strategy_resolved metrics exclude them; neither is a calibrated win probability.",
                             "Supplemental close_mark drawdown uses hypothetical fee/slippage-adjusted liquidation value at each bar close; it is not an observed fill, intrabar peak-to-trough path or independently verified account equity.", 
                             "Optional original-target cost guard refuses hypothetical entries with nonpositive modeled net upside to the original target; it is a same-sample sensitivity policy, not the baseline or proof of improved performance.",
+                            "The per-trade reference gross PnL minus modeled buy/sell slippage and both execution fees reconciles to net PnL; reference OHLC prices are not independently observed fills or quotes.",
                             "Does not model partial fills, liquidity impact or intra-bar equity peaks."]}

@@ -522,6 +522,55 @@ class ChronologicalEvaluationTests(unittest.TestCase):
         self.assertIsNone(empty["execution_diagnostics"]["strategy_resolved_expectancy_usdt"])
         self.assertIsNone(empty["execution_diagnostics"]["strategy_resolved_profit_factor"])
 
+
+    def test_modeled_fee_and_slippage_breakdown_reconciles_losses_and_zero_trades(self):
+        from cloud_backend import trading_research as tr
+        # Synthetic next-open entries and same-bar stops, never exchange fills.
+        flat = [replace(b, open=100, high=101, low=99, close=100, volume=10)
+                for b in self.bars[:130]]
+        with patch.object(tr, "setup",
+                          return_value={"stop": 99.5, "reference_entry": 100}):
+            report = tr.backtest(flat, "trend_pullback", SimulationConfig())
+        self.assertGreater(report["trade_count"], 0)
+        self.assertLess(report["net_pnl"], 0)
+        diagnostics = report["execution_diagnostics"]
+        buy = sell = fees = 0.0
+        for trade in report["trades"]:
+            self.assertGreater(trade["modeled_buy_slippage_cost_usdt"], 0)
+            self.assertGreater(trade["modeled_sell_slippage_cost_usdt"], 0)
+            self.assertEqual(trade["entry_reference_open"], 100)
+            self.assertEqual(trade["exit_reference_price"], 99.5)
+            self.assertAlmostEqual(
+                trade["reference_gross_pnl_before_modeled_costs_usdt"],
+                trade["quantity"] * (trade["exit_reference_price"]
+                                     - trade["entry_reference_open"]))
+            self.assertAlmostEqual(
+                trade["net_pnl"],
+                trade["reference_gross_pnl_before_modeled_costs_usdt"]
+                - trade["modeled_buy_slippage_cost_usdt"]
+                - trade["modeled_sell_slippage_cost_usdt"] - trade["fees"])
+            buy += trade["modeled_buy_slippage_cost_usdt"]
+            sell += trade["modeled_sell_slippage_cost_usdt"]
+            fees += trade["fees"]
+        self.assertAlmostEqual(diagnostics["modeled_buy_slippage_cost_usdt"], buy)
+        self.assertAlmostEqual(diagnostics["modeled_sell_slippage_cost_usdt"], sell)
+        self.assertAlmostEqual(diagnostics["modeled_total_slippage_cost_usdt"],
+                               buy + sell)
+        self.assertAlmostEqual(diagnostics["modeled_fees_plus_slippage_cost_usdt"],
+                               buy + sell + fees)
+        self.assertAlmostEqual(report["fees_paid"], fees)
+        self.assertAlmostEqual(report["net_pnl"],
+                               sum(t["net_pnl"] for t in report["trades"]))
+        with patch.object(tr, "setup", return_value=None):
+            empty = tr.backtest(flat, "trend_pullback", SimulationConfig())
+        self.assertEqual(empty["trade_count"], 0)
+        self.assertEqual(empty["net_pnl"], 0)
+        for key in ("modeled_buy_slippage_cost_usdt",
+                    "modeled_sell_slippage_cost_usdt",
+                    "modeled_total_slippage_cost_usdt",
+                    "modeled_fees_plus_slippage_cost_usdt"):
+            self.assertEqual(empty["execution_diagnostics"][key], 0)
+
     def test_no_trade_outcome_is_preserved(self):
         flat = [replace(b, open=100, high=100.1, low=99.9, close=100, volume=10)
                 for b in self.bars]

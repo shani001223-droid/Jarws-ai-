@@ -278,12 +278,15 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
             if (b.open <= stop
                     or not 0 < entry-stop <= 4*(pending["reference_entry"]-stop)):
                 entry_skipped_gap += 1
-            elif b.open >= pending.get(
+            elif (b.open >= pending.get(
                     "reference_target", pending["reference_entry"]
-                    + 2*(pending["reference_entry"]-stop)):
-                # The original closed-candle target has already traded at
-                # the next open. Do not chase a completed signal by moving
-                # its hypothetical 2R target farther away after the gap.
+                    + 2*(pending["reference_entry"]-stop))
+                    or entry >= pending.get(
+                        "reference_target", pending["reference_entry"]
+                        + 2*(pending["reference_entry"]-stop))):
+                # Even when the raw open is below the original signal target,
+                # adverse buy slippage may push the modeled fill to/past it.
+                # Reject the already-completed setup rather than repricing 2R.
                 entry_skipped_target_gap += 1
             elif cfg.daily_loss_limit-day_losses.get(day, 0) <= 1e-8:
                 # A realized daily loss lockout must remain visible even if

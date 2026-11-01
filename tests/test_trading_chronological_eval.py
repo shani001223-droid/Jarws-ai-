@@ -138,6 +138,40 @@ class ChronologicalEvaluationTests(unittest.TestCase):
         self.assertEqual(
             valid["holdout"]["execution_diagnostics"]["paper_entries_skipped_past_signal_target"], 0)
 
+    def test_slippage_adjusted_next_open_at_signal_target_is_refused(self):
+        from cloud_backend import trading_research as tr
+        # Synthetic 5 bps buy slippage takes 109.98 above the original
+        # 110.00 signal target, even though the raw opening was below it.
+        # No new 2R target may be manufactured from that modeled fill.
+        for opening, refused in ((109.98, True), (109.0, False)):
+            with self.subTest(opening=opening):
+                bars = [replace(b, open=opening, high=112, low=94,
+                                close=100, volume=10) for b in self.bars]
+                with patch.object(tr, "setup", return_value={
+                        "stop": 95.0, "reference_entry": 100.0,
+                        "reference_target": 110.0}):
+                    report = ev.evaluate_chronological(
+                        bars, "BTCUSDT", "trend_pullback")
+                d = report["holdout"]["execution_diagnostics"]
+                self.assertGreater(d["paper_entry_attempts"], 0)
+                self.assertEqual(
+                    d["paper_entry_attempts"],
+                    d["paper_entries_opened"] + d["paper_entries_skipped_invalid_gap"]
+                    + d["paper_entries_skipped_past_signal_target"]
+                    + d["paper_entries_skipped_utc_daily_loss_cap"]
+                    + d["paper_entries_skipped_insufficient_risk_capacity"])
+                if refused:
+                    self.assertEqual(d["paper_entry_attempts"],
+                                     d["paper_entries_skipped_past_signal_target"])
+                    self.assertEqual(d["paper_entries_opened"], 0)
+                    self.assertEqual(report["holdout"]["trade_count"], 0)
+                    self.assertEqual(report["holdout"]["net_pnl"], 0)
+                else:
+                    self.assertGreater(d["paper_entries_opened"], 0)
+                    self.assertEqual(d["paper_entries_skipped_past_signal_target"], 0)
+                    self.assertGreater(report["holdout"]["trade_count"], 0)
+                self.assertFalse(report["orders_enabled"])
+
     def test_last_bar_time_expiry_is_strategy_resolved_not_terminal_mark(self):
         from cloud_backend import trading_research as tr
         # Synthetic 15m bars: signal index 63, next-open entry index 64,

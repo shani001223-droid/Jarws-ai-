@@ -299,10 +299,19 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
                                  cfg.daily_loss_limit-day_losses.get(day, 0))
                     estimated_exit = stop*(1-slip)
                     planned_loss = qty*(entry-estimated_exit + fee*(entry+estimated_exit))
+                    # The paper target is repriced from the next-open fill.
+                    # Separately disclose remaining gross reward to the ORIGINAL
+                    # closed-signal target; it may be below 1R after a gap.
+                    original_target = pending.get(
+                        "reference_target", pending["reference_entry"]
+                        + 2*(pending["reference_entry"]-stop))
+                    original_rr = (original_target-entry)/(entry-stop)
                     position = {"entry": entry, "stop": stop, "target": entry+2*(entry-stop),
                                 "qty": qty, "entry_time": b.time, "entry_index": i,
                                 "risk_budget_at_entry": budget,
-                                "planned_stop_loss": planned_loss}
+                                "planned_stop_loss": planned_loss,
+                                "original_signal_target": original_target,
+                                "remaining_original_signal_reward_risk_at_entry": original_rr}
                 else:
                     entry_skipped_risk_capacity += 1
             pending = None
@@ -397,6 +406,9 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
                                "terminal_forced_mark": reason == "end_of_sample",
                                "reference_stop": p["stop"],
                                "reference_target": p["target"],
+                               "original_signal_target": p["original_signal_target"],
+                               "remaining_original_signal_reward_risk_at_entry": (
+                                   p["remaining_original_signal_reward_risk_at_entry"]),
                                "stop_target_same_bar": reason == "stop" and stop_target_same_bar,
                                "gap_beyond_stop_pct": gap_beyond_stop_pct,
                                "risk_budget_at_entry_usdt": p["risk_budget_at_entry"],
@@ -459,6 +471,9 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
                 "paper_entries_opened": entry_attempts - entry_skipped_gap
                                         - entry_skipped_target_gap - entry_skipped_daily_cap
                                         - entry_skipped_risk_capacity,
+                "paper_entries_original_signal_remaining_rr_below_1r": sum(
+                    t["remaining_original_signal_reward_risk_at_entry"] < 1
+                    for t in trades),
                 "terminal_forced_close_count": terminal_forced_close_count,
                 "terminal_forced_close_net_pnl_usdt": terminal_forced_close_net_pnl,
                 "strategy_resolved_trade_count": len(resolved),
@@ -492,6 +507,7 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
                             "Open-triggered exits use the observed bar open; intrabar stop/target exit_time is only a bar-close upper bound, not an observed execution timestamp.",
                             "UTC gross realized daily loss cap prevents new entries only; an already-open position may gap past the cap. Per-entry budgets and daily caps are not guaranteed maximum losses.",
                             "A next-open gap at or above the original signal target cancels that paper entry instead of chasing a completed setup; refusal counts are not real exchange submissions or observed fills.",
+                            "The modeled paper target is repriced to 2R from the next-open entry; remaining_original_signal_reward_risk_at_entry discloses gross reward to the ORIGINAL signal target after slippage, which can be below 1R even for an eligible paper entry. This is not realized return, calibrated probability or an independent execution observation.",
                             "A still-open position at sample end is force-marked at the final close, including modeled costs; headline all-trade win rate/expectancy/profit factor include such marks, while strategy_resolved metrics exclude them; neither is a calibrated win probability.",
                             "Supplemental close_mark drawdown uses hypothetical fee/slippage-adjusted liquidation value at each bar close; it is not an observed fill, intrabar peak-to-trough path or independently verified account equity.", 
                             "Does not model partial fills, liquidity impact or intra-bar equity peaks."]}

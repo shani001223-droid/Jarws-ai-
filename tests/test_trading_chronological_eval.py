@@ -172,6 +172,45 @@ class ChronologicalEvaluationTests(unittest.TestCase):
                     self.assertGreater(report["holdout"]["trade_count"], 0)
                 self.assertFalse(report["orders_enabled"])
 
+    def test_original_signal_remaining_reward_risk_disclosure(self):
+        from cloud_backend import trading_research as tr
+        # Synthetic next-open gaps are both below the original 110 target.
+        # The 109 opening leaves less than 1R to that original target even
+        # though the paper engine recomputes its own target as 2R.
+        for opening, below_one in ((109.0, True), (100.0, False)):
+            with self.subTest(opening=opening):
+                bars = [replace(b, open=opening, high=112, low=94,
+                                close=100, volume=10) for b in self.bars]
+                with patch.object(tr, "setup", return_value={
+                        "stop": 95.0, "reference_entry": 100.0,
+                        "reference_target": 110.0}):
+                    report = ev.evaluate_chronological(
+                        bars, "BTCUSDT", "trend_pullback")
+                trades = report["holdout"]["trades"]
+                self.assertGreater(len(trades), 0)
+                for trade in trades:
+                    self.assertEqual(trade["original_signal_target"], 110.0)
+                    expected = ((110.0 - trade["entry"])
+                                / (trade["entry"] - trade["reference_stop"]))
+                    self.assertAlmostEqual(
+                        trade["remaining_original_signal_reward_risk_at_entry"],
+                        expected)
+                    self.assertAlmostEqual(
+                        trade["reference_target"],
+                        trade["entry"] + 2*(trade["entry"] - trade["reference_stop"]))
+                    self.assertEqual(expected < 1, below_one)
+                self.assertEqual(
+                    report["holdout"]["execution_diagnostics"][
+                        "paper_entries_original_signal_remaining_rr_below_1r"],
+                    len(trades) if below_one else 0)
+                self.assertFalse(report["orders_enabled"])
+
+        with patch.object(tr, "setup", return_value=None):
+            empty = ev.evaluate_chronological(self.bars, "ETHUSDT", "trend_pullback")
+        self.assertEqual(
+            empty["holdout"]["execution_diagnostics"][
+                "paper_entries_original_signal_remaining_rr_below_1r"], 0)
+
     def test_last_bar_time_expiry_is_strategy_resolved_not_terminal_mark(self):
         from cloud_backend import trading_research as tr
         # Synthetic 15m bars: signal index 63, next-open entry index 64,

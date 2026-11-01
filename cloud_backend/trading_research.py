@@ -257,7 +257,8 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
     risk_budget_breach_count, planned_stop_loss_exceeded_count = 0, 0
     terminal_forced_close_count, terminal_forced_close_net_pnl = 0, 0.0
     # Account for every next-open paper entry attempt, including refusals.
-    entry_attempts = entry_skipped_gap = entry_skipped_daily_cap = entry_skipped_risk_capacity = 0
+    entry_attempts = entry_skipped_gap = entry_skipped_target_gap = 0
+    entry_skipped_daily_cap = entry_skipped_risk_capacity = 0
     max_loss_to_risk_budget_multiple = None
     for i, b in enumerate(bars):
         day = b.time // 86_400_000
@@ -277,6 +278,13 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
             if (b.open <= stop
                     or not 0 < entry-stop <= 4*(pending["reference_entry"]-stop)):
                 entry_skipped_gap += 1
+            elif b.open >= pending.get(
+                    "reference_target", pending["reference_entry"]
+                    + 2*(pending["reference_entry"]-stop)):
+                # The original closed-candle target has already traded at
+                # the next open. Do not chase a completed signal by moving
+                # its hypothetical 2R target farther away after the gap.
+                entry_skipped_target_gap += 1
             elif cfg.daily_loss_limit-day_losses.get(day, 0) <= 1e-8:
                 # A realized daily loss lockout must remain visible even if
                 # later signals appear; do not silently count them as no setup.
@@ -442,10 +450,12 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
                 "close_mark_low_equity_usdt": close_mark_low,
                 "paper_entry_attempts": entry_attempts,
                 "paper_entries_skipped_invalid_gap": entry_skipped_gap,
+                "paper_entries_skipped_past_signal_target": entry_skipped_target_gap,
                 "paper_entries_skipped_utc_daily_loss_cap": entry_skipped_daily_cap,
                 "paper_entries_skipped_insufficient_risk_capacity": entry_skipped_risk_capacity,
                 "paper_entries_opened": entry_attempts - entry_skipped_gap
-                                        - entry_skipped_daily_cap - entry_skipped_risk_capacity,
+                                        - entry_skipped_target_gap - entry_skipped_daily_cap
+                                        - entry_skipped_risk_capacity,
                 "terminal_forced_close_count": terminal_forced_close_count,
                 "terminal_forced_close_net_pnl_usdt": terminal_forced_close_net_pnl,
                 "strategy_resolved_trade_count": len(resolved),
@@ -478,7 +488,7 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None):
                             "Next-open fills, fixed adverse slippage, stop-first ambiguous candles; ambiguity and gap diagnostics are observed OHLC scenarios, not authenticated execution paths.",
                             "Open-triggered exits use the observed bar open; intrabar stop/target exit_time is only a bar-close upper bound, not an observed execution timestamp.",
                             "UTC gross realized daily loss cap prevents new entries only; an already-open position may gap past the cap. Per-entry budgets and daily caps are not guaranteed maximum losses.",
-                            "Paper entry attempts and refusal counts are modeled next-open signals, not real exchange submissions or observed fills.",
+                            "A next-open gap at or above the original signal target cancels that paper entry instead of chasing a completed setup; refusal counts are not real exchange submissions or observed fills.",
                             "A still-open position at sample end is force-marked at the final close, including modeled costs; headline all-trade win rate/expectancy/profit factor include such marks, while strategy_resolved metrics exclude them; neither is a calibrated win probability.",
                             "Supplemental close_mark drawdown uses hypothetical fee/slippage-adjusted liquidation value at each bar close; it is not an observed fill, intrabar peak-to-trough path or independently verified account equity.", 
                             "Does not model partial fills, liquidity impact or intra-bar equity peaks."]}

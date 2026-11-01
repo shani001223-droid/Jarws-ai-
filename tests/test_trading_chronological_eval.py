@@ -51,6 +51,7 @@ class ChronologicalEvaluationTests(unittest.TestCase):
         self.assertEqual(
             d["paper_entry_attempts"],
             d["paper_entries_opened"] + d["paper_entries_skipped_invalid_gap"]
+            + d["paper_entries_skipped_past_signal_target"]
             + d["paper_entries_skipped_utc_daily_loss_cap"]
             + d["paper_entries_skipped_insufficient_risk_capacity"])
         self.assertEqual(d["paper_entries_opened"], report["holdout"]["trade_count"])
@@ -101,6 +102,41 @@ class ChronologicalEvaluationTests(unittest.TestCase):
         self.assertGreater(
             valid["holdout"]["execution_diagnostics"]["paper_entries_opened"], 0)
         self.assertGreater(valid["holdout"]["trade_count"], 0)
+
+    def test_next_open_at_or_above_original_target_cancels_stale_paper_entry(self):
+        from cloud_backend import trading_research as tr
+        # Synthetic next-open gap: the signal's original 2R target was
+        # already reached at the opening. Repricing the target would chase.
+        for opening in (110.0, 111.0):
+            with self.subTest(opening=opening):
+                bars = [replace(b, open=opening, high=112, low=94,
+                                close=100, volume=10) for b in self.bars]
+                with patch.object(tr, "setup", return_value={
+                        "stop": 95.0, "reference_entry": 100.0,
+                        "reference_target": 110.0}):
+                    report = ev.evaluate_chronological(
+                        bars, "BTCUSDT", "trend_pullback")
+                d = report["holdout"]["execution_diagnostics"]
+                self.assertGreater(d["paper_entry_attempts"], 0)
+                self.assertEqual(d["paper_entry_attempts"],
+                                 d["paper_entries_skipped_past_signal_target"])
+                self.assertEqual(d["paper_entries_opened"], 0)
+                self.assertEqual(report["holdout"]["trade_count"], 0)
+                self.assertEqual(report["holdout"]["net_pnl"], 0)
+
+        # A next open still below the original target remains eligible;
+        # subsequent intrabar stop treatment remains conservative.
+        bars = [replace(b, open=109.0, high=112, low=94,
+                        close=100, volume=10) for b in self.bars]
+        with patch.object(tr, "setup", return_value={
+                "stop": 95.0, "reference_entry": 100.0,
+                "reference_target": 110.0}):
+            valid = ev.evaluate_chronological(
+                bars, "BTCUSDT", "trend_pullback")
+        self.assertGreater(
+            valid["holdout"]["execution_diagnostics"]["paper_entries_opened"], 0)
+        self.assertEqual(
+            valid["holdout"]["execution_diagnostics"]["paper_entries_skipped_past_signal_target"], 0)
 
     def test_last_bar_time_expiry_is_strategy_resolved_not_terminal_mark(self):
         from cloud_backend import trading_research as tr

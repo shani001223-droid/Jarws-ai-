@@ -18,6 +18,52 @@ class ChronologicalEvaluationTests(unittest.TestCase):
     def setUp(self):
         self.bars = history("15m", count=300)
 
+    def test_modeled_trade_quality_exposure_flags_suspicious_execution_bars(self):
+        # Synthetic candles and synthetic paper timestamps; not real exchange fills.
+        bars = [Candle(i * 900000, 100, 101, 99, 100, 10,
+                       i * 900000 + 899999) for i in range(6)]
+        bars[2] = replace(bars[2], high=112, volume=0)
+        bars[3] = replace(bars[3], open=103, high=105, low=99)
+        bars[4] = replace(bars[4], high=100, low=100)
+        trades = [
+            {"entry_time": bars[1].time, "exit_time": bars[4].close_time},
+            {"entry_time": bars[5].time, "exit_time": bars[5].time},
+        ]
+        exposure = ev._execution_bar_quality(bars, trades)
+        self.assertEqual(exposure["trade_count"], 2)
+        self.assertEqual(exposure["entry_zero_volume_count"], 0)
+        self.assertEqual(exposure["exit_zero_volume_count"], 0)
+        self.assertEqual(exposure["trades_spanning_zero_volume_count"], 1)
+        self.assertEqual(exposure["trades_spanning_flat_ohlc_count"], 1)
+        self.assertEqual(exposure["trades_spanning_open_gap_ge_2pct_count"], 1)
+        self.assertEqual(exposure["trades_spanning_intrabar_range_ge_10pct_count"], 1)
+        self.assertEqual(exposure["trades_spanning_any_flag_count"], 1)
+        self.assertEqual(len(exposure["trade_exposures"]), 2)
+        self.assertFalse(exposure["trade_exposures"][1]["spanned_zero_volume"])
+        self.assertTrue(exposure["trade_exposures"][0]["spanned_zero_volume"])
+        with self.assertRaisesRegex(ev.PaperEvaluationError,
+                                    "paper_trade_outside_candle_sample"):
+            ev._execution_bar_quality(bars, [{"entry_time": -900000,
+                                               "exit_time": bars[2].close_time}])
+
+    def test_paper_execution_quality_zero_trades_and_same_sample_sensitivity(self):
+        from cloud_backend import trading_research as tr
+        with patch.object(tr, "setup", return_value=None):
+            report = ev.evaluate_chronological(
+                self.bars, "BTCUSDT", "trend_pullback",
+                include_cost_guard_sensitivity=True)
+        exposure = report["paper_execution_bar_quality"]
+        self.assertFalse(exposure["authenticated_market_data"])
+        self.assertFalse(exposure["observed_exchange_fills"])
+        self.assertFalse(exposure["trade_rule_or_filter"])
+        self.assertTrue(exposure["counts_overlap"])
+        for partition in ("training", "holdout"):
+            self.assertEqual(exposure[partition]["trade_count"], 0)
+            self.assertEqual(exposure[partition]["trades_spanning_any_flag_count"], 0)
+            self.assertEqual(exposure[partition]["trade_exposures"], [])
+        guarded = report["holdout_original_target_cost_guard_sensitivity"]
+        self.assertEqual(guarded["guarded_paper_execution_bar_quality"]["trade_count"], 0)
+
     def test_sample_quality_counts_holdout_boundary_gaps_and_zero_volume(self):
         # Entirely synthetic contiguous 15m OHLCV, not authenticated data.
         from cloud_backend import trading_research as tr

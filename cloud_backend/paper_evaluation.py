@@ -84,6 +84,71 @@ def _sample_quality(bars, *, previous_close=None):
     }
 
 
+
+def _execution_bar_quality(bars, trades):
+    """Disclose suspicious OHLCV bars crossed by modeled paper positions.
+
+    A trade's exit candle is included, but intrabar exit ordering is unknown.
+    This is NOT a fill-quality verification, liquidity estimate or trade veto.
+    """
+    flags = []
+    index = {}
+    previous_close = None
+    for i, bar in enumerate(bars):
+        index[bar.time] = i
+        flags.append({
+            "zero_volume": bar.volume == 0,
+            "flat_ohlc": bar.open == bar.high == bar.low == bar.close,
+            "open_gap_ge_2pct": (previous_close is not None
+                                   and abs(bar.open - previous_close)
+                                   >= previous_close * .02),
+            "intrabar_range_ge_10pct": bar.high - bar.low >= bar.open * .10,
+        })
+        previous_close = bar.close
+    result = {
+        "trade_count": len(trades),
+        "entry_zero_volume_count": 0,
+        "exit_zero_volume_count": 0,
+        "trades_spanning_zero_volume_count": 0,
+        "trades_spanning_flat_ohlc_count": 0,
+        "trades_spanning_open_gap_ge_2pct_count": 0,
+        "trades_spanning_intrabar_range_ge_10pct_count": 0,
+        "trades_spanning_any_flag_count": 0,
+        "trade_exposures": [],
+    }
+    for trade in trades:
+        entry = index.get(trade["entry_time"])
+        # Open and close timestamps both map to the containing 15m candle.
+        exit_index = index.get((trade["exit_time"] // STEP_MS) * STEP_MS)
+        if entry is None or exit_index is None or exit_index < entry:
+            raise PaperEvaluationError("paper_trade_outside_candle_sample")
+        span = flags[entry:exit_index + 1]
+        exposed = {
+            "entry_time": trade["entry_time"],
+            "exit_time": trade["exit_time"],
+            "entry_zero_volume": flags[entry]["zero_volume"],
+            "exit_zero_volume": flags[exit_index]["zero_volume"],
+            "spanned_zero_volume": any(x["zero_volume"] for x in span),
+            "spanned_flat_ohlc": any(x["flat_ohlc"] for x in span),
+            "spanned_open_gap_ge_2pct": any(x["open_gap_ge_2pct"] for x in span),
+            "spanned_intrabar_range_ge_10pct": any(
+                x["intrabar_range_ge_10pct"] for x in span),
+        }
+        result["trade_exposures"].append(exposed)
+        result["entry_zero_volume_count"] += exposed["entry_zero_volume"]
+        result["exit_zero_volume_count"] += exposed["exit_zero_volume"]
+        result["trades_spanning_zero_volume_count"] += exposed["spanned_zero_volume"]
+        result["trades_spanning_flat_ohlc_count"] += exposed["spanned_flat_ohlc"]
+        result["trades_spanning_open_gap_ge_2pct_count"] += exposed["spanned_open_gap_ge_2pct"]
+        result["trades_spanning_intrabar_range_ge_10pct_count"] += (
+            exposed["spanned_intrabar_range_ge_10pct"])
+        result["trades_spanning_any_flag_count"] += any(
+            exposed[key] for key in (
+                "spanned_zero_volume", "spanned_flat_ohlc",
+                "spanned_open_gap_ge_2pct", "spanned_intrabar_range_ge_10pct"))
+    return result
+
+
 def evaluate_chronological(bars, symbol: str, strategy: str,
                            config: SimulationConfig | None = None, *,
                            include_cost_guard_sensitivity: bool = False) -> dict:
@@ -130,6 +195,16 @@ def evaluate_chronological(bars, symbol: str, strategy: str,
         "win_probability": None, "independent_venue_verified": False,
         "input_provenance": "operator_supplied_unverified",
         "input_candle_sha256": hashlib.sha256(payload).hexdigest(),
+        "paper_execution_bar_quality": {
+            "status": "descriptive_modeled_trades_operator_supplied_unverified",
+            "training": _execution_bar_quality(candles[:split], train["trades"]),
+            "holdout": _execution_bar_quality(
+                candles[split - WARMUP_BARS:], holdout["trades"]),
+            "counts_overlap": True,
+            "trade_rule_or_filter": False,
+            "authenticated_market_data": False,
+            "observed_exchange_fills": False,
+        },
         "sample_quality": {
             "status": "descriptive_operator_supplied_unverified",
             "thresholds": {
@@ -156,7 +231,7 @@ def evaluate_chronological(bars, symbol: str, strategy: str,
         "holdout_no_trades": holdout["trade_count"] == 0,
         "limitations": [
             "Operator-supplied candles are NOT authenticated or cross-venue verified.",
-            "Sample-quality gap, zero-volume, flat-bar and range counts are descriptive only; they neither validate venue data nor veto trades.",
+            "Sample-quality and modeled-trade bar-exposure flags are descriptive only; they neither validate venue data nor veto trades. Exit-bar exposure includes the reported exit candle even when intrabar ordering is unknown.",
             "One fixed chronological holdout on one short sample is not independent replication.",
             "The existing 15m research rule is NOT the 3-timeframe V2 desk or V3 engine.",
             "Prior 64 closed bars are context only; warmup entries are prohibited at the engine boundary.",
@@ -179,6 +254,8 @@ def evaluate_chronological(bars, symbol: str, strategy: str,
             "baseline_trade_count": holdout["trade_count"],
             "baseline_net_pnl_usdt": holdout["net_pnl"],
             "guarded_holdout": {k: v for k, v in guarded.items() if k != "input_candles"},
+            "guarded_paper_execution_bar_quality": _execution_bar_quality(
+                candles[split - WARMUP_BARS:], guarded["trades"]),
             "independent_venue_verified": False,
             "forward_verified": False,
             "limitations": [
@@ -230,6 +307,10 @@ def evaluate_rolling_robustness(bars, symbol: str, strategy: str,
             "scored_bars": end - start,
             "prior_warmup_bars": WARMUP_BARS,
             "baseline": {k: v for k, v in base.items() if k != "input_candles"},
+            "baseline_paper_execution_bar_quality": _execution_bar_quality(segment, base["trades"]),
+            "double_costs_paper_execution_bar_quality": (
+                _execution_bar_quality(segment, stressed["trades"])
+                if stressed is not None else None),
             "double_costs": ({k: v for k, v in stressed.items()
                               if k != "input_candles"} if stressed else None),
             "double_costs_status": ("evaluated" if stressed is not None

@@ -51,6 +51,38 @@ class ChronologicalEvaluationTests(unittest.TestCase):
         self.assertIsNone(incomplete["max_consecutive_strategy_resolved_losses"])
         self.assertEqual(incomplete["trade_count_including_terminal_marks"], 2)
 
+    def test_concentration_overflow_never_fabricates_zero_percent_shares(self):
+        # Synthetic finite trade PnL can overflow when aggregated. Previously
+        # sum() silently became infinity, reporting a false 0% concentration.
+        for values in ((1e308, 1e308), (-1e308, -1e308)):
+            with self.subTest(values=values):
+                trades = [
+                    {"entry_time": i * 900000, "net_pnl": pnl}
+                    for i, pnl in enumerate(values)
+                ]
+                summary = ev._trade_outcome_concentration(trades)
+                self.assertEqual(summary["status"],
+                                 "unavailable_nonfinite_resolved_gross_pnl")
+                self.assertEqual(summary["strategy_resolved_trade_count"], 2)
+                self.assertIsNone(
+                    summary["largest_win_share_of_resolved_gross_profit_pct"])
+                self.assertIsNone(
+                    summary["largest_loss_share_of_resolved_gross_loss_pct"])
+                self.assertEqual(
+                    summary["max_consecutive_strategy_resolved_losses"],
+                    2 if values[0] < 0 else 0)
+        ordinary = ev._trade_outcome_concentration([
+            {"entry_time": 0, "net_pnl": 0.1},
+            {"entry_time": 900000, "net_pnl": 0.2},
+            {"entry_time": 1800000, "net_pnl": 0.3},
+            {"entry_time": 2700000, "net_pnl": -2.0},
+        ])
+        self.assertEqual(ordinary["status"], "descriptive_modeled_only")
+        self.assertAlmostEqual(
+            ordinary["largest_win_share_of_resolved_gross_profit_pct"], 50.0)
+        self.assertEqual(
+            ordinary["largest_loss_share_of_resolved_gross_loss_pct"], 100.0)
+
     def test_chronological_concentration_reports_are_scenario_specific(self):
         from cloud_backend import trading_research as tr
         with patch.object(tr, "setup", return_value=None):

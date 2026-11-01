@@ -283,10 +283,21 @@ def _trade_outcome_concentration(trades):
     losses = [-t["net_pnl"] for t in resolved if t["net_pnl"] < 0]
     result["worst_strategy_resolved_net_pnl_usdt"] = min(
         t["net_pnl"] for t in resolved)
-    result["largest_win_share_of_resolved_gross_profit_pct"] = (
-        max(wins) / sum(wins) * 100 if wins else None)
-    result["largest_loss_share_of_resolved_gross_loss_pct"] = (
-        max(losses) / sum(losses) * 100 if losses else None)
+    # The individual modeled trade outcomes can be finite while their
+    # gross sum overflows. A normal float sum silently becomes infinity and
+    # reports a misleading 0% largest-trade contribution. Fail closed instead.
+    try:
+        gross_wins = math.fsum(wins)
+        gross_losses = math.fsum(losses)
+        if not math.isfinite(gross_wins) or not math.isfinite(gross_losses):
+            raise OverflowError("nonfinite_modeled_gross_pnl")
+        result["largest_win_share_of_resolved_gross_profit_pct"] = (
+            max(wins) / gross_wins * 100 if wins else None)
+        result["largest_loss_share_of_resolved_gross_loss_pct"] = (
+            max(losses) / gross_losses * 100 if losses else None)
+    except (OverflowError, ValueError):
+        result["status"] = "unavailable_nonfinite_resolved_gross_pnl"
+        return result
     result["status"] = "descriptive_modeled_only"
     return result
 

@@ -407,7 +407,15 @@ class ApiTests(unittest.TestCase):
         def fetch(key,url,ttl):
             tf=url.split("interval=")[1].split("&")[0]
             self.assertTrue(url.startswith("https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&"))
-            return rows(tf,now=now*1000),now
+            # The research path now requires genuine Binance-shaped
+            # 12-field kline metadata, not a synthetic 7-field OHLCV stub.
+            source = rows(tf,now=now*1000)
+            full = []
+            for bar in source:
+                volume, close = float(bar[5]), float(bar[4])
+                full.append(bar + [str(volume * close), 10,
+                                   str(volume / 2), str(volume * close / 2), "0"])
+            return full,now
         with patch.object(main,"_public_data",side_effect=fetch) as p,patch.object(main.time,"time",return_value=now):
             result=main.trading_research("BTCUSDT")
         self.assertEqual(p.call_count,3)

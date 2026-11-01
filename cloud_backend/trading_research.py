@@ -230,7 +230,8 @@ def risk_size(cash, entry, stop, day_loss, cfg):
 
 
 def backtest(bars, strategy, cfg, *, entry_not_before=None,
-             reject_nonpositive_original_net_upside=False):
+             reject_nonpositive_original_net_upside=False,
+             max_prior_volume_participation_pct=None):
     """Bounded, single-position, long-only exploratory test on supplied history.
 
     Uses 15m rules only (NOT the multi-timeframe research filter). Fees/slippage
@@ -239,6 +240,11 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None,
     """
     if type(reject_nonpositive_original_net_upside) is not bool:
         raise ValueError("Invalid cost guard flag")
+    if max_prior_volume_participation_pct is not None and (
+            type(max_prior_volume_participation_pct) not in (int, float)
+            or not math.isfinite(max_prior_volume_participation_pct)
+            or not .01 <= max_prior_volume_participation_pct <= 10):
+        raise ValueError("Invalid prior closed volume participation cap")
     if strategy not in STRATEGIES or not 64 <= len(bars) <= 500:
         raise ValueError("Invalid test input")
     # Warmup bars may form signals, but must never open or finance positions.
@@ -264,6 +270,7 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None,
     entry_skipped_daily_cap = entry_skipped_risk_capacity = 0
     entry_skipped_nonpositive_net_upside = 0
     entry_skipped_zero_volume = 0
+    entry_skipped_prior_volume = 0
     max_loss_to_risk_budget_multiple = None
     for i, b in enumerate(bars):
         day = b.time // 86_400_000
@@ -304,7 +311,14 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None,
                 entry_skipped_daily_cap += 1
             else:
                 qty = risk_size(cash, entry, stop, day_losses.get(day, 0), cfg)
-                if qty > 0:
+                # At the next-open decision, only PREVIOUS closed-bar volume
+                # is known. Never peek at the current bar's final volume.
+                # This optional guard is a proxy, not executable order depth.
+                prior_volume = bars[i-1].volume
+                if (qty > 0 and max_prior_volume_participation_pct is not None
+                        and qty > prior_volume * max_prior_volume_participation_pct / 100):
+                    entry_skipped_prior_volume += 1
+                elif qty > 0:
                     budget = min(cash*cfg.risk_pct/100,
                                  cfg.daily_loss_limit-day_losses.get(day, 0))
                     estimated_exit = stop*(1-slip)
@@ -330,6 +344,7 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None,
                         position = {"entry": entry, "stop": stop, "target": entry+2*(entry-stop),
                                     "qty": qty, "entry_time": b.time, "entry_index": i,
                                     "raw_entry_open": b.open,
+                                    "prior_closed_bar_base_volume": prior_volume,
                                     "risk_budget_at_entry": budget,
                                     "planned_stop_loss": planned_loss,
                                     "original_signal_target": original_target,
@@ -433,6 +448,10 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None,
                                    "bar_close_upper_bound_intrabar_unknown"),
                                "entry": p["entry"], "exit": exit_price, "quantity": p["qty"],
                                "entry_reference_open": p["raw_entry_open"],
+                               "prior_closed_bar_base_volume": p["prior_closed_bar_base_volume"],
+                               "modeled_entry_qty_pct_of_prior_closed_bar_volume": (
+                                   p["qty"] / p["prior_closed_bar_base_volume"] * 100
+                                   if p["prior_closed_bar_base_volume"] > 0 else None),
                                "exit_reference_price": raw_exit,
                                "reference_gross_pnl_before_modeled_costs_usdt": reference_gross_pnl,
                                "modeled_buy_slippage_cost_usdt": buy_slippage_cost,
@@ -495,6 +514,7 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None,
             "rule_version": RULE_VERSION, "strategy": strategy, "interval": "15m",
             "config": asdict(cfg), "bars": len(bars),
             "reject_nonpositive_original_net_upside": reject_nonpositive_original_net_upside,
+            "max_prior_volume_participation_pct": max_prior_volume_participation_pct,
             "start_at": bars[0].time, "end_at": bars[-1].close_time,
             "trade_count": len(trades), "win_rate_pct": wins/len(trades)*100 if trades else None,
             "initial_equity": cfg.equity, "ending_equity": cash, "net_pnl": cash-cfg.equity,
@@ -516,12 +536,14 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None,
                 "paper_entry_attempts": entry_attempts,
                 "paper_entries_skipped_invalid_gap": entry_skipped_gap,
                 "paper_entries_skipped_zero_volume_open": entry_skipped_zero_volume,
+                "paper_entries_skipped_prior_closed_volume_cap": entry_skipped_prior_volume,
                 "paper_entries_skipped_past_signal_target": entry_skipped_target_gap,
                 "paper_entries_skipped_utc_daily_loss_cap": entry_skipped_daily_cap,
                 "paper_entries_skipped_insufficient_risk_capacity": entry_skipped_risk_capacity,
                 "paper_entries_skipped_nonpositive_original_target_net_upside": entry_skipped_nonpositive_net_upside,
                 "paper_entries_opened": entry_attempts - entry_skipped_gap
                                         - entry_skipped_zero_volume
+                                        - entry_skipped_prior_volume
                                         - entry_skipped_target_gap - entry_skipped_daily_cap
                                         - entry_skipped_risk_capacity
                                         - entry_skipped_nonpositive_net_upside,
@@ -565,6 +587,7 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None,
                             "UTC gross realized daily loss cap prevents new entries only; an already-open position may gap past the cap. Per-entry budgets and daily caps are not guaranteed maximum losses.",
                             "A next-open gap at or above the original signal target cancels that paper entry instead of chasing a completed setup; refusal counts are not real exchange submissions or observed fills.",
                             "Zero-volume next-open candles refuse hypothetical new entries; OHLC prices without reported traded volume do not establish an executable fill. Existing positions retain modeled exit uncertainty and zero-volume exposure warnings.",
+                            "Optional prior-closed-bar base-volume participation cap uses only already closed information, not future entry-bar volume; it is a hypothetical capacity proxy, not order-book depth, real liquidity or an exchange fill guarantee.",
                             "The paper target is repriced to 2R from the next-open entry. remaining_original_signal_reward_risk_at_entry measures gross reward to the ORIGINAL signal target after buy slippage; remaining_original_signal_net_reward_risk_at_entry assumes a hypothetical original-target sell with adverse sell slippage and both fees, divided by the modeled stop loss per unit. A target above entry can still have nonpositive modeled net upside. Neither metric is realized return, observed execution or a calibrated win probability.",
                             "A still-open position at sample end is force-marked at the final close, including modeled costs; headline all-trade win rate/expectancy/profit factor include such marks, while strategy_resolved metrics exclude them; neither is a calibrated win probability.",
                             "Supplemental close_mark drawdown uses hypothetical fee/slippage-adjusted liquidation value at each bar close; it is not an observed fill, intrabar peak-to-trough path or independently verified account equity.", 

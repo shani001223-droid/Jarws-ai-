@@ -194,6 +194,64 @@ class ChronologicalEvaluationTests(unittest.TestCase):
             self.assertIsNone(outcome["profit_factor"])
         self.assertFalse(report["orders_enabled"])
 
+    def test_prior_closed_volume_guard_is_causal_and_preserves_baseline(self):
+        # Synthetic setup always proposes a next-open long. The entry bar's
+        # final volume is not known at its open; use only prior closed volume.
+        from cloud_backend import trading_research as tr
+        flat = [replace(b, open=100, high=101, low=99,
+                        close=100, volume=10) for b in self.bars]
+        setup = {"stop": 99.5, "reference_entry": 100}
+        with patch.object(tr, "setup", return_value=setup):
+            report = ev.evaluate_chronological(
+                flat, "BTCUSDT", "trend_pullback",
+                include_prior_volume_guard_sensitivity=True)
+        baseline = report["holdout"]
+        guarded = report["holdout_prior_closed_volume_guard_sensitivity"]
+        d = guarded["guarded_holdout"]["execution_diagnostics"]
+        self.assertGreater(baseline["trade_count"], 0)
+        self.assertEqual(guarded["baseline_trade_count"], baseline["trade_count"])
+        self.assertEqual(guarded["baseline_net_pnl_usdt"], baseline["net_pnl"])
+        self.assertEqual(guarded["guarded_holdout"]["trade_count"], 0)
+        self.assertEqual(guarded["guarded_holdout"]["net_pnl"], 0)
+        self.assertGreater(d["paper_entries_skipped_prior_closed_volume_cap"], 0)
+        self.assertEqual(d["paper_entries_opened"], 0)
+        self.assertIsNone(guarded["guarded_holdout"]["win_rate_pct"])
+        self.assertFalse(guarded["forward_verified"])
+        self.assertFalse(guarded["independent_venue_verified"])
+        self.assertNotIn("holdout_prior_closed_volume_guard_sensitivity",
+                         ev.evaluate_chronological(flat, "BTCUSDT", "trend_pullback"))
+        # Ample prior volume admits the same entries and negative PnL.
+        ample = [replace(b, volume=10000) for b in flat]
+        with patch.object(tr, "setup", return_value=setup):
+            ample_report = ev.evaluate_chronological(
+                ample, "BTCUSDT", "trend_pullback",
+                include_prior_volume_guard_sensitivity=True)
+        self.assertEqual(
+            ample_report["holdout_prior_closed_volume_guard_sensitivity"][
+                "guarded_holdout"]["net_pnl"],
+            ample_report["holdout"]["net_pnl"])
+        self.assertGreater(
+            ample_report["holdout_prior_closed_volume_guard_sensitivity"][
+                "guarded_holdout"]["trade_count"], 0)
+        self.assertTrue(all(
+            t["modeled_entry_qty_pct_of_prior_closed_bar_volume"] <= 1
+            for t in ample_report["holdout_prior_closed_volume_guard_sensitivity"][
+                "guarded_holdout"]["trades"]))
+        for bad in (0, -1, 11, float("nan"), True, "1"):
+            with self.subTest(bad=bad), self.assertRaises(ValueError):
+                tr.backtest(flat[:100], "trend_pullback", SimulationConfig(),
+                            max_prior_volume_participation_pct=bad)
+        for bad in (None, 1, "true"):
+            with self.subTest(flag=bad), self.assertRaisesRegex(
+                    ev.PaperEvaluationError, "invalid_prior_volume_guard_flag"):
+                ev.evaluate_chronological(
+                    flat, "BTCUSDT", "trend_pullback",
+                    include_prior_volume_guard_sensitivity=bad)
+        rolling = ev.evaluate_rolling_robustness(
+            flat, "BTCUSDT", "trend_pullback",
+            include_prior_volume_guard_sensitivity=True)
+        self.assertIn("holdout_prior_closed_volume_guard_sensitivity", rolling)
+
     def test_sample_quality_counts_holdout_boundary_gaps_and_zero_volume(self):
         # Entirely synthetic contiguous 15m OHLCV, not authenticated data.
         from cloud_backend import trading_research as tr

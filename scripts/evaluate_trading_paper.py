@@ -75,6 +75,8 @@ def main():
                         help="Optional local HOSHI_CAPTURE_RECEIPT stderr line; unsigned evidence only")
     parser.add_argument("--cost-guard-sensitivity", action="store_true",
                         help="Optional same-holdout cost-aware original-target entry guard")
+    parser.add_argument("--prior-volume-guard-sensitivity", action="store_true",
+                        help="Optional causal prior-closed-bar 1 percent base-volume participation guard")
     parser.add_argument("--holdout-cost-stress", action="store_true",
                         help="Optional same-holdout double fee/slippage sensitivity; not independent")
     parser.add_argument("--rolling-robustness", action="store_true",
@@ -87,7 +89,8 @@ def main():
         evaluator = evaluate_rolling_robustness if args.rolling_robustness else evaluate_chronological
         result = evaluator(bars, symbol, args.strategy, config,
                            include_cost_guard_sensitivity=args.cost_guard_sensitivity,
-                           include_holdout_cost_stress=args.holdout_cost_stress)
+                           include_holdout_cost_stress=args.holdout_cost_stress,
+                           include_prior_volume_guard_sensitivity=args.prior_volume_guard_sensitivity)
         if args.capture_receipt is not None:
             result = attach_capture_receipt(result, load_capture_receipt(args.capture_receipt))
     except (OSError, UnicodeError, ValueError, TypeError, OverflowError):

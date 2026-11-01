@@ -232,7 +232,8 @@ def _trade_outcome_concentration(trades):
 def evaluate_chronological(bars, symbol: str, strategy: str,
                            config: SimulationConfig | None = None, *,
                            include_cost_guard_sensitivity: bool = False,
-                           include_holdout_cost_stress: bool = False) -> dict:
+                           include_holdout_cost_stress: bool = False,
+                           include_prior_volume_guard_sensitivity: bool = False) -> dict:
     """Fixed 70/30 chronological split; 64 prior bars warm the holdout.
 
     Signals may use only bars already closed at that moment. A signal at the
@@ -244,6 +245,8 @@ def evaluate_chronological(bars, symbol: str, strategy: str,
         raise PaperEvaluationError("invalid_cost_guard_flag")
     if type(include_holdout_cost_stress) is not bool:
         raise PaperEvaluationError("invalid_holdout_cost_stress_flag")
+    if type(include_prior_volume_guard_sensitivity) is not bool:
+        raise PaperEvaluationError("invalid_prior_volume_guard_flag")
     if symbol not in ("BTCUSDT", "ETHUSDT") or strategy not in STRATEGIES:
         raise PaperEvaluationError("unsupported_symbol_or_strategy")
     cfg = SimulationConfig() if config is None else config
@@ -335,6 +338,34 @@ def evaluate_chronological(bars, symbol: str, strategy: str,
         ],
     }
 
+    if include_prior_volume_guard_sensitivity:
+        # Causal prior-bar volume is known at entry. A fixed 1% cap is a
+        # hypothetical capacity sensitivity, never observed order-book depth.
+        volume_guarded = backtest(candles[split - WARMUP_BARS:], strategy, cfg,
+                                  entry_not_before=first_holdout,
+                                  max_prior_volume_participation_pct=1.0)
+        if any(t["entry_time"] < first_holdout for t in volume_guarded["trades"]):
+            raise PaperEvaluationError("lookahead_or_warmup_trade")
+        result["holdout_prior_closed_volume_guard_sensitivity"] = {
+            "status": "same_holdout_causal_volume_proxy_not_independent",
+            "max_prior_closed_bar_base_volume_participation_pct": 1.0,
+            "baseline_trade_count": holdout["trade_count"],
+            "baseline_net_pnl_usdt": holdout["net_pnl"],
+            "guarded_holdout": {k: v for k, v in volume_guarded.items()
+                                if k != "input_candles"},
+            "guarded_outcome_concentration": _trade_outcome_concentration(
+                volume_guarded["trades"]),
+            "guarded_paper_execution_bar_quality": _execution_bar_quality(
+                candles[split - WARMUP_BARS:], volume_guarded["trades"]),
+            "independent_venue_verified": False,
+            "forward_verified": False,
+            "limitations": [
+                "Only the previous closed 15m base volume is used at each entry; never the entry candle future total.",
+                "One percent is an exploratory capacity proxy, not observed depth, fill probability or guaranteed liquidity.",
+                "Same operator-supplied unverified holdout; no independent performance or profitability proof.",
+                "Baseline zero/negative outcomes remain unchanged and separately reported.",
+            ],
+        }
     if include_cost_guard_sensitivity:
         # Same holdout and input; this is a counterfactual policy, not independent evidence.
         guarded = backtest(candles[split - WARMUP_BARS:], strategy, cfg,
@@ -401,7 +432,8 @@ def evaluate_chronological(bars, symbol: str, strategy: str,
 def evaluate_rolling_robustness(bars, symbol: str, strategy: str,
                                 config: SimulationConfig | None = None, *,
                                 include_cost_guard_sensitivity: bool = False,
-                                include_holdout_cost_stress: bool = False) -> dict:
+                                include_holdout_cost_stress: bool = False,
+                                include_prior_volume_guard_sensitivity: bool = False) -> dict:
     """Optional fixed-window/cost stress study on the SAME unverified input.
 
     The 40-60%, 60-80% and 80-100% windows do not overlap in scored bars.
@@ -411,7 +443,8 @@ def evaluate_rolling_robustness(bars, symbol: str, strategy: str,
     report = evaluate_chronological(
         bars, symbol, strategy, config,
         include_cost_guard_sensitivity=include_cost_guard_sensitivity,
-        include_holdout_cost_stress=include_holdout_cost_stress)
+        include_holdout_cost_stress=include_holdout_cost_stress,
+        include_prior_volume_guard_sensitivity=include_prior_volume_guard_sensitivity)
     candles = _checked(bars)
     cfg = SimulationConfig() if config is None else config
     stress_available = cfg.fee_bps <= 50 and cfg.slippage_bps <= 50

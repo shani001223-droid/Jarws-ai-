@@ -170,8 +170,8 @@ class ChronologicalEvaluationTests(unittest.TestCase):
         self.assertEqual(guarded["guarded_paper_execution_bar_quality"]["trade_count"], 0)
 
     def test_zero_volume_entry_refusal_propagates_to_holdout_and_stress(self):
-        # Fully synthetic no-volume bars: neither baseline nor doubled-cost
-        # replay can assume next-open fills or manufacture a win rate.
+        # Fully synthetic zero-volume PRIOR closed bars: neither baseline
+        # nor doubled-cost replay admits next-open entries or a win rate.
         from cloud_backend import trading_research as tr
         flat = [replace(b, open=100, high=101, low=99,
                         close=100, volume=0) for b in self.bars]
@@ -185,7 +185,7 @@ class ChronologicalEvaluationTests(unittest.TestCase):
         for outcome in (base, stressed):
             d = outcome["execution_diagnostics"]
             self.assertGreater(d["paper_entry_attempts"], 0)
-            self.assertEqual(d["paper_entries_skipped_zero_volume_open"],
+            self.assertEqual(d["paper_entries_skipped_prior_closed_zero_volume"],
                              d["paper_entry_attempts"])
             self.assertEqual(d["paper_entries_opened"], 0)
             self.assertEqual(outcome["trade_count"], 0)

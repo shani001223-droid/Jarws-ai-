@@ -280,7 +280,7 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None,
     entry_attempts = entry_skipped_gap = entry_skipped_target_gap = 0
     entry_skipped_daily_cap = entry_skipped_risk_capacity = 0
     entry_skipped_nonpositive_net_upside = 0
-    entry_skipped_zero_volume = 0
+    entry_skipped_prior_zero_volume = 0
     entry_skipped_prior_volume = 0
     max_loss_to_risk_budget_multiple = None
     for i, b in enumerate(bars):
@@ -298,11 +298,11 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None,
             # Applying adverse buy slippage can otherwise lift an already
             # invalid below-stop opening above the stop and create a fictitious
             # paper entry after the setup has been invalidated.
-            # A candle reporting zero traded volume cannot substantiate a
-            # next-open paper fill. Refuse the hypothetical entry, even if
-            # its OHLC prices appear to cross an otherwise valid setup.
-            if b.volume == 0:
-                entry_skipped_zero_volume += 1
+            # At this next-open decision only PRIOR CLOSED bar volume
+            # is known. The entry bar's eventual volume is future information
+            # and must never veto the modeled entry.
+            if bars[i - 1].volume == 0:
+                entry_skipped_prior_zero_volume += 1
             elif (b.open <= stop
                     or not 0 < entry-stop <= 4*(pending["reference_entry"]-stop)):
                 entry_skipped_gap += 1
@@ -355,6 +355,8 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None,
                         position = {"entry": entry, "stop": stop, "target": entry+2*(entry-stop),
                                     "qty": qty, "entry_time": b.time, "entry_index": i,
                                     "raw_entry_open": b.open,
+                                    # Retrospective evidence flag, NOT an entry input.
+                                    "entry_bar_zero_volume_ex_post": b.volume == 0,
                                     "prior_closed_bar_base_volume": prior_volume,
                                     "risk_budget_at_entry": budget,
                                     "planned_stop_loss": planned_loss,
@@ -459,6 +461,7 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None,
                                    "bar_close_upper_bound_intrabar_unknown"),
                                "entry": p["entry"], "exit": exit_price, "quantity": p["qty"],
                                "entry_reference_open": p["raw_entry_open"],
+                               "entry_bar_zero_volume_ex_post": p["entry_bar_zero_volume_ex_post"],
                                "prior_closed_bar_base_volume": p["prior_closed_bar_base_volume"],
                                "modeled_entry_qty_pct_of_prior_closed_bar_volume": (
                                    _safe_prior_volume_participation_pct(
@@ -546,14 +549,16 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None,
                 "close_mark_low_equity_usdt": close_mark_low,
                 "paper_entry_attempts": entry_attempts,
                 "paper_entries_skipped_invalid_gap": entry_skipped_gap,
-                "paper_entries_skipped_zero_volume_open": entry_skipped_zero_volume,
+                "paper_entries_skipped_prior_closed_zero_volume": entry_skipped_prior_zero_volume,
+                "paper_entries_with_zero_volume_entry_bar_ex_post": sum(
+                    trade["entry_bar_zero_volume_ex_post"] for trade in trades),
                 "paper_entries_skipped_prior_closed_volume_cap": entry_skipped_prior_volume,
                 "paper_entries_skipped_past_signal_target": entry_skipped_target_gap,
                 "paper_entries_skipped_utc_daily_loss_cap": entry_skipped_daily_cap,
                 "paper_entries_skipped_insufficient_risk_capacity": entry_skipped_risk_capacity,
                 "paper_entries_skipped_nonpositive_original_target_net_upside": entry_skipped_nonpositive_net_upside,
                 "paper_entries_opened": entry_attempts - entry_skipped_gap
-                                        - entry_skipped_zero_volume
+                                        - entry_skipped_prior_zero_volume
                                         - entry_skipped_prior_volume
                                         - entry_skipped_target_gap - entry_skipped_daily_cap
                                         - entry_skipped_risk_capacity
@@ -597,7 +602,7 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None,
                             "Open-triggered exits use the observed bar open; intrabar stop/target exit_time is only a bar-close upper bound, not an observed execution timestamp.",
                             "UTC gross realized daily loss cap prevents new entries only; an already-open position may gap past the cap. Per-entry budgets and daily caps are not guaranteed maximum losses.",
                             "A next-open gap at or above the original signal target cancels that paper entry instead of chasing a completed setup; refusal counts are not real exchange submissions or observed fills.",
-                            "Zero-volume next-open candles refuse hypothetical new entries; OHLC prices without reported traded volume do not establish an executable fill. Existing positions retain modeled exit uncertainty and zero-volume exposure warnings.",
+                            "Only zero volume on the PRIOR CLOSED signal bar vetoes a next-open paper entry; the entry bar's eventual volume is unknown at its open. Zero-volume entry bars are flagged ex post as unsubstantiated modeled fills, never silently removed or treated as observed execution.",
                             "Optional prior-closed-bar base-volume participation cap uses only already closed information, not future entry-bar volume; it is a hypothetical capacity proxy, not order-book depth, real liquidity or an exchange fill guarantee.",
                             "The paper target is repriced to 2R from the next-open entry. remaining_original_signal_reward_risk_at_entry measures gross reward to the ORIGINAL signal target after buy slippage; remaining_original_signal_net_reward_risk_at_entry assumes a hypothetical original-target sell with adverse sell slippage and both fees, divided by the modeled stop loss per unit. A target above entry can still have nonpositive modeled net upside. Neither metric is realized return, observed execution or a calibrated win probability.",
                             "A still-open position at sample end is force-marked at the final close, including modeled costs; headline all-trade win rate/expectancy/profit factor include such marks, while strategy_resolved metrics exclude them; neither is a calibrated win probability.",

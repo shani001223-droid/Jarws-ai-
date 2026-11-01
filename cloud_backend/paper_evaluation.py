@@ -179,6 +179,56 @@ def _execution_bar_quality(bars, trades):
     return result
 
 
+def _trade_outcome_concentration(trades):
+    """Describe concentration of modeled resolved PnL, not predictive odds.
+
+    Terminal forced marks are reported separately; they are not resolved
+    strategy trades. All loss streaks are chronological by entry time.
+    """
+    result = {
+        "trade_count_including_terminal_marks": len(trades),
+        "strategy_resolved_trade_count": None,
+        "terminal_forced_mark_count": None,
+        "distinct_strategy_resolved_entry_utc_days": None,
+        "max_consecutive_strategy_resolved_losses": None,
+        "worst_strategy_resolved_net_pnl_usdt": None,
+        "largest_win_share_of_resolved_gross_profit_pct": None,
+        "largest_loss_share_of_resolved_gross_loss_pct": None,
+    }
+    if any(type(t) is not dict or type(t.get("entry_time")) is not int
+           or t["entry_time"] < 0 or type(t.get("net_pnl")) not in (int, float)
+           or not math.isfinite(t["net_pnl"])
+           or type(t.get("terminal_forced_mark", False)) is not bool
+           for t in trades):
+        result["status"] = "unavailable_incomplete_trade_outcomes"
+        return result
+    resolved = sorted(
+        (t for t in trades if not t.get("terminal_forced_mark", False)),
+        key=lambda t: t["entry_time"])
+    result["strategy_resolved_trade_count"] = len(resolved)
+    result["terminal_forced_mark_count"] = len(trades) - len(resolved)
+    result["distinct_strategy_resolved_entry_utc_days"] = len({
+        t["entry_time"] // 86_400_000 for t in resolved})
+    streak = maximum = 0
+    for t in resolved:
+        streak = streak + 1 if t["net_pnl"] < 0 else 0
+        maximum = max(maximum, streak)
+    result["max_consecutive_strategy_resolved_losses"] = maximum
+    if not resolved:
+        result["status"] = "no_strategy_resolved_trades"
+        return result
+    wins = [t["net_pnl"] for t in resolved if t["net_pnl"] > 0]
+    losses = [-t["net_pnl"] for t in resolved if t["net_pnl"] < 0]
+    result["worst_strategy_resolved_net_pnl_usdt"] = min(
+        t["net_pnl"] for t in resolved)
+    result["largest_win_share_of_resolved_gross_profit_pct"] = (
+        max(wins) / sum(wins) * 100 if wins else None)
+    result["largest_loss_share_of_resolved_gross_loss_pct"] = (
+        max(losses) / sum(losses) * 100 if losses else None)
+    result["status"] = "descriptive_modeled_only"
+    return result
+
+
 def evaluate_chronological(bars, symbol: str, strategy: str,
                            config: SimulationConfig | None = None, *,
                            include_cost_guard_sensitivity: bool = False,
@@ -251,6 +301,15 @@ def evaluate_chronological(bars, symbol: str, strategy: str,
             "authenticated_market_data": False,
             "trade_rule_or_filter": False,
         },
+        "outcome_concentration": {
+            "status": "descriptive_operator_supplied_unverified",
+            "training": _trade_outcome_concentration(train["trades"]),
+            "holdout": _trade_outcome_concentration(holdout["trades"]),
+            "terminal_marks_excluded_from_resolved_metrics": True,
+            "authenticated_market_data": False,
+            "forward_verified": False,
+            "calibrated_win_probability": None,
+        },
         "split": {
             "method": "fixed_chronological_70_30_no_tuning",
             "total_bars": len(candles), "training_bars": split,
@@ -272,6 +331,7 @@ def evaluate_chronological(bars, symbol: str, strategy: str,
             "Next-open fills, fixed fees/slippage and stop-first ambiguous bars; real gaps, liquidity and impact can be worse.",
             "Zero-volume next-open bars refuse new modeled entries; existing positions still have uncertain modeled exits and descriptive zero-volume exposure flags.",
             "Zero and negative results are retained; no profit, win-rate or forward-performance guarantee.",
+            "Resolved-trade concentration, worst loss and loss streak are descriptive on the same unverified sample; terminal forced marks are excluded, not hidden.",
         ],
     }
 
@@ -288,6 +348,7 @@ def evaluate_chronological(bars, symbol: str, strategy: str,
             "baseline_trade_count": holdout["trade_count"],
             "baseline_net_pnl_usdt": holdout["net_pnl"],
             "guarded_holdout": {k: v for k, v in guarded.items() if k != "input_candles"},
+            "guarded_outcome_concentration": _trade_outcome_concentration(guarded["trades"]),
             "guarded_paper_execution_bar_quality": _execution_bar_quality(
                 candles[split - WARMUP_BARS:], guarded["trades"]),
             "independent_venue_verified": False,
@@ -319,6 +380,9 @@ def evaluate_chronological(bars, symbol: str, strategy: str,
             "double_costs_net_pnl_usdt": stressed["net_pnl"] if stressed is not None else None,
             "double_costs_holdout": ({k: v for k, v in stressed.items()
                                      if k != "input_candles"} if stressed is not None else None),
+            "double_costs_outcome_concentration": (
+                _trade_outcome_concentration(stressed["trades"])
+                if stressed is not None else None),
             "double_costs_paper_execution_bar_quality": (
                 _execution_bar_quality(candles[split - WARMUP_BARS:],
                                        stressed["trades"]) if stressed is not None else None),
@@ -376,7 +440,11 @@ def evaluate_rolling_robustness(bars, symbol: str, strategy: str,
             "scored_bars": end - start,
             "prior_warmup_bars": WARMUP_BARS,
             "baseline": {k: v for k, v in base.items() if k != "input_candles"},
+            "baseline_outcome_concentration": _trade_outcome_concentration(base["trades"]),
             "baseline_paper_execution_bar_quality": _execution_bar_quality(segment, base["trades"]),
+            "double_costs_outcome_concentration": (
+                _trade_outcome_concentration(stressed["trades"])
+                if stressed is not None else None),
             "double_costs_paper_execution_bar_quality": (
                 _execution_bar_quality(segment, stressed["trades"])
                 if stressed is not None else None),

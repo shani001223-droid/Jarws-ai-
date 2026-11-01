@@ -18,6 +18,65 @@ class ChronologicalEvaluationTests(unittest.TestCase):
     def setUp(self):
         self.bars = history("15m", count=300)
 
+    def test_resolved_outcome_concentration_keeps_losses_and_excludes_terminal_marks(self):
+        # Entirely synthetic modeled trades, not independently observed fills.
+        trades = [
+            {"entry_time": 0, "net_pnl": -5.0},
+            {"entry_time": 900000, "net_pnl": 10.0},
+            {"entry_time": 1800000, "net_pnl": -2.0},
+            {"entry_time": 2700000, "net_pnl": -3.0},
+            {"entry_time": 86400000, "net_pnl": 200.0,
+             "terminal_forced_mark": True},
+        ]
+        d = ev._trade_outcome_concentration(trades)
+        self.assertEqual(d["status"], "descriptive_modeled_only")
+        self.assertEqual(d["trade_count_including_terminal_marks"], 5)
+        self.assertEqual(d["strategy_resolved_trade_count"], 4)
+        self.assertEqual(d["terminal_forced_mark_count"], 1)
+        self.assertEqual(d["distinct_strategy_resolved_entry_utc_days"], 1)
+        self.assertEqual(d["max_consecutive_strategy_resolved_losses"], 2)
+        self.assertEqual(d["worst_strategy_resolved_net_pnl_usdt"], -5)
+        self.assertEqual(d["largest_win_share_of_resolved_gross_profit_pct"], 100)
+        self.assertEqual(d["largest_loss_share_of_resolved_gross_loss_pct"], 50)
+        empty = ev._trade_outcome_concentration([])
+        self.assertEqual(empty["status"], "no_strategy_resolved_trades")
+        self.assertEqual(empty["max_consecutive_strategy_resolved_losses"], 0)
+        self.assertIsNone(empty["worst_strategy_resolved_net_pnl_usdt"])
+        self.assertIsNone(empty["largest_win_share_of_resolved_gross_profit_pct"])
+        self.assertIsNone(empty["largest_loss_share_of_resolved_gross_loss_pct"])
+        incomplete = ev._trade_outcome_concentration([
+            {"entry_time": 0, "net_pnl": -4.0},
+            {"entry_time": 900000}])
+        self.assertEqual(incomplete["status"], "unavailable_incomplete_trade_outcomes")
+        self.assertIsNone(incomplete["max_consecutive_strategy_resolved_losses"])
+        self.assertEqual(incomplete["trade_count_including_terminal_marks"], 2)
+
+    def test_chronological_concentration_reports_are_scenario_specific(self):
+        from cloud_backend import trading_research as tr
+        with patch.object(tr, "setup", return_value=None):
+            report = ev.evaluate_rolling_robustness(
+                self.bars, "BTCUSDT", "trend_pullback",
+                include_cost_guard_sensitivity=True,
+                include_holdout_cost_stress=True)
+        summary = report["outcome_concentration"]
+        self.assertFalse(summary["authenticated_market_data"])
+        self.assertFalse(summary["forward_verified"])
+        self.assertIsNone(summary["calibrated_win_probability"])
+        self.assertEqual(summary["holdout"]["status"], "no_strategy_resolved_trades")
+        self.assertEqual(summary["holdout"]["strategy_resolved_trade_count"], 0)
+        self.assertEqual(
+            report["holdout_original_target_cost_guard_sensitivity"][
+                "guarded_outcome_concentration"]["strategy_resolved_trade_count"], 0)
+        self.assertEqual(
+            report["holdout_double_cost_sensitivity"][
+                "double_costs_outcome_concentration"]["strategy_resolved_trade_count"], 0)
+        for window in report["rolling_robustness"]["windows"]:
+            self.assertEqual(
+                window["baseline_outcome_concentration"]["strategy_resolved_trade_count"], 0)
+            self.assertEqual(
+                window["double_costs_outcome_concentration"]["strategy_resolved_trade_count"], 0)
+        self.assertFalse(report["orders_enabled"])
+
     def test_modeled_trade_quality_exposure_flags_suspicious_execution_bars(self):
         # Synthetic candles and synthetic paper timestamps; not real exchange fills.
         bars = [Candle(i * 900000, 100, 101, 99, 100, 10,

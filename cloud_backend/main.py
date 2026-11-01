@@ -20,7 +20,7 @@ from threading import BoundedSemaphore, Lock
 from concurrent.futures import ThreadPoolExecutor
 try:
     from .trading_research import closed_candles, research, backtest, SimulationConfig
-    from .market_data_quality import public_urls, verify_spot_market, MarketDataQualityError
+    from .market_data_quality import public_urls, verify_spot_market, binance_candles, MarketDataQualityError
     from .market_structure import analyze_market_structure, MarketStructureError
     from .market_indicators import analyze_market_indicators, MarketIndicatorsError
     from .setup_assessment import assess_spot_setup, SetupAssessmentError
@@ -31,7 +31,7 @@ try:
     from .trading_desk import build_trading_desk
 except ImportError:
     from trading_research import closed_candles, research, backtest, SimulationConfig
-    from market_data_quality import public_urls, verify_spot_market, MarketDataQualityError
+    from market_data_quality import public_urls, verify_spot_market, binance_candles, MarketDataQualityError
     from market_structure import analyze_market_structure, MarketStructureError
     from market_indicators import analyze_market_indicators, MarketIndicatorsError
     from setup_assessment import assess_spot_setup, SetupAssessmentError
@@ -1504,8 +1504,11 @@ def _research_history(pair, interval):
         "https://data-api.binance.vision/api/v3/klines?symbol=" + pair
         + "&interval=" + interval + "&limit=500", 30)
     try:
-        return closed_candles(data, interval, int(time.time()*1000)), fetched
-    except (ValueError, TypeError, IndexError, OverflowError) as exc:
+        # The desk/structure/setup research paths must validate the actual
+        # 12-field Binance kline, including quote/trade/taker-volume evidence.
+        # A 7-field OHLCV lookalike is not enough for a current-market claim.
+        return binance_candles(data, interval, int(time.time()*1000)), fetched
+    except (MarketDataQualityError, ValueError, TypeError, IndexError, OverflowError) as exc:
         raise HTTPException(status_code=503, detail="Research candles invalid, incomplete or stale. No proposal generated.") from exc
 
 

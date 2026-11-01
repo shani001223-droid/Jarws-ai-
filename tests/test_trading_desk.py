@@ -41,6 +41,37 @@ class TradingDeskTests(unittest.TestCase):
             self.assertEqual(result["timeframes"][tf]["last_close"], self.data[tf][-1].close)
             self.assertEqual(result["timeframes"][tf]["last_closed_at"], self.data[tf][-1].close_time)
 
+    def test_research_source_requires_full_binance_volume_and_trade_evidence(self):
+        # This uses synthetic 12-field Binance-shaped rows, never a provider
+        # call or a claim that the exchange was independently authenticated.
+        rows = []
+        for bar in self.data["15m"]:
+            rows.append([bar.time, str(bar.open), str(bar.high), str(bar.low),
+                         str(bar.close), "10", bar.close_time,
+                         str(bar.close * 10), 5, "5", str(bar.close * 5), "0"])
+        with patch.object(main, "_public_data", return_value=(rows, NOW // 1000)), patch.object(
+                main.time, "time", return_value=NOW / 1000):
+            bars, fetched = main._research_history("BTCUSDT", "15m")
+        self.assertEqual(len(bars), len(self.data["15m"]))
+        self.assertEqual(fetched, NOW // 1000)
+        # Quote volume inconsistent with traded base and a truncated row
+        # both fail closed instead of silently becoming usable paper evidence.
+        for mutation in ("forged_quote", "missing_trade_fields", "forged_taker"):
+            bad = [row.copy() for row in rows]
+            if mutation == "forged_quote":
+                bad[-1][7] = "1"
+            elif mutation == "missing_trade_fields":
+                bad[-1] = bad[-1][:7]
+            else:
+                bad[-1][10] = "1"
+            with self.subTest(mutation=mutation), patch.object(
+                    main, "_public_data", return_value=(bad, NOW // 1000)), patch.object(
+                    main.time, "time", return_value=NOW / 1000):
+                with self.assertRaises(main.HTTPException) as caught:
+                    main._research_history("BTCUSDT", "15m")
+                self.assertEqual(caught.exception.status_code, 503)
+                self.assertNotIn("quote", str(caught.exception.detail).lower())
+
     def test_invalid_symbol_or_risk_never_fetches(self):
         with patch.object(main, "_research_history") as fetch:
             for query in ("symbol=SOLUSDT", "symbol=../main.py", "equity_usdt=0",

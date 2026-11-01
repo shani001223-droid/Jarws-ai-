@@ -229,6 +229,17 @@ def risk_size(cash, entry, stop, day_loss, cfg):
     return min(budget/per_unit, cash/(entry*(1+fee)))
 
 
+def _safe_prior_volume_participation_pct(qty, volume):
+    """Descriptive ratio only; never emit infinity for tiny valid base volume."""
+    if volume <= 0:
+        return None
+    try:
+        pct = qty / volume * 100
+    except (OverflowError, ZeroDivisionError):
+        return None
+    return pct if math.isfinite(pct) else None
+
+
 def backtest(bars, strategy, cfg, *, entry_not_before=None,
              reject_nonpositive_original_net_upside=False,
              max_prior_volume_participation_pct=None):
@@ -450,8 +461,8 @@ def backtest(bars, strategy, cfg, *, entry_not_before=None,
                                "entry_reference_open": p["raw_entry_open"],
                                "prior_closed_bar_base_volume": p["prior_closed_bar_base_volume"],
                                "modeled_entry_qty_pct_of_prior_closed_bar_volume": (
-                                   p["qty"] / p["prior_closed_bar_base_volume"] * 100
-                                   if p["prior_closed_bar_base_volume"] > 0 else None),
+                                   _safe_prior_volume_participation_pct(
+                                       p["qty"], p["prior_closed_bar_base_volume"])),
                                "exit_reference_price": raw_exit,
                                "reference_gross_pnl_before_modeled_costs_usdt": reference_gross_pnl,
                                "modeled_buy_slippage_cost_usdt": buy_slippage_cost,

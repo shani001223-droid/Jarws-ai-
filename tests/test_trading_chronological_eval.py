@@ -237,6 +237,16 @@ class ChronologicalEvaluationTests(unittest.TestCase):
             t["modeled_entry_qty_pct_of_prior_closed_bar_volume"] <= 1
             for t in ample_report["holdout_prior_closed_volume_guard_sensitivity"][
                 "guarded_holdout"]["trades"]))
+        # Valid but tiny reported prior volume must not leak Infinity/NaN
+        # into a JSON export; unavailable ratio is explicit None.
+        tiny = [replace(b, volume=1e-320) for b in flat]
+        with patch.object(tr, "setup", return_value=setup):
+            tiny_report = ev.evaluate_chronological(
+                tiny, "BTCUSDT", "trend_pullback")
+        self.assertGreater(tiny_report["holdout"]["trade_count"], 0)
+        self.assertIsNone(tiny_report["holdout"]["trades"][0][
+            "modeled_entry_qty_pct_of_prior_closed_bar_volume"])
+        self.assertNotIn("Infinity", json.dumps(tiny_report, allow_nan=False))
         for bad in (0, -1, 11, float("nan"), True, "1"):
             with self.subTest(bad=bad), self.assertRaises(ValueError):
                 tr.backtest(flat[:100], "trend_pullback", SimulationConfig(),

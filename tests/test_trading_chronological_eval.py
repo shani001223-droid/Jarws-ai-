@@ -77,6 +77,48 @@ class ChronologicalEvaluationTests(unittest.TestCase):
                 window["double_costs_outcome_concentration"]["strategy_resolved_trade_count"], 0)
         self.assertFalse(report["orders_enabled"])
 
+    def test_suspicious_bar_pnl_attribution_keeps_losses_and_zero_trades(self):
+        # Ex-post descriptive association on synthetic OHLCV, not real fills.
+        bars = [Candle(i * 900000, 100, 101, 99, 100, 10,
+                       i * 900000 + 899999) for i in range(5)]
+        bars[2] = replace(bars[2], volume=0, high=112)
+        trades = [
+            {"entry_time": bars[0].time, "exit_time": bars[2].close_time,
+             "net_pnl": -3.5},
+            {"entry_time": bars[3].time, "exit_time": bars[3].close_time,
+             "net_pnl": 2.0},
+        ]
+        result = ev._execution_bar_quality(bars, trades)["modeled_pnl_attribution"]
+        self.assertEqual(result["status"], "descriptive_modeled_only")
+        self.assertEqual(result["flagged_trade_count"], 1)
+        self.assertEqual(result["unflagged_trade_count"], 1)
+        self.assertEqual(result["flagged_net_pnl_usdt"], -3.5)
+        self.assertEqual(result["unflagged_net_pnl_usdt"], 2.0)
+        self.assertEqual(result["flagged_gross_profit_usdt"], 0.0)
+        self.assertEqual(result["flagged_gross_loss_usdt"], 3.5)
+        self.assertEqual(result["all_trade_net_pnl_usdt"], -1.5)
+        no_trades = ev._execution_bar_quality(bars, [])["modeled_pnl_attribution"]
+        self.assertEqual(no_trades["status"], "no_modeled_trades")
+        self.assertEqual(no_trades["all_trade_net_pnl_usdt"], 0.0)
+        self.assertEqual(no_trades["flagged_trade_count"], 0)
+
+    def test_suspicious_bar_pnl_attribution_fails_closed_on_missing_or_overflow(self):
+        bars = [Candle(i * 900000, 100, 101, 99, 100, 10,
+                       i * 900000 + 899999) for i in range(4)]
+        base = {"entry_time": bars[1].time, "exit_time": bars[2].close_time}
+        for trades in ([base], [{**base, "net_pnl": float("nan")}],
+                       [{**base, "net_pnl": 1e308},
+                        {**base, "net_pnl": 1e308}]):
+            with self.subTest(trades=trades):
+                report = ev._execution_bar_quality(bars, trades)
+                attribution = report["modeled_pnl_attribution"]
+                self.assertEqual(attribution["status"],
+                                 "unavailable_incomplete_or_nonfinite_trade_pnl")
+                self.assertIsNone(attribution["all_trade_net_pnl_usdt"])
+                self.assertEqual(attribution["flagged_trade_count"] +
+                                 attribution["unflagged_trade_count"], len(trades))
+                self.assertEqual(report["trade_count"], len(trades))
+
     def test_modeled_trade_quality_exposure_flags_suspicious_execution_bars(self):
         # Synthetic candles and synthetic paper timestamps; not real exchange fills.
         bars = [Candle(i * 900000, 100, 101, 99, 100, 10,

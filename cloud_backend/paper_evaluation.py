@@ -176,6 +176,68 @@ def _execution_bar_quality(bars, trades):
             exposed[key] for key in (
                 "spanned_zero_volume", "spanned_flat_ohlc",
                 "spanned_open_gap_ge_2pct", "spanned_intrabar_range_ge_10pct"))
+    # Partition modeled net PnL by whether a position crossed ANY suspicious
+    # OHLCV bar. This is ex-post exposure attribution, not a causal adjustment,
+    # fill validation, trade veto, or independently observed performance.
+    # Synthetic/incomplete trade doubles must never be treated as zero PnL.
+    flagged = [
+        any(exposure[key] for key in (
+            "spanned_zero_volume", "spanned_flat_ohlc",
+            "spanned_open_gap_ge_2pct", "spanned_intrabar_range_ge_10pct"))
+        for exposure in result["trade_exposures"]
+    ]
+    counts = {
+        "flagged_trade_count": sum(flagged),
+        "unflagged_trade_count": len(trades) - sum(flagged),
+    }
+    if not trades:
+        result["modeled_pnl_attribution"] = {
+            "status": "no_modeled_trades", **counts,
+            "flagged_net_pnl_usdt": 0.0,
+            "unflagged_net_pnl_usdt": 0.0,
+            "flagged_gross_profit_usdt": 0.0,
+            "flagged_gross_loss_usdt": 0.0,
+            "all_trade_net_pnl_usdt": 0.0,
+        }
+    else:
+        try:
+            complete = all(
+                type(trade) is dict
+                and type(trade.get("net_pnl")) in (int, float)
+                and math.isfinite(trade["net_pnl"])
+                for trade in trades
+            )
+            if not complete:
+                raise ValueError("incomplete_modeled_trade_pnl")
+            flagged_pnl = [trade["net_pnl"] for trade, flag in zip(trades, flagged)
+                           if flag]
+            unflagged_pnl = [trade["net_pnl"] for trade, flag in zip(trades, flagged)
+                             if not flag]
+            values = {
+                "flagged_net_pnl_usdt": math.fsum(flagged_pnl),
+                "unflagged_net_pnl_usdt": math.fsum(unflagged_pnl),
+                "flagged_gross_profit_usdt": math.fsum(
+                    max(0.0, pnl) for pnl in flagged_pnl),
+                "flagged_gross_loss_usdt": math.fsum(
+                    max(0.0, -pnl) for pnl in flagged_pnl),
+                "all_trade_net_pnl_usdt": math.fsum(
+                    trade["net_pnl"] for trade in trades),
+            }
+            if not all(math.isfinite(value) for value in values.values()):
+                raise OverflowError("nonfinite_modeled_trade_pnl")
+            result["modeled_pnl_attribution"] = {
+                "status": "descriptive_modeled_only", **counts, **values,
+            }
+        except (ValueError, OverflowError, TypeError):
+            result["modeled_pnl_attribution"] = {
+                "status": "unavailable_incomplete_or_nonfinite_trade_pnl",
+                **counts,
+                "flagged_net_pnl_usdt": None,
+                "unflagged_net_pnl_usdt": None,
+                "flagged_gross_profit_usdt": None,
+                "flagged_gross_loss_usdt": None,
+                "all_trade_net_pnl_usdt": None,
+            }
     return result
 
 

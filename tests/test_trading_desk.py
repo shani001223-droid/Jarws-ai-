@@ -9,6 +9,7 @@ import unittest
 
 from fastapi.testclient import TestClient
 from cloud_backend import main, trading_desk as desk
+from cloud_backend.trading_research import INTERVALS
 from cloud_backend.brain import KnowledgeError
 from test_paper_risk import NOW, FRAMES, histories, sample_analysis
 
@@ -17,6 +18,26 @@ class TradingDeskTests(unittest.TestCase):
     def setUp(self):
         self.client = TestClient(main.app)
         self.data = histories()
+        # Historical paper-risk fixtures deliberately model independent
+        # timeframes. The current desk requires the newest same-venue 1h/4h
+        # bars to aggregate from exactly the 15m closed candles.
+        self.data = self._align_latest_frames(self.data)
+
+    @staticmethod
+    def _align_latest_frames(data):
+        quarter = INTERVALS["15m"]
+        by_start = {bar.time: bar for bar in data["15m"]}
+        for tf in ("1h", "4h"):
+            parent = data[tf][-1]
+            children = [by_start[parent.time + i * quarter]
+                        for i in range(INTERVALS[tf] // quarter)]
+            data[tf][-1] = replace(
+                parent, open=children[0].open,
+                high=max(bar.high for bar in children),
+                low=min(bar.low for bar in children),
+                close=children[-1].close,
+                volume=sum(bar.volume for bar in children))
+        return data
 
     def test_real_analyzers_share_one_set_of_three_fetched_histories(self):
         calls = []
@@ -40,6 +61,38 @@ class TradingDeskTests(unittest.TestCase):
         for tf in FRAMES:
             self.assertEqual(result["timeframes"][tf]["last_close"], self.data[tf][-1].close)
             self.assertEqual(result["timeframes"][tf]["last_closed_at"], self.data[tf][-1].close_time)
+
+    def test_latest_same_venue_ohlcv_aggregation_and_tampering(self):
+        # Valid synthetic aggregation survives actual analyzers. Inconsistent
+        # 1h/4h prices or volume must fail closed before any paper plan.
+        result = desk.build_trading_desk(self.data, "BTCUSDT", NOW, NOW // 1000)
+        self.assertEqual(result["market"], "spot")
+        for tf, field, delta in (("1h", "close", 1),
+                                 ("1h", "high", 1),
+                                 ("4h", "volume", 1),
+                                 ("4h", "open", 1)):
+            data = {frame: bars.copy() for frame, bars in self.data.items()}
+            data[tf][-1] = replace(data[tf][-1],
+                                   **{field: getattr(data[tf][-1], field) + delta})
+            with self.subTest(tf=tf, field=field):
+                with self.assertRaisesRegex(ValueError, "cross_timeframe_ohlcv_mismatch"):
+                    desk.build_trading_desk(data, "BTCUSDT", NOW, NOW // 1000)
+                with patch.object(main, "_research_history",
+                        side_effect=lambda pair, frame: (data[frame], NOW // 1000)), patch.object(
+                        main.time, "time", return_value=NOW / 1000):
+                    response = self.client.get("/api/trading/desk")
+                self.assertEqual(response.status_code, 503)
+                self.assertEqual(response.json()["detail"]["decision"], "wait")
+                self.assertIsNone(response.json()["detail"]["paper_plan"])
+                self.assertNotIn("cross_timeframe", response.text)
+
+    def test_missing_constituent_15m_bar_refuses_mixed_snapshot(self):
+        data = {tf: bars.copy() for tf, bars in self.data.items()}
+        parent = data["4h"][-1]
+        data["15m"] = [bar for bar in data["15m"]
+                       if bar.time != parent.time + 3 * INTERVALS["15m"]]
+        with self.assertRaises(ValueError):
+            desk.build_trading_desk(data, "BTCUSDT", NOW, NOW // 1000)
 
     def test_cross_boundary_snapshot_rejects_lagging_frame_without_plan(self):
         # An older but otherwise fresh candle must not be mixed with a newer

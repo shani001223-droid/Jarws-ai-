@@ -6,6 +6,8 @@ existing six-family long setup and all five existing V2 confluence conditions.
 """
 from __future__ import annotations
 
+import math
+
 try:
     from .market_structure import analyze_market_structure
     from .market_indicators import analyze_market_indicators
@@ -25,6 +27,39 @@ except ImportError:  # existing Docker root: uvicorn main:app
 
 VERSION = "hoshi-trading-desk-v1"
 FRAMES = ("15m", "1h", "4h")
+
+def _require_same_venue_aggregation(histories: dict) -> None:
+    """Latest 1h/4h OHLCV must equal their constituent closed 15m bars.
+
+    A same-provider three-frame response can otherwise be internally fresh
+    but contradictory. This is a consistency check, NOT independent venue
+    authentication or a claim about the older indicator lookback.
+    """
+    quarter_ms = INTERVALS["15m"]
+    quarters = {bar.time: bar for bar in histories["15m"]}
+    for tf in ("1h", "4h"):
+        parent = histories[tf][-1]
+        children = [quarters.get(parent.time + i * quarter_ms)
+                    for i in range(INTERVALS[tf] // quarter_ms)]
+        if any(child is None for child in children):
+            raise ValueError("missing_cross_timeframe_closed_bars")
+        if children[-1].close_time != parent.close_time:
+            raise ValueError("cross_timeframe_close_boundary_mismatch")
+        aggregate = (
+            children[0].open, max(child.high for child in children),
+            min(child.low for child in children), children[-1].close,
+            math.fsum(child.volume for child in children),
+        )
+        actual = (parent.open, parent.high, parent.low, parent.close, parent.volume)
+        for i, (observed, computed) in enumerate(zip(actual, aggregate)):
+            # Binance's separately rounded base-volume sums can differ by
+            # a few 1e-8 units; price extremes should agree much tighter.
+            tolerance = (2e-7 + 1e-8 * max(abs(observed), abs(computed))
+                         if i == 4 else 1e-8 * max(1, abs(observed), abs(computed)))
+            if (not math.isfinite(observed) or not math.isfinite(computed)
+                    or abs(observed - computed) > tolerance):
+                raise ValueError("cross_timeframe_ohlcv_mismatch")
+
 
 
 def build_trading_desk(histories: dict, symbol: str, now_ms: int,
@@ -55,6 +90,7 @@ def build_trading_desk(histories: dict, symbol: str, now_ms: int,
             raise ValueError("noncausal_closed_candle_fetch")
     # Validates every candle, frame, close time and freshness before analysis.
     confluence = confluence_score(histories, symbol, now_ms, "long")
+    _require_same_venue_aggregation(histories)
     structure = analyze_market_structure(histories, symbol)
     indicators = analyze_market_indicators(histories, symbol)
     setup = _evaluate(structure, indicators)

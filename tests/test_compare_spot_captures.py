@@ -739,10 +739,15 @@ class CaptureOverlapTests(unittest.TestCase):
                         corrupted["trades"] = [trade(**changes)]
                         simulations = ([corrupted, valid] if side == 0
                                        else [valid, corrupted])
+                        # The earlier causal ledger rightly rejects an
+                        # early forced mark before the exit-label audit runs.
+                        expected_error = (
+                            "noncausal_prospective_replay"
+                            if changes == {"terminal_forced_mark": True}
+                            else "unreconciled_prospective_exit_semantics")
                         with patch.object(compare, "backtest", side_effect=simulations):
                             with self.assertRaisesRegex(
-                                    PaperEvaluationError,
-                                    "unreconciled_prospective_exit_semantics"):
+                                    PaperEvaluationError, expected_error):
                                 compare.compare_capture_files(
                                     old, old_receipt, new, new_receipt,
                                     prospective_strategy="trend_pullback")

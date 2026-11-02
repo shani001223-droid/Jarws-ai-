@@ -835,18 +835,41 @@ class CaptureOverlapTests(unittest.TestCase):
             root = Path(tmp)
             old, old_receipt = save_pair(root, "old", capture_fixture())
             new, new_receipt = save_pair(root, "new", capture_fixture(2))
-            trade = {
-                "entry_time": NOW, "exit_time": NOW + STEP - 1,
-                "net_pnl": -1.0, "terminal_forced_mark": False,
-                "entry_reference_open": 100.0, "exit_reference_price": 99.0,
-                "reference_stop": 99.0, "reference_target": 101.0,
-                "reason": "stop", "exit_time_precision":
-                    "bar_close_upper_bound_intrabar_unknown",
-                "stop_target_same_bar": True, "gap_beyond_stop_pct": None,
-            }
-            valid = {"net_pnl": -1.0, "trade_count": 1,
-                     "max_drawdown_pct": 1.0, "trades": [trade]}
-            with patch.object(compare, "backtest", side_effect=[valid, valid]):
+            # Complete modeled execution fields are mandatory when a trade
+            # claims entry/exit reference prices; use each side's actual
+            # baseline/doubled fee and slippage configuration.
+            cfg = compare.SimulationConfig()
+            stress_cfg = compare.SimulationConfig(
+                equity=cfg.equity, risk_pct=cfg.risk_pct,
+                daily_loss_limit=cfg.daily_loss_limit,
+                fee_bps=cfg.fee_bps * 2, slippage_bps=cfg.slippage_bps * 2)
+            def modeled(config):
+                qty, raw_entry, raw_exit = 1.0, 100.0, 99.0
+                entry = raw_entry * (1 + config.slippage_bps / 10_000)
+                exit_price = raw_exit * (1 - config.slippage_bps / 10_000)
+                fees = qty * config.fee_bps / 10_000 * (entry + exit_price)
+                buy = qty * (entry - raw_entry)
+                sell = qty * (raw_exit - exit_price)
+                gross = qty * (raw_exit - raw_entry)
+                pnl = gross - buy - sell - fees
+                trade = {
+                    "entry_time": NOW, "exit_time": NOW + STEP - 1,
+                    "net_pnl": pnl, "terminal_forced_mark": False,
+                    "entry_reference_open": raw_entry,
+                    "exit_reference_price": raw_exit,
+                    "reference_stop": 99.0, "reference_target": 101.0,
+                    "reason": "stop", "exit_time_precision":
+                        "bar_close_upper_bound_intrabar_unknown",
+                    "stop_target_same_bar": True, "gap_beyond_stop_pct": None,
+                    "entry": entry, "exit": exit_price, "quantity": qty,
+                    "fees": fees, "modeled_buy_slippage_cost_usdt": buy,
+                    "modeled_sell_slippage_cost_usdt": sell,
+                    "reference_gross_pnl_before_modeled_costs_usdt": gross,
+                }
+                return {"net_pnl": pnl, "trade_count": 1,
+                        "max_drawdown_pct": 1.0, "trades": [trade]}
+            valid = [modeled(cfg), modeled(stress_cfg)]
+            with patch.object(compare, "backtest", side_effect=valid):
                 report = compare.compare_capture_files(
                     old, old_receipt, new, new_receipt,
                     prospective_strategy="trend_pullback")
@@ -859,10 +882,11 @@ class CaptureOverlapTests(unittest.TestCase):
                                      ("exit_reference_price", 100.0),
                                      ("reference_target", 103.0)):
                     with self.subTest(side=side, field=field):
-                        corrupted = dict(valid)
-                        corrupted["trades"] = [dict(trade, **{field: value})]
-                        pair = ([corrupted, valid] if side == 0
-                                else [valid, corrupted])
+                        corrupted = dict(valid[side])
+                        corrupted["trades"] = [dict(
+                            valid[side]["trades"][0], **{field: value})]
+                        pair = ([corrupted, valid[1]] if side == 0
+                                else [valid[0], corrupted])
                         with patch.object(compare, "backtest", side_effect=pair):
                             with self.assertRaisesRegex(
                                     PaperEvaluationError,

@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -34,6 +35,50 @@ def _verified_local_capture(data_path: Path, receipt_path: Path):
     receipt = load_capture_receipt(receipt_path)
     bound = attach_capture_receipt(report, receipt)
     return symbol, bars, receipt, bound["capture_receipt"]["receipt_sha256"], report["input_candle_sha256"]
+
+
+def _verified_prospective_ledger(simulation: dict, first_scored: int,
+                                 last_closed: int) -> list[int]:
+    """Validate local MODELED trade chronology and net-PnL reconciliation.
+
+    This does not authenticate any exchange observation or paper fill.
+    """
+    if type(simulation) is not dict or type(simulation.get("trades")) is not list:
+        raise PaperEvaluationError("invalid_prospective_paper_ledger")
+    net = simulation.get("net_pnl")
+    if type(net) not in (int, float) or not math.isfinite(net):
+        raise PaperEvaluationError("invalid_prospective_paper_ledger")
+    trades = simulation["trades"]
+    if ("trade_count" in simulation
+            and (type(simulation["trade_count"]) is not int
+                 or simulation["trade_count"] != len(trades))):
+        raise PaperEvaluationError("unreconciled_prospective_paper_ledger")
+    entries, pnl, previous_exit = [], [], None
+    for trade in trades:
+        if type(trade) is not dict:
+            raise PaperEvaluationError("invalid_prospective_paper_ledger")
+        entry, exit_at = trade.get("entry_time"), trade.get("exit_time")
+        gain, forced = trade.get("net_pnl"), trade.get("terminal_forced_mark")
+        if (type(entry) is not int or type(exit_at) is not int
+                or type(gain) not in (int, float) or not math.isfinite(gain)
+                or type(forced) is not bool):
+            raise PaperEvaluationError("invalid_prospective_paper_ledger")
+        if (entry < first_scored or entry % STEP_MS
+                or not entry <= exit_at <= last_closed
+                or exit_at % STEP_MS not in (0, STEP_MS - 1)
+                or (previous_exit is not None and entry <= previous_exit)
+                or (forced and exit_at != last_closed)):
+            raise PaperEvaluationError("noncausal_prospective_replay")
+        entries.append(entry)
+        pnl.append(gain)
+        previous_exit = exit_at
+    try:
+        reconciled = math.isclose(math.fsum(pnl), net, rel_tol=1e-9, abs_tol=1e-7)
+    except (OverflowError, ValueError):
+        reconciled = False
+    if not reconciled:
+        raise PaperEvaluationError("unreconciled_prospective_paper_ledger")
+    return entries
 
 
 def compare_capture_files(earlier: Path, earlier_receipt: Path,
@@ -143,12 +188,10 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
             segment, prospective_strategy, stress_config,
             entry_not_before=first_scored,
         )
-        baseline_entries = [trade["entry_time"] for trade in simulation["trades"]]
-        stress_entries = [trade["entry_time"] for trade in stressed["trades"]]
-        if (any(entry < first_scored for entry in baseline_entries + stress_entries)
-                or len(set(baseline_entries)) != len(baseline_entries)
-                or len(set(stress_entries)) != len(stress_entries)):
-            raise PaperEvaluationError("noncausal_prospective_replay")
+        baseline_entries = _verified_prospective_ledger(
+            simulation, first_scored, b[-1].close_time)
+        stress_entries = _verified_prospective_ledger(
+            stressed, first_scored, b[-1].close_time)
         baseline_set, stress_set = set(baseline_entries), set(stress_entries)
         forced = [trade for trade in simulation["trades"]
                   if trade["terminal_forced_mark"]]
@@ -161,6 +204,7 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
             "scored_closed_bars": len(b) - scored_index,
             "prior_closed_warmup_bars": WARMUP_BARS,
             "fixed_default_paper_settings": True,
+            "modeled_trade_chronology_and_pnl_reconciled": True,
             "strategy_resolved_trade_count": len(resolved),
             "terminal_forced_mark_count": len(forced),
             "resolved_trade_net_pnl_usdt": sum(
@@ -191,6 +235,7 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
                 "double_cost_terminal_forced_mark_count": sum(
                     trade["terminal_forced_mark"] for trade in stressed["trades"]),
                 "double_cost_max_drawdown_pct": stressed["max_drawdown_pct"],
+                "modeled_trade_chronology_and_pnl_reconciled": True,
                 "simulation": {k: v for k, v in stressed.items()
                                if k != "input_candles"},
                 "independent_evaluation": False,
@@ -199,6 +244,7 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
                     "This is the same operator-supplied later capture, not independent holdout data.",
                     "Both sides' fees and adverse slippage are doubled; changing fills and risk sizing may change entry timestamps, so PnL is not guaranteed monotonic.",
                     "All negative, zero-trade, gap, ambiguity, drawdown and forced terminal outcomes remain in the modeled simulation.",
+                    "Modeled entry/exit chronology and net PnL are locally checked, not real fills.",
                     "No authenticated fills, calibrated win probability, executable quote or profitability claim.",
                 ],
             },
@@ -207,6 +253,7 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
                 "Both local receipts are unsigned; later candles are operator supplied, not independently authenticated.",
                 "Next-open fills, fees, slippage, gap stops and stop-first ambiguity are modeled, not observed.",
                 "Forced end-of-sample marks are not resolved strategy exits; modeled net PnL includes them.",
+                "Nonoverlapping modeled trade lifecycles and net PnL are reconciled, not exchange-attested.",
                 "Zero trades, losses and drawdown remain visible; no independent forward performance or profitability proof.",
             ],
         }

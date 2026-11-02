@@ -255,14 +255,14 @@ class CaptureOverlapTests(unittest.TestCase):
             new, new_receipt = save_pair(root, "new", capture_fixture(2))
             baseline = {
                 "net_pnl": -2.5, "max_drawdown_pct": 1.0,
-                "trades": [{"entry_time": NOW, "net_pnl": -2.5,
-                            "terminal_forced_mark": False}],
+                "trades": [{"entry_time": NOW, "exit_time": NOW + STEP - 1,
+                            "net_pnl": -2.5, "terminal_forced_mark": False}],
                 "input_candles": ["not_exported"],
             }
             stressed = {
                 "net_pnl": -7.0, "max_drawdown_pct": 2.5,
-                "trades": [{"entry_time": NOW + STEP, "net_pnl": -7.0,
-                            "terminal_forced_mark": True}],
+                "trades": [{"entry_time": NOW + STEP, "exit_time": NOW + 2 * STEP - 1,
+                            "net_pnl": -7.0, "terminal_forced_mark": True}],
                 "input_candles": ["not_exported"],
             }
             with patch.object(compare, "backtest", side_effect=[baseline, stressed]) as run:
@@ -294,8 +294,8 @@ class CaptureOverlapTests(unittest.TestCase):
             baseline = {"net_pnl": 0.0, "max_drawdown_pct": 0.0, "trades": []}
             noncausal = {
                 "net_pnl": 100.0, "max_drawdown_pct": 0.0,
-                "trades": [{"entry_time": NOW - STEP, "net_pnl": 100.0,
-                            "terminal_forced_mark": False}],
+                "trades": [{"entry_time": NOW - STEP, "exit_time": NOW + STEP - 1,
+                            "net_pnl": 100.0, "terminal_forced_mark": False}],
             }
             with patch.object(compare, "backtest", side_effect=[baseline, noncausal]):
                 with self.assertRaisesRegex(
@@ -309,6 +309,68 @@ class CaptureOverlapTests(unittest.TestCase):
                     self.assertEqual(compare.main([
                         "--earlier", str(old), "--earlier-receipt", str(old_receipt),
                         "--later", str(new), "--later-receipt", str(new_receipt),
+                        "--prospective-replay", "trend_pullback",
+                    ]), 2)
+            self.assertEqual(output.getvalue(), "")
+            self.assertIn("WAIT:", errors.getvalue())
+
+    def test_replay_rejects_future_overlap_and_false_terminal_exits(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            old, proof_old = save_pair(root, "old", capture_fixture())
+            new, proof_new = save_pair(root, "new", capture_fixture(2))
+            empty = {"net_pnl": 0.0, "trades": [], "trade_count": 0}
+            cases = [
+                [{"entry_time": NOW, "exit_time": NOW + 3*STEP - 1,
+                  "net_pnl": -1.0, "terminal_forced_mark": False}],
+                [{"entry_time": NOW, "exit_time": NOW + 2*STEP - 1,
+                  "net_pnl": -1.0, "terminal_forced_mark": False},
+                 {"entry_time": NOW + STEP, "exit_time": NOW + 2*STEP - 1,
+                  "net_pnl": -2.0, "terminal_forced_mark": False}],
+                [{"entry_time": NOW, "exit_time": NOW + STEP - 1,
+                  "net_pnl": -1.0, "terminal_forced_mark": True}],
+            ]
+            for trades in cases:
+                with self.subTest(trades=trades):
+                    bad = {"net_pnl": sum(x["net_pnl"] for x in trades),
+                           "trades": trades, "trade_count": len(trades)}
+                    with patch.object(compare, "backtest", side_effect=[bad, empty]):
+                        with self.assertRaisesRegex(
+                                PaperEvaluationError, "noncausal_prospective_replay"):
+                            compare.compare_capture_files(
+                                old, proof_old, new, proof_new,
+                                prospective_strategy="trend_pullback")
+
+    def test_replay_rejects_missing_or_unreconciled_paper_ledger(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            old, proof_old = save_pair(root, "old", capture_fixture())
+            new, proof_new = save_pair(root, "new", capture_fixture(2))
+            empty = {"net_pnl": 0.0, "trades": [], "trade_count": 0}
+            cases = [
+                ({"net_pnl": 5.0, "trades": [], "trade_count": 0},
+                 "unreconciled_prospective_paper_ledger"),
+                ({"net_pnl": 0.0, "trades": [{
+                    "entry_time": NOW, "net_pnl": 0.0,
+                    "terminal_forced_mark": False}]},
+                 "invalid_prospective_paper_ledger"),
+                ({"net_pnl": 0.0, "trades": [], "trade_count": 1},
+                 "unreconciled_prospective_paper_ledger"),
+            ]
+            for bad, reason in cases:
+                with self.subTest(reason=reason):
+                    with patch.object(compare, "backtest", side_effect=[bad, empty]):
+                        with self.assertRaisesRegex(PaperEvaluationError, reason):
+                            compare.compare_capture_files(
+                                old, proof_old, new, proof_new,
+                                prospective_strategy="trend_pullback")
+            output, errors = io.StringIO(), io.StringIO()
+            with patch.object(compare, "backtest", side_effect=[
+                    {"net_pnl": 1.0, "trades": []}, empty]):
+                with redirect_stdout(output), redirect_stderr(errors):
+                    self.assertEqual(compare.main([
+                        "--earlier", str(old), "--earlier-receipt", str(proof_old),
+                        "--later", str(new), "--later-receipt", str(proof_new),
                         "--prospective-replay", "trend_pullback",
                     ]), 2)
             self.assertEqual(output.getvalue(), "")

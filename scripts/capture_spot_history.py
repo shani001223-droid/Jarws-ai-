@@ -132,14 +132,20 @@ def capture_spot_history(symbol: str, *, fetch_json=None, clock=None):
     fetch = _fetch_json if fetch_json is None else fetch_json
     now = time.time if clock is None else clock
     binance = fetch(binance_url)
-    binance_fetched_at = int(now())
+    binance_tick = now()
     kraken = fetch(kraken_url)
-    kraken_fetched_at = int(now())
-    # This manual capture fetches Binance before Kraken, never in parallel.
-    # Refuse a backwards local clock rather than issue a noncausal receipt.
-    if binance_fetched_at > kraken_fetched_at:
+    kraken_tick = now()
+    capture_tick = now()
+    # Compare raw clock samples before truncating them to whole seconds.
+    # Otherwise a backwards jump within one second (or after the Kraken
+    # fetch) can produce a seemingly valid but noncausal unsigned receipt.
+    if (not all(math.isfinite(tick) and tick >= 0
+                for tick in (binance_tick, kraken_tick, capture_tick))
+            or not binance_tick <= kraken_tick <= capture_tick):
         raise MarketDataQualityError("nonmonotonic_capture_clock")
-    now_ms = int(now() * 1000)
+    binance_fetched_at = int(binance_tick)
+    kraken_fetched_at = int(kraken_tick)
+    now_ms = int(capture_tick * 1000)
     quality = verify_spot_market(
         symbol, INTERVAL, binance, kraken, now_ms,
         binance_fetched_at, kraken_fetched_at,

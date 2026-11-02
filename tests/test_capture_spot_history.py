@@ -315,6 +315,32 @@ class CaptureTests(unittest.TestCase):
         self.assertLessEqual(receipt["source_fetched_at"]["binance"],
                              receipt["source_fetched_at"]["kraken"])
 
+    def test_manual_capture_refuses_subsecond_clock_reversal(self):
+        # Whole-second int() rounding used to hide reversed source reads.
+        b, k = fixtures()
+        for ticks in (
+            (NOW / 1000 + 0.8, NOW / 1000 + 0.4, NOW / 1000 + 0.9),
+            (NOW / 1000 + 0.2, NOW / 1000 + 0.8, NOW / 1000 + 0.5),
+        ):
+            with self.subTest(ticks=ticks), self.assertRaisesRegex(
+                    MarketDataQualityError, "nonmonotonic_capture_clock"):
+                capture.capture_spot_history(
+                    "BTCUSDT",
+                    fetch_json=lambda u: k if "kraken.com" in u else b,
+                    clock=lambda values=iter(ticks): next(values))
+
+    def test_manual_capture_accepts_ordered_subsecond_clock_samples(self):
+        b, k = fixtures()
+        ticks = iter((NOW / 1000 + 0.1, NOW / 1000 + 0.2,
+                      NOW / 1000 + 0.3))
+        dataset, receipt = capture.capture_spot_history(
+            "BTCUSDT", fetch_json=lambda u: k if "kraken.com" in u else b,
+            clock=lambda: next(ticks))
+        self.assertEqual(len(dataset["candles"]), 499)
+        self.assertEqual(receipt["captured_at_ms"], NOW + 300)
+        self.assertEqual(receipt["source_fetched_at"],
+                         {"binance": NOW // 1000, "kraken": NOW // 1000})
+
     def test_unsigned_receipt_refuses_reversed_sequential_fetch_order(self):
         b, k = fixtures()
         data, receipt = capture.capture_spot_history(

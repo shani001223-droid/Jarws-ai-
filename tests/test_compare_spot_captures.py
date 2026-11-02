@@ -89,6 +89,32 @@ class CaptureOverlapTests(unittest.TestCase):
                     with self.assertRaisesRegex(PaperEvaluationError, reason):
                         compare.compare_capture_files(old, proof_old, new, proof_new)
 
+    def test_new_bars_must_close_after_earlier_capture_time(self):
+        # The first receipt can still pass its own binding when its data
+        # is one interval stale. That old receipt must not make a candle
+        # already closed at the earlier capture look like forward evidence.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            stale_pair = capture_fixture()
+            stale_pair[1]["captured_at_ms"] = NOW + STEP
+            stale_pair[1]["source_fetched_at"] = {
+                "binance": (NOW + STEP) // 1000,
+                "kraken": (NOW + STEP) // 1000,
+            }
+            old, old_receipt = save_pair(root, "stale", stale_pair)
+            new, new_receipt = save_pair(root, "later", capture_fixture(2))
+            with self.assertRaisesRegex(
+                    PaperEvaluationError, "new_closed_bar_not_after_earlier_capture"):
+                compare.compare_capture_files(old, old_receipt, new, new_receipt)
+            output, errors = io.StringIO(), io.StringIO()
+            with redirect_stdout(output), redirect_stderr(errors):
+                self.assertEqual(compare.main([
+                    "--earlier", str(old), "--earlier-receipt", str(old_receipt),
+                    "--later", str(new), "--later-receipt", str(new_receipt),
+                ]), 2)
+            self.assertEqual(output.getvalue(), "")
+            self.assertIn("WAIT:", errors.getvalue())
+
     def test_tampered_receipt_or_data_fails_without_stdout(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

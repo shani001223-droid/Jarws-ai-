@@ -66,6 +66,12 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
     if (not new_bars or new_bars[0].time != a[-1].time + STEP_MS
             or new_bars[-1].time != b[-1].time):
         raise PaperEvaluationError("missing_new_closed_candle_or_gap")
+    # A valid unsigned receipt can be recorded up to two intervals after its
+    # last included bar. If the next bar had already CLOSED by that earlier
+    # capture, it was not a newly closed observation after the first sample.
+    # Never count stale, operator-supplied history as a forward observation.
+    if new_bars[0].close_time <= proof_a["captured_at_ms"]:
+        raise PaperEvaluationError("new_closed_bar_not_after_earlier_capture")
     return {
         "mode": "manual_local_spot_capture_overlap_audit",
         "status": "unsigned_local_captures_overlap_consistent",

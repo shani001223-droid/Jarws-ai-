@@ -605,6 +605,71 @@ def _verified_original_target_accounting(simulation: dict,
 
 
 
+
+def _verified_modeled_outcome_statistics(simulation: dict) -> bool | None:
+    """Recompute all-trade versus strategy-resolved MODELED outcome metrics.
+
+    A forced terminal mark affects cash and headline statistics, but is not a
+    resolved strategy exit. These are local arithmetic checks, not calibrated
+    win probabilities, independently observed fills or profitability evidence.
+    None denotes zero trades; False denotes unannotated legacy test stubs.
+    """
+    trades = simulation["trades"]
+    diagnostics = simulation.get("execution_diagnostics")
+    headline = ("win_rate_pct", "expectancy", "profit_factor")
+    resolved_keys = (
+        "strategy_resolved_win_rate_pct",
+        "strategy_resolved_expectancy_usdt",
+        "strategy_resolved_profit_factor",
+    )
+
+    def fail():
+        raise PaperEvaluationError("unreconciled_prospective_outcome_statistics")
+
+    if diagnostics is not None and type(diagnostics) is not dict:
+        fail()
+    claimed = (any(key in simulation for key in headline)
+               or (diagnostics is not None
+                   and any(key in diagnostics for key in resolved_keys)))
+    if not claimed:
+        return None if not trades else False
+    if (diagnostics is None
+            or any(key not in simulation for key in headline)
+            or any(key not in diagnostics for key in resolved_keys)):
+        fail()
+
+    def metrics(items):
+        if not items:
+            return (None, None, None)
+        if any(type(x) not in (int, float) or not math.isfinite(x)
+               for x in items):
+            fail()
+        try:
+            gain = math.fsum(x for x in items if x > 0)
+            loss = math.fsum(-x for x in items if x < 0)
+            net = math.fsum(items)
+            return (100 * sum(x > 0 for x in items) / len(items),
+                    net / len(items), gain / loss if loss else None)
+        except (OverflowError, ValueError, ZeroDivisionError):
+            fail()
+
+    all_pnl = [trade["net_pnl"] for trade in trades]
+    resolved_pnl = [trade["net_pnl"] for trade in trades
+                    if not trade["terminal_forced_mark"]]
+    expected = metrics(all_pnl) + metrics(resolved_pnl)
+    actual = tuple(simulation[key] for key in headline) + tuple(
+        diagnostics[key] for key in resolved_keys)
+    for got, wanted in zip(actual, expected):
+        if wanted is None:
+            if got is not None:
+                fail()
+        elif (type(got) not in (int, float) or not math.isfinite(got)
+              or not math.isfinite(wanted)
+              or not math.isclose(got, wanted, rel_tol=1e-9, abs_tol=1e-7)):
+            fail()
+    return True if trades else None
+
+
 def _verified_replay_metadata(simulation: dict, strategy: str,
                               config: SimulationConfig, segment: list) -> bool:
     """Check the engine actually reports the requested strategy/cost/window.
@@ -886,6 +951,10 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
             simulation, baseline_config)
         stress_original_target_verified = _verified_original_target_accounting(
             stressed, stress_config)
+        baseline_statistics_verified = _verified_modeled_outcome_statistics(
+            simulation)
+        stress_statistics_verified = _verified_modeled_outcome_statistics(
+            stressed)
         baseline_set, stress_set = set(baseline_entries), set(stress_entries)
         forced = [trade for trade in simulation["trades"]
                   if trade["terminal_forced_mark"]]
@@ -899,6 +968,7 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
             "prior_closed_warmup_bars": WARMUP_BARS,
             "fixed_default_paper_settings": True,
             "modeled_trade_chronology_and_pnl_reconciled": True,
+            "modeled_outcome_statistics_reconciled": baseline_statistics_verified,
             "modeled_execution_costs_reconciled": baseline_costs_verified,
             "modeled_exit_reason_and_timing_reconciled": baseline_exit_semantics_verified,
             "modeled_candle_price_anchors_reconciled": baseline_candle_prices_verified,
@@ -937,6 +1007,7 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
                     trade["terminal_forced_mark"] for trade in stressed["trades"]),
                 "double_cost_max_drawdown_pct": stressed["max_drawdown_pct"],
                 "modeled_trade_chronology_and_pnl_reconciled": True,
+                "modeled_outcome_statistics_reconciled": stress_statistics_verified,
                 "modeled_execution_costs_reconciled": stress_costs_verified,
                 "modeled_exit_reason_and_timing_reconciled": stress_exit_semantics_verified,
                 "modeled_candle_price_anchors_reconciled": stress_candle_prices_verified,

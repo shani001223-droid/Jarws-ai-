@@ -1293,6 +1293,7 @@ class CaptureOverlapTests(unittest.TestCase):
             for result in (replay, stress):
                 self.assertTrue(result[
                     "modeled_risk_budget_and_utc_loss_reconciled"])
+                self.assertTrue(result["modeled_outcome_statistics_reconciled"])
                 self.assertTrue(result[
                     "modeled_original_signal_target_cost_ratios_reconciled"])
                 self.assertTrue(result[
@@ -1304,6 +1305,113 @@ class CaptureOverlapTests(unittest.TestCase):
                 self.assertFalse(result["profitability_verified"])
             self.assertFalse(report["forward_paper_fills_verified"])
             self.assertFalse(report["independent_venue_authenticated"])
+
+
+
+    def test_modeled_outcome_statistics_reconcile_forced_marks_and_losses(self):
+        # A profitable forced end-of-sample mark is NOT a resolved win.
+        # These are synthetic ledger values, not observed fills or returns.
+        trades = [
+            {"net_pnl": 10.0, "terminal_forced_mark": False},
+            {"net_pnl": -4.0, "terminal_forced_mark": False},
+            {"net_pnl": 6.0, "terminal_forced_mark": True},
+        ]
+        valid = {
+            "trades": trades,
+            "win_rate_pct": 200 / 3,
+            "expectancy": 4.0,
+            "profit_factor": 4.0,
+            "execution_diagnostics": {
+                "strategy_resolved_win_rate_pct": 50.0,
+                "strategy_resolved_expectancy_usdt": 3.0,
+                "strategy_resolved_profit_factor": 2.5,
+            },
+        }
+        self.assertTrue(compare._verified_modeled_outcome_statistics(valid))
+        self.assertFalse(compare._verified_modeled_outcome_statistics(
+            {"trades": trades}))
+        for key in ("win_rate_pct", "expectancy", "profit_factor"):
+            with self.subTest(headline=key):
+                with self.assertRaisesRegex(
+                        PaperEvaluationError,
+                        "unreconciled_prospective_outcome_statistics"):
+                    compare._verified_modeled_outcome_statistics(
+                        dict(valid, **{key: 999.0}))
+        for key in valid["execution_diagnostics"]:
+            with self.subTest(resolved=key):
+                bad = dict(valid["execution_diagnostics"], **{key: 999.0})
+                with self.assertRaisesRegex(
+                        PaperEvaluationError,
+                        "unreconciled_prospective_outcome_statistics"):
+                    compare._verified_modeled_outcome_statistics(
+                        dict(valid, execution_diagnostics=bad))
+        for key in ("expectancy", "profit_factor"):
+            incomplete = dict(valid)
+            del incomplete[key]
+            with self.assertRaisesRegex(
+                    PaperEvaluationError,
+                    "unreconciled_prospective_outcome_statistics"):
+                compare._verified_modeled_outcome_statistics(incomplete)
+        self.assertIsNone(compare._verified_modeled_outcome_statistics(
+            {"trades": [], "win_rate_pct": None, "expectancy": None,
+             "profit_factor": None, "execution_diagnostics": {
+                 "strategy_resolved_win_rate_pct": None,
+                 "strategy_resolved_expectancy_usdt": None,
+                 "strategy_resolved_profit_factor": None,
+             }}))
+        with self.assertRaisesRegex(
+                PaperEvaluationError,
+                "unreconciled_prospective_outcome_statistics"):
+            compare._verified_modeled_outcome_statistics(
+                {"trades": [], "win_rate_pct": 100.0, "expectancy": None,
+                 "profit_factor": None, "execution_diagnostics": {
+                     "strategy_resolved_win_rate_pct": None,
+                     "strategy_resolved_expectancy_usdt": None,
+                     "strategy_resolved_profit_factor": None,
+                 }})
+        all_wins = dict(valid, trades=[trades[0]],
+                        win_rate_pct=100.0, expectancy=10.0,
+                        profit_factor=None, execution_diagnostics={
+                            "strategy_resolved_win_rate_pct": 100.0,
+                            "strategy_resolved_expectancy_usdt": 10.0,
+                            "strategy_resolved_profit_factor": None,
+                        })
+        self.assertTrue(compare._verified_modeled_outcome_statistics(all_wins))
+
+    def test_real_paper_engine_outcome_statistics_both_cost_settings(self):
+        # Exercise actual backtest, not a mocked performance dictionary.
+        from cloud_backend.trading_research import Candle
+        bars = [
+            Candle(NOW + i * STEP, 100.0, 101.0, 99.0, 100.0,
+                   10.0, NOW + (i + 1) * STEP - 1)
+            for i in range(70)
+        ]
+
+        def one_signal(prior, strategy):
+            if len(prior) == 64:
+                return {"stop": 99.0, "reference_entry": 100.0,
+                        "reference_target": 102.0}
+            return None
+
+        for config in (
+                compare.SimulationConfig(),
+                compare.SimulationConfig(fee_bps=20, slippage_bps=10)):
+            with self.subTest(fee_bps=config.fee_bps):
+                with patch("cloud_backend.trading_research.setup",
+                           side_effect=one_signal):
+                    modeled = compare.backtest(
+                        bars, "trend_pullback", config,
+                        entry_not_before=bars[64].time)
+                self.assertEqual(modeled["trade_count"], 1)
+                self.assertLess(modeled["net_pnl"], 0)
+                self.assertTrue(
+                    compare._verified_modeled_outcome_statistics(modeled))
+                for key in ("win_rate_pct", "expectancy", "profit_factor"):
+                    tampered = dict(modeled, **{key: 42.0})
+                    with self.assertRaisesRegex(
+                            PaperEvaluationError,
+                            "unreconciled_prospective_outcome_statistics"):
+                        compare._verified_modeled_outcome_statistics(tampered)
 
 
 if __name__ == "__main__":

@@ -1182,6 +1182,89 @@ class CaptureOverlapTests(unittest.TestCase):
                         dict(modeled, trades=[missing]), config)
 
 
+    def test_real_engine_original_signal_target_ratios_both_costs(self):
+        # Real modeled paper engine, deterministic synthetic candles only.
+        # Original signal target remains unauthenticated operator/test input.
+        from cloud_backend.trading_research import Candle
+        bars = [
+            Candle(NOW + i * STEP, 100.0, 101.0, 99.0, 100.0,
+                   10.0, NOW + (i + 1) * STEP - 1)
+            for i in range(70)
+        ]
+
+        def one_signal(prior, strategy):
+            if len(prior) == 64:
+                return {"stop": 99.0, "reference_entry": 100.0,
+                        "reference_target": 102.0}
+            return None
+
+        for config in (
+                compare.SimulationConfig(),
+                compare.SimulationConfig(fee_bps=20, slippage_bps=10)):
+            with self.subTest(fee_bps=config.fee_bps):
+                with patch("cloud_backend.trading_research.setup",
+                           side_effect=one_signal):
+                    modeled = compare.backtest(
+                        bars, "trend_pullback", config,
+                        entry_not_before=bars[64].time)
+                self.assertEqual(modeled["trade_count"], 1)
+                self.assertTrue(compare._verified_original_target_accounting(
+                    modeled, config))
+                trade = modeled["trades"][0]
+                for key in (
+                        "original_signal_target",
+                        "remaining_original_signal_reward_risk_at_entry",
+                        "original_signal_target_net_gain_per_unit_usdt",
+                        "remaining_original_signal_net_reward_risk_at_entry",
+                        "reference_target"):
+                    with self.subTest(tampered=key):
+                        altered = dict(modeled, trades=[dict(
+                            trade, **{key: trade[key] + 1.0})])
+                        with self.assertRaisesRegex(
+                                PaperEvaluationError,
+                                "unreconciled_prospective_original_target"):
+                            compare._verified_original_target_accounting(
+                                altered, config)
+                for key in (
+                        "original_signal_target",
+                        "remaining_original_signal_reward_risk_at_entry",
+                        "original_signal_target_net_gain_per_unit_usdt",
+                        "remaining_original_signal_net_reward_risk_at_entry"):
+                    with self.subTest(missing=key):
+                        incomplete = dict(trade)
+                        del incomplete[key]
+                        with self.assertRaisesRegex(
+                                PaperEvaluationError,
+                                "unreconciled_prospective_original_target"):
+                            compare._verified_original_target_accounting(
+                                dict(modeled, trades=[incomplete]), config)
+                for key in (
+                        "paper_entries_original_signal_remaining_rr_below_1r",
+                        "paper_entries_original_signal_net_upside_nonpositive"):
+                    diagnostics = dict(modeled["execution_diagnostics"])
+                    diagnostics[key] += 1
+                    with self.assertRaisesRegex(
+                            PaperEvaluationError,
+                            "unreconciled_prospective_original_target"):
+                        compare._verified_original_target_accounting(
+                            dict(modeled, execution_diagnostics=diagnostics),
+                            config)
+        self.assertFalse(compare._verified_original_target_accounting(
+            {"trades": [{"entry_time": NOW}]}, compare.SimulationConfig()))
+        self.assertIsNone(compare._verified_original_target_accounting(
+            {"trades": [], "execution_diagnostics": {
+                "paper_entries_original_signal_remaining_rr_below_1r": 0,
+                "paper_entries_original_signal_net_upside_nonpositive": 0,
+            }}, compare.SimulationConfig()))
+        with self.assertRaisesRegex(
+                PaperEvaluationError, "unreconciled_prospective_original_target"):
+            compare._verified_original_target_accounting(
+                {"trades": [], "execution_diagnostics": {
+                    "paper_entries_original_signal_remaining_rr_below_1r": 1,
+                    "paper_entries_original_signal_net_upside_nonpositive": 0,
+                }}, compare.SimulationConfig())
+
+
     def test_real_engine_nonempty_prospective_capture_replay(self):
         # Full local capture/receipt/replay integration, not a mocked
         # backtest return. Every OHLC bar is synthetic, never market evidence.
@@ -1210,6 +1293,8 @@ class CaptureOverlapTests(unittest.TestCase):
             for result in (replay, stress):
                 self.assertTrue(result[
                     "modeled_risk_budget_and_utc_loss_reconciled"])
+                self.assertTrue(result[
+                    "modeled_original_signal_target_cost_ratios_reconciled"])
                 self.assertTrue(result[
                     "modeled_execution_costs_reconciled"])
                 self.assertTrue(result[

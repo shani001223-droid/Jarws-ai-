@@ -542,7 +542,8 @@ class CaptureOverlapTests(unittest.TestCase):
                     "modeled_sell_slippage_cost_usdt": sell,
                     "reference_gross_pnl_before_modeled_costs_usdt": gross,
                 }
-                return {"net_pnl": pnl, "trade_count": 1, "trades": [trade]}
+                return {"net_pnl": pnl, "trade_count": 1, "trades": [trade],
+                        "max_drawdown_pct": 0.0}
 
             valid = [modeled(cfg), modeled(stress)]
             with patch.object(compare, "backtest", side_effect=valid):

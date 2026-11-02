@@ -176,6 +176,32 @@ class QualityUnitTests(unittest.TestCase):
                 self.assertEqual(result["last_closed_at"], NOW-1)
                 self.assertEqual(result["status"], "verified_sources_agree")
 
+    def test_quality_refuses_fetch_before_close_or_after_server_clock(self):
+        # Synthetic timestamps can look recent and both venues can agree,
+        # but a closed candle cannot have been fetched before its close.
+        for tf in mq.INTERVALS:
+            b, k = fixtures(tf)
+            for binance_time, kraken_time in (
+                    (NOW // 1000 - 1, NOW // 1000),
+                    (NOW // 1000, NOW // 1000 - 1),
+                    (NOW // 1000, NOW // 1000 + 1)):
+                with self.subTest(tf=tf, b=binance_time, k=kraken_time):
+                    with self.assertRaisesRegex(
+                            mq.MarketDataQualityError,
+                            "noncausal_source_fetch_time"):
+                        mq.verify_spot_market(
+                            "BTCUSDT", tf, b, k, NOW, binance_time, kraken_time)
+        b, k = fixtures()
+        def fetch(key, url, ttl):
+            return (k if "kraken.com" in url else b), (
+                NOW // 1000 if "kraken.com" in url else NOW // 1000 - 1)
+        with patch.object(main, "_public_data", side_effect=fetch), patch.object(
+                main.time, "time", return_value=NOW / 1000):
+            with self.assertRaises(main.HTTPException) as caught:
+                main.trading_data_quality(Response(), "BTCUSDT", "15m")
+        self.assertEqual(caught.exception.status_code, 503)
+        self.assertNotIn("verified_sources_agree", str(caught.exception.detail))
+
     def test_rejects_stale_gapped_and_mismatched_sources(self):
         b, k = fixtures()
         k["result"]["XXBTZUSD"][-2][2] = "111"

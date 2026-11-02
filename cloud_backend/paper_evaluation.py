@@ -835,7 +835,8 @@ def attach_capture_receipt(report: dict, receipt: dict) -> dict:
                    or v > captured // 1000
                    or v < captured // 1000 - 120
                    for v in fetched.values())
-            or abs(fetched["binance"] - fetched["kraken"]) > 120):
+            or abs(fetched["binance"] - fetched["kraken"]) > 120
+            or fetched["binance"] > fetched["kraken"]):
         raise PaperEvaluationError("capture_receipt_fetch_mismatch")
     historical_max = receipt.get("max_historical_close_difference_pct")
     ohlc_max = receipt.get("max_historical_ohlc_difference_pct")

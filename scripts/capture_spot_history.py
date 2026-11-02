@@ -135,6 +135,10 @@ def capture_spot_history(symbol: str, *, fetch_json=None, clock=None):
     binance_fetched_at = int(now())
     kraken = fetch(kraken_url)
     kraken_fetched_at = int(now())
+    # This manual capture fetches Binance before Kraken, never in parallel.
+    # Refuse a backwards local clock rather than issue a noncausal receipt.
+    if binance_fetched_at > kraken_fetched_at:
+        raise MarketDataQualityError("nonmonotonic_capture_clock")
     now_ms = int(now() * 1000)
     quality = verify_spot_market(
         symbol, INTERVAL, binance, kraken, now_ms,

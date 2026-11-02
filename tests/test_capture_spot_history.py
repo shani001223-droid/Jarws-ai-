@@ -299,6 +299,41 @@ class CaptureTests(unittest.TestCase):
                                             "capture_receipt_fetch_mismatch"):
                     attach_capture_receipt(report, changed)
 
+    def test_manual_capture_refuses_backwards_source_clock(self):
+        b, k = fixtures()
+        ticks = iter((NOW / 1000 + 8, NOW / 1000 + 7, NOW / 1000 + 10))
+        with self.assertRaisesRegex(MarketDataQualityError,
+                                    "nonmonotonic_capture_clock"):
+            capture.capture_spot_history(
+                "BTCUSDT", fetch_json=lambda u: k if "kraken.com" in u else b,
+                clock=lambda: next(ticks))
+        ticks = iter((NOW / 1000 + 7, NOW / 1000 + 8, NOW / 1000 + 10))
+        data, receipt = capture.capture_spot_history(
+            "BTCUSDT", fetch_json=lambda u: k if "kraken.com" in u else b,
+            clock=lambda: next(ticks))
+        self.assertEqual(len(data["candles"]), 499)
+        self.assertLessEqual(receipt["source_fetched_at"]["binance"],
+                             receipt["source_fetched_at"]["kraken"])
+
+    def test_unsigned_receipt_refuses_reversed_sequential_fetch_order(self):
+        b, k = fixtures()
+        data, receipt = capture.capture_spot_history(
+            "BTCUSDT", fetch_json=lambda u: k if "kraken.com" in u else b,
+            clock=lambda: NOW / 1000)
+        from cloud_backend.paper_evaluation import attach_capture_receipt, PaperEvaluationError
+        report = evaluate_chronological([Candle(*row) for row in data["candles"]],
+                                        "BTCUSDT", "trend_pullback")
+        later = {**receipt, "captured_at_ms": NOW + 10_000,
+                 "source_fetched_at": {"binance": NOW // 1000 + 7,
+                                       "kraken": NOW // 1000 + 8}}
+        self.assertEqual(attach_capture_receipt(report, later)["capture_receipt"]["status"],
+                         "local_unsigned_receipt_matches_candles")
+        reversed_order = {**later, "source_fetched_at": {
+            "binance": NOW // 1000 + 8, "kraken": NOW // 1000 + 7}}
+        with self.assertRaisesRegex(PaperEvaluationError,
+                                    "capture_receipt_fetch_mismatch"):
+            attach_capture_receipt(report, reversed_order)
+
     def test_receipt_rejects_impossible_recent_ohlc_claims(self):
         # Synthetic unsigned receipts must still be internally consistent.
         b, k = fixtures()

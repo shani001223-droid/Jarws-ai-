@@ -123,13 +123,33 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
         if scored_index < WARMUP_BARS:
             raise PaperEvaluationError("insufficient_prospective_warmup")
         segment = b[scored_index - WARMUP_BARS:]
+        baseline_config = SimulationConfig()
         simulation = backtest(
-            segment, prospective_strategy, SimulationConfig(),
+            segment, prospective_strategy, baseline_config,
             entry_not_before=first_scored,
         )
-        if any(trade["entry_time"] < first_scored
-               for trade in simulation["trades"]):
+        # Same exact scored candles, strategy and risk defaults; ONLY both
+        # adverse fee/slippage assumptions are doubled. This sensitivity is
+        # neither an independent dataset nor a claim that PnL must decrease:
+        # changed fills/sizing can change subsequent entries and exits.
+        stress_config = SimulationConfig(
+            equity=baseline_config.equity,
+            risk_pct=baseline_config.risk_pct,
+            daily_loss_limit=baseline_config.daily_loss_limit,
+            fee_bps=baseline_config.fee_bps * 2,
+            slippage_bps=baseline_config.slippage_bps * 2,
+        )
+        stressed = backtest(
+            segment, prospective_strategy, stress_config,
+            entry_not_before=first_scored,
+        )
+        baseline_entries = [trade["entry_time"] for trade in simulation["trades"]]
+        stress_entries = [trade["entry_time"] for trade in stressed["trades"]]
+        if (any(entry < first_scored for entry in baseline_entries + stress_entries)
+                or len(set(baseline_entries)) != len(baseline_entries)
+                or len(set(stress_entries)) != len(stress_entries)):
             raise PaperEvaluationError("noncausal_prospective_replay")
+        baseline_set, stress_set = set(baseline_entries), set(stress_entries)
         forced = [trade for trade in simulation["trades"]
                   if trade["terminal_forced_mark"]]
         resolved = [trade for trade in simulation["trades"]
@@ -153,6 +173,35 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
             "profitability_verified": False,
             "simulation": {k: v for k, v in simulation.items()
                            if k != "input_candles"},
+            "double_cost_same_series_sensitivity": {
+                "status": "modeled_same_series_not_independent",
+                "fee_bps": stress_config.fee_bps,
+                "slippage_bps": stress_config.slippage_bps,
+                "baseline_net_pnl_usdt": simulation["net_pnl"],
+                "double_cost_net_pnl_usdt": stressed["net_pnl"],
+                "double_cost_minus_baseline_net_pnl_usdt": (
+                    stressed["net_pnl"] - simulation["net_pnl"]),
+                "baseline_trade_count": len(baseline_entries),
+                "double_cost_trade_count": len(stress_entries),
+                "shared_entry_count": len(baseline_set & stress_set),
+                "baseline_only_entry_count": len(baseline_set - stress_set),
+                "double_cost_only_entry_count": len(stress_set - baseline_set),
+                "double_cost_strategy_resolved_trade_count": sum(
+                    not trade["terminal_forced_mark"] for trade in stressed["trades"]),
+                "double_cost_terminal_forced_mark_count": sum(
+                    trade["terminal_forced_mark"] for trade in stressed["trades"]),
+                "double_cost_max_drawdown_pct": stressed["max_drawdown_pct"],
+                "simulation": {k: v for k, v in stressed.items()
+                               if k != "input_candles"},
+                "independent_evaluation": False,
+                "profitability_verified": False,
+                "limitations": [
+                    "This is the same operator-supplied later capture, not independent holdout data.",
+                    "Both sides' fees and adverse slippage are doubled; changing fills and risk sizing may change entry timestamps, so PnL is not guaranteed monotonic.",
+                    "All negative, zero-trade, gap, ambiguity, drawdown and forced terminal outcomes remain in the modeled simulation.",
+                    "No authenticated fills, calibrated win probability, executable quote or profitability claim.",
+                ],
+            },
             "limitations": [
                 "Only fully post-earlier-capture bars are scored; 64 earlier closed bars are warmup context, never entries.",
                 "Both local receipts are unsigned; later candles are operator supplied, not independently authenticated.",

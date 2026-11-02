@@ -5,6 +5,7 @@ import tempfile
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
+from unittest.mock import patch
 
 from cloud_backend.paper_evaluation import PaperEvaluationError
 from scripts import capture_spot_history as capture
@@ -191,6 +192,15 @@ class CaptureOverlapTests(unittest.TestCase):
             self.assertEqual(replay["simulation"]["trade_count"], 0)
             self.assertEqual(replay["simulation"]["net_pnl"], 0)
             self.assertIsNone(replay["win_probability"])
+            stress = replay["double_cost_same_series_sensitivity"]
+            self.assertEqual(stress["fee_bps"], 20)
+            self.assertEqual(stress["slippage_bps"], 10)
+            self.assertEqual(stress["baseline_trade_count"], 0)
+            self.assertEqual(stress["double_cost_trade_count"], 0)
+            self.assertEqual(stress["double_cost_net_pnl_usdt"], 0)
+            self.assertEqual(stress["double_cost_minus_baseline_net_pnl_usdt"], 0)
+            self.assertFalse(stress["independent_evaluation"])
+            self.assertFalse(stress["profitability_verified"])
             self.assertFalse(replay["forward_paper_fills_verified"])
             self.assertFalse(replay["independent_venue_authenticated"])
             self.assertFalse(replay["profitability_verified"])
@@ -235,6 +245,74 @@ class CaptureOverlapTests(unittest.TestCase):
             self.assertEqual(output.getvalue(), "")
             self.assertIn("WAIT:", errors.getvalue())
 
+
+    def test_prospective_double_cost_retains_losses_forced_marks_and_unmatched_entries(self):
+        # Deterministic mocked engine outputs test the reporting/partition
+        # contract, NOT a claim of actual modeled or market performance.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            old, old_receipt = save_pair(root, "old", capture_fixture())
+            new, new_receipt = save_pair(root, "new", capture_fixture(2))
+            baseline = {
+                "net_pnl": -2.5, "max_drawdown_pct": 1.0,
+                "trades": [{"entry_time": NOW, "net_pnl": -2.5,
+                            "terminal_forced_mark": False}],
+                "input_candles": ["not_exported"],
+            }
+            stressed = {
+                "net_pnl": -7.0, "max_drawdown_pct": 2.5,
+                "trades": [{"entry_time": NOW + STEP, "net_pnl": -7.0,
+                            "terminal_forced_mark": True}],
+                "input_candles": ["not_exported"],
+            }
+            with patch.object(compare, "backtest", side_effect=[baseline, stressed]) as run:
+                report = compare.compare_capture_files(
+                    old, old_receipt, new, new_receipt,
+                    prospective_strategy="trend_pullback")
+            self.assertEqual(run.call_count, 2)
+            self.assertEqual(run.call_args_list[0].kwargs["entry_not_before"], NOW)
+            self.assertEqual(run.call_args_list[1].kwargs["entry_not_before"], NOW)
+            stress = report["prospective_paper_replay"]["double_cost_same_series_sensitivity"]
+            self.assertEqual(stress["baseline_net_pnl_usdt"], -2.5)
+            self.assertEqual(stress["double_cost_net_pnl_usdt"], -7.0)
+            self.assertEqual(stress["double_cost_minus_baseline_net_pnl_usdt"], -4.5)
+            self.assertEqual(stress["shared_entry_count"], 0)
+            self.assertEqual(stress["baseline_only_entry_count"], 1)
+            self.assertEqual(stress["double_cost_only_entry_count"], 1)
+            self.assertEqual(stress["double_cost_terminal_forced_mark_count"], 1)
+            self.assertEqual(stress["double_cost_strategy_resolved_trade_count"], 0)
+            self.assertEqual(stress["double_cost_max_drawdown_pct"], 2.5)
+            self.assertEqual(stress["simulation"]["trades"][0]["net_pnl"], -7.0)
+            self.assertNotIn("input_candles", stress["simulation"])
+            self.assertFalse(stress["profitability_verified"])
+
+    def test_prospective_double_cost_refuses_noncausal_stress_entry(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            old, old_receipt = save_pair(root, "old", capture_fixture())
+            new, new_receipt = save_pair(root, "new", capture_fixture(2))
+            baseline = {"net_pnl": 0.0, "max_drawdown_pct": 0.0, "trades": []}
+            noncausal = {
+                "net_pnl": 100.0, "max_drawdown_pct": 0.0,
+                "trades": [{"entry_time": NOW - STEP, "net_pnl": 100.0,
+                            "terminal_forced_mark": False}],
+            }
+            with patch.object(compare, "backtest", side_effect=[baseline, noncausal]):
+                with self.assertRaisesRegex(
+                        PaperEvaluationError, "noncausal_prospective_replay"):
+                    compare.compare_capture_files(
+                        old, old_receipt, new, new_receipt,
+                        prospective_strategy="trend_pullback")
+            output, errors = io.StringIO(), io.StringIO()
+            with patch.object(compare, "backtest", side_effect=[baseline, noncausal]):
+                with redirect_stdout(output), redirect_stderr(errors):
+                    self.assertEqual(compare.main([
+                        "--earlier", str(old), "--earlier-receipt", str(old_receipt),
+                        "--later", str(new), "--later-receipt", str(new_receipt),
+                        "--prospective-replay", "trend_pullback",
+                    ]), 2)
+            self.assertEqual(output.getvalue(), "")
+            self.assertIn("WAIT:", errors.getvalue())
 
 if __name__ == "__main__":
     unittest.main()

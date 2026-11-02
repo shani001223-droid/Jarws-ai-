@@ -278,6 +278,27 @@ class CaptureTests(unittest.TestCase):
             with self.subTest(key=key), self.assertRaises(PaperEvaluationError):
                 attach_capture_receipt(report, {**receipt, key: bad})
 
+    def test_receipt_fetch_times_must_follow_last_close_and_precede_receipt(self):
+        # A local unsigned receipt previously allowed fetch timestamps up
+        # to 120s before capture, even if the claimed final candle had not
+        # yet closed, or up to 5s after the receipt itself.
+        b, k = fixtures()
+        data, receipt = capture.capture_spot_history(
+            "BTCUSDT", fetch_json=lambda u: k if "kraken.com" in u else b,
+            clock=lambda: NOW / 1000)
+        from cloud_backend.paper_evaluation import attach_capture_receipt, PaperEvaluationError
+        report = evaluate_chronological([Candle(*row) for row in data["candles"]],
+                                        "BTCUSDT", "trend_pullback")
+        self.assertEqual(attach_capture_receipt(report, receipt)["capture_receipt"]["status"],
+                         "local_unsigned_receipt_matches_candles")
+        for invalid_time in (NOW // 1000 - 30, NOW // 1000 + 3):
+            with self.subTest(invalid_time=invalid_time):
+                changed = {**receipt, "source_fetched_at": {
+                    "binance": invalid_time, "kraken": invalid_time}}
+                with self.assertRaisesRegex(PaperEvaluationError,
+                                            "capture_receipt_fetch_mismatch"):
+                    attach_capture_receipt(report, changed)
+
     def test_receipt_rejects_impossible_recent_ohlc_claims(self):
         # Synthetic unsigned receipts must still be internally consistent.
         b, k = fixtures()

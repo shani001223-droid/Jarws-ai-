@@ -824,9 +824,17 @@ def attach_capture_receipt(report: dict, receipt: dict) -> dict:
             or not last_close <= captured <= last_close + 2 * STEP_MS):
         raise PaperEvaluationError("capture_receipt_time_mismatch")
     fetched = receipt.get("source_fetched_at")
+    # The public candle must have fully closed BEFORE either venue was
+    # fetched. The fetches must also precede the final local receipt time.
+    # Earlier versions allowed a locally supplied fetch timestamp up to
+    # 120 seconds before capture (possibly before the last bar closed), or
+    # five seconds in its future. Neither can be valid causal evidence.
+    # Provider fetch timestamps have whole-second precision.
     if (type(fetched) is not dict or set(fetched) != {"binance", "kraken"}
-            or any(type(v) is not int or v < captured // 1000 - 120
-                   or v > captured // 1000 + 5 for v in fetched.values())
+            or any(type(v) is not int or v * 1000 <= last_close
+                   or v > captured // 1000
+                   or v < captured // 1000 - 120
+                   for v in fetched.values())
             or abs(fetched["binance"] - fetched["kraken"]) > 120):
         raise PaperEvaluationError("capture_receipt_fetch_mismatch")
     historical_max = receipt.get("max_historical_close_difference_pct")

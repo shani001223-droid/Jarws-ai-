@@ -371,6 +371,146 @@ def _verified_prior_closed_volume(simulation: dict, segment: list) -> bool | Non
     return True
 
 
+def _verified_modeled_risk_outcomes(simulation: dict,
+                                    config: SimulationConfig) -> bool | None:
+    """Audit modeled per-trade risk budgets and UTC realized-loss accounting.
+
+    This checks only local simulated arithmetic. Neither a planned budget nor
+    a daily entry lockout guarantees an exchange fill or maximum gap loss.
+    """
+    trades = simulation["trades"]
+    diagnostics = simulation.get("execution_diagnostics")
+    keys = (
+        "risk_budget_at_entry_usdt", "planned_stop_loss_usdt",
+        "risk_budget_breached", "planned_stop_loss_exceeded",
+        "utc_day_gross_realized_loss_after_exit_usdt",
+        "utc_gross_loss_cap_breached", "realized_loss_to_budget_multiple",
+    )
+    aggregate_keys = (
+        "risk_budget_breach_count", "planned_stop_loss_exceeded_count",
+        "max_loss_to_risk_budget_multiple", "utc_daily_gross_loss_cap_usdt",
+        "utc_gross_loss_cap_breach_days",
+        "max_utc_day_gross_realized_loss_usdt",
+    )
+
+    def fail():
+        raise PaperEvaluationError("unreconciled_prospective_paper_risk")
+
+    def finite(value):
+        return type(value) in (int, float) and math.isfinite(value)
+
+    def same(actual, expected):
+        return finite(actual) and math.isclose(
+            actual, expected, rel_tol=1e-9, abs_tol=1e-7)
+
+    if diagnostics is not None and type(diagnostics) is not dict:
+        fail()
+    present_aggregates = (set(aggregate_keys) & set(diagnostics)
+                          if diagnostics is not None else set())
+    if present_aggregates and len(present_aggregates) != len(aggregate_keys):
+        fail()
+    if not trades:
+        if present_aggregates:
+            for key, expected in (
+                ("risk_budget_breach_count", 0),
+                ("planned_stop_loss_exceeded_count", 0),
+                ("max_loss_to_risk_budget_multiple", None),
+                ("utc_daily_gross_loss_cap_usdt", config.daily_loss_limit),
+                ("utc_gross_loss_cap_breach_days", 0),
+                ("max_utc_day_gross_realized_loss_usdt", 0.0),
+            ):
+                value = diagnostics[key]
+                if (value is not None or expected is not None) and (
+                        (expected is None and value is not None)
+                        or (expected is not None and not same(value, expected))):
+                    fail()
+        return None
+    claimed = [any(key in trade for key in keys) for trade in trades]
+    if not any(claimed):
+        if present_aggregates:
+            fail()
+        return False
+    if not all(claimed):
+        fail()
+    cash, day_losses = config.equity, {}
+    breaches = planned_breaches = 0
+    max_multiple = None
+    fee, slip = config.fee_bps / 10_000, config.slippage_bps / 10_000
+    for trade in trades:
+        if any(key not in trade for key in keys):
+            fail()
+        entry_at, exit_at = trade["entry_time"], trade["exit_time"]
+        entry, stop, qty = (
+            trade.get("entry"), trade.get("reference_stop"),
+            trade.get("quantity"))
+        net, budget, planned = (
+            trade["net_pnl"], trade["risk_budget_at_entry_usdt"],
+            trade["planned_stop_loss_usdt"])
+        if (type(entry_at) is not int or type(exit_at) is not int
+                or any(not finite(x) for x in (entry, stop, qty, net,
+                                                budget, planned))
+                or not 0 < stop < entry or qty <= 0 or budget <= 0
+                or planned <= 0):
+            fail()
+        entry_day = entry_at // 86_400_000
+        remaining = config.daily_loss_limit - day_losses.get(entry_day, 0.0)
+        expected_budget = min(cash * config.risk_pct / 100, remaining)
+        stop_exit = stop * (1 - slip)
+        expected_planned = qty * (
+            entry - stop_exit + fee * (entry + stop_exit))
+        if (expected_budget <= 0
+                or not same(budget, expected_budget)
+                or not same(planned, expected_planned)
+                or planned > budget + 1e-7):
+            fail()
+        loss = max(0.0, -net)
+        breached = loss > budget + 1e-8
+        planned_breached = loss > planned + 1e-8
+        if (type(trade["risk_budget_breached"]) is not bool
+                or trade["risk_budget_breached"] != breached
+                or type(trade["planned_stop_loss_exceeded"]) is not bool
+                or trade["planned_stop_loss_exceeded"] != planned_breached):
+            fail()
+        multiple = loss / budget if loss else None
+        reported_multiple = trade["realized_loss_to_budget_multiple"]
+        if ((multiple is None and reported_multiple is not None)
+                or (multiple is not None
+                    and not same(reported_multiple, multiple))):
+            fail()
+        exit_day = exit_at // 86_400_000
+        day_losses[exit_day] = day_losses.get(exit_day, 0.0) + loss
+        daily_loss = day_losses[exit_day]
+        daily_breached = daily_loss > config.daily_loss_limit + 1e-8
+        if (not same(trade["utc_day_gross_realized_loss_after_exit_usdt"],
+                     daily_loss)
+                or type(trade["utc_gross_loss_cap_breached"]) is not bool
+                or trade["utc_gross_loss_cap_breached"] != daily_breached):
+            fail()
+        breaches += int(breached)
+        planned_breaches += int(planned_breached)
+        if multiple is not None:
+            max_multiple = max(max_multiple or 0.0, multiple)
+        cash += net
+    if present_aggregates:
+        expected = {
+            "risk_budget_breach_count": breaches,
+            "planned_stop_loss_exceeded_count": planned_breaches,
+            "max_loss_to_risk_budget_multiple": max_multiple,
+            "utc_daily_gross_loss_cap_usdt": config.daily_loss_limit,
+            "utc_gross_loss_cap_breach_days": sum(
+                loss > config.daily_loss_limit + 1e-8
+                for loss in day_losses.values()),
+            "max_utc_day_gross_realized_loss_usdt": max(
+                day_losses.values(), default=0.0),
+        }
+        for key, wanted in expected.items():
+            got = diagnostics[key]
+            if ((wanted is None and got is not None)
+                    or (wanted is not None and not same(got, wanted))):
+                fail()
+    return True
+
+
 def _verified_replay_metadata(simulation: dict, strategy: str,
                               config: SimulationConfig, segment: list) -> bool:
     """Check the engine actually reports the requested strategy/cost/window.
@@ -644,6 +784,10 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
             simulation, segment)
         stress_volume_verified = _verified_prior_closed_volume(
             stressed, segment)
+        baseline_risk_verified = _verified_modeled_risk_outcomes(
+            simulation, baseline_config)
+        stress_risk_verified = _verified_modeled_risk_outcomes(
+            stressed, stress_config)
         baseline_set, stress_set = set(baseline_entries), set(stress_entries)
         forced = [trade for trade in simulation["trades"]
                   if trade["terminal_forced_mark"]]
@@ -661,6 +805,7 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
             "modeled_exit_reason_and_timing_reconciled": baseline_exit_semantics_verified,
             "modeled_candle_price_anchors_reconciled": baseline_candle_prices_verified,
             "modeled_prior_closed_volume_reconciled": baseline_volume_verified,
+            "modeled_risk_budget_and_utc_loss_reconciled": baseline_risk_verified,
             "modeled_strategy_cost_window_metadata_reconciled": baseline_metadata_verified,
             "strategy_resolved_trade_count": len(resolved),
             "terminal_forced_mark_count": len(forced),
@@ -697,6 +842,7 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
                 "modeled_exit_reason_and_timing_reconciled": stress_exit_semantics_verified,
                 "modeled_candle_price_anchors_reconciled": stress_candle_prices_verified,
                 "modeled_prior_closed_volume_reconciled": stress_volume_verified,
+                "modeled_risk_budget_and_utc_loss_reconciled": stress_risk_verified,
                 "modeled_strategy_cost_window_metadata_reconciled": stress_metadata_verified,
                 "simulation": {k: v for k, v in stressed.items()
                                if k != "input_candles"},

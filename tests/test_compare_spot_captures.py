@@ -1041,5 +1041,98 @@ class CaptureOverlapTests(unittest.TestCase):
                                     prospective_strategy="trend_pullback")
 
 
+    def test_modeled_risk_budget_and_utc_loss_audit_both_cost_settings(self):
+        # The paper cap blocks new entries; gap losses can exceed a budget.
+        # Audit the per-entry planned stop, realized loss and UTC-day totals.
+        for config in (
+                compare.SimulationConfig(),
+                compare.SimulationConfig(fee_bps=20, slippage_bps=10)):
+            with self.subTest(fee_bps=config.fee_bps):
+                entry, stop, qty, net = 100.0 * (
+                    1 + config.slippage_bps / 10_000), 99.0, 1.0, -2.0
+                planned = qty * (
+                    entry - stop * (1 - config.slippage_bps / 10_000)
+                    + config.fee_bps / 10_000 * (
+                        entry + stop * (1 - config.slippage_bps / 10_000)))
+                trade = {
+                    "entry_time": NOW, "exit_time": NOW + STEP - 1,
+                    "entry": entry, "reference_stop": stop, "quantity": qty,
+                    "net_pnl": net, "risk_budget_at_entry_usdt": 5.0,
+                    "planned_stop_loss_usdt": planned,
+                    "risk_budget_breached": False,
+                    "planned_stop_loss_exceeded": True,
+                    "utc_day_gross_realized_loss_after_exit_usdt": 2.0,
+                    "utc_gross_loss_cap_breached": False,
+                    "realized_loss_to_budget_multiple": 0.4,
+                }
+                diagnostics = {
+                    "risk_budget_breach_count": 0,
+                    "planned_stop_loss_exceeded_count": 1,
+                    "max_loss_to_risk_budget_multiple": 0.4,
+                    "utc_daily_gross_loss_cap_usdt": 10.0,
+                    "utc_gross_loss_cap_breach_days": 0,
+                    "max_utc_day_gross_realized_loss_usdt": 2.0,
+                }
+                valid = {"trades": [trade],
+                         "execution_diagnostics": diagnostics}
+                self.assertTrue(compare._verified_modeled_risk_outcomes(
+                    valid, config))
+                self.assertFalse(compare._verified_modeled_risk_outcomes(
+                    {"trades": [{"entry_time": NOW}]}, config))
+                for change in (
+                        {"risk_budget_at_entry_usdt": 6.0},
+                        {"planned_stop_loss_usdt": planned + 1.0},
+                        {"risk_budget_breached": True},
+                        {"planned_stop_loss_exceeded": False},
+                        {"utc_day_gross_realized_loss_after_exit_usdt": 0.0},
+                        {"utc_gross_loss_cap_breached": True},
+                        {"realized_loss_to_budget_multiple": 0.5},
+                        {"reference_stop": 98.0},
+                ):
+                    with self.subTest(change=change):
+                        with self.assertRaisesRegex(
+                                PaperEvaluationError,
+                                "unreconciled_prospective_paper_risk"):
+                            compare._verified_modeled_risk_outcomes(
+                                {"trades": [dict(trade, **change)],
+                                 "execution_diagnostics": diagnostics}, config)
+                partial = dict(trade)
+                del partial["planned_stop_loss_usdt"]
+                with self.assertRaisesRegex(
+                        PaperEvaluationError, "unreconciled_prospective_paper_risk"):
+                    compare._verified_modeled_risk_outcomes(
+                        {"trades": [partial]}, config)
+                for field in diagnostics:
+                    with self.subTest(aggregate=field):
+                        broken = dict(diagnostics)
+                        broken[field] = 999.0
+                        with self.assertRaisesRegex(
+                                PaperEvaluationError,
+                                "unreconciled_prospective_paper_risk"):
+                            compare._verified_modeled_risk_outcomes(
+                                {"trades": [trade],
+                                 "execution_diagnostics": broken}, config)
+                self.assertIsNone(compare._verified_modeled_risk_outcomes(
+                    {"trades": [], "execution_diagnostics": {
+                        "risk_budget_breach_count": 0,
+                        "planned_stop_loss_exceeded_count": 0,
+                        "max_loss_to_risk_budget_multiple": None,
+                        "utc_daily_gross_loss_cap_usdt": config.daily_loss_limit,
+                        "utc_gross_loss_cap_breach_days": 0,
+                        "max_utc_day_gross_realized_loss_usdt": 0.0,
+                    }}, config))
+                with self.assertRaisesRegex(
+                        PaperEvaluationError, "unreconciled_prospective_paper_risk"):
+                    compare._verified_modeled_risk_outcomes(
+                        {"trades": [], "execution_diagnostics": {
+                            "risk_budget_breach_count": 1,
+                            "planned_stop_loss_exceeded_count": 0,
+                            "max_loss_to_risk_budget_multiple": None,
+                            "utc_daily_gross_loss_cap_usdt": config.daily_loss_limit,
+                            "utc_gross_loss_cap_breach_days": 0,
+                            "max_utc_day_gross_realized_loss_usdt": 0.0,
+                        }}, config)
+
+
 if __name__ == "__main__":
     unittest.main()

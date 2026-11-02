@@ -1062,7 +1062,7 @@ class CaptureOverlapTests(unittest.TestCase):
                     "risk_budget_breached": False,
                     "planned_stop_loss_exceeded": True,
                     "utc_day_gross_realized_loss_after_exit_usdt": 2.0,
-                    "utc_gross_loss_cap_breached": False,
+                    "utc_day_gross_loss_cap_breached": False,
                     "realized_loss_to_budget_multiple": 0.4,
                 }
                 diagnostics = {
@@ -1085,7 +1085,7 @@ class CaptureOverlapTests(unittest.TestCase):
                         {"risk_budget_breached": True},
                         {"planned_stop_loss_exceeded": False},
                         {"utc_day_gross_realized_loss_after_exit_usdt": 0.0},
-                        {"utc_gross_loss_cap_breached": True},
+                        {"utc_day_gross_loss_cap_breached": True},
                         {"realized_loss_to_budget_multiple": 0.5},
                         {"reference_stop": 98.0},
                 ):
@@ -1132,6 +1132,54 @@ class CaptureOverlapTests(unittest.TestCase):
                             "utc_gross_loss_cap_breach_days": 0,
                             "max_utc_day_gross_realized_loss_usdt": 0.0,
                         }}, config)
+
+
+    def test_actual_paper_engine_risk_flag_contract_both_costs(self):
+        # Exercise the REAL engine, not a mocked ledger with invented keys.
+        # Synthetic closed candles and a deterministic signal produce a
+        # modeled stop-out; no provider request or exchange fill occurs.
+        from cloud_backend.trading_research import Candle
+        bars = [
+            Candle(NOW + i * STEP, 100.0, 101.0, 99.0, 100.0,
+                   10.0, NOW + (i + 1) * STEP - 1)
+            for i in range(70)
+        ]
+
+        def one_signal(prior, strategy):
+            if len(prior) == 64:
+                return {"stop": 99.0, "reference_entry": 100.0,
+                        "reference_target": 102.0}
+            return None
+
+        for config in (
+                compare.SimulationConfig(),
+                compare.SimulationConfig(fee_bps=20, slippage_bps=10)):
+            with self.subTest(fee_bps=config.fee_bps):
+                with patch("cloud_backend.trading_research.setup",
+                           side_effect=one_signal):
+                    modeled = compare.backtest(
+                        bars, "trend_pullback", config,
+                        entry_not_before=bars[64].time)
+                self.assertEqual(modeled["trade_count"], 1)
+                trade = modeled["trades"][0]
+                self.assertIn("utc_day_gross_loss_cap_breached", trade)
+                self.assertTrue(compare._verified_modeled_risk_outcomes(
+                    modeled, config))
+                for bad in (True, None, 1):
+                    altered = dict(modeled, trades=[
+                        dict(trade, utc_day_gross_loss_cap_breached=bad)])
+                    with self.assertRaisesRegex(
+                            PaperEvaluationError,
+                            "unreconciled_prospective_paper_risk"):
+                        compare._verified_modeled_risk_outcomes(
+                            altered, config)
+                missing = dict(trade)
+                del missing["utc_day_gross_loss_cap_breached"]
+                with self.assertRaisesRegex(
+                        PaperEvaluationError,
+                        "unreconciled_prospective_paper_risk"):
+                    compare._verified_modeled_risk_outcomes(
+                        dict(modeled, trades=[missing]), config)
 
 
 if __name__ == "__main__":

@@ -384,7 +384,7 @@ def _verified_modeled_risk_outcomes(simulation: dict,
         "risk_budget_at_entry_usdt", "planned_stop_loss_usdt",
         "risk_budget_breached", "planned_stop_loss_exceeded",
         "utc_day_gross_realized_loss_after_exit_usdt",
-        "utc_gross_loss_cap_breached", "realized_loss_to_budget_multiple",
+        "utc_day_gross_loss_cap_breached", "realized_loss_to_budget_multiple",
     )
     aggregate_keys = (
         "risk_budget_breach_count", "planned_stop_loss_exceeded_count",
@@ -483,8 +483,8 @@ def _verified_modeled_risk_outcomes(simulation: dict,
         daily_breached = daily_loss > config.daily_loss_limit + 1e-8
         if (not same(trade["utc_day_gross_realized_loss_after_exit_usdt"],
                      daily_loss)
-                or type(trade["utc_gross_loss_cap_breached"]) is not bool
-                or trade["utc_gross_loss_cap_breached"] != daily_breached):
+                or type(trade["utc_day_gross_loss_cap_breached"]) is not bool
+                or trade["utc_day_gross_loss_cap_breached"] != daily_breached):
             fail()
         breaches += int(breached)
         planned_breaches += int(planned_breached)

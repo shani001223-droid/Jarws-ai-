@@ -1005,7 +1005,14 @@ class CaptureOverlapTests(unittest.TestCase):
                         "max_drawdown_pct": 1.0, "trades": [trade],
                         "execution_diagnostics": {
                             "paper_entries_with_zero_volume_entry_bar_ex_post": 0,
-                            "paper_entries_opened": 1}}
+                            "paper_entries_opened": 1,
+                            "terminal_forced_close_count": 0,
+                            "strategy_resolved_trade_count": 1,
+                            "terminal_forced_close_net_pnl_usdt": 0.0,
+                            "strategy_resolved_net_pnl_usdt": pnl,
+                            "close_mark_max_drawdown_pct": 1.0,
+                            "close_mark_peak_equity_usdt": 1000.0,
+                            "close_mark_low_equity_usdt": 990.0}}
             valid = [modeled(cfg), modeled(stress)]
             with patch.object(compare, "backtest", side_effect=valid):
                 result = compare.compare_capture_files(

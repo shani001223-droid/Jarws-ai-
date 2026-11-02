@@ -673,5 +673,93 @@ class CaptureOverlapTests(unittest.TestCase):
                     "unreconciled_prospective_execution_costs"):
                 compare._verified_execution_costs(claimed, cfg)
 
+
+    def test_exit_reason_timestamp_and_ambiguity_audit_on_both_replays(self):
+        # Only modeled paper-engine metadata; not exchange-attested fills.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            old, old_receipt = save_pair(root, "old", capture_fixture())
+            new, new_receipt = save_pair(root, "new", capture_fixture(2))
+            def trade(reason="stop", **overrides):
+                item = {
+                    "entry_time": NOW, "exit_time": NOW + STEP - 1,
+                    "net_pnl": -1.0, "terminal_forced_mark": False,
+                    "reason": reason,
+                    "exit_time_precision": "bar_close_upper_bound_intrabar_unknown",
+                    "stop_target_same_bar": True,
+                    "gap_beyond_stop_pct": None,
+                }
+                item.update(overrides)
+                return item
+            valid = {"net_pnl": -1.0, "trade_count": 1,
+                     "max_drawdown_pct": 1.0, "trades": [trade()]}
+            self.assertTrue(compare._verified_exit_semantics(valid, NOW + 2*STEP - 1))
+            self.assertIsNone(compare._verified_exit_semantics(
+                {"trades": []}, NOW + 2*STEP - 1))
+            self.assertFalse(compare._verified_exit_semantics(
+                {"trades": [{"entry_time": NOW, "exit_time": NOW + STEP - 1,
+                             "net_pnl": -1.0, "terminal_forced_mark": False}]},
+                NOW + 2*STEP - 1))
+            valid_gap = trade(
+                "gap_stop", exit_time=NOW + STEP,
+                exit_time_precision="bar_open_exact",
+                stop_target_same_bar=False, gap_beyond_stop_pct=0.2)
+            self.assertTrue(compare._verified_exit_semantics(
+                {"trades": [valid_gap]}, NOW + 2*STEP - 1))
+            valid_terminal = trade(
+                "end_of_sample", exit_time=NOW + 2*STEP - 1,
+                exit_time_precision="bar_close_exact",
+                terminal_forced_mark=True, stop_target_same_bar=False)
+            self.assertTrue(compare._verified_exit_semantics(
+                {"trades": [valid_terminal]}, NOW + 2*STEP - 1))
+            with patch.object(compare, "backtest", side_effect=[valid, valid]):
+                report = compare.compare_capture_files(
+                    old, old_receipt, new, new_receipt,
+                    prospective_strategy="trend_pullback")
+            replay = report["prospective_paper_replay"]
+            self.assertTrue(replay["modeled_exit_reason_and_timing_reconciled"])
+            self.assertTrue(replay["double_cost_same_series_sensitivity"][
+                "modeled_exit_reason_and_timing_reconciled"])
+            cases = [
+                {"reason": "end_of_sample"},
+                {"reason": "unknown_exit"},
+                {"exit_time_precision": "bar_open_exact"},
+                {"exit_time": NOW + STEP},
+                {"stop_target_same_bar": "yes"},
+                {"gap_beyond_stop_pct": 0.1},
+                {"terminal_forced_mark": True},
+                {"reason": "gap_stop", "exit_time": NOW + STEP,
+                 "exit_time_precision": "bar_open_exact",
+                 "stop_target_same_bar": False, "gap_beyond_stop_pct": None},
+            ]
+            for changes in cases:
+                for side in (0, 1):
+                    with self.subTest(changes=changes, side=side):
+                        corrupted = dict(valid)
+                        corrupted["trades"] = [trade(**changes)]
+                        simulations = ([corrupted, valid] if side == 0
+                                       else [valid, corrupted])
+                        with patch.object(compare, "backtest", side_effect=simulations):
+                            with self.assertRaisesRegex(
+                                    PaperEvaluationError,
+                                    "unreconciled_prospective_exit_semantics"):
+                                compare.compare_capture_files(
+                                    old, old_receipt, new, new_receipt,
+                                    prospective_strategy="trend_pullback")
+            partial = dict(valid)
+            partial["trades"] = [trade()]
+            del partial["trades"][0]["exit_time_precision"]
+            stdout, stderr = io.StringIO(), io.StringIO()
+            with patch.object(compare, "backtest", side_effect=[valid, partial]):
+                with redirect_stdout(stdout), redirect_stderr(stderr):
+                    self.assertEqual(compare.main([
+                        "--earlier", str(old), "--earlier-receipt", str(old_receipt),
+                        "--later", str(new), "--later-receipt", str(new_receipt),
+                        "--prospective-replay", "trend_pullback",
+                    ]), 2)
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertIn("WAIT:", stderr.getvalue())
+
+
 if __name__ == "__main__":
     unittest.main()

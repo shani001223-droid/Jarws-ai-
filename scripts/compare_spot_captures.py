@@ -142,6 +142,55 @@ def _verified_prospective_ledger(simulation: dict, first_scored: int,
     return entries
 
 
+
+def _verified_exit_semantics(simulation: dict, last_closed: int) -> bool | None:
+    """Reconcile modeled exit reasons, timestamp precision and ambiguity labels.
+
+    True means the LOCAL paper engine's complete exit annotations agree with
+    its timestamps. False means legacy synthetic stubs provide no such
+    evidence. None means zero trades. None of these authenticates fills.
+    """
+    trades = simulation["trades"]
+    if not trades:
+        return None
+    keys = ("reason", "exit_time_precision", "stop_target_same_bar",
+            "gap_beyond_stop_pct")
+    claims = [any(key in trade for key in keys) for trade in trades]
+    if not any(claims):
+        return False
+    if not all(claims):
+        raise PaperEvaluationError("unreconciled_prospective_exit_semantics")
+    open_reasons = {"gap_stop", "stop_at_open", "target_gap_open"}
+    intrabar_reasons = {"stop", "target"}
+    close_reasons = {"time_exit", "end_of_sample"}
+    for trade in trades:
+        if any(key not in trade for key in keys):
+            raise PaperEvaluationError("unreconciled_prospective_exit_semantics")
+        reason, precision = trade["reason"], trade["exit_time_precision"]
+        exit_at = trade["exit_time"]
+        if reason in open_reasons:
+            wanted, remainder = "bar_open_exact", 0
+        elif reason in intrabar_reasons:
+            wanted, remainder = "bar_close_upper_bound_intrabar_unknown", STEP_MS - 1
+        elif reason in close_reasons:
+            wanted, remainder = "bar_close_exact", STEP_MS - 1
+        else:
+            raise PaperEvaluationError("unreconciled_prospective_exit_semantics")
+        gap = trade["gap_beyond_stop_pct"]
+        if (type(reason) is not str or type(precision) is not str
+                or precision != wanted or exit_at % STEP_MS != remainder
+                or trade["terminal_forced_mark"] != (reason == "end_of_sample")
+                or (reason == "end_of_sample" and exit_at != last_closed)
+                or type(trade["stop_target_same_bar"]) is not bool
+                or (trade["stop_target_same_bar"] and reason != "stop")
+                or (reason == "gap_stop" and
+                    (type(gap) not in (int, float) or not math.isfinite(gap)
+                     or gap <= 0))
+                or (reason != "gap_stop" and gap is not None)):
+            raise PaperEvaluationError("unreconciled_prospective_exit_semantics")
+    return True
+
+
 def _verified_replay_metadata(simulation: dict, strategy: str,
                               config: SimulationConfig, segment: list) -> bool:
     """Check the engine actually reports the requested strategy/cost/window.
@@ -403,6 +452,10 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
             stressed, first_scored, b[-1].close_time, stress_config.equity)
         baseline_costs_verified = _verified_execution_costs(simulation, baseline_config)
         stress_costs_verified = _verified_execution_costs(stressed, stress_config)
+        baseline_exit_semantics_verified = _verified_exit_semantics(
+            simulation, b[-1].close_time)
+        stress_exit_semantics_verified = _verified_exit_semantics(
+            stressed, b[-1].close_time)
         baseline_set, stress_set = set(baseline_entries), set(stress_entries)
         forced = [trade for trade in simulation["trades"]
                   if trade["terminal_forced_mark"]]
@@ -417,6 +470,7 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
             "fixed_default_paper_settings": True,
             "modeled_trade_chronology_and_pnl_reconciled": True,
             "modeled_execution_costs_reconciled": baseline_costs_verified,
+            "modeled_exit_reason_and_timing_reconciled": baseline_exit_semantics_verified,
             "modeled_strategy_cost_window_metadata_reconciled": baseline_metadata_verified,
             "strategy_resolved_trade_count": len(resolved),
             "terminal_forced_mark_count": len(forced),
@@ -450,6 +504,7 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
                 "double_cost_max_drawdown_pct": stressed["max_drawdown_pct"],
                 "modeled_trade_chronology_and_pnl_reconciled": True,
                 "modeled_execution_costs_reconciled": stress_costs_verified,
+                "modeled_exit_reason_and_timing_reconciled": stress_exit_semantics_verified,
                 "modeled_strategy_cost_window_metadata_reconciled": stress_metadata_verified,
                 "simulation": {k: v for k, v in stressed.items()
                                if k != "input_candles"},

@@ -452,7 +452,7 @@ class CaptureOverlapTests(unittest.TestCase):
                     "orders_enabled": False,
                     "rule_version": compare.RULE_VERSION,
                     "strategy": "trend_pullback", "interval": "15m",
-                    "start_at": NOW - 63 * STEP,
+                    "start_at": NOW - 64 * STEP,
                     "end_at": NOW + 2 * STEP - 1,
                     "bars": 66, "config": asdict(config),
                     "initial_equity": 1000.0, "ending_equity": 1000.0,

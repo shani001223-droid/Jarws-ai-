@@ -168,5 +168,73 @@ class CaptureOverlapTests(unittest.TestCase):
             self.assertNotIn("BTCUSDT", stderr.getvalue())
 
 
+    def test_optional_prospective_replay_scores_only_fully_new_bars(self):
+        # The first extra bar opened one millisecond before the old receipt.
+        # It can warm the replay but cannot be a scored entry interval.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            earlier = capture_fixture()
+            earlier[1]["captured_at_ms"] = NOW + 1
+            old, proof_old = save_pair(root, "old", earlier)
+            later, proof_later = save_pair(root, "later", capture_fixture(2))
+            ordinary = compare.compare_capture_files(old, proof_old, later, proof_later)
+            self.assertNotIn("prospective_paper_replay", ordinary)
+            result = compare.compare_capture_files(
+                old, proof_old, later, proof_later,
+                prospective_strategy="trend_pullback")
+            replay = result["prospective_paper_replay"]
+            self.assertEqual(replay["first_scored_entry_at_ms"], NOW + STEP)
+            self.assertEqual(replay["scored_closed_bars"], 1)
+            self.assertEqual(replay["prior_closed_warmup_bars"], 64)
+            self.assertEqual(replay["strategy_resolved_trade_count"], 0)
+            self.assertEqual(replay["terminal_forced_mark_count"], 0)
+            self.assertEqual(replay["simulation"]["trade_count"], 0)
+            self.assertEqual(replay["simulation"]["net_pnl"], 0)
+            self.assertIsNone(replay["win_probability"])
+            self.assertFalse(replay["forward_paper_fills_verified"])
+            self.assertFalse(replay["independent_venue_authenticated"])
+            self.assertFalse(replay["profitability_verified"])
+            self.assertTrue(all(t["entry_time"] >= NOW + STEP
+                                for t in replay["simulation"]["trades"]))
+            output, errors = io.StringIO(), io.StringIO()
+            with redirect_stdout(output), redirect_stderr(errors):
+                self.assertEqual(compare.main([
+                    "--earlier", str(old), "--earlier-receipt", str(proof_old),
+                    "--later", str(later), "--later-receipt", str(proof_later),
+                    "--prospective-replay", "breakout_retest",
+                ]), 0)
+            cli = json.loads(output.getvalue())["prospective_paper_replay"]
+            self.assertEqual(cli["strategy"], "breakout_retest")
+            self.assertEqual(cli["first_scored_entry_at_ms"], NOW + STEP)
+            self.assertEqual(errors.getvalue(), "")
+
+    def test_prospective_replay_refuses_invalid_or_partial_evidence(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            earlier = capture_fixture()
+            earlier[1]["captured_at_ms"] = NOW + 1
+            old, proof_old = save_pair(root, "old", earlier)
+            partial, proof_partial = save_pair(root, "partial", capture_fixture(1))
+            with self.assertRaisesRegex(PaperEvaluationError,
+                                        "no_full_post_capture_closed_candle"):
+                compare.compare_capture_files(
+                    old, proof_old, partial, proof_partial,
+                    prospective_strategy="trend_pullback")
+            with self.assertRaisesRegex(PaperEvaluationError,
+                                        "unsupported_prospective_strategy"):
+                compare.compare_capture_files(
+                    old, proof_old, partial, proof_partial,
+                    prospective_strategy="unbounded_scalp")
+            output, errors = io.StringIO(), io.StringIO()
+            with redirect_stdout(output), redirect_stderr(errors):
+                self.assertEqual(compare.main([
+                    "--earlier", str(old), "--earlier-receipt", str(proof_old),
+                    "--later", str(partial), "--later-receipt", str(proof_partial),
+                    "--prospective-replay", "trend_pullback",
+                ]), 2)
+            self.assertEqual(output.getvalue(), "")
+            self.assertIn("WAIT:", errors.getvalue())
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -5,9 +5,10 @@ Usage:
     --earlier old.json --earlier-receipt old.receipt \
     --later new.json --later-receipt new.receipt
 
-This only checks local, UNSIGNED receipt bindings and overlapping closed bars.
-It does not authenticate either exchange, verify fills, run a forward strategy,
-fetch network data, write files, or place orders.
+By default this checks only local, UNSIGNED receipts and overlapping closed bars.
+The optional --prospective-replay scores only fully post-capture closed bars
+with fixed default modeled paper settings; it is NOT independent forward fills.
+No exchange authentication, network fetch, file writes or orders.
 """
 from __future__ import annotations
 
@@ -17,9 +18,10 @@ import sys
 from pathlib import Path
 
 from cloud_backend.paper_evaluation import (
-    STEP_MS, PaperEvaluationError, attach_capture_receipt,
+    STEP_MS, WARMUP_BARS, PaperEvaluationError, attach_capture_receipt,
     evaluate_chronological,
 )
+from cloud_backend.trading_research import SimulationConfig, backtest
 from scripts.evaluate_trading_paper import load_capture_receipt, load_local
 
 
@@ -35,7 +37,11 @@ def _verified_local_capture(data_path: Path, receipt_path: Path):
 
 
 def compare_capture_files(earlier: Path, earlier_receipt: Path,
-                          later: Path, later_receipt: Path) -> dict:
+                          later: Path, later_receipt: Path, *,
+                          prospective_strategy: str | None = None) -> dict:
+    if prospective_strategy is not None and prospective_strategy not in (
+            "trend_pullback", "breakout_retest"):
+        raise PaperEvaluationError("unsupported_prospective_strategy")
     symbol_a, a, proof_a, receipt_hash_a, candle_hash_a = _verified_local_capture(
         earlier, earlier_receipt)
     symbol_b, b, proof_b, receipt_hash_b, candle_hash_b = _verified_local_capture(
@@ -81,7 +87,7 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
                           if bar.time >= proof_a["captured_at_ms"]]
     if not fully_post_capture:
         raise PaperEvaluationError("no_full_post_capture_closed_candle")
-    return {
+    report = {
         "mode": "manual_local_spot_capture_overlap_audit",
         "status": "unsigned_local_captures_overlap_consistent",
         "symbol": symbol_a, "interval": "15m", "orders_enabled": False,
@@ -107,6 +113,55 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
             "No signal, order, leverage, calibrated win probability or profit claim.",
         ],
     }
+    if prospective_strategy is not None:
+        # This opt-in replay scores ONLY bars whose entire interval began
+        # after the earlier unsigned receipt. Earlier bars are warmup only.
+        # The same local later capture supplies prices; this is NOT an
+        # independent forward-fill observation or exchange attestation.
+        first_scored = fully_post_capture[0].time
+        scored_index = next(i for i, bar in enumerate(b) if bar.time == first_scored)
+        if scored_index < WARMUP_BARS:
+            raise PaperEvaluationError("insufficient_prospective_warmup")
+        segment = b[scored_index - WARMUP_BARS:]
+        simulation = backtest(
+            segment, prospective_strategy, SimulationConfig(),
+            entry_not_before=first_scored,
+        )
+        if any(trade["entry_time"] < first_scored
+               for trade in simulation["trades"]):
+            raise PaperEvaluationError("noncausal_prospective_replay")
+        forced = [trade for trade in simulation["trades"]
+                  if trade["terminal_forced_mark"]]
+        resolved = [trade for trade in simulation["trades"]
+                    if not trade["terminal_forced_mark"]]
+        report["prospective_paper_replay"] = {
+            "status": "modeled_local_unsigned_same_series_not_independent",
+            "strategy": prospective_strategy,
+            "first_scored_entry_at_ms": first_scored,
+            "scored_closed_bars": len(b) - scored_index,
+            "prior_closed_warmup_bars": WARMUP_BARS,
+            "fixed_default_paper_settings": True,
+            "strategy_resolved_trade_count": len(resolved),
+            "terminal_forced_mark_count": len(forced),
+            "resolved_trade_net_pnl_usdt": sum(
+                trade["net_pnl"] for trade in resolved),
+            "terminal_forced_mark_net_pnl_usdt": sum(
+                trade["net_pnl"] for trade in forced),
+            "win_probability": None,
+            "independent_venue_authenticated": False,
+            "forward_paper_fills_verified": False,
+            "profitability_verified": False,
+            "simulation": {k: v for k, v in simulation.items()
+                           if k != "input_candles"},
+            "limitations": [
+                "Only fully post-earlier-capture bars are scored; 64 earlier closed bars are warmup context, never entries.",
+                "Both local receipts are unsigned; later candles are operator supplied, not independently authenticated.",
+                "Next-open fills, fees, slippage, gap stops and stop-first ambiguity are modeled, not observed.",
+                "Forced end-of-sample marks are not resolved strategy exits; modeled net PnL includes them.",
+                "Zero trades, losses and drawdown remain visible; no independent forward performance or profitability proof.",
+            ],
+        }
+    return report
 
 
 def main(argv=None):
@@ -116,10 +171,14 @@ def main(argv=None):
     parser.add_argument("--earlier-receipt", required=True, type=Path)
     parser.add_argument("--later", required=True, type=Path)
     parser.add_argument("--later-receipt", required=True, type=Path)
+    parser.add_argument("--prospective-replay",
+                        choices=("trend_pullback", "breakout_retest"),
+                        help="Optional fixed-default modeled replay of fully post-capture bars; NOT independent fills")
     args = parser.parse_args(argv)
     try:
         report = compare_capture_files(args.earlier, args.earlier_receipt,
-                                       args.later, args.later_receipt)
+                                       args.later, args.later_receipt,
+                                       prospective_strategy=args.prospective_replay)
         output = json.dumps(report, sort_keys=True, allow_nan=False)
     except (OSError, UnicodeError, ValueError, TypeError, OverflowError):
         print("WAIT: captures missing, changed, incompatible or unverifiable; no comparison emitted.",

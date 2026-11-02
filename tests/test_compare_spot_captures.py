@@ -878,8 +878,11 @@ class CaptureOverlapTests(unittest.TestCase):
             self.assertTrue(replay["double_cost_same_series_sensitivity"][
                 "modeled_candle_price_anchors_reconciled"])
             for side in (0, 1):
-                for field, value in (("entry_reference_open", 100.25),
-                                     ("exit_reference_price", 100.0),
+                # Raw-price mutations are checked directly above; at CLI
+                # level those are correctly caught first by the existing
+                # fee/slippage audit. Change only reference stop/target here
+                # so this new candle-path guard is the first rejecting check.
+                for field, value in (("reference_stop", 97.0),
                                      ("reference_target", 103.0)):
                     with self.subTest(side=side, field=field):
                         corrupted = dict(valid[side])

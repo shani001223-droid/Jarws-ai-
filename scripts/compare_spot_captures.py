@@ -176,6 +176,90 @@ def _verified_replay_metadata(simulation: dict, strategy: str,
     return True
 
 
+
+def _verified_execution_costs(simulation: dict, config: SimulationConfig) -> bool | None:
+    """Reconcile modeled fills against the requested fees and slippage.
+
+    None means no trades to audit; False means legacy synthetic trades without
+    execution fields. Neither state is independently observed fills.
+    Partial fields or contradictory cost/PnL arithmetic fail closed.
+    """
+    trades = simulation["trades"]
+    if not trades:
+        return None
+    keys = (
+        "entry_reference_open", "exit_reference_price", "entry", "exit",
+        "quantity", "fees", "modeled_buy_slippage_cost_usdt",
+        "modeled_sell_slippage_cost_usdt",
+        "reference_gross_pnl_before_modeled_costs_usdt",
+    )
+    present = [any(key in trade for key in keys) for trade in trades]
+    if not any(present):
+        return False
+    if not all(present):
+        raise PaperEvaluationError("unreconciled_prospective_execution_costs")
+    fee, slip = config.fee_bps / 10_000, config.slippage_bps / 10_000
+    for trade in trades:
+        if any(key not in trade for key in keys):
+            raise PaperEvaluationError("unreconciled_prospective_execution_costs")
+        values = [trade[key] for key in keys]
+        if (any(type(value) not in (int, float) or not math.isfinite(value)
+                for value in values)
+                or any(trade[key] <= 0 for key in (
+                    "entry_reference_open", "exit_reference_price",
+                    "entry", "exit", "quantity"))
+                or any(trade[key] < 0 for key in (
+                    "fees", "modeled_buy_slippage_cost_usdt",
+                    "modeled_sell_slippage_cost_usdt"))):
+            raise PaperEvaluationError("unreconciled_prospective_execution_costs")
+        raw_entry = trade["entry_reference_open"]
+        raw_exit = trade["exit_reference_price"]
+        entry, exit_price, qty = trade["entry"], trade["exit"], trade["quantity"]
+        expected = {
+            "entry": raw_entry * (1 + slip),
+            "exit": raw_exit * (1 - slip),
+            "fees": qty * fee * (entry + exit_price),
+            "modeled_buy_slippage_cost_usdt": qty * (entry - raw_entry),
+            "modeled_sell_slippage_cost_usdt": qty * (raw_exit - exit_price),
+            "reference_gross_pnl_before_modeled_costs_usdt": (
+                qty * (raw_exit - raw_entry)),
+        }
+        expected["net_pnl"] = (
+            expected["reference_gross_pnl_before_modeled_costs_usdt"]
+            - expected["modeled_buy_slippage_cost_usdt"]
+            - expected["modeled_sell_slippage_cost_usdt"] - expected["fees"])
+        if any(not math.isfinite(wanted) or not math.isclose(
+                trade[key], wanted, rel_tol=1e-9, abs_tol=1e-7)
+                for key, wanted in expected.items()):
+            raise PaperEvaluationError("unreconciled_prospective_execution_costs")
+    diagnostics = simulation.get("execution_diagnostics")
+    if diagnostics is not None:
+        cost_keys = (
+            "modeled_buy_slippage_cost_usdt",
+            "modeled_sell_slippage_cost_usdt",
+            "modeled_total_slippage_cost_usdt",
+            "modeled_fees_plus_slippage_cost_usdt",
+        )
+        if any(key in diagnostics for key in cost_keys):
+            if any(key not in diagnostics for key in cost_keys):
+                raise PaperEvaluationError("unreconciled_prospective_execution_costs")
+            try:
+                buy = math.fsum(t["modeled_buy_slippage_cost_usdt"] for t in trades)
+                sell = math.fsum(t["modeled_sell_slippage_cost_usdt"] for t in trades)
+                fees = math.fsum(t["fees"] for t in trades)
+            except (OverflowError, ValueError) as exc:
+                raise PaperEvaluationError(
+                    "unreconciled_prospective_execution_costs") from exc
+            totals = (buy, sell, buy + sell, buy + sell + fees)
+            for key, wanted in zip(cost_keys, totals):
+                actual = diagnostics[key]
+                if (type(actual) not in (int, float)
+                        or not math.isfinite(actual) or not math.isfinite(wanted)
+                        or not math.isclose(actual, wanted,
+                                            rel_tol=1e-9, abs_tol=1e-7)):
+                    raise PaperEvaluationError("unreconciled_prospective_execution_costs")
+    return True
+
 def compare_capture_files(earlier: Path, earlier_receipt: Path,
                           later: Path, later_receipt: Path, *,
                           prospective_strategy: str | None = None) -> dict:
@@ -291,6 +375,8 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
             simulation, first_scored, b[-1].close_time, baseline_config.equity)
         stress_entries = _verified_prospective_ledger(
             stressed, first_scored, b[-1].close_time, stress_config.equity)
+        baseline_costs_verified = _verified_execution_costs(simulation, baseline_config)
+        stress_costs_verified = _verified_execution_costs(stressed, stress_config)
         baseline_set, stress_set = set(baseline_entries), set(stress_entries)
         forced = [trade for trade in simulation["trades"]
                   if trade["terminal_forced_mark"]]
@@ -304,6 +390,7 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
             "prior_closed_warmup_bars": WARMUP_BARS,
             "fixed_default_paper_settings": True,
             "modeled_trade_chronology_and_pnl_reconciled": True,
+            "modeled_execution_costs_reconciled": baseline_costs_verified,
             "modeled_strategy_cost_window_metadata_reconciled": baseline_metadata_verified,
             "strategy_resolved_trade_count": len(resolved),
             "terminal_forced_mark_count": len(forced),
@@ -336,6 +423,7 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
                     trade["terminal_forced_mark"] for trade in stressed["trades"]),
                 "double_cost_max_drawdown_pct": stressed["max_drawdown_pct"],
                 "modeled_trade_chronology_and_pnl_reconciled": True,
+                "modeled_execution_costs_reconciled": stress_costs_verified,
                 "modeled_strategy_cost_window_metadata_reconciled": stress_metadata_verified,
                 "simulation": {k: v for k, v in stressed.items()
                                if k != "input_candles"},

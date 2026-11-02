@@ -510,5 +510,83 @@ class CaptureOverlapTests(unittest.TestCase):
                 self.assertEqual(output.getvalue(), "")
                 self.assertIn("WAIT:", errors.getvalue())
 
+
+    def test_replay_reconciles_per_trade_costs_and_rejects_tampering(self):
+        # Synthetic paper trades only; this is not exchange fill evidence.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            old, proof_old = save_pair(root, "old", capture_fixture())
+            new, proof_new = save_pair(root, "new", capture_fixture(2))
+            cfg = compare.SimulationConfig()
+            stress = compare.SimulationConfig(
+                equity=cfg.equity, risk_pct=cfg.risk_pct,
+                daily_loss_limit=cfg.daily_loss_limit,
+                fee_bps=cfg.fee_bps * 2, slippage_bps=cfg.slippage_bps * 2)
+
+            def modeled(config):
+                qty, raw_entry, raw_exit = 2.0, 100.0, 102.0
+                entry = raw_entry * (1 + config.slippage_bps / 10_000)
+                exit_price = raw_exit * (1 - config.slippage_bps / 10_000)
+                fees = qty * config.fee_bps / 10_000 * (entry + exit_price)
+                buy = qty * (entry - raw_entry)
+                sell = qty * (raw_exit - exit_price)
+                gross = qty * (raw_exit - raw_entry)
+                pnl = gross - buy - sell - fees
+                trade = {
+                    "entry_time": NOW, "exit_time": NOW + STEP - 1,
+                    "terminal_forced_mark": False, "net_pnl": pnl,
+                    "entry_reference_open": raw_entry,
+                    "exit_reference_price": raw_exit, "entry": entry,
+                    "exit": exit_price, "quantity": qty, "fees": fees,
+                    "modeled_buy_slippage_cost_usdt": buy,
+                    "modeled_sell_slippage_cost_usdt": sell,
+                    "reference_gross_pnl_before_modeled_costs_usdt": gross,
+                }
+                return {"net_pnl": pnl, "trade_count": 1, "trades": [trade]}
+
+            valid = [modeled(cfg), modeled(stress)]
+            with patch.object(compare, "backtest", side_effect=valid):
+                result = compare.compare_capture_files(
+                    old, proof_old, new, proof_new,
+                    prospective_strategy="trend_pullback")
+            replay = result["prospective_paper_replay"]
+            self.assertTrue(replay["modeled_execution_costs_reconciled"])
+            self.assertTrue(replay["double_cost_same_series_sensitivity"][
+                "modeled_execution_costs_reconciled"])
+            self.assertIsNone(compare._verified_execution_costs(
+                {"trades": []}, cfg))
+            legacy = {"trades": [{"entry_time": NOW, "exit_time": NOW + STEP - 1,
+                                  "terminal_forced_mark": False, "net_pnl": -1.0}]}
+            self.assertFalse(compare._verified_execution_costs(legacy, cfg))
+            for side in (0, 1):
+                for key in ("entry", "exit", "quantity", "fees",
+                            "modeled_buy_slippage_cost_usdt",
+                            "modeled_sell_slippage_cost_usdt",
+                            "reference_gross_pnl_before_modeled_costs_usdt"):
+                    with self.subTest(side=side, key=key):
+                        bad = [dict(valid[0]), dict(valid[1])]
+                        bad[side]["trades"] = [dict(bad[side]["trades"][0])]
+                        bad[side]["trades"][0][key] += 0.5
+                        with patch.object(compare, "backtest", side_effect=bad):
+                            with self.assertRaisesRegex(
+                                    PaperEvaluationError,
+                                    "unreconciled_prospective_execution_costs"):
+                                compare.compare_capture_files(
+                                    old, proof_old, new, proof_new,
+                                    prospective_strategy="trend_pullback")
+            partial = [dict(valid[0]), dict(valid[1])]
+            partial[1]["trades"] = [dict(partial[1]["trades"][0])]
+            del partial[1]["trades"][0]["fees"]
+            with patch.object(compare, "backtest", side_effect=partial):
+                output, errors = io.StringIO(), io.StringIO()
+                with redirect_stdout(output), redirect_stderr(errors):
+                    self.assertEqual(compare.main([
+                        "--earlier", str(old), "--earlier-receipt", str(proof_old),
+                        "--later", str(new), "--later-receipt", str(proof_new),
+                        "--prospective-replay", "trend_pullback",
+                    ]), 2)
+                self.assertEqual(output.getvalue(), "")
+                self.assertIn("WAIT:", errors.getvalue())
+
 if __name__ == "__main__":
     unittest.main()

@@ -72,6 +72,15 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
     # Never count stale, operator-supplied history as a forward observation.
     if new_bars[0].close_time <= proof_a["captured_at_ms"]:
         raise PaperEvaluationError("new_closed_bar_not_after_earlier_capture")
+    # A bar that started before the earlier receipt was captured is only
+    # partially prospective, even if its close occurred afterwards. Require
+    # at least one entire, fully closed bar that opened after that receipt.
+    # Preserve partial bars in the overlap audit but never count them as
+    # full post-capture observations.
+    fully_post_capture = [bar for bar in new_bars
+                          if bar.time >= proof_a["captured_at_ms"]]
+    if not fully_post_capture:
+        raise PaperEvaluationError("no_full_post_capture_closed_candle")
     return {
         "mode": "manual_local_spot_capture_overlap_audit",
         "status": "unsigned_local_captures_overlap_consistent",
@@ -82,6 +91,9 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
         "later_unsigned_receipt_sha256": receipt_hash_b,
         "overlapping_identical_closed_bars": len(old_overlap),
         "newer_closed_bars": len(new_bars),
+        "fully_post_capture_closed_bars": len(fully_post_capture),
+        "partial_at_capture_closed_bars": len(new_bars) - len(fully_post_capture),
+        "first_fully_post_capture_open_at_ms": fully_post_capture[0].time,
         "newer_first_open_at_ms": new_bars[0].time,
         "newer_last_closed_at_ms": new_bars[-1].close_time,
         "independent_venue_authenticated": False,
@@ -90,6 +102,7 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
         "limitations": [
             "Both captures and receipts are local, operator-supplied and unsigned.",
             "An overlap match detects revisions but cannot authenticate provider identity or earlier history.",
+            "Only bars opened after the earlier receipt count as fully post-capture observations; partial bars are excluded.",
             "New closed candles are NOT independently observed paper fills or a forward strategy result.",
             "No signal, order, leverage, calibrated win probability or profit claim.",
         ],

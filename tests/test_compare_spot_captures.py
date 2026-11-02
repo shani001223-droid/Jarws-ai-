@@ -52,6 +52,9 @@ class CaptureOverlapTests(unittest.TestCase):
             result = compare.compare_capture_files(old, old_receipt, new, new_receipt)
             self.assertEqual(result["overlapping_identical_closed_bars"], 498)
             self.assertEqual(result["newer_closed_bars"], 1)
+            self.assertEqual(result["fully_post_capture_closed_bars"], 1)
+            self.assertEqual(result["partial_at_capture_closed_bars"], 0)
+            self.assertEqual(result["first_fully_post_capture_open_at_ms"], NOW)
             self.assertEqual(result["newer_first_open_at_ms"], NOW)
             self.assertFalse(result["orders_enabled"])
             self.assertFalse(result["independent_venue_authenticated"])
@@ -114,6 +117,34 @@ class CaptureOverlapTests(unittest.TestCase):
                 ]), 2)
             self.assertEqual(output.getvalue(), "")
             self.assertIn("WAIT:", errors.getvalue())
+
+    def test_partial_bar_not_counted_as_fully_post_capture(self):
+        # The next 15m bar began before the old receipt was taken, so
+        # its close alone cannot establish one entire prospective bar.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            earlier_pair = capture_fixture()
+            earlier_pair[1]["captured_at_ms"] = NOW + 1
+            old, proof_old = save_pair(root, "old", earlier_pair)
+            partial, partial_receipt = save_pair(root, "partial", capture_fixture(1))
+            with self.assertRaisesRegex(
+                    PaperEvaluationError, "no_full_post_capture_closed_candle"):
+                compare.compare_capture_files(old, proof_old, partial, partial_receipt)
+            output, errors = io.StringIO(), io.StringIO()
+            with redirect_stdout(output), redirect_stderr(errors):
+                self.assertEqual(compare.main([
+                    "--earlier", str(old), "--earlier-receipt", str(proof_old),
+                    "--later", str(partial), "--later-receipt", str(partial_receipt),
+                ]), 2)
+            self.assertEqual(output.getvalue(), "")
+            self.assertIn("WAIT:", errors.getvalue())
+
+            later, proof_later = save_pair(root, "later", capture_fixture(2))
+            report = compare.compare_capture_files(old, proof_old, later, proof_later)
+            self.assertEqual(report["newer_closed_bars"], 2)
+            self.assertEqual(report["partial_at_capture_closed_bars"], 1)
+            self.assertEqual(report["fully_post_capture_closed_bars"], 1)
+            self.assertEqual(report["first_fully_post_capture_open_at_ms"], NOW + STEP)
 
     def test_tampered_receipt_or_data_fails_without_stdout(self):
         with tempfile.TemporaryDirectory() as tmp:

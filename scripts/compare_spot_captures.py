@@ -185,7 +185,33 @@ def _verified_execution_costs(simulation: dict, config: SimulationConfig) -> boo
     Partial fields or contradictory cost/PnL arithmetic fail closed.
     """
     trades = simulation["trades"]
+    # The real paper engine emits fees_paid and four aggregate cost totals,
+    # including for ZERO trades. Previously an empty ledger returned early,
+    # so a nonzero/partial cost claim could pass as a clean zero-trade run.
+    diagnostics = simulation.get("execution_diagnostics")
+    cost_keys = (
+        "modeled_buy_slippage_cost_usdt",
+        "modeled_sell_slippage_cost_usdt",
+        "modeled_total_slippage_cost_usdt",
+        "modeled_fees_plus_slippage_cost_usdt",
+    )
+    has_cost_totals = type(diagnostics) is dict and any(
+        key in diagnostics for key in cost_keys)
+    if has_cost_totals and any(key not in diagnostics for key in cost_keys):
+        raise PaperEvaluationError("unreconciled_prospective_execution_costs")
+    has_fees_paid = "fees_paid" in simulation
     if not trades:
+        if has_fees_paid:
+            value = simulation["fees_paid"]
+            if (type(value) not in (int, float) or not math.isfinite(value)
+                    or not math.isclose(value, 0.0, abs_tol=1e-7)):
+                raise PaperEvaluationError("unreconciled_prospective_execution_costs")
+        if has_cost_totals:
+            for key in cost_keys:
+                value = diagnostics[key]
+                if (type(value) not in (int, float) or not math.isfinite(value)
+                        or not math.isclose(value, 0.0, abs_tol=1e-7)):
+                    raise PaperEvaluationError("unreconciled_prospective_execution_costs")
         return None
     keys = (
         "entry_reference_open", "exit_reference_price", "entry", "exit",
@@ -195,6 +221,10 @@ def _verified_execution_costs(simulation: dict, config: SimulationConfig) -> boo
     )
     present = [any(key in trade for key in keys) for trade in trades]
     if not any(present):
+        # Legacy synthetic trade stubs can be unverified, but cannot claim
+        # verified aggregate fees or slippage without per-trade evidence.
+        if has_cost_totals or has_fees_paid:
+            raise PaperEvaluationError("unreconciled_prospective_execution_costs")
         return False
     if not all(present):
         raise PaperEvaluationError("unreconciled_prospective_execution_costs")
@@ -232,32 +262,28 @@ def _verified_execution_costs(simulation: dict, config: SimulationConfig) -> boo
                 trade[key], wanted, rel_tol=1e-9, abs_tol=1e-7)
                 for key, wanted in expected.items()):
             raise PaperEvaluationError("unreconciled_prospective_execution_costs")
-    diagnostics = simulation.get("execution_diagnostics")
-    if diagnostics is not None:
-        cost_keys = (
-            "modeled_buy_slippage_cost_usdt",
-            "modeled_sell_slippage_cost_usdt",
-            "modeled_total_slippage_cost_usdt",
-            "modeled_fees_plus_slippage_cost_usdt",
-        )
-        if any(key in diagnostics for key in cost_keys):
-            if any(key not in diagnostics for key in cost_keys):
+    try:
+        fees = math.fsum(t["fees"] for t in trades)
+        buy = math.fsum(t["modeled_buy_slippage_cost_usdt"] for t in trades)
+        sell = math.fsum(t["modeled_sell_slippage_cost_usdt"] for t in trades)
+    except (OverflowError, ValueError) as exc:
+        raise PaperEvaluationError(
+            "unreconciled_prospective_execution_costs") from exc
+    if has_fees_paid:
+        value = simulation["fees_paid"]
+        if (type(value) not in (int, float) or not math.isfinite(value)
+                or not math.isfinite(fees)
+                or not math.isclose(value, fees, rel_tol=1e-9, abs_tol=1e-7)):
+            raise PaperEvaluationError("unreconciled_prospective_execution_costs")
+    if has_cost_totals:
+        totals = (buy, sell, buy + sell, buy + sell + fees)
+        for key, wanted in zip(cost_keys, totals):
+            actual = diagnostics[key]
+            if (type(actual) not in (int, float)
+                    or not math.isfinite(actual) or not math.isfinite(wanted)
+                    or not math.isclose(actual, wanted,
+                                        rel_tol=1e-9, abs_tol=1e-7)):
                 raise PaperEvaluationError("unreconciled_prospective_execution_costs")
-            try:
-                buy = math.fsum(t["modeled_buy_slippage_cost_usdt"] for t in trades)
-                sell = math.fsum(t["modeled_sell_slippage_cost_usdt"] for t in trades)
-                fees = math.fsum(t["fees"] for t in trades)
-            except (OverflowError, ValueError) as exc:
-                raise PaperEvaluationError(
-                    "unreconciled_prospective_execution_costs") from exc
-            totals = (buy, sell, buy + sell, buy + sell + fees)
-            for key, wanted in zip(cost_keys, totals):
-                actual = diagnostics[key]
-                if (type(actual) not in (int, float)
-                        or not math.isfinite(actual) or not math.isfinite(wanted)
-                        or not math.isclose(actual, wanted,
-                                            rel_tol=1e-9, abs_tol=1e-7)):
-                    raise PaperEvaluationError("unreconciled_prospective_execution_costs")
     return True
 
 def compare_capture_files(earlier: Path, earlier_receipt: Path,

@@ -589,5 +589,89 @@ class CaptureOverlapTests(unittest.TestCase):
                 self.assertEqual(output.getvalue(), "")
                 self.assertIn("WAIT:", errors.getvalue())
 
+
+    def test_zero_trade_aggregate_costs_must_reconcile_on_both_replays(self):
+        # Zero trades are a valid outcome, not a license for hidden costs.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            old, old_receipt = save_pair(root, "old", capture_fixture())
+            new, new_receipt = save_pair(root, "new", capture_fixture(2))
+            cost_keys = (
+                "modeled_buy_slippage_cost_usdt",
+                "modeled_sell_slippage_cost_usdt",
+                "modeled_total_slippage_cost_usdt",
+                "modeled_fees_plus_slippage_cost_usdt",
+            )
+            valid = {
+                "net_pnl": 0.0, "trades": [], "trade_count": 0,
+                "initial_equity": 1000.0, "ending_equity": 1000.0,
+                "max_drawdown_pct": 0.0, "fees_paid": 0.0,
+                "execution_diagnostics": {
+                    **{key: 0.0 for key in cost_keys},
+                    "terminal_forced_close_count": 0,
+                    "strategy_resolved_trade_count": 0,
+                    "terminal_forced_close_net_pnl_usdt": 0.0,
+                    "strategy_resolved_net_pnl_usdt": 0.0,
+                    "close_mark_max_drawdown_pct": 0.0,
+                    "close_mark_peak_equity_usdt": 1000.0,
+                    "close_mark_low_equity_usdt": 1000.0,
+                },
+            }
+            with patch.object(compare, "backtest", side_effect=[valid, valid]):
+                report = compare.compare_capture_files(
+                    old, old_receipt, new, new_receipt,
+                    prospective_strategy="trend_pullback")
+            self.assertIsNone(report["prospective_paper_replay"][
+                "modeled_execution_costs_reconciled"])
+            for change in ("fees", "buy", "sell", "partial", "nonfinite"):
+                for side in (0, 1):
+                    with self.subTest(change=change, side=side):
+                        bad = dict(valid)
+                        bad["execution_diagnostics"] = dict(valid["execution_diagnostics"])
+                        if change == "fees":
+                            bad["fees_paid"] = 0.5
+                        elif change == "partial":
+                            del bad["execution_diagnostics"][cost_keys[0]]
+                        elif change == "nonfinite":
+                            bad["execution_diagnostics"][cost_keys[2]] = float("nan")
+                        else:
+                            key = cost_keys[0 if change == "buy" else 1]
+                            bad["execution_diagnostics"][key] = 0.5
+                        cases = [bad, valid] if side == 0 else [valid, bad]
+                        with patch.object(compare, "backtest", side_effect=cases):
+                            with self.assertRaisesRegex(
+                                    PaperEvaluationError,
+                                    "unreconciled_prospective_execution_costs"):
+                                compare.compare_capture_files(
+                                    old, old_receipt, new, new_receipt,
+                                    prospective_strategy="trend_pullback")
+            bad = dict(valid, fees_paid=1.0)
+            output, errors = io.StringIO(), io.StringIO()
+            with patch.object(compare, "backtest", side_effect=[valid, bad]):
+                with redirect_stdout(output), redirect_stderr(errors):
+                    self.assertEqual(compare.main([
+                        "--earlier", str(old), "--earlier-receipt", str(old_receipt),
+                        "--later", str(new), "--later-receipt", str(new_receipt),
+                        "--prospective-replay", "trend_pullback",
+                    ]), 2)
+            self.assertEqual(output.getvalue(), "")
+            self.assertIn("WAIT:", errors.getvalue())
+
+    def test_nonempty_cost_aggregate_claim_requires_trade_evidence(self):
+        cfg = compare.SimulationConfig()
+        legacy = {"trades": [{"entry_time": NOW,
+                              "exit_time": NOW + STEP - 1,
+                              "terminal_forced_mark": False, "net_pnl": -1.0}]}
+        self.assertFalse(compare._verified_execution_costs(legacy, cfg))
+        for claimed in (
+            dict(legacy, fees_paid=0.0),
+            dict(legacy, execution_diagnostics={
+                "modeled_buy_slippage_cost_usdt": 0.0}),
+        ):
+            with self.assertRaisesRegex(
+                    PaperEvaluationError,
+                    "unreconciled_prospective_execution_costs"):
+                compare._verified_execution_costs(claimed, cfg)
+
 if __name__ == "__main__":
     unittest.main()

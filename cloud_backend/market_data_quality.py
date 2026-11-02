@@ -198,6 +198,13 @@ def verify_spot_market(symbol: str, interval: str, binance_payload,
     public_urls(symbol, interval)
     first = binance_candles(binance_payload, interval, now_ms)
     second = kraken_candles(kraken_payload, interval, now_ms, expected_symbol=symbol)
+    # Historical freshness allows a one-interval lag, but a CURRENT
+    # independent-venue quality claim must compare the latest fully closed
+    # candle on both venues at the same as-of boundary. Two equally lagging
+    # venues would otherwise agree and misleadingly appear current.
+    expected_close = (now_ms // INTERVALS[interval]) * INTERVALS[interval] - 1
+    if first[-1].close_time != expected_close or second[-1].close_time != expected_close:
+        raise MarketDataQualityError("lagging_cross_venue_closed_candle")
     if len(first) < CROSS_CHECK_BARS or len(second) < CROSS_CHECK_BARS:
         raise MarketDataQualityError("insufficient_overlap")
     differences = []

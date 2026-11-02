@@ -145,6 +145,37 @@ class QualityUnitTests(unittest.TestCase):
                     mq.verify_spot_market("BTCUSDT", "15m", b, k, NOW,
                                           NOW//1000, NOW//1000)
 
+    def test_both_venues_equally_lagging_cannot_claim_current_quality(self):
+        # The generic historical parser permits one interval of freshness
+        # tolerance. If BOTH sources lag, 20/20 prices can still agree;
+        # the public current-quality endpoint must refuse that stale claim.
+        for tf in mq.INTERVALS:
+            with self.subTest(interval=tf):
+                b, k = fixtures(tf)
+                b = b[:-2]  # drop latest closed and current-forming rows
+                k["result"]["XXBTZUSD"] = k["result"]["XXBTZUSD"][:-2]
+                with self.assertRaisesRegex(mq.MarketDataQualityError,
+                                            "lagging_cross_venue_closed_candle"):
+                    mq.verify_spot_market("BTCUSDT", tf, b, k, NOW,
+                                          NOW//1000, NOW//1000)
+                def fetch(key, url, ttl):
+                    return (k if "kraken.com" in url else b), NOW//1000
+                with patch.object(main, "_public_data", side_effect=fetch), patch.object(
+                        main.time, "time", return_value=NOW/1000):
+                    with self.assertRaises(main.HTTPException) as caught:
+                        main.trading_data_quality(Response(), "BTCUSDT", tf)
+                self.assertEqual(caught.exception.status_code, 503)
+                self.assertNotIn("verified_sources_agree", str(caught.exception.detail))
+
+    def test_quality_accepts_same_latest_close_just_after_boundary(self):
+        for tf in mq.INTERVALS:
+            with self.subTest(interval=tf):
+                b, k = fixtures(tf)
+                result = mq.verify_spot_market("BTCUSDT", tf, b, k, NOW+1,
+                                               NOW//1000, NOW//1000)
+                self.assertEqual(result["last_closed_at"], NOW-1)
+                self.assertEqual(result["status"], "verified_sources_agree")
+
     def test_rejects_stale_gapped_and_mismatched_sources(self):
         b, k = fixtures()
         k["result"]["XXBTZUSD"][-2][2] = "111"

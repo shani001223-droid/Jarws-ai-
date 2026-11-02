@@ -1182,5 +1182,44 @@ class CaptureOverlapTests(unittest.TestCase):
                         dict(modeled, trades=[missing]), config)
 
 
+    def test_real_engine_nonempty_prospective_capture_replay(self):
+        # Full local capture/receipt/replay integration, not a mocked
+        # backtest return. Every OHLC bar is synthetic, never market evidence.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            old, proof_old = save_pair(root, "old", capture_fixture())
+            new, proof_new = save_pair(root, "new", capture_fixture(2))
+
+            def one_signal(prior, strategy):
+                if len(prior) == 64 and strategy == "trend_pullback":
+                    return {"stop": 99.0, "reference_entry": 100.0,
+                            "reference_target": 102.0}
+                return None
+
+            with patch("cloud_backend.trading_research.setup",
+                       side_effect=one_signal):
+                report = compare.compare_capture_files(
+                    old, proof_old, new, proof_new,
+                    prospective_strategy="trend_pullback")
+            replay = report["prospective_paper_replay"]
+            stress = replay["double_cost_same_series_sensitivity"]
+            self.assertEqual(replay["simulation"]["trade_count"], 1)
+            self.assertEqual(stress["simulation"]["trade_count"], 1)
+            self.assertLess(replay["simulation"]["net_pnl"], 0)
+            self.assertLess(stress["simulation"]["net_pnl"], 0)
+            for result in (replay, stress):
+                self.assertTrue(result[
+                    "modeled_risk_budget_and_utc_loss_reconciled"])
+                self.assertTrue(result[
+                    "modeled_execution_costs_reconciled"])
+                self.assertTrue(result[
+                    "modeled_candle_price_anchors_reconciled"])
+                self.assertTrue(result[
+                    "modeled_trade_chronology_and_pnl_reconciled"])
+                self.assertFalse(result["profitability_verified"])
+            self.assertFalse(report["forward_paper_fills_verified"])
+            self.assertFalse(report["independent_venue_authenticated"])
+
+
 if __name__ == "__main__":
     unittest.main()

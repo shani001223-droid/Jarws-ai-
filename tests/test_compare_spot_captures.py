@@ -376,5 +376,61 @@ class CaptureOverlapTests(unittest.TestCase):
             self.assertEqual(output.getvalue(), "")
             self.assertIn("WAIT:", errors.getvalue())
 
+
+    def test_replay_rejects_inconsistent_cash_drawdown_and_outcome_breakdown(self):
+        # These are synthetic engine stubs, NOT real forward performance.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            old, proof_old = save_pair(root, "old", capture_fixture())
+            new, proof_new = save_pair(root, "new", capture_fixture(2))
+            diagnostics = {
+                "terminal_forced_close_count": 0,
+                "strategy_resolved_trade_count": 0,
+                "terminal_forced_close_net_pnl_usdt": 0.0,
+                "strategy_resolved_net_pnl_usdt": 0.0,
+                "close_mark_max_drawdown_pct": 0.0,
+                "close_mark_peak_equity_usdt": 1000.0,
+                "close_mark_low_equity_usdt": 1000.0,
+            }
+            valid = {
+                "net_pnl": 0.0, "trades": [], "trade_count": 0,
+                "initial_equity": 1000.0, "ending_equity": 1000.0,
+                "max_drawdown_pct": 0.0,
+                "execution_diagnostics": diagnostics,
+            }
+            with patch.object(compare, "backtest", side_effect=[valid, valid]):
+                report = compare.compare_capture_files(
+                    old, proof_old, new, proof_new,
+                    prospective_strategy="trend_pullback")
+            self.assertEqual(report["prospective_paper_replay"]["simulation"]["ending_equity"], 1000)
+            bad_cases = [
+                ({"ending_equity": 1005.0},
+                 "unreconciled_prospective_paper_ledger"),
+                ({"initial_equity": 900.0, "ending_equity": 900.0},
+                 "unreconciled_prospective_paper_ledger"),
+                ({"ending_equity": None},
+                 "invalid_prospective_paper_ledger"),
+                ({"max_drawdown_pct": float("nan")},
+                 "invalid_prospective_paper_ledger"),
+                ({"max_drawdown_pct": -0.1},
+                 "invalid_prospective_paper_ledger"),
+                ({"execution_diagnostics": dict(
+                    diagnostics, terminal_forced_close_count=1)},
+                 "unreconciled_prospective_paper_ledger"),
+                ({"execution_diagnostics": dict(
+                    diagnostics, close_mark_peak_equity_usdt=900.0)},
+                 "unreconciled_prospective_paper_ledger"),
+            ]
+            for changes, reason in bad_cases:
+                for side in (0, 1):
+                    with self.subTest(changes=changes, side=side):
+                        bad = dict(valid, **changes)
+                        simulated = [bad, valid] if side == 0 else [valid, bad]
+                        with patch.object(compare, "backtest", side_effect=simulated):
+                            with self.assertRaisesRegex(PaperEvaluationError, reason):
+                                compare.compare_capture_files(
+                                    old, proof_old, new, proof_new,
+                                    prospective_strategy="trend_pullback")
+
 if __name__ == "__main__":
     unittest.main()

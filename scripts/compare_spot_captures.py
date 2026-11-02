@@ -38,7 +38,8 @@ def _verified_local_capture(data_path: Path, receipt_path: Path):
 
 
 def _verified_prospective_ledger(simulation: dict, first_scored: int,
-                                 last_closed: int) -> list[int]:
+                                 last_closed: int,
+                                 expected_initial_equity: float) -> list[int]:
     """Validate local MODELED trade chronology and net-PnL reconciliation.
 
     This does not authenticate any exchange observation or paper fill.
@@ -78,6 +79,65 @@ def _verified_prospective_ledger(simulation: dict, first_scored: int,
         reconciled = False
     if not reconciled:
         raise PaperEvaluationError("unreconciled_prospective_paper_ledger")
+
+    # The modeled trade sum must also agree with the reported cash ledger.
+    # Checking trade PnL alone misses a broken ending-equity or risk report.
+    # Legacy synthetic engine stubs omit both equity fields; the real engine
+    # emits both. Never accept just one half of the equity identity.
+    has_start = "initial_equity" in simulation
+    has_end = "ending_equity" in simulation
+    if has_start != has_end:
+        raise PaperEvaluationError("invalid_prospective_paper_ledger")
+    if has_start:
+        start, end = simulation["initial_equity"], simulation["ending_equity"]
+        if (type(start) not in (int, float) or type(end) not in (int, float)
+                or not math.isfinite(start) or not math.isfinite(end)):
+            raise PaperEvaluationError("invalid_prospective_paper_ledger")
+        if (not math.isclose(start, expected_initial_equity,
+                             rel_tol=1e-12, abs_tol=1e-8)
+                or not math.isclose(end - start, net,
+                                    rel_tol=1e-9, abs_tol=1e-7)):
+            raise PaperEvaluationError("unreconciled_prospective_paper_ledger")
+    if "max_drawdown_pct" in simulation:
+        drawdown = simulation["max_drawdown_pct"]
+        # Do not cap at 100%: an adverse modeled gap can exceed cash equity.
+        if (type(drawdown) not in (int, float)
+                or not math.isfinite(drawdown) or drawdown < 0):
+            raise PaperEvaluationError("invalid_prospective_paper_ledger")
+
+    diagnostics = simulation.get("execution_diagnostics")
+    if diagnostics is not None:
+        if type(diagnostics) is not dict:
+            raise PaperEvaluationError("invalid_prospective_paper_ledger")
+        forced = [trade["net_pnl"] for trade in trades
+                  if trade["terminal_forced_mark"]]
+        resolved = [trade["net_pnl"] for trade in trades
+                    if not trade["terminal_forced_mark"]]
+        for key, expected in (
+                ("terminal_forced_close_count", len(forced)),
+                ("strategy_resolved_trade_count", len(resolved)),
+                ("terminal_forced_close_net_pnl_usdt", math.fsum(forced)),
+                ("strategy_resolved_net_pnl_usdt", math.fsum(resolved))):
+            value = diagnostics.get(key)
+            if (type(value) not in (int, float)
+                    or not math.isfinite(value)
+                    or (type(expected) is int and
+                        (type(value) is not int or value != expected))
+                    or (type(expected) is float and not math.isclose(
+                        value, expected, rel_tol=1e-9, abs_tol=1e-7))):
+                raise PaperEvaluationError("unreconciled_prospective_paper_ledger")
+        for key in ("close_mark_max_drawdown_pct",
+                    "close_mark_peak_equity_usdt",
+                    "close_mark_low_equity_usdt"):
+            value = diagnostics.get(key)
+            if type(value) not in (int, float) or not math.isfinite(value):
+                raise PaperEvaluationError("invalid_prospective_paper_ledger")
+        if (diagnostics["close_mark_max_drawdown_pct"] < 0
+                or diagnostics["close_mark_peak_equity_usdt"]
+                < diagnostics["close_mark_low_equity_usdt"]
+                or (has_start and diagnostics["close_mark_peak_equity_usdt"]
+                    < simulation["initial_equity"] - 1e-7)):
+            raise PaperEvaluationError("unreconciled_prospective_paper_ledger")
     return entries
 
 
@@ -189,9 +249,9 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
             entry_not_before=first_scored,
         )
         baseline_entries = _verified_prospective_ledger(
-            simulation, first_scored, b[-1].close_time)
+            simulation, first_scored, b[-1].close_time, baseline_config.equity)
         stress_entries = _verified_prospective_ledger(
-            stressed, first_scored, b[-1].close_time)
+            stressed, first_scored, b[-1].close_time, stress_config.equity)
         baseline_set, stress_set = set(baseline_entries), set(stress_entries)
         forced = [trade for trade in simulation["trades"]
                   if trade["terminal_forced_mark"]]

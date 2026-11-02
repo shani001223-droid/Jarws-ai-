@@ -191,6 +191,102 @@ def _verified_exit_semantics(simulation: dict, last_closed: int) -> bool | None:
     return True
 
 
+
+def _verified_candle_price_anchors(simulation: dict, segment: list) -> bool | None:
+    """Bind MODELED entries and exits to the supplied closed 15m candles.
+
+    True verifies only local OHLC/strategy arithmetic, not provider identity,
+    executable prices, independent fills or performance. Legacy synthetic
+    stubs without stop/target anchors are explicitly unverified (False).
+    """
+    trades = simulation["trades"]
+    if not trades:
+        return None
+    anchor_keys = ("reference_stop", "reference_target")
+    claimed = [any(key in trade for key in anchor_keys) for trade in trades]
+    if not any(claimed):
+        return False
+    if not all(claimed):
+        raise PaperEvaluationError("unreconciled_prospective_candle_prices")
+    required = (
+        "entry_time", "exit_time", "entry_reference_open",
+        "exit_reference_price", "reference_stop", "reference_target",
+        "reason", "stop_target_same_bar", "gap_beyond_stop_pct",
+    )
+    first = segment[0].time
+    last = len(segment) - 1
+
+    def same(a, b):
+        return math.isclose(a, b, rel_tol=1e-9, abs_tol=1e-7)
+
+    for trade in trades:
+        if any(key not in trade for key in required):
+            raise PaperEvaluationError("unreconciled_prospective_candle_prices")
+        entry_at, exit_at = trade["entry_time"], trade["exit_time"]
+        if (type(entry_at) is not int or type(exit_at) is not int
+                or entry_at % STEP_MS
+                or exit_at % STEP_MS not in (0, STEP_MS - 1)):
+            raise PaperEvaluationError("unreconciled_prospective_candle_prices")
+        entry_i = (entry_at - first) // STEP_MS
+        exit_i = (exit_at - first) // STEP_MS
+        if not (0 <= entry_i <= exit_i <= last
+                and segment[entry_i].time == entry_at
+                and segment[exit_i].time <= exit_at <= segment[exit_i].close_time):
+            raise PaperEvaluationError("unreconciled_prospective_candle_prices")
+        entry_bar, exit_bar = segment[entry_i], segment[exit_i]
+        raw_entry = trade["entry_reference_open"]
+        raw_exit = trade["exit_reference_price"]
+        stop, target = trade["reference_stop"], trade["reference_target"]
+        if (any(type(x) not in (int, float) or not math.isfinite(x)
+                for x in (raw_entry, raw_exit, stop, target))
+                or not 0 < stop < raw_entry < target
+                or not same(raw_entry, entry_bar.open)
+                or type(trade["stop_target_same_bar"]) is not bool):
+            raise PaperEvaluationError("unreconciled_prospective_candle_prices")
+        # A position cannot survive a previous bar that already crossed an
+        # exit boundary; the next-open/stop-first model must exit immediately.
+        for previous in segment[entry_i:exit_i]:
+            if previous.low <= stop or previous.high >= target:
+                raise PaperEvaluationError("unreconciled_prospective_candle_prices")
+        if exit_i - entry_i > 96:
+            raise PaperEvaluationError("unreconciled_prospective_candle_prices")
+        if exit_bar.open < stop:
+            reason, expected_exit = "gap_stop", exit_bar.open
+            expected_gap = (stop - exit_bar.open) / stop * 100
+        elif exit_bar.open == stop:
+            reason, expected_exit = "stop_at_open", exit_bar.open
+            expected_gap = None
+        elif exit_bar.open >= target:
+            reason, expected_exit = "target_gap_open", target
+            expected_gap = None
+        elif exit_bar.low <= stop:
+            reason, expected_exit = "stop", stop
+            expected_gap = None
+        elif exit_bar.high >= target:
+            reason, expected_exit = "target", target
+            expected_gap = None
+        elif exit_i - entry_i == 96:
+            reason, expected_exit = "time_exit", exit_bar.close
+            expected_gap = None
+        elif exit_i == last:
+            reason, expected_exit = "end_of_sample", exit_bar.close
+            expected_gap = None
+        else:
+            raise PaperEvaluationError("unreconciled_prospective_candle_prices")
+        ambiguous = (reason == "stop" and exit_bar.high >= target
+                     and stop < exit_bar.open < target)
+        gap = trade["gap_beyond_stop_pct"]
+        if (trade["reason"] != reason
+                or not same(raw_exit, expected_exit)
+                or trade["stop_target_same_bar"] != ambiguous
+                or (expected_gap is None and gap is not None)
+                or (expected_gap is not None and (
+                    type(gap) not in (int, float) or not math.isfinite(gap)
+                    or not same(gap, expected_gap)))):
+            raise PaperEvaluationError("unreconciled_prospective_candle_prices")
+    return True
+
+
 def _verified_replay_metadata(simulation: dict, strategy: str,
                               config: SimulationConfig, segment: list) -> bool:
     """Check the engine actually reports the requested strategy/cost/window.
@@ -456,6 +552,10 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
             simulation, b[-1].close_time)
         stress_exit_semantics_verified = _verified_exit_semantics(
             stressed, b[-1].close_time)
+        baseline_candle_prices_verified = _verified_candle_price_anchors(
+            simulation, segment)
+        stress_candle_prices_verified = _verified_candle_price_anchors(
+            stressed, segment)
         baseline_set, stress_set = set(baseline_entries), set(stress_entries)
         forced = [trade for trade in simulation["trades"]
                   if trade["terminal_forced_mark"]]
@@ -471,6 +571,7 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
             "modeled_trade_chronology_and_pnl_reconciled": True,
             "modeled_execution_costs_reconciled": baseline_costs_verified,
             "modeled_exit_reason_and_timing_reconciled": baseline_exit_semantics_verified,
+            "modeled_candle_price_anchors_reconciled": baseline_candle_prices_verified,
             "modeled_strategy_cost_window_metadata_reconciled": baseline_metadata_verified,
             "strategy_resolved_trade_count": len(resolved),
             "terminal_forced_mark_count": len(forced),
@@ -505,6 +606,7 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
                 "modeled_trade_chronology_and_pnl_reconciled": True,
                 "modeled_execution_costs_reconciled": stress_costs_verified,
                 "modeled_exit_reason_and_timing_reconciled": stress_exit_semantics_verified,
+                "modeled_candle_price_anchors_reconciled": stress_candle_prices_verified,
                 "modeled_strategy_cost_window_metadata_reconciled": stress_metadata_verified,
                 "simulation": {k: v for k, v in stressed.items()
                                if k != "input_candles"},

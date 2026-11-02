@@ -766,5 +766,111 @@ class CaptureOverlapTests(unittest.TestCase):
             self.assertIn("WAIT:", stderr.getvalue())
 
 
+    def test_modeled_trade_prices_must_match_local_closed_candle_path(self):
+        # Synthetic OHLC only. A consistent PnL ledger is insufficient if
+        # a modeled entry, stop, target or exit price was invented.
+        from types import SimpleNamespace
+        def bar(t, o, h, l, c):
+            return SimpleNamespace(time=t, close_time=t + STEP - 1,
+                                   open=o, high=h, low=l, close=c)
+        bars = [
+            bar(NOW, 100, 102, 98, 100),
+            bar(NOW + STEP, 100, 100.5, 99.5, 100),
+            bar(NOW + 2 * STEP, 103, 104, 102, 103),
+        ]
+        stop = {
+            "entry_time": NOW, "exit_time": NOW + STEP - 1,
+            "entry_reference_open": 100.0, "exit_reference_price": 99.0,
+            "reference_stop": 99.0, "reference_target": 101.0,
+            "reason": "stop", "stop_target_same_bar": True,
+            "gap_beyond_stop_pct": None,
+        }
+        self.assertTrue(compare._verified_candle_price_anchors(
+            {"trades": [stop]}, bars))
+        self.assertIsNone(compare._verified_candle_price_anchors(
+            {"trades": []}, bars))
+        legacy = dict(stop)
+        del legacy["reference_stop"], legacy["reference_target"]
+        self.assertFalse(compare._verified_candle_price_anchors(
+            {"trades": [legacy]}, bars))
+        # A favorable target gap is capped at the target, not the open.
+        gap_target = {
+            "entry_time": NOW + STEP, "exit_time": NOW + 2 * STEP,
+            "entry_reference_open": 100.0, "exit_reference_price": 102.0,
+            "reference_stop": 99.0, "reference_target": 102.0,
+            "reason": "target_gap_open", "stop_target_same_bar": False,
+            "gap_beyond_stop_pct": None,
+        }
+        self.assertTrue(compare._verified_candle_price_anchors(
+            {"trades": [gap_target]}, bars))
+        cases = (
+            (stop, {"entry_reference_open": 100.25}),
+            (stop, {"exit_reference_price": 100.0}),
+            (stop, {"reason": "target"}),
+            (stop, {"stop_target_same_bar": False}),
+            (stop, {"reference_stop": 97.0}),
+            (stop, {"reference_target": 103.0}),
+            (stop, {"exit_time": NOW + 2 * STEP - 1}),
+            (gap_target, {"exit_reference_price": 103.0}),
+            (gap_target, {"reference_stop": 101.0}),
+            (stop, {"reference_target": None}),
+        )
+        for original, change in cases:
+            with self.subTest(change=change):
+                corrupted = dict(original, **change)
+                with self.assertRaisesRegex(
+                        PaperEvaluationError,
+                        "unreconciled_prospective_candle_prices"):
+                    compare._verified_candle_price_anchors(
+                        {"trades": [corrupted]}, bars)
+        partial = dict(stop)
+        del partial["reference_target"]
+        with self.assertRaisesRegex(
+                PaperEvaluationError, "unreconciled_prospective_candle_prices"):
+            compare._verified_candle_price_anchors({"trades": [partial]}, bars)
+
+    def test_candle_price_anchor_audit_on_both_prospective_replays(self):
+        # Synthetic capture, synthetic modeled trades; no exchange fills.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            old, old_receipt = save_pair(root, "old", capture_fixture())
+            new, new_receipt = save_pair(root, "new", capture_fixture(2))
+            trade = {
+                "entry_time": NOW, "exit_time": NOW + STEP - 1,
+                "net_pnl": -1.0, "terminal_forced_mark": False,
+                "entry_reference_open": 100.0, "exit_reference_price": 99.0,
+                "reference_stop": 99.0, "reference_target": 101.0,
+                "reason": "stop", "exit_time_precision":
+                    "bar_close_upper_bound_intrabar_unknown",
+                "stop_target_same_bar": True, "gap_beyond_stop_pct": None,
+            }
+            valid = {"net_pnl": -1.0, "trade_count": 1,
+                     "max_drawdown_pct": 1.0, "trades": [trade]}
+            with patch.object(compare, "backtest", side_effect=[valid, valid]):
+                report = compare.compare_capture_files(
+                    old, old_receipt, new, new_receipt,
+                    prospective_strategy="trend_pullback")
+            replay = report["prospective_paper_replay"]
+            self.assertTrue(replay["modeled_candle_price_anchors_reconciled"])
+            self.assertTrue(replay["double_cost_same_series_sensitivity"][
+                "modeled_candle_price_anchors_reconciled"])
+            for side in (0, 1):
+                for field, value in (("entry_reference_open", 100.25),
+                                     ("exit_reference_price", 100.0),
+                                     ("reference_target", 103.0)):
+                    with self.subTest(side=side, field=field):
+                        corrupted = dict(valid)
+                        corrupted["trades"] = [dict(trade, **{field: value})]
+                        pair = ([corrupted, valid] if side == 0
+                                else [valid, corrupted])
+                        with patch.object(compare, "backtest", side_effect=pair):
+                            with self.assertRaisesRegex(
+                                    PaperEvaluationError,
+                                    "unreconciled_prospective_candle_prices"):
+                                compare.compare_capture_files(
+                                    old, old_receipt, new, new_receipt,
+                                    prospective_strategy="trend_pullback")
+
+
 if __name__ == "__main__":
     unittest.main()

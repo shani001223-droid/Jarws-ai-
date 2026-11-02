@@ -47,6 +47,12 @@ def build_trading_desk(histories: dict, symbol: str, now_ms: int,
         expected_close = (now_ms // INTERVALS[tf]) * INTERVALS[tf] - 1
         if not bars or type(bars[-1].close_time) is not int or bars[-1].close_time != expected_close:
             raise ValueError("mixed_or_lagging_closed_candle_snapshot")
+        # A candle cannot have been obtained before its closing instant.
+        # A cached pre-boundary fetch must never authorize a post-boundary
+        # paper plan, even if the supplied OHLC series claims the new close.
+        # The fetch timestamp is rounded to whole seconds by _public_data.
+        if fetched_at * 1000 <= expected_close:
+            raise ValueError("noncausal_closed_candle_fetch")
     # Validates every candle, frame, close time and freshness before analysis.
     confluence = confluence_score(histories, symbol, now_ms, "long")
     structure = analyze_market_structure(histories, symbol)

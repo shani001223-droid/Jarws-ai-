@@ -57,6 +57,25 @@ class TradingDeskTests(unittest.TestCase):
             self.assertEqual(response.json()["detail"]["decision"], "wait")
             self.assertIsNone(response.json()["detail"]["paper_plan"])
 
+    def test_post_boundary_snapshot_refuses_preclose_fetch_timestamp(self):
+        # Synthetic provider response can claim a newly closed bar while its
+        # recorded fetch time predates that close. Freshness alone (120s)
+        # cannot prove causal availability; all three frames must fail closed.
+        for age_seconds in (1, 30, 119):
+            with self.subTest(age_seconds=age_seconds):
+                stamp = NOW // 1000 - age_seconds
+                with self.assertRaisesRegex(ValueError,
+                                            "noncausal_closed_candle_fetch"):
+                    desk.build_trading_desk(self.data, "BTCUSDT", NOW, stamp)
+                with patch.object(main, "_research_history",
+                        side_effect=lambda pair, tf: (self.data[tf], stamp)), patch.object(
+                        main.time, "time", return_value=NOW / 1000):
+                    response = self.client.get("/api/trading/desk")
+                self.assertEqual(response.status_code, 503)
+                self.assertEqual(response.json()["detail"]["decision"], "wait")
+                self.assertIsNone(response.json()["detail"]["paper_plan"])
+                self.assertNotIn("noncausal_closed_candle_fetch", response.text)
+
     def test_same_closed_snapshot_is_valid_just_after_boundary(self):
         with patch.object(main, "_research_history",
                 side_effect=lambda pair, tf: (self.data[tf], NOW//1000)), patch.object(

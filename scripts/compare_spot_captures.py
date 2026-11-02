@@ -511,6 +511,100 @@ def _verified_modeled_risk_outcomes(simulation: dict,
     return True
 
 
+
+def _verified_original_target_accounting(simulation: dict,
+                                         config: SimulationConfig) -> bool | None:
+    """Reconcile the modeled ORIGINAL signal-target opportunity at entry.
+
+    This checks only internal next-open paper arithmetic. The claimed original
+    signal target itself is NOT independently authenticated against a venue,
+    and these ratios are not observed fills or calibrated probabilities.
+    """
+    trades = simulation["trades"]
+    diagnostics = simulation.get("execution_diagnostics")
+    aggregate_keys = (
+        "paper_entries_original_signal_remaining_rr_below_1r",
+        "paper_entries_original_signal_net_upside_nonpositive",
+    )
+    keys = (
+        "original_signal_target",
+        "remaining_original_signal_reward_risk_at_entry",
+        "original_signal_target_net_gain_per_unit_usdt",
+        "remaining_original_signal_net_reward_risk_at_entry",
+    )
+
+    def fail():
+        raise PaperEvaluationError("unreconciled_prospective_original_target")
+
+    def finite(value):
+        return type(value) in (int, float) and math.isfinite(value)
+
+    def same(value, expected):
+        return finite(value) and math.isclose(
+            value, expected, rel_tol=1e-9, abs_tol=1e-7)
+
+    if diagnostics is not None and type(diagnostics) is not dict:
+        fail()
+    present = (set(aggregate_keys) & set(diagnostics)
+               if diagnostics is not None else set())
+    if present and len(present) != len(aggregate_keys):
+        fail()
+    if not trades:
+        if present and any(
+                type(diagnostics[key]) is not int or diagnostics[key] != 0
+                for key in aggregate_keys):
+            fail()
+        return None
+    claims = [any(key in trade for key in keys) for trade in trades]
+    if not any(claims):
+        if present:
+            fail()
+        return False
+    if not all(claims):
+        fail()
+    fee, slip = config.fee_bps / 10_000, config.slippage_bps / 10_000
+    below_one, nonpositive = 0, 0
+    for trade in trades:
+        if any(key not in trade for key in keys):
+            fail()
+        entry = trade.get("entry")
+        stop = trade.get("reference_stop")
+        target = trade.get("reference_target")
+        original = trade["original_signal_target"]
+        if (any(not finite(v) for v in (entry, stop, target, original))
+                or not 0 < stop < entry < original
+                or not same(target, entry + 2 * (entry - stop))):
+            fail()
+        planned_exit = stop * (1 - slip)
+        planned_loss_per_unit = (
+            entry - planned_exit + fee * (entry + planned_exit))
+        if not math.isfinite(planned_loss_per_unit) or planned_loss_per_unit <= 0:
+            fail()
+        gross_rr = (original - entry) / (entry - stop)
+        original_exit = original * (1 - slip)
+        net_gain = original_exit - entry - fee * (entry + original_exit)
+        net_rr = net_gain / planned_loss_per_unit
+        if (any(not math.isfinite(v) for v in (gross_rr, net_gain, net_rr))
+                or not same(
+                    trade["remaining_original_signal_reward_risk_at_entry"],
+                    gross_rr)
+                or not same(
+                    trade["original_signal_target_net_gain_per_unit_usdt"],
+                    net_gain)
+                or not same(
+                    trade["remaining_original_signal_net_reward_risk_at_entry"],
+                    net_rr)):
+            fail()
+        below_one += int(gross_rr < 1)
+        nonpositive += int(net_gain <= 0)
+    if present:
+        for key, expected in zip(aggregate_keys, (below_one, nonpositive)):
+            if type(diagnostics[key]) is not int or diagnostics[key] != expected:
+                fail()
+    return True
+
+
+
 def _verified_replay_metadata(simulation: dict, strategy: str,
                               config: SimulationConfig, segment: list) -> bool:
     """Check the engine actually reports the requested strategy/cost/window.

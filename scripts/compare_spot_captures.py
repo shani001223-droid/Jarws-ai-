@@ -287,6 +287,90 @@ def _verified_candle_price_anchors(simulation: dict, segment: list) -> bool | No
     return True
 
 
+def _verified_prior_closed_volume(simulation: dict, segment: list) -> bool | None:
+    """Reconcile modeled participation to PREVIOUS closed 15m base volume.
+
+    The current entry bar's volume is future information at the next-open
+    decision: it is disclosed ex post, never used to veto the entry. This
+    audit checks local, unsigned OHLCV only, not executable market depth.
+    """
+    trades = simulation["trades"]
+    diagnostics = simulation.get("execution_diagnostics")
+    if diagnostics is not None and type(diagnostics) is not dict:
+        raise PaperEvaluationError("unreconciled_prospective_prior_volume")
+    diagnostic_keys = (
+        "paper_entries_with_zero_volume_entry_bar_ex_post",
+        "paper_entries_opened",
+    )
+    if not trades:
+        if diagnostics is not None:
+            for key in diagnostic_keys:
+                if key in diagnostics and (
+                        type(diagnostics[key]) is not int or diagnostics[key] != 0):
+                    raise PaperEvaluationError("unreconciled_prospective_prior_volume")
+        return None
+    keys = (
+        "prior_closed_bar_base_volume",
+        "entry_bar_zero_volume_ex_post",
+        "modeled_entry_qty_pct_of_prior_closed_bar_volume",
+    )
+    claimed = [any(key in trade for key in keys) for trade in trades]
+    if not any(claimed):
+        return False
+    if not all(claimed):
+        raise PaperEvaluationError("unreconciled_prospective_prior_volume")
+    first = segment[0].time
+    ex_post_zero = 0
+    for trade in trades:
+        if any(key not in trade for key in keys):
+            raise PaperEvaluationError("unreconciled_prospective_prior_volume")
+        entry_at, qty = trade["entry_time"], trade.get("quantity")
+        if (type(entry_at) is not int or entry_at % STEP_MS
+                or type(qty) not in (int, float) or not math.isfinite(qty)
+                or qty <= 0):
+            raise PaperEvaluationError("unreconciled_prospective_prior_volume")
+        i = (entry_at - first) // STEP_MS
+        if not (1 <= i < len(segment) and segment[i].time == entry_at):
+            raise PaperEvaluationError("unreconciled_prospective_prior_volume")
+        previous, current = segment[i - 1].volume, segment[i].volume
+        reported = trade["prior_closed_bar_base_volume"]
+        if (any(type(v) not in (int, float) or not math.isfinite(v)
+                for v in (previous, current, reported))
+                or previous <= 0 or current < 0
+                or not math.isclose(reported, previous,
+                                    rel_tol=1e-9, abs_tol=1e-9)):
+            raise PaperEvaluationError("unreconciled_prospective_prior_volume")
+        zero = current == 0
+        if type(trade["entry_bar_zero_volume_ex_post"]) is not bool or (
+                trade["entry_bar_zero_volume_ex_post"] != zero):
+            raise PaperEvaluationError("unreconciled_prospective_prior_volume")
+        ex_post_zero += int(zero)
+        try:
+            pct = qty / previous * 100
+        except (OverflowError, ZeroDivisionError):
+            pct = float("inf")
+        wanted = pct if math.isfinite(pct) else None
+        reported_pct = trade["modeled_entry_qty_pct_of_prior_closed_bar_volume"]
+        if wanted is None:
+            if reported_pct is not None:
+                raise PaperEvaluationError("unreconciled_prospective_prior_volume")
+        elif (type(reported_pct) not in (int, float)
+              or not math.isfinite(reported_pct)
+              or not math.isclose(reported_pct, wanted,
+                                  rel_tol=1e-9, abs_tol=1e-7)):
+            raise PaperEvaluationError("unreconciled_prospective_prior_volume")
+    if diagnostics is not None:
+        expected = {
+            "paper_entries_with_zero_volume_entry_bar_ex_post": ex_post_zero,
+            "paper_entries_opened": len(trades),
+        }
+        for key, value in expected.items():
+            if key in diagnostics and (
+                    type(diagnostics[key]) is not int or diagnostics[key] != value):
+                raise PaperEvaluationError("unreconciled_prospective_prior_volume")
+    return True
+
+
 def _verified_replay_metadata(simulation: dict, strategy: str,
                               config: SimulationConfig, segment: list) -> bool:
     """Check the engine actually reports the requested strategy/cost/window.
@@ -556,6 +640,10 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
             simulation, segment)
         stress_candle_prices_verified = _verified_candle_price_anchors(
             stressed, segment)
+        baseline_volume_verified = _verified_prior_closed_volume(
+            simulation, segment)
+        stress_volume_verified = _verified_prior_closed_volume(
+            stressed, segment)
         baseline_set, stress_set = set(baseline_entries), set(stress_entries)
         forced = [trade for trade in simulation["trades"]
                   if trade["terminal_forced_mark"]]
@@ -572,6 +660,7 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
             "modeled_execution_costs_reconciled": baseline_costs_verified,
             "modeled_exit_reason_and_timing_reconciled": baseline_exit_semantics_verified,
             "modeled_candle_price_anchors_reconciled": baseline_candle_prices_verified,
+            "modeled_prior_closed_volume_reconciled": baseline_volume_verified,
             "modeled_strategy_cost_window_metadata_reconciled": baseline_metadata_verified,
             "strategy_resolved_trade_count": len(resolved),
             "terminal_forced_mark_count": len(forced),
@@ -607,6 +696,7 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
                 "modeled_execution_costs_reconciled": stress_costs_verified,
                 "modeled_exit_reason_and_timing_reconciled": stress_exit_semantics_verified,
                 "modeled_candle_price_anchors_reconciled": stress_candle_prices_verified,
+                "modeled_prior_closed_volume_reconciled": stress_volume_verified,
                 "modeled_strategy_cost_window_metadata_reconciled": stress_metadata_verified,
                 "simulation": {k: v for k, v in stressed.items()
                                if k != "input_candles"},

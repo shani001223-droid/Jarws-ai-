@@ -899,5 +899,140 @@ class CaptureOverlapTests(unittest.TestCase):
                                     prospective_strategy="trend_pullback")
 
 
+    def test_prior_closed_volume_audit_keeps_ex_post_zero_volume_visible(self):
+        # Synthetic OHLCV: the next-open decision knows ONLY prior bar volume.
+        from types import SimpleNamespace
+        bars = [
+            SimpleNamespace(time=NOW, volume=10.0),
+            SimpleNamespace(time=NOW + STEP, volume=0.0),
+            SimpleNamespace(time=NOW + 2 * STEP, volume=15.0),
+        ]
+        trade = {
+            "entry_time": NOW + STEP, "quantity": 1.0,
+            "prior_closed_bar_base_volume": 10.0,
+            "entry_bar_zero_volume_ex_post": True,
+            "modeled_entry_qty_pct_of_prior_closed_bar_volume": 10.0,
+        }
+        diagnostics = {
+            "paper_entries_with_zero_volume_entry_bar_ex_post": 1,
+            "paper_entries_opened": 1,
+        }
+        self.assertTrue(compare._verified_prior_closed_volume(
+            {"trades": [trade], "execution_diagnostics": diagnostics}, bars))
+        self.assertIsNone(compare._verified_prior_closed_volume(
+            {"trades": [], "execution_diagnostics": {
+                "paper_entries_opened": 0,
+                "paper_entries_with_zero_volume_entry_bar_ex_post": 0,
+            }}, bars))
+        self.assertFalse(compare._verified_prior_closed_volume(
+            {"trades": [{"entry_time": NOW + STEP}]}, bars))
+        for change in (
+                {"prior_closed_bar_base_volume": 20.0},
+                {"entry_bar_zero_volume_ex_post": False},
+                {"modeled_entry_qty_pct_of_prior_closed_bar_volume": 20.0},
+                {"modeled_entry_qty_pct_of_prior_closed_bar_volume": None},
+                {"quantity": 0.0},
+                {"entry_time": NOW},
+        ):
+            with self.subTest(change=change):
+                with self.assertRaisesRegex(
+                        PaperEvaluationError, "unreconciled_prospective_prior_volume"):
+                    compare._verified_prior_closed_volume(
+                        {"trades": [dict(trade, **change)],
+                         "execution_diagnostics": diagnostics}, bars)
+        partial = dict(trade)
+        del partial["entry_bar_zero_volume_ex_post"]
+        with self.assertRaisesRegex(
+                PaperEvaluationError, "unreconciled_prospective_prior_volume"):
+            compare._verified_prior_closed_volume({"trades": [partial]}, bars)
+        for key in diagnostics:
+            with self.subTest(diagnostic=key):
+                broken = dict(diagnostics, **{key: 0 if diagnostics[key] else 1})
+                with self.assertRaisesRegex(
+                        PaperEvaluationError, "unreconciled_prospective_prior_volume"):
+                    compare._verified_prior_closed_volume(
+                        {"trades": [trade], "execution_diagnostics": broken}, bars)
+        with self.assertRaisesRegex(
+                PaperEvaluationError, "unreconciled_prospective_prior_volume"):
+            compare._verified_prior_closed_volume(
+                {"trades": [], "execution_diagnostics": {
+                    "paper_entries_opened": 1}}, bars)
+        # Zero prior volume must never justify a next-open modeled entry.
+        invalid_bars = list(bars)
+        invalid_bars[0] = SimpleNamespace(time=NOW, volume=0.0)
+        with self.assertRaisesRegex(
+                PaperEvaluationError, "unreconciled_prospective_prior_volume"):
+            compare._verified_prior_closed_volume(
+                {"trades": [trade]}, invalid_bars)
+
+    def test_prior_volume_provenance_on_both_prospective_replays(self):
+        # A complete synthetic modeled trade is accepted only if its local
+        # previous CLOSED candle's base volume agrees on BOTH cost runs.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            old, proof_old = save_pair(root, "old", capture_fixture())
+            new, proof_new = save_pair(root, "new", capture_fixture(2))
+            cfg = compare.SimulationConfig()
+            stress = compare.SimulationConfig(
+                equity=cfg.equity, risk_pct=cfg.risk_pct,
+                daily_loss_limit=cfg.daily_loss_limit,
+                fee_bps=cfg.fee_bps * 2, slippage_bps=cfg.slippage_bps * 2)
+
+            def modeled(config):
+                qty, raw_entry, raw_exit = 1.0, 100.0, 99.0
+                entry = raw_entry * (1 + config.slippage_bps / 10_000)
+                exit_price = raw_exit * (1 - config.slippage_bps / 10_000)
+                fees = qty * config.fee_bps / 10_000 * (entry + exit_price)
+                buy, sell = qty * (entry - raw_entry), qty * (raw_exit - exit_price)
+                pnl = qty * (raw_exit - raw_entry) - buy - sell - fees
+                trade = {
+                    "entry_time": NOW, "exit_time": NOW + STEP - 1,
+                    "net_pnl": pnl, "terminal_forced_mark": False,
+                    "entry_reference_open": raw_entry, "exit_reference_price": raw_exit,
+                    "reference_stop": 99.0, "reference_target": 101.0,
+                    "reason": "stop",
+                    "exit_time_precision": "bar_close_upper_bound_intrabar_unknown",
+                    "stop_target_same_bar": True, "gap_beyond_stop_pct": None,
+                    "entry": entry, "exit": exit_price, "quantity": qty,
+                    "fees": fees, "modeled_buy_slippage_cost_usdt": buy,
+                    "modeled_sell_slippage_cost_usdt": sell,
+                    "reference_gross_pnl_before_modeled_costs_usdt": -1.0,
+                    "prior_closed_bar_base_volume": 10.0,
+                    "entry_bar_zero_volume_ex_post": False,
+                    "modeled_entry_qty_pct_of_prior_closed_bar_volume": 10.0,
+                }
+                return {"net_pnl": pnl, "trade_count": 1,
+                        "max_drawdown_pct": 1.0, "trades": [trade],
+                        "execution_diagnostics": {
+                            "paper_entries_with_zero_volume_entry_bar_ex_post": 0,
+                            "paper_entries_opened": 1}}
+            valid = [modeled(cfg), modeled(stress)]
+            with patch.object(compare, "backtest", side_effect=valid):
+                result = compare.compare_capture_files(
+                    old, proof_old, new, proof_new,
+                    prospective_strategy="trend_pullback")
+            replay = result["prospective_paper_replay"]
+            self.assertTrue(replay["modeled_prior_closed_volume_reconciled"])
+            self.assertTrue(replay["double_cost_same_series_sensitivity"][
+                "modeled_prior_closed_volume_reconciled"])
+            for side in (0, 1):
+                for field, value in (
+                        ("prior_closed_bar_base_volume", 11.0),
+                        ("entry_bar_zero_volume_ex_post", True),
+                        ("modeled_entry_qty_pct_of_prior_closed_bar_volume", 11.0)):
+                    with self.subTest(side=side, field=field):
+                        bad = dict(valid[side])
+                        bad["trades"] = [dict(
+                            valid[side]["trades"][0], **{field: value})]
+                        pair = [bad, valid[1]] if side == 0 else [valid[0], bad]
+                        with patch.object(compare, "backtest", side_effect=pair):
+                            with self.assertRaisesRegex(
+                                    PaperEvaluationError,
+                                    "unreconciled_prospective_prior_volume"):
+                                compare.compare_capture_files(
+                                    old, proof_old, new, proof_new,
+                                    prospective_strategy="trend_pullback")
+
+
 if __name__ == "__main__":
     unittest.main()

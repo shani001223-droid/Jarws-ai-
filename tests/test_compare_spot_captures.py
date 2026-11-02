@@ -432,5 +432,83 @@ class CaptureOverlapTests(unittest.TestCase):
                                     old, proof_old, new, proof_new,
                                     prospective_strategy="trend_pullback")
 
+
+    def test_replay_refuses_wrong_strategy_cost_window_or_partial_metadata(self):
+        # Synthetic engine outputs only. Both baseline and doubled-cost
+        # metadata must describe the actual requested segment and config.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            old, proof_old = save_pair(root, "old", capture_fixture())
+            new, proof_new = save_pair(root, "new", capture_fixture(2))
+            cfg = compare.SimulationConfig()
+            stress_cfg = compare.SimulationConfig(
+                equity=cfg.equity, risk_pct=cfg.risk_pct,
+                daily_loss_limit=cfg.daily_loss_limit,
+                fee_bps=cfg.fee_bps * 2, slippage_bps=cfg.slippage_bps * 2)
+            from dataclasses import asdict
+            def stub(config):
+                return {
+                    "mode": "historical-paper-simulation",
+                    "orders_enabled": False,
+                    "rule_version": compare.RULE_VERSION,
+                    "strategy": "trend_pullback", "interval": "15m",
+                    "start_at": NOW - 63 * STEP,
+                    "end_at": NOW + 2 * STEP - 1,
+                    "bars": 66, "config": asdict(config),
+                    "initial_equity": 1000.0, "ending_equity": 1000.0,
+                    "net_pnl": 0.0, "trades": [], "trade_count": 0,
+                    "max_drawdown_pct": 0.0,
+                }
+            valid = [stub(cfg), stub(stress_cfg)]
+            with patch.object(compare, "backtest", side_effect=valid):
+                result = compare.compare_capture_files(
+                    old, proof_old, new, proof_new,
+                    prospective_strategy="trend_pullback")
+            replay = result["prospective_paper_replay"]
+            self.assertTrue(replay["modeled_strategy_cost_window_metadata_reconciled"])
+            self.assertTrue(replay["double_cost_same_series_sensitivity"][
+                "modeled_strategy_cost_window_metadata_reconciled"])
+            bad_cases = [
+                {"strategy": "breakout_retest"},
+                {"orders_enabled": True},
+                {"start_at": NOW - 62 * STEP},
+                {"end_at": NOW + 3 * STEP - 1},
+                {"bars": 65},
+                {"config": dict(asdict(cfg), fee_bps=99)},
+                {"config": dict(asdict(cfg), risk_pct=True)},
+                {"mode": "live-order-simulation"},
+                {"rule_version": "unknown"},
+            ]
+            for change in bad_cases:
+                for side in (0, 1):
+                    with self.subTest(change=change, side=side):
+                        corrupted = [dict(valid[0]), dict(valid[1])]
+                        update = dict(change)
+                        if "config" in update and side == 1:
+                            update["config"] = dict(
+                                asdict(stress_cfg), **{
+                                    k: v for k, v in update["config"].items()
+                                    if k in ("fee_bps", "risk_pct")})
+                        corrupted[side].update(update)
+                        with patch.object(compare, "backtest", side_effect=corrupted):
+                            with self.assertRaisesRegex(
+                                    PaperEvaluationError,
+                                    "unreconciled_prospective_replay_metadata"):
+                                compare.compare_capture_files(
+                                    old, proof_old, new, proof_new,
+                                    prospective_strategy="trend_pullback")
+            partial = {"mode": "historical-paper-simulation",
+                       "net_pnl": 0.0, "trades": []}
+            with patch.object(compare, "backtest", side_effect=[partial, valid[1]]):
+                output, errors = io.StringIO(), io.StringIO()
+                with redirect_stdout(output), redirect_stderr(errors):
+                    self.assertEqual(compare.main([
+                        "--earlier", str(old), "--earlier-receipt", str(proof_old),
+                        "--later", str(new), "--later-receipt", str(proof_new),
+                        "--prospective-replay", "trend_pullback",
+                    ]), 2)
+                self.assertEqual(output.getvalue(), "")
+                self.assertIn("WAIT:", errors.getvalue())
+
 if __name__ == "__main__":
     unittest.main()

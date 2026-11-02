@@ -13,6 +13,7 @@ No exchange authentication, network fetch, file writes or orders.
 from __future__ import annotations
 
 import argparse
+from dataclasses import asdict
 import json
 import math
 import sys
@@ -22,7 +23,7 @@ from cloud_backend.paper_evaluation import (
     STEP_MS, WARMUP_BARS, PaperEvaluationError, attach_capture_receipt,
     evaluate_chronological,
 )
-from cloud_backend.trading_research import SimulationConfig, backtest
+from cloud_backend.trading_research import RULE_VERSION, SimulationConfig, backtest
 from scripts.evaluate_trading_paper import load_capture_receipt, load_local
 
 
@@ -141,6 +142,40 @@ def _verified_prospective_ledger(simulation: dict, first_scored: int,
     return entries
 
 
+def _verified_replay_metadata(simulation: dict, strategy: str,
+                              config: SimulationConfig, segment: list) -> bool:
+    """Check the engine actually reports the requested strategy/cost/window.
+
+    Synthetic legacy test stubs without ANY metadata are explicitly unverified;
+    real backtest outputs include every field. A partial or contradictory
+    metadata claim must fail closed rather than masquerade as the requested
+    fixed-default or double-cost prospective replay.
+    """
+    expected = {
+        "mode": "historical-paper-simulation",
+        "orders_enabled": False,
+        "rule_version": RULE_VERSION,
+        "strategy": strategy,
+        "interval": "15m",
+        "start_at": segment[0].time,
+        "end_at": segment[-1].close_time,
+        "bars": len(segment),
+        "config": asdict(config),
+    }
+    if not any(key in simulation for key in expected):
+        return False
+    for key, wanted in expected.items():
+        value = simulation.get(key)
+        if key == "config":
+            if (type(value) is not dict or set(value) != set(wanted)
+                    or any(type(value[k]) is not type(wanted[k])
+                           or value[k] != wanted[k] for k in wanted)):
+                raise PaperEvaluationError("unreconciled_prospective_replay_metadata")
+        elif type(value) is not type(wanted) or value != wanted:
+            raise PaperEvaluationError("unreconciled_prospective_replay_metadata")
+    return True
+
+
 def compare_capture_files(earlier: Path, earlier_receipt: Path,
                           later: Path, later_receipt: Path, *,
                           prospective_strategy: str | None = None) -> dict:
@@ -248,6 +283,10 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
             segment, prospective_strategy, stress_config,
             entry_not_before=first_scored,
         )
+        baseline_metadata_verified = _verified_replay_metadata(
+            simulation, prospective_strategy, baseline_config, segment)
+        stress_metadata_verified = _verified_replay_metadata(
+            stressed, prospective_strategy, stress_config, segment)
         baseline_entries = _verified_prospective_ledger(
             simulation, first_scored, b[-1].close_time, baseline_config.equity)
         stress_entries = _verified_prospective_ledger(
@@ -265,6 +304,7 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
             "prior_closed_warmup_bars": WARMUP_BARS,
             "fixed_default_paper_settings": True,
             "modeled_trade_chronology_and_pnl_reconciled": True,
+            "modeled_strategy_cost_window_metadata_reconciled": baseline_metadata_verified,
             "strategy_resolved_trade_count": len(resolved),
             "terminal_forced_mark_count": len(forced),
             "resolved_trade_net_pnl_usdt": sum(
@@ -296,6 +336,7 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
                     trade["terminal_forced_mark"] for trade in stressed["trades"]),
                 "double_cost_max_drawdown_pct": stressed["max_drawdown_pct"],
                 "modeled_trade_chronology_and_pnl_reconciled": True,
+                "modeled_strategy_cost_window_metadata_reconciled": stress_metadata_verified,
                 "simulation": {k: v for k, v in stressed.items()
                                if k != "input_candles"},
                 "independent_evaluation": False,

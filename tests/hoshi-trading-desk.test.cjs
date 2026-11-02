@@ -38,6 +38,24 @@ test("mixed or one-interval-lagging closed frames fail client verification",()=>
   const valid=fixture();valid.as_of_ms=NOW+1;valid.confluence.as_of=NOW+1;
   assert.equal(desk.validate(valid,expected,NOW+1).decision,"wait");
 });
+test("browser rejects impossible preclose provider timestamps even when snapshot is fresh",()=>{
+  // A cached/preclose source cannot contain the newly closed 15m/1h/4h
+  // candles. The server rejects it; the client must independently fail closed
+  // if a stale intermediary or tampered response bypasses the API guard.
+  for(const age of [1,30,119]){
+    const d=fixture();d.fetched_at=NOW/1000-age;
+    assert.throws(()=>desk.validate(d,expected,NOW));
+  }
+  const d=fixture();d.decision="paper_plan_only";d.fetched_at=NOW/1000-1;
+  d.confluence.score=100;d.confluence.decision="paper_watchlist_only";
+  for(const e of Object.values(d.confluence.evidence)){e.passed=true;e.points=20;}
+  d.setup.positive_families=6;d.setup.decision="paper_watchlist_only";
+  for(const e of Object.values(d.setup.evidence))e.status="supports_watchlist";
+  d.paper_plan=makePaperPlan();
+  assert.throws(()=>desk.validate(d,expected,NOW));
+  const valid=fixture();valid.as_of_ms=NOW+1;valid.confluence.as_of=NOW+1;
+  assert.equal(desk.validate(valid,expected,NOW+1).decision,"wait");
+});
 test("invalid paper settings reject before a URL is built",()=>{for(const change of [{symbol:"SOLUSDT"},{risk_pct:2},{equity_usdt:0},{fee_bps:0},{slippage_bps:Infinity}])assert.throws(()=>desk.settings({...expected,...change}));});
 test("local operator mode is loopback-only; public pages cannot redirect the API",()=>{
   assert.equal(desk.apiBase("http://127.0.0.1:8765/trading.html?backend=local"),"http://127.0.0.1:8000");

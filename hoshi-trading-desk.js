@@ -62,7 +62,7 @@
     if (!a || a.equity_usdt!==expected.equity_usdt || a.risk_pct!==expected.risk_pct || a.fee_bps_each_side!==expected.fee_bps || a.adverse_slippage_bps_each_side!==expected.slippage_bps || !sameKeys(data.timeframes,FRAMES)) fail();
     for (const tf of FRAMES) {
       const f=data.timeframes[tf];
-      if (!f || !stamp(f.last_closed_at) || f.last_closed_at>=data.as_of_ms || f.last_closed_at!==Math.floor(data.as_of_ms/STEPS[tf])*STEPS[tf]-1 || !positive(f.last_close) || !finite(f.rsi14) || f.rsi14<0 || f.rsi14>100 || !positive(f.ema20) || !positive(f.ema50) || !finite(f.atr14) || f.atr14<0 || (f.support!==null && (!positive(f.support)||f.support>f.last_close)) || (f.resistance!==null && (!positive(f.resistance)||f.resistance<f.last_close))) fail();
+      if (!f || !stamp(f.last_closed_at) || f.last_closed_at>=data.as_of_ms || f.last_closed_at!==Math.floor(data.as_of_ms/STEPS[tf])*STEPS[tf]-1 || data.fetched_at*1000<=f.last_closed_at || !positive(f.last_close) || !finite(f.rsi14) || f.rsi14<0 || f.rsi14>100 || !positive(f.ema20) || !positive(f.ema50) || !finite(f.atr14) || f.atr14<0 || (f.support!==null && (!positive(f.support)||f.support>f.last_close)) || (f.resistance!==null && (!positive(f.resistance)||f.resistance<f.last_close))) fail();
     }
     const c=data.confluence,s=data.setup;
     if (!c || c.version!=="hoshi-confluence-v2" || c.symbol!==data.symbol || c.market!=="spot" || c.orders_enabled!==false || c.win_probability!==null || c.direction!=="long" || c.as_of!==data.as_of_ms || c.score_semantics!=="weighted_rule_coverage_not_win_probability" || !sameKeys(c.evidence,Object.keys(CHECKS)) || !Number.isInteger(c.score) || c.score<0 || c.score>100 || c.score_max!==100) fail();

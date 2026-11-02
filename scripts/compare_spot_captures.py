@@ -882,6 +882,10 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
             simulation, baseline_config)
         stress_risk_verified = _verified_modeled_risk_outcomes(
             stressed, stress_config)
+        baseline_original_target_verified = _verified_original_target_accounting(
+            simulation, baseline_config)
+        stress_original_target_verified = _verified_original_target_accounting(
+            stressed, stress_config)
         baseline_set, stress_set = set(baseline_entries), set(stress_entries)
         forced = [trade for trade in simulation["trades"]
                   if trade["terminal_forced_mark"]]
@@ -900,6 +904,7 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
             "modeled_candle_price_anchors_reconciled": baseline_candle_prices_verified,
             "modeled_prior_closed_volume_reconciled": baseline_volume_verified,
             "modeled_risk_budget_and_utc_loss_reconciled": baseline_risk_verified,
+            "modeled_original_signal_target_cost_ratios_reconciled": baseline_original_target_verified,
             "modeled_strategy_cost_window_metadata_reconciled": baseline_metadata_verified,
             "strategy_resolved_trade_count": len(resolved),
             "terminal_forced_mark_count": len(forced),
@@ -937,6 +942,7 @@ def compare_capture_files(earlier: Path, earlier_receipt: Path,
                 "modeled_candle_price_anchors_reconciled": stress_candle_prices_verified,
                 "modeled_prior_closed_volume_reconciled": stress_volume_verified,
                 "modeled_risk_budget_and_utc_loss_reconciled": stress_risk_verified,
+                "modeled_original_signal_target_cost_ratios_reconciled": stress_original_target_verified,
                 "modeled_strategy_cost_window_metadata_reconciled": stress_metadata_verified,
                 "simulation": {k: v for k, v in stressed.items()
                                if k != "input_candles"},

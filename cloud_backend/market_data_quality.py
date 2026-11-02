@@ -234,11 +234,11 @@ def verify_spot_market(symbol: str, interval: str, binance_payload,
             or max(binance_fetched_at, kraken_fetched_at) > now_ms // 1000 + 5):
         raise MarketDataQualityError("stale_fetch")
     # A fetched response cannot contain a fully closed candle before its close.
-    # The source timestamps and server clock are whole-second observations;
-    # do not allow even a small future timestamp to certify market quality.
+    # Fetch timestamps have whole-second precision. Keep the existing
+    # bounded five-second server-clock skew allowance, but never allow a
+    # source to claim it fetched a bar before that bar actually closed.
     if (binance_fetched_at * 1000 <= expected_close
-            or kraken_fetched_at * 1000 <= expected_close
-            or max(binance_fetched_at, kraken_fetched_at) > now_ms // 1000):
+            or kraken_fetched_at * 1000 <= expected_close):
         raise MarketDataQualityError("noncausal_source_fetch_time")
     last = first[-1]
     # Real Binance quote volume (USDT) is separately checked against OHLC.

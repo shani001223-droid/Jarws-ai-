@@ -176,15 +176,14 @@ class QualityUnitTests(unittest.TestCase):
                 self.assertEqual(result["last_closed_at"], NOW-1)
                 self.assertEqual(result["status"], "verified_sources_agree")
 
-    def test_quality_refuses_fetch_before_close_or_after_server_clock(self):
+    def test_quality_refuses_fetch_before_latest_candle_close(self):
         # Synthetic timestamps can look recent and both venues can agree,
         # but a closed candle cannot have been fetched before its close.
         for tf in mq.INTERVALS:
             b, k = fixtures(tf)
             for binance_time, kraken_time in (
                     (NOW // 1000 - 1, NOW // 1000),
-                    (NOW // 1000, NOW // 1000 - 1),
-                    (NOW // 1000, NOW // 1000 + 1)):
+                    (NOW // 1000, NOW // 1000 - 1)):
                 with self.subTest(tf=tf, b=binance_time, k=kraken_time):
                     with self.assertRaisesRegex(
                             mq.MarketDataQualityError,

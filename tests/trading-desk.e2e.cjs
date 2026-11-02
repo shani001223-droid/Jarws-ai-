@@ -65,12 +65,29 @@ async function run(){
     release=null;await page.locator("#analyze").click();{const until=Date.now()+6000;while(!release&&Date.now()<until)await new Promise(r=>setTimeout(r,10));assert.ok(release,JSON.stringify({requests,requestPaths,status:await page.locator("#status").textContent()}));}await page.locator("#symbol").selectOption("ETHUSDT");release();await page.waitForTimeout(100);assert.equal(await page.locator("#snapshot").isVisible(),false);await page.locator("#symbol").selectOption("BTCUSDT");
     mode="expiry";await page.locator("#analyze").click();await page.waitForFunction(()=>document.querySelector("#decision").textContent==="PAPER PLAN");await page.waitForFunction(()=>document.querySelector("#status").textContent.includes("expire"));assert.equal(await page.locator("#levels").textContent(),"");
     // Use the REAL service worker: a trading navigation must not poison index.
-    await page.evaluate(async()=>{await navigator.serviceWorker.register("/sw.js");await navigator.serviceWorker.ready;});
+    // Simulate an installed v37 offline shell holding stale trading JS.
+    // The new SW must evict it, not keep serving the old validator.
+    await page.evaluate(async()=>{
+      const old=await caches.open("hoshi-shell-v37");
+      await old.put("/hoshi-trading-desk.js",new Response("stale-v37-client"));
+      await navigator.serviceWorker.register("/sw.js");
+      await navigator.serviceWorker.ready;
+    });
+    await page.waitForFunction(async()=>{
+      const keys=await caches.keys();
+      return keys.includes("hoshi-shell-v38")&&!keys.includes("hoshi-shell-v37");
+    });
+    const newDeskSource=fs.readFileSync(path.join(ROOT,"hoshi-trading-desk.js"),"utf8");
+    assert.equal(await page.evaluate(async()=>{
+      const cache=await caches.open("hoshi-shell-v38");
+      const r=await cache.match(new URL("/hoshi-trading-desk.js",location.origin).href);
+      return r&&r.text();
+    }),newDeskSource);
     await page.reload();await page.evaluate(()=>fetch("/index.html",{cache:"reload"}));await page.reload();
     const mainSource=fs.readFileSync(path.join(ROOT,"index.html"),"utf8");
-    await page.waitForFunction(async expected=>{const cache=await caches.open("hoshi-shell-v37"),r=await cache.match(new URL("/index.html",location.origin).href);return r&&await r.text()===expected;},mainSource);
+    await page.waitForFunction(async expected=>{const cache=await caches.open("hoshi-shell-v38"),r=await cache.match(new URL("/index.html",location.origin).href);return r&&await r.text()===expected;},mainSource);
     await page.waitForTimeout(200);
-    assert.equal(await page.evaluate(async()=>{const r=await(await caches.open("hoshi-shell-v37")).match(new URL("/index.html",location.origin).href);return r.text();}),mainSource);
+    assert.equal(await page.evaluate(async()=>{const r=await(await caches.open("hoshi-shell-v38")).match(new URL("/index.html",location.origin).href);return r.text();}),mainSource);
     await context.setOffline(true);await context.unroute("**/*");await page.reload();await page.waitForFunction(()=>!!window.HoshiTradingDesk&&!document.querySelector("#analyze").disabled);await page.locator("#analyze").click();await page.waitForFunction(()=>document.querySelector("#status").textContent.includes("Data verify"));assert.equal(await page.locator("#plan").isVisible(),false);
     assert.deepEqual(errors,[]);console.log("Trading desk Chromium mobile: WAIT/plan, tampering, Stop/races, expiry, consent/export/delete and real SW offline checks passed.");
   }finally{if(browser)await browser.close();await new Promise(resolve=>server.close(resolve));}

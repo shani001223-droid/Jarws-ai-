@@ -67,10 +67,10 @@ class TradingDeskTests(unittest.TestCase):
         # 1h/4h prices or volume must fail closed before any paper plan.
         result = desk.build_trading_desk(self.data, "BTCUSDT", NOW, NOW // 1000)
         self.assertEqual(result["market"], "spot")
-        for tf, field, delta in (("1h", "close", 1),
+        for tf, field, delta in (("1h", "close", .01),
                                  ("1h", "high", 1),
                                  ("4h", "volume", 1),
-                                 ("4h", "open", 1)):
+                                 ("4h", "open", .01)):
             data = {frame: bars.copy() for frame, bars in self.data.items()}
             data[tf][-1] = replace(data[tf][-1],
                                    **{field: getattr(data[tf][-1], field) + delta})

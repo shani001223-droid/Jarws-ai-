@@ -95,6 +95,9 @@ jobs:
           print("Task 40 Docker API route registered; unsupported pair rejected")
           PY
           # Task 41: real image must expose the read-only paper risk route.
+          desk_status=$(curl --silent --show-error --max-time 5 -o /tmp/hoshi-desk-invalid.json \
+            -w '%{http_code}' 'http://127.0.0.1:18765/api/trading/desk?symbol=SOLUSDT')
+          test "$desk_status" = 422 || { echo "Trading desk expected 422, got $desk_status"; exit 1; }
           paper_status=$(curl --silent --show-error --max-time 5 -o /tmp/hoshi-paper-invalid.json \
             -w '%{http_code}' 'http://127.0.0.1:18765/api/trading/paper-risk?symbol=SOLUSDT')
           test "$paper_status" = 422 || { echo "Paper risk route expected 422, got $paper_status"; exit 1; }
@@ -105,6 +108,35 @@ jobs:
           assert "detail" in payload and "BTCUSDT" in payload["detail"], payload
           print("Task 41 Docker paper risk route registered; unsupported pair rejected")
           PY
+          # Task 42: the actual Docker/Uvicorn image exposes only read-only
+          # annotated-chart exports and rejects unsupported pairs pre-network.
+          chart_status=$(curl --silent --show-error --max-time 5 -o /tmp/hoshi-chart-invalid.json \
+            -w '%{http_code}' 'http://127.0.0.1:18765/api/trading/annotated-chart?symbol=SOLUSDT')
+          test "$chart_status" = 422 || { echo "Chart route expected 422, got $chart_status"; exit 1; }
+          python3 - <<'PY'
+          import json
+          with open("/tmp/hoshi-chart-invalid.json") as f:
+              payload = json.load(f)
+          assert "detail" in payload and "BTCUSDT" in payload["detail"], payload
+          print("Task 42 Docker chart route registered; unsupported pair rejected")
+          PY
+          # Task 44: review-only Flora drafts must work inside the real image.
+          curl --fail --silent --show-error --max-time 5 \
+            'http://127.0.0.1:18765/api/flora/campaign-draft?product_id=shampoo&platform=whatsapp_status' \
+            > /tmp/hoshi-flora-campaign.json
+          python3 - <<'PY'
+          import json
+          with open("/tmp/hoshi-flora-campaign.json") as f:
+              plan = json.load(f)
+          assert plan["status"] == "draft_review_required"
+          assert plan["creative_brief"]["canvas_px"] == "1080x1920"
+          assert plan["publishable"] is False and plan["scheduled"] is False
+          assert plan["photo_rights_verified"] is False
+          print("Task 44 Docker campaign draft is read-only and unapproved")
+          PY
+          campaign_status=$(curl --silent --show-error --max-time 5 -o /tmp/hoshi-flora-campaign-invalid.json \
+            -w '%{http_code}' 'http://127.0.0.1:18765/api/flora/campaign-draft?platform=publish_now')
+          test "$campaign_status" = 422 || { echo "Campaign route expected 422, got $campaign_status"; exit 1; }
           # Validate knowledge files and timezone data inside the actual image.
           docker exec -i "$container" python - <<'PY'
           import json

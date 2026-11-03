@@ -2,7 +2,26 @@
 
 > **START HERE:** [HOSHI_MASTER_PROJECT.md](HOSHI_MASTER_PROJECT.md) is the single canonical project overview for all former JARVIS/JARWS/ALTRON/VALTRON ideas and today's Hoshi AI assistant. [HOSHI_60_TASK_MASTER_ROADMAP.md](HOSHI_60_TASK_MASTER_ROADMAP.md) is the **only current 60-task completion tracker**. The historical material below may describe older versions of the app; the master document and current verified CI/deploy evidence take precedence.
 
-**Current structure:** one GitHub repository with web frontend, Python backend, Android bridge, verified tools and user-approved design assets. New work goes to the reviewed Hoshi development branch ([draft PR #24](https://github.com/shani001223-droid/Jarws-ai-/pull/24)); it is **not automatically live** on Render. Do not duplicate the project or silently merge production changes.
+**30 October 2026 — active scope: trading only.** Other feature development is
+pending/deferred by the user's latest instruction. The same repository now has
+a dedicated [Hoshi Trading paper desk](trading.html), using one bounded
+`GET /api/trading/desk` response for BTC/ETH structure, indicators, V2 rule
+coverage and hypothetical risk. Stop/clear, snapshot expiry and an opt-in local
+journal/export/delete are included. No real orders or paid model calls.
+This is development source in [existing draft PR #29](https://github.com/shani001223-droid/Jarws-ai-/pull/29),
+not a claim that the page/backend have been deployed. The source-blocked V3
+curriculum and its runtime/evaluation/release gates remain separate and pending.
+
+Local operator preview: start the existing backend with
+`python -m uvicorn cloud_backend.main:app --host 127.0.0.1 --port 8000`, serve the
+repository frontend with `python -m http.server 8765 --bind 127.0.0.1`, and open
+`http://127.0.0.1:8765/trading.html?backend=local`. The override works only on
+loopback HTTP pages; public pages always use the existing approved backend
+origin. Install the existing development requirements first. No credentials
+are needed for this paper desk. Missing/unavailable market data produce WAIT.
+
+
+**Current structure:** one GitHub repository with web frontend, Python backend, Android bridge, verified tools and user-approved design assets. New work goes to the reviewed Hoshi development branch ([draft PR #29](https://github.com/shani001223-droid/Jarws-ai-/pull/29)); it is **not automatically live** on Render. Do not duplicate the project or silently merge production changes. PR #24 was the released V2 predecessor.
 
 **Trading V2 development update (27 Oct 2026):** [audit and commit evidence](AUDIT_REPORT.md), [ten-module curriculum + history](modules/), and [exact API/rules/deployment guide](HOSHI_TRADING_V2.md). Adds `/history`, `/learn`, `/confluence_score`, integrity-checked knowledge retrieval and a five-factor 0–100 **rule-coverage** score. It is paper research, not calibrated accuracy or real trading. Older interface/voice descriptions below are historical; current master decisions take precedence.
 

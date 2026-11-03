@@ -47,6 +47,23 @@ class AssistantApiTests(unittest.TestCase):
         self.assertEqual(mocked.await_count, 1)
         self.assertEqual(len(main.speech_cache), 1)
 
+    def test_concurrent_identical_urdu_audio_coalesces_and_normalizes_style(self):
+        async def slow_synthesis(text, style):
+            await asyncio.sleep(0.02)
+            return b"ID3shared-audio"
+        with patch("cloud_backend.main.synthesize_urdu",
+                   new=AsyncMock(side_effect=slow_synthesis)) as mocked:
+            async def two_listeners():
+                return await asyncio.gather(
+                    main.speech(main.SpeechRequest(text="میں ہوشی ہوں۔", style="soft")),
+                    main.speech(main.SpeechRequest(text="میں ہوشی ہوں۔", style="unsupported")),
+                )
+            responses = asyncio.run(two_listeners())
+        self.assertEqual([response.body for response in responses],
+                         [b"ID3shared-audio", b"ID3shared-audio"])
+        mocked.assert_awaited_once_with("میں ہوشی ہوں۔", "soft")
+        self.assertEqual(len(main.speech_cache), 1)
+
     def test_online_urdu_audio_rejects_wrong_script_before_provider(self):
         with patch("cloud_backend.main.synthesize_urdu", new=AsyncMock()) as mocked:
             with self.assertRaises(main.HTTPException) as raised:

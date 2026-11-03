@@ -1,0 +1,389 @@
+"""Real image and private CLI regression for Flora Task 43 photo intake."""
+from __future__ import annotations
+
+import hashlib
+from io import BytesIO
+import json
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+import unittest
+
+from PIL import Image
+
+from cloud_backend.flora_catalog import FloraCatalogError, inspect_owner_photo
+from cloud_backend.flora_private_photo_intake import (
+    FloraPrivatePhotoError, prepare_private_flora_photo,
+)
+from cloud_backend.flora_photo_posters import render_flora_photo_preview
+from cloud_backend.flora_video_ads import render_flora_video_draft
+from cloud_backend.flora_private_bundle_verify import (
+    FloraPrivateBundleError, verify_private_flora_bundle,
+)
+
+
+def _jpeg_with_exif() -> bytes:
+    image = Image.new("RGB", (640, 800), (70, 120, 160))
+    exif = Image.Exif()
+    exif[274] = 6  # EXIF rotation: display width and height swapped
+    exif[271] = "PRIVATE CAMERA IDENTIFIER"
+    buffer = BytesIO()
+    image.save(buffer, format="JPEG", exif=exif)
+    return buffer.getvalue()
+
+
+class FloraPrivatePhotoIntakeTests(unittest.TestCase):
+    def test_exif_orientation_and_private_metadata_scrub(self):
+        original = _jpeg_with_exif()
+        self.assertEqual(inspect_owner_photo(original, "image/jpeg")["width"], 640)
+        result = prepare_private_flora_photo(original, "image/jpeg")
+        self.assertEqual(result["source_photo_sha256"], hashlib.sha256(original).hexdigest())
+        self.assertEqual(result["sanitized_canvas_px"], [800, 640])
+        self.assertTrue(result["metadata_removed"])
+        self.assertFalse(result["approved_for_publication"])
+        self.assertFalse(result["owner_rights_independently_verified"])
+        self.assertFalse(result["publication_permitted"])
+        cleaned = result["sanitized_png_bytes"]
+        self.assertEqual(result["sanitized_photo_sha256"], hashlib.sha256(cleaned).hexdigest())
+        self.assertNotIn(b"PRIVATE CAMERA IDENTIFIER", cleaned)
+        with Image.open(BytesIO(cleaned)) as image:
+            self.assertEqual(image.format, "PNG")
+            self.assertEqual(image.mode, "RGB")
+            self.assertFalse(image.info)
+            self.assertEqual(image.size, (800, 640))
+
+    def test_private_photo_reaches_real_poster_and_mp4_without_approval(self):
+        prepared = prepare_private_flora_photo(_jpeg_with_exif(), "image/jpeg")
+        photo = prepared["sanitized_png_bytes"]
+        poster = render_flora_photo_preview("shampoo", photo, "image/png")
+        self.assertEqual(poster["source_photo_sha256"],
+                         prepared["sanitized_photo_sha256"])
+        self.assertFalse(poster["approved_for_publication"])
+        video = render_flora_video_draft("shampoo", photo, "image/png", "feed")
+        self.assertEqual(video["codec"], "h264")
+        self.assertEqual(video["audio_status"], "silent_no_music")
+        self.assertEqual(video["source_photo_sha256"],
+                         prepared["sanitized_photo_sha256"])
+        self.assertFalse(video["approved_for_publication"])
+        self.assertFalse(video["published"])
+        self.assertTrue(video["video_mp4"].startswith(b"\x00\x00"))
+
+    def test_animated_apng_and_truncated_jpeg_fail_closed(self):
+        a = Image.new("RGB", (640, 640), "red")
+        b = Image.new("RGB", (640, 640), "blue")
+        buffer = BytesIO()
+        a.save(buffer, format="PNG", save_all=True, append_images=[b],
+               duration=100, loop=0)
+        animated = buffer.getvalue()
+        with self.assertRaises(FloraCatalogError):
+            inspect_owner_photo(animated, "image/png")
+        with self.assertRaises(FloraPrivatePhotoError):
+            prepare_private_flora_photo(animated, "image/png")
+        truncated = _jpeg_with_exif()[:250]
+        with self.assertRaises(FloraCatalogError):
+            inspect_owner_photo(truncated, "image/jpeg")
+
+    def test_downscale_without_upscale_and_reject_extreme_aspect_ratio(self):
+        large = BytesIO()
+        Image.new("RGB", (3200, 1600), "white").save(large, format="PNG")
+        prepared = prepare_private_flora_photo(large.getvalue(), "image/png")
+        self.assertEqual(prepared["sanitized_canvas_px"], [2048, 1024])
+        narrow = BytesIO()
+        Image.new("RGB", (4096, 400), "white").save(narrow, format="PNG")
+        with self.assertRaises(FloraPrivatePhotoError):
+            prepare_private_flora_photo(narrow.getvalue(), "image/png")
+
+    def test_private_cli_create_only_and_no_rights_no_output(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "owner.jpg"
+            source.write_bytes(_jpeg_with_exif())
+            out = root / "private"
+            out.mkdir()
+            args = [sys.executable, "-m", "scripts.prepare_flora_private_photo",
+                    "--photo", str(source), "--mime", "image/jpeg",
+                    "--product-id", "gold_kit", "--output-dir", str(out)]
+            denied = subprocess.run(args, capture_output=True, text=True, timeout=25)
+            self.assertNotEqual(denied.returncode, 0)
+            self.assertEqual(list(out.iterdir()), [])
+            accepted = subprocess.run(args + ["--rights-attested"],
+                                      capture_output=True, text=True, timeout=25)
+            self.assertEqual(accepted.returncode, 0, accepted.stderr)
+            report = json.loads(accepted.stdout)
+            self.assertFalse(report["publication_permitted"])
+            self.assertEqual(len(list(out.iterdir())), 2)
+            meta = json.loads((out / "flora_gold_kit_PRIVATE_photo_provenance.json").read_text())
+            self.assertTrue(meta["caller_rights_attested_not_independently_verified"])
+            self.assertFalse(meta["owner_approved"])
+            self.assertNotIn("sanitized_png_bytes", meta)
+            self.assertEqual(source.read_bytes(), _jpeg_with_exif())
+            before = {p.name: p.read_bytes() for p in out.iterdir()}
+            repeated = subprocess.run(args + ["--rights-attested"],
+                                      capture_output=True, text=True, timeout=25)
+            self.assertNotEqual(repeated.returncode, 0)
+            self.assertEqual(before, {p.name: p.read_bytes() for p in out.iterdir()})
+
+
+    def test_private_cli_one_step_real_silent_mp4_with_hash_bound_photo(self):
+        """Operator can produce an actual private MP4 without a second script."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "original_with_exif.jpg"
+            original = _jpeg_with_exif()
+            source.write_bytes(original)
+            out = root / "private"
+            out.mkdir()
+            args = [
+                sys.executable, "-m", "scripts.prepare_flora_private_photo",
+                "--photo", str(source), "--mime", "image/jpeg",
+                "--product-id", "gold_kit", "--output-dir", str(out),
+                "--rights-attested", "--render-video", "--placement", "story",
+            ]
+            completed = subprocess.run(args, capture_output=True, text=True, timeout=90)
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            summary = json.loads(completed.stdout)
+            self.assertFalse(summary["publication_permitted"])
+            self.assertFalse(summary["owner_approved"])
+            names = {
+                "flora_gold_kit_PRIVATE_photo.png",
+                "flora_gold_kit_PRIVATE_photo_provenance.json",
+                "flora_gold_kit_story_DRAFT.png",
+                "flora_gold_kit_story_DRAFT.mp4",
+            }
+            self.assertEqual({p.name for p in out.iterdir()}, names)
+            provenance = json.loads(
+                (out / "flora_gold_kit_PRIVATE_photo_provenance.json").read_text()
+            )
+            render = provenance["private_render"]
+            self.assertEqual(render["audio_status"], "silent_no_music")
+            self.assertFalse(render["publication_permitted"])
+            self.assertFalse(render["owner_approved"])
+            self.assertFalse(render["photo_rights_independently_verified"])
+            self.assertFalse(render["current_price_independently_verified"])
+            self.assertTrue(render["ffprobe_verified_locally"])
+            self.assertEqual(
+                provenance["sanitized_photo_sha256"],
+                hashlib.sha256((out / "flora_gold_kit_PRIVATE_photo.png").read_bytes()).hexdigest(),
+            )
+            for kind, filename in (("poster", "flora_gold_kit_story_DRAFT.png"),
+                                   ("video", "flora_gold_kit_story_DRAFT.mp4")):
+                self.assertEqual(
+                    render[kind + "_sha256"],
+                    hashlib.sha256((out / filename).read_bytes()).hexdigest(),
+                )
+            self.assertEqual(summary["video_sha256"], render["video_sha256"])
+            self.assertNotIn("original_with_exif.jpg",
+                             (out / "flora_gold_kit_PRIVATE_photo_provenance.json").read_text())
+            self.assertNotIn(b"PRIVATE CAMERA IDENTIFIER",
+                             (out / "flora_gold_kit_PRIVATE_photo.png").read_bytes())
+            probed = subprocess.run([
+                "ffprobe", "-v", "error", "-show_entries",
+                "stream=codec_name,codec_type:format=duration",
+                "-of", "json", str(out / "flora_gold_kit_story_DRAFT.mp4"),
+            ], capture_output=True, text=True, timeout=15, check=True)
+            streams = json.loads(probed.stdout)["streams"]
+            self.assertEqual([(s["codec_type"], s["codec_name"]) for s in streams],
+                             [("video", "h264")])
+
+            # Independent read-only verifier decodes the actual encoded MP4
+            # midpoint, not just the self-reported SHA-256 in the JSON.
+            verified = verify_private_flora_bundle(out, "gold_kit", "story")
+            self.assertEqual(verified["status"], "private_draft_verified_not_approved")
+            self.assertTrue(verified["encoded_midpoint_checked"])
+            self.assertTrue(verified["encoded_three_samples_checked"])
+            self.assertEqual(verified["encoded_sample_times_seconds"], [0.6, 1.5, 2.4])
+            self.assertTrue(verified["encoded_full_frame_checked"])
+            self.assertEqual(verified["encoded_frames_checked"], 36)
+            self.assertEqual(verified["encoded_expected_frame_rate"], 12)
+            self.assertFalse(verified["owner_approved"])
+            cli_check = subprocess.run([
+                sys.executable, "-m", "scripts.verify_flora_private_bundle",
+                "--draft-dir", str(out), "--product-id", "gold_kit",
+                "--placement", "story",
+            ], capture_output=True, text=True, timeout=35)
+            self.assertEqual(cli_check.returncode, 0, cli_check.stderr)
+            self.assertFalse(json.loads(cli_check.stdout)["publication_permitted"])
+
+            # A forged MP4 can keep its 1.5s midpoint and valid H.264
+            # metadata while replacing early frames. Rehashing the JSON
+            # must not let this partial corruption pass review.
+            video_path = out / "flora_gold_kit_story_DRAFT.mp4"
+            meta_path = out / "flora_gold_kit_PRIVATE_photo_provenance.json"
+            original_video, original_meta = video_path.read_bytes(), meta_path.read_bytes()
+            forged_video = root / "forged_early_frames.mp4"
+            encoded = subprocess.run([
+                "ffmpeg", "-hide_banner", "-loglevel", "error", "-nostdin", "-y",
+                "-i", str(video_path),
+                "-vf", "drawbox=x=0:y=0:w=iw:h=ih:color=black:t=fill:enable='lt(t,0.8)'",
+                "-an", "-c:v", "libx264", "-threads", "2", "-preset", "ultrafast",
+                "-crf", "32", "-pix_fmt", "yuv420p", "-r", "12",
+                "-movflags", "+faststart", str(forged_video),
+            ], capture_output=True, text=True, timeout=35)
+            self.assertEqual(encoded.returncode, 0, encoded.stderr)
+            altered = forged_video.read_bytes()
+            self.assertNotEqual(altered, original_video)
+            video_path.write_bytes(altered)
+            changed = json.loads(original_meta)
+            changed["private_render"]["video_sha256"] = hashlib.sha256(altered).hexdigest()
+            meta_path.write_text(json.dumps(changed), encoding="utf-8")
+            with self.assertRaisesRegex(
+                FloraPrivateBundleError, "does not visually match"
+            ):
+                verify_private_flora_bundle(out, "gold_kit", "story")
+            video_path.write_bytes(original_video)
+            meta_path.write_bytes(original_meta)
+            self.assertTrue(
+                verify_private_flora_bundle(out, "gold_kit", "story")[
+                    "encoded_three_samples_checked"]
+            )
+
+            # The old three-frame sampler missed a short substituted shot
+            # strictly between 0.6, 1.5 and 2.4 seconds. All 36 frames must
+            # now be decoded, including the previously unchecked interval.
+            brief_forgery = root / "forged_between_samples.mp4"
+            encoded = subprocess.run([
+                "ffmpeg", "-hide_banner", "-loglevel", "error", "-nostdin", "-y",
+                "-i", str(video_path),
+                "-vf", "drawbox=x=0:y=0:w=iw:h=ih:color=black:t=fill:"
+                       "enable='between(t,1.05,1.22)'",
+                "-an", "-c:v", "libx264", "-threads", "2", "-preset", "ultrafast",
+                "-crf", "32", "-pix_fmt", "yuv420p", "-r", "12",
+                "-movflags", "+faststart", str(brief_forgery),
+            ], capture_output=True, text=True, timeout=35)
+            self.assertEqual(encoded.returncode, 0, encoded.stderr)
+            altered = brief_forgery.read_bytes()
+            video_path.write_bytes(altered)
+            changed = json.loads(original_meta)
+            changed["private_render"]["video_sha256"] = hashlib.sha256(altered).hexdigest()
+            meta_path.write_text(json.dumps(changed), encoding="utf-8")
+            with self.assertRaisesRegex(
+                FloraPrivateBundleError, "does not visually match"
+            ):
+                verify_private_flora_bundle(out, "gold_kit", "story")
+            video_path.write_bytes(original_video)
+            meta_path.write_bytes(original_meta)
+            self.assertTrue(
+                verify_private_flora_bundle(out, "gold_kit", "story")[
+                    "encoded_full_frame_checked"]
+            )
+
+            # Rehashing a forged poster and JSON must not make it match the
+            # actual decoded H.264 video. Restore originals afterward.
+            poster_path = out / "flora_gold_kit_story_DRAFT.png"
+            meta_path = out / "flora_gold_kit_PRIVATE_photo_provenance.json"
+            original_poster, original_meta = poster_path.read_bytes(), meta_path.read_bytes()
+            forged = BytesIO()
+            Image.new("RGB", (1080, 1920), "magenta").save(forged, format="PNG")
+            poster_path.write_bytes(forged.getvalue())
+            changed = json.loads(original_meta)
+            changed["private_render"]["poster_sha256"] = hashlib.sha256(
+                forged.getvalue()).hexdigest()
+            meta_path.write_text(json.dumps(changed), encoding="utf-8")
+            with self.assertRaises(FloraPrivateBundleError):
+                verify_private_flora_bundle(out, "gold_kit", "story")
+            poster_path.write_bytes(original_poster)
+            meta_path.write_bytes(original_meta)
+
+            # Unexpected files and forged approval state both fail closed.
+            extra = out / "unexpected.txt"
+            extra.write_text("not part of private draft")
+            with self.assertRaises(FloraPrivateBundleError):
+                verify_private_flora_bundle(out, "gold_kit", "story")
+            extra.unlink()
+            changed = json.loads(original_meta)
+            changed["owner_approved"] = True
+            meta_path.write_text(json.dumps(changed), encoding="utf-8")
+            with self.assertRaises(FloraPrivateBundleError):
+                verify_private_flora_bundle(out, "gold_kit", "story")
+            meta_path.write_bytes(original_meta)
+            self.assertEqual(
+                verify_private_flora_bundle(out, "gold_kit", "story")["status"],
+                "private_draft_verified_not_approved",
+            )
+            before = {p.name: p.read_bytes() for p in out.iterdir()}
+            repeat = subprocess.run(args, capture_output=True, text=True, timeout=90)
+            self.assertNotEqual(repeat.returncode, 0)
+            self.assertEqual(before, {p.name: p.read_bytes() for p in out.iterdir()})
+            self.assertEqual(source.read_bytes(), original)
+
+    def test_private_offline_mobile_review_page_is_create_only_and_verified(self):
+        """A real MP4 has a static local reviewer; no owner approval or posting."""
+        from cloud_backend.flora_private_review import build_flora_private_review_html
+
+        with self.assertRaises(ValueError):
+            build_flora_private_review_html("shampoo", "story", "bad", "0" * 64, "0" * 64)
+        with self.assertRaises(ValueError):
+            build_flora_private_review_html("../shampoo", "story", "0" * 64, "0" * 64, "0" * 64)
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "private_camera.jpg"
+            original = _jpeg_with_exif()
+            source.write_bytes(original)
+            out = root / "draft"
+            out.mkdir()
+            args = [
+                sys.executable, "-m", "scripts.prepare_flora_private_photo",
+                "--photo", str(source), "--mime", "image/jpeg",
+                "--product-id", "shampoo", "--output-dir", str(out),
+                "--rights-attested", "--placement", "feed", "--review-page",
+            ]
+            no_video = subprocess.run(args, capture_output=True, text=True, timeout=15)
+            self.assertNotEqual(no_video.returncode, 0)
+            self.assertEqual(list(out.iterdir()), [])
+            args.append("--render-video")
+            made = subprocess.run(args, capture_output=True, text=True, timeout=90)
+            self.assertEqual(made.returncode, 0, made.stderr)
+            html_path = out / "flora_shampoo_feed_PRIVATE_review.html"
+            meta_path = out / "flora_shampoo_PRIVATE_photo_provenance.json"
+            self.assertEqual(len(list(out.iterdir())), 5)
+            page = html_path.read_bytes()
+            self.assertIn(b"<video controls playsinline", page)
+            self.assertIn(b"NOT APPROVED FOR PUBLICATION", page)
+            self.assertIn(b"default-src 'none'", page)
+            self.assertNotIn(b"<script", page)
+            self.assertNotIn(b"http://", page)
+            self.assertNotIn(b"https://", page)
+            self.assertNotIn(b"PRIVATE CAMERA IDENTIFIER", page)
+            meta = json.loads(meta_path.read_bytes())
+            self.assertEqual(meta["private_render"]["review_html_sha256"],
+                             hashlib.sha256(page).hexdigest())
+            verified = verify_private_flora_bundle(out, "shampoo", "feed")
+            self.assertTrue(verified["offline_review_page_checked"])
+            self.assertFalse(verified["publication_permitted"])
+            html_path.write_bytes(page.replace(b"NOT APPROVED", b"NOW APPROVED"))
+            with self.assertRaises(FloraPrivateBundleError):
+                verify_private_flora_bundle(out, "shampoo", "feed")
+            html_path.write_bytes(page)
+            meta_path.write_bytes(meta_path.read_bytes().replace(
+                meta["private_render"]["review_html_sha256"].encode(), b"0" * 64))
+            with self.assertRaises(FloraPrivateBundleError):
+                verify_private_flora_bundle(out, "shampoo", "feed")
+            meta_path.write_text(json.dumps(meta), encoding="utf-8")
+            self.assertTrue(verify_private_flora_bundle(out, "shampoo", "feed")[
+                "offline_review_page_checked"])
+            before = {p.name: p.read_bytes() for p in out.iterdir()}
+            repeated = subprocess.run(args, capture_output=True, text=True, timeout=90)
+            self.assertNotEqual(repeated.returncode, 0)
+            self.assertEqual(before, {p.name: p.read_bytes() for p in out.iterdir()})
+            self.assertEqual(source.read_bytes(), original)
+
+    def test_private_cli_invalid_photo_never_leaves_partial_video(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "broken.jpg"
+            source.write_bytes(_jpeg_with_exif()[:250])
+            out = root / "private"
+            out.mkdir()
+            result = subprocess.run([
+                sys.executable, "-m", "scripts.prepare_flora_private_photo",
+                "--photo", str(source), "--mime", "image/jpeg",
+                "--product-id", "shampoo", "--output-dir", str(out),
+                "--rights-attested", "--render-video",
+            ], capture_output=True, text=True, timeout=25)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual(list(out.iterdir()), [])
+
+
+if __name__ == "__main__":
+    unittest.main()

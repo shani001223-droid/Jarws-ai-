@@ -12,13 +12,91 @@
   }
   return parts;
  }
- function queue(parts,load,isCurrent=()=>true){
-  const pending=new Map();
-  return {get(index){
-   if(!isCurrent()||index<0||index>=parts.length)return Promise.resolve(null);
-   if(!pending.has(index))pending.set(index,Promise.resolve().then(()=>isCurrent()?load(parts[index]):null).catch(()=>null));
-   return pending.get(index);
-  }};
+ // Clip deadlines must settle even if a WebView/network adapter ignores AbortSignal.
+ // Aborting one prefetch must not abort its siblings; the shared parent still
+ // cancels all child requests when the user presses Stop Speaking.
+ function withClipTimeout(parentSignal,timeoutMs,load){
+  if(!Number.isFinite(timeoutMs)||timeoutMs<=0)return Promise.reject(new RangeError('Invalid speech clip timeout'));
+  if(typeof load!=='function')return Promise.reject(new TypeError('Speech clip loader is required'));
+  const controller=new AbortController();
+  return new Promise((resolve,reject)=>{
+   let settled=false,timer=null;
+   const cleanup=()=>{
+    if(timer!==null)clearTimeout(timer);
+    if(parentSignal)parentSignal.removeEventListener('abort',onParentAbort);
+   };
+   const settle=(callback,value)=>{
+    if(settled)return;
+    settled=true;cleanup();callback(value);
+   };
+   const cancel=reason=>{
+    if(!controller.signal.aborted)controller.abort();
+    settle(reject,new Error(reason));
+   };
+   const onParentAbort=()=>cancel('Speech clip cancelled');
+   if(parentSignal){
+    if(parentSignal.aborted){onParentAbort();return;}
+    parentSignal.addEventListener('abort',onParentAbort,{once:true});
+   }
+   timer=setTimeout(()=>cancel('Speech clip timed out'),timeoutMs);
+   try{
+    // Both fulfillment and rejection handlers are always attached, so a late
+    // loader failure after timeout cannot become an unhandled rejection.
+    Promise.resolve(load(controller.signal)).then(
+     value=>settle(resolve,value),error=>settle(reject,error)
+    );
+   }catch(error){settle(reject,error);}
+  });
  }
- const api={split,queue};if(root)root.HoshiSpeechPipeline=api;if(typeof module!=='undefined')module.exports=api;
+ // Only the current clip and its next prefetch need cached audio bytes.
+ // A played clip can be released once its Blob URL owns the audio; closing the
+ // queue on Stop Speaking prevents stale microtasks from starting new fetches.
+ function queue(parts,load,isCurrent=()=>true){
+  const pending=new Map();let closed=false;
+  return {
+   get(index){
+    if(closed||!isCurrent()||!Number.isInteger(index)||index<0||index>=parts.length)return Promise.resolve(null);
+    if(!pending.has(index))pending.set(index,Promise.resolve().then(()=>!closed&&isCurrent()?load(parts[index]):null).catch(()=>null));
+    return pending.get(index);
+   },
+   release(index){pending.delete(index)},
+   clear(){closed=true;pending.clear()}
+  };
+ }
+
+ // Stream encoded Urdu MP3 with a hard client-side byte budget. A misleading
+ // Content-Length must not let a response exhaust a small Android WebView.
+ // The Blob fallback exists for older WebViews without ReadableStream support.
+ async function readBoundedAudio(response,maxBytes=2_000_000){
+  if(!Number.isSafeInteger(maxBytes)||maxBytes<1)throw new RangeError('Invalid Urdu audio size limit');
+  if(!response||typeof response.blob!=='function')throw new TypeError('Invalid Urdu audio response');
+  const raw=response.headers&&typeof response.headers.get==='function'?response.headers.get('content-length'):null;
+  if(raw!==null&&raw!==''){
+   const value=String(raw).trim();
+   if(!/^\d+$/.test(value)||Number(value)>maxBytes)throw new Error('Urdu audio exceeds size limit');
+  }
+  if(response.body&&typeof response.body.getReader==='function'){
+   const reader=response.body.getReader();const chunks=[];let total=0,finished=false;
+   try{
+    while(true){
+     const {done,value}=await reader.read();
+     if(done){finished=true;break;}
+     if(!(value instanceof Uint8Array))throw new Error('Invalid Urdu audio chunk');
+     total+=value.byteLength;
+     if(total>maxBytes)throw new Error('Urdu audio exceeds size limit');
+     chunks.push(value);
+    }
+   }finally{
+    if(!finished){try{const cancelled=reader.cancel();if(cancelled&&typeof cancelled.catch==='function')cancelled.catch(()=>{});}catch(_){}}
+    try{reader.releaseLock()}catch(_){}
+   }
+   if(!total)throw new Error('Empty Urdu audio');
+   return new Blob(chunks,{type:'audio/mpeg'});
+  }
+  const blob=await response.blob();
+  if(!blob||!blob.size)throw new Error('Empty Urdu audio');
+  if(blob.size>maxBytes)throw new Error('Urdu audio exceeds size limit');
+  return blob;
+ }
+ const api={split,queue,withClipTimeout,readBoundedAudio};if(root)root.HoshiSpeechPipeline=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window!=='undefined'?window:null);

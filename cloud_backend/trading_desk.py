@@ -29,37 +29,51 @@ VERSION = "hoshi-trading-desk-v1"
 FRAMES = ("15m", "1h", "4h")
 
 def _require_same_venue_aggregation(histories: dict) -> None:
-    """Latest 1h/4h OHLCV must equal their constituent closed 15m bars.
+    """Reconcile every fully overlapping 1h/4h OHLCV bar with closed 15m.
 
-    A same-provider three-frame response can otherwise be internally fresh
-    but contradictory. This is a consistency check, NOT independent venue
-    authentication or a claim about the older indicator lookback.
+    Earlier higher-frame candles inside the 15m window influence EMA/ATR,
+    structure and setup checks too; checking only the newest parent misses
+    internally contradictory lookback evidence. The oldest partial parent
+    outside that window is intentionally not claimed as verified. This is
+    SAME-VENUE consistency, not independent exchange authentication.
     """
     quarter_ms = INTERVALS["15m"]
     quarters = {bar.time: bar for bar in histories["15m"]}
+    first_open = histories["15m"][0].time
+    last_close = histories["15m"][-1].close_time
     for tf in ("1h", "4h"):
-        parent = histories[tf][-1]
-        children = [quarters.get(parent.time + i * quarter_ms)
-                    for i in range(INTERVALS[tf] // quarter_ms)]
-        if any(child is None for child in children):
-            raise ValueError("missing_cross_timeframe_closed_bars")
-        if children[-1].close_time != parent.close_time:
-            raise ValueError("cross_timeframe_close_boundary_mismatch")
-        aggregate = (
-            children[0].open, max(child.high for child in children),
-            min(child.low for child in children), children[-1].close,
-            math.fsum(child.volume for child in children),
-        )
-        actual = (parent.open, parent.high, parent.low, parent.close, parent.volume)
-        for i, (observed, computed) in enumerate(zip(actual, aggregate)):
-            # Binance's separately rounded base-volume sums can differ by
-            # a few 1e-8 units; price extremes should agree much tighter.
-            tolerance = (2e-7 + 1e-8 * max(abs(observed), abs(computed))
-                         if i == 4 else 1e-8 * max(1, abs(observed), abs(computed)))
-            if (not math.isfinite(observed) or not math.isfinite(computed)
-                    or abs(observed - computed) > tolerance):
-                raise ValueError("cross_timeframe_ohlcv_mismatch")
-
+        covered = 0
+        parents = histories[tf]
+        for parent in parents:
+            # A parent partially outside the available 15m lookback cannot
+            # be checked. The newest parent MUST be fully represented.
+            if parent.time < first_open or parent.close_time > last_close:
+                if parent is parents[-1]:
+                    raise ValueError("missing_latest_cross_timeframe_coverage")
+                continue
+            children = [quarters.get(parent.time + i * quarter_ms)
+                        for i in range(INTERVALS[tf] // quarter_ms)]
+            if any(child is None for child in children):
+                raise ValueError("missing_cross_timeframe_closed_bars")
+            if children[-1].close_time != parent.close_time:
+                raise ValueError("cross_timeframe_close_boundary_mismatch")
+            aggregate = (
+                children[0].open, max(child.high for child in children),
+                min(child.low for child in children), children[-1].close,
+                math.fsum(child.volume for child in children),
+            )
+            actual = (parent.open, parent.high, parent.low, parent.close, parent.volume)
+            for i, (observed, computed) in enumerate(zip(actual, aggregate)):
+                # Binance independently rounds higher-frame base volumes.
+                # Price extremes should agree much more tightly.
+                tolerance = (2e-7 + 1e-8 * max(abs(observed), abs(computed))
+                             if i == 4 else 1e-8 * max(1, abs(observed), abs(computed)))
+                if (not math.isfinite(observed) or not math.isfinite(computed)
+                        or abs(observed - computed) > tolerance):
+                    raise ValueError("cross_timeframe_ohlcv_mismatch")
+            covered += 1
+        if covered == 0:
+            raise ValueError("missing_cross_timeframe_coverage")
 
 
 def build_trading_desk(histories: dict, symbol: str, now_ms: int,

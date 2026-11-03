@@ -25,18 +25,25 @@ class TradingDeskTests(unittest.TestCase):
 
     @staticmethod
     def _align_latest_frames(data):
+        # Synthetic fixture's independently generated frame prices are NOT
+        # an actual same-venue aggregate. Align every fully overlapping bar,
+        # leaving older non-overlapping indicator warmup bars untouched.
         quarter = INTERVALS["15m"]
         by_start = {bar.time: bar for bar in data["15m"]}
+        first_open = data["15m"][0].time
+        last_close = data["15m"][-1].close_time
         for tf in ("1h", "4h"):
-            parent = data[tf][-1]
-            children = [by_start[parent.time + i * quarter]
-                        for i in range(INTERVALS[tf] // quarter)]
-            data[tf][-1] = replace(
-                parent, open=children[0].open,
-                high=max(bar.high for bar in children),
-                low=min(bar.low for bar in children),
-                close=children[-1].close,
-                volume=sum(bar.volume for bar in children))
+            for index, parent in enumerate(data[tf]):
+                if parent.time < first_open or parent.close_time > last_close:
+                    continue
+                children = [by_start[parent.time + i * quarter]
+                            for i in range(INTERVALS[tf] // quarter)]
+                data[tf][index] = replace(
+                    parent, open=children[0].open,
+                    high=max(bar.high for bar in children),
+                    low=min(bar.low for bar in children),
+                    close=children[-1].close,
+                    volume=sum(bar.volume for bar in children))
         return data
 
     def test_real_analyzers_share_one_set_of_three_fetched_histories(self):
@@ -75,6 +82,26 @@ class TradingDeskTests(unittest.TestCase):
             data[tf][-1] = replace(data[tf][-1],
                                    **{field: getattr(data[tf][-1], field) + delta})
             with self.subTest(tf=tf, field=field):
+                with self.assertRaisesRegex(ValueError, "cross_timeframe_ohlcv_mismatch"):
+                    desk.build_trading_desk(data, "BTCUSDT", NOW, NOW // 1000)
+                with patch.object(main, "_research_history",
+                        side_effect=lambda pair, frame: (data[frame], NOW // 1000)), patch.object(
+                        main.time, "time", return_value=NOW / 1000):
+                    response = self.client.get("/api/trading/desk")
+                self.assertEqual(response.status_code, 503)
+                self.assertEqual(response.json()["detail"]["decision"], "wait")
+                self.assertIsNone(response.json()["detail"]["paper_plan"])
+                self.assertNotIn("cross_timeframe", response.text)
+
+    def test_older_overlapping_higher_frame_cannot_hide_ohlcv_disagreement(self):
+        # An older 1h/4h candle still affects indicators and structure.
+        # Matching only the latest parent used to accept this contradiction.
+        for tf, field, delta in (("1h", "high", 1), ("4h", "volume", 1)):
+            with self.subTest(tf=tf, field=field):
+                data = {frame: bars.copy() for frame, bars in self.data.items()}
+                parent = data[tf][-2]
+                data[tf][-2] = replace(
+                    parent, **{field: getattr(parent, field) + delta})
                 with self.assertRaisesRegex(ValueError, "cross_timeframe_ohlcv_mismatch"):
                     desk.build_trading_desk(data, "BTCUSDT", NOW, NOW // 1000)
                 with patch.object(main, "_research_history",

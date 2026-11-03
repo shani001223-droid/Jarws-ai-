@@ -1,5 +1,16 @@
 # HOSHI trading V2 — audit and implementation evidence
 
+## 3 November 2026 — overlapping higher-timeframe OHLCV integrity (trading-only)
+
+**Code-complete, development branch only:** [Commit `128cdcb0`](https://github.com/shani001223-droid/Jarws-ai-/commit/128cdcb02fa8e86aab86ca13036519d33667dad8) extends the previous *latest-bar-only* Binance Spot aggregation check. Every **fully overlapping** closed 1h and 4h candle in the available 15m lookback must now match its four/sixteen closed 15m constituents in open/high/low/close/base volume. The latest parent must be covered. Older partial parents outside the bounded 15m window are **not** claimed as checked; the older non-overlapping 1h/4h indicator warmup is also **not** independently verified. An older overlapping high or volume contradiction fails closed to sanitized HTTP 503/WAIT and null paper plan. Synthetic regression tests check both frames through the actual API. Same-venue consistency is **not** exchange authentication or cross-venue validation; no strategy, fee assumptions, orders, voice/Stop, identity or privacy behavior was expanded.
+
+**Exact-source CI verified:** [Full Python/Node/Chromium PR run 41553896640](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/41553896640) **passed**, including **769 Python tests**, Node contracts, actual Chromium mobile trading-desk/Stop/privacy/offline checks. [Docker/Uvicorn PR run 41553896710](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/41553896710) and [push Docker 41553892147](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/41553892147) **passed**. [Full push run 41553892155](https://github.com/shani001223-droid/Jarws-ai-/actions/runs/41553892155) was **in progress** at documentation time; do not treat that as completed. This documentation-only head requires its own exact-source checks.
+
+**Real-data / independent paper evaluation — PENDING:** At **2026-11-03 00:35:47 UTC**, direct DNS probes for `data-api.binance.vision` and `api.kraken.com` in the local execution environment both returned temporary name-resolution failures. No fresh authenticated capture, independent forward-paper fills, measured profitability or calibrated win probability is established by synthetic tests.
+
+**Production / device acceptance — PENDING:** Read-only Render deployment records for all three existing services still show **27 October release `1a0f532afb34d5f3f1d939b2daef86ec9fd46e29`** as live, not this development branch. Main remains `3f411640`; draft PR #29 remains open/unmerged. Physical Realme Note 50 acceptance and user-authorized cumulative release review are outstanding. Historical 48/60 checkboxes are preserved (not trading completion); V3 remains 49/50 source-checked, not runtime-loaded, with NDOG/NWOG evidence pending. Non-trading development deferred; no new repository/PR/automation, purchase, credentials, deployment or real-money order.
+
+
 
 ## 3 November 2026 — latest same-venue 15m/1h/4h OHLCV aggregation gate (trading-only)
 
